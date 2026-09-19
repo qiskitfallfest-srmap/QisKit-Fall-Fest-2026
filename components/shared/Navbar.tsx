@@ -8,6 +8,8 @@ import { useTheme } from 'next-themes';
 import { Sun, Moon, ArrowRight, Menu, X } from 'lucide-react';
 import clsx from 'clsx';
 
+export const NAVBAR_JOIN_HREF = 'https://unstop.com';
+
 const NAV_LINKS = [
   { label: 'About', href: '/about' },
   { label: 'Experience', href: '/experience' },
@@ -219,7 +221,7 @@ export function Navbar() {
 
           {/* Join CTA */}
           <a
-            href="https://unstop.com" 
+            href={NAVBAR_JOIN_HREF} 
             target="_blank"
             rel="noopener noreferrer"
             data-cursor="cta"
@@ -300,7 +302,7 @@ export function Navbar() {
 
             {/* Full-width Join Button */}
             <a
-              href="https://unstop.com"
+              href={NAVBAR_JOIN_HREF}
               target="_blank"
               rel="noopener noreferrer"
               data-cursor="cta"
