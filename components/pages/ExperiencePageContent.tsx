@@ -1,114 +1,109 @@
-interface ExperienceSkeletonSection {
-  id: string;
-  orderNumber: string;
-  title: string;
-  debugBg: string;
-  debugBorder: string;
-  debugTextColor: string;
-  tagColor: string;
-  purpose: string;
-  isFooter?: boolean;
-}
+'use client';
 
-const EXPERIENCE_SECTIONS: ExperienceSkeletonSection[] = [
-  {
-    id: 'section-01-hero',
-    orderNumber: '01',
-    title: 'Hero',
-    debugBg: 'bg-[#4a154b]', // Deep Plum Magenta
-    debugBorder: 'border-fuchsia-400',
-    debugTextColor: 'text-fuchsia-100',
-    tagColor: 'bg-fuchsia-500/30 text-fuchsia-200 border-fuchsia-400/50',
-    purpose: 'Hero display, immersion entry point, and experiential overview for Qiskit Fall Fest 2026.',
-  },
-  {
-    id: 'section-02-learn',
-    orderNumber: '02',
-    title: 'Learn',
-    debugBg: 'bg-[#0f3b4c]', // Deep Ocean Teal
-    debugBorder: 'border-cyan-400',
-    debugTextColor: 'text-cyan-100',
-    tagColor: 'bg-cyan-500/30 text-cyan-200 border-cyan-400/50',
-    purpose: 'Masterclasses, quantum circuit theory sessions, and fundamental Qiskit learning paths.',
-  },
-  {
-    id: 'section-03-build',
-    orderNumber: '03',
-    title: 'Build',
-    debugBg: 'bg-[#194d33]', // Deep Forest Green
-    debugBorder: 'border-emerald-400',
-    debugTextColor: 'text-emerald-100',
-    tagColor: 'bg-emerald-500/30 text-emerald-200 border-emerald-400/50',
-    purpose: 'Hands-on hackathon tracks, algorithm execution on real quantum backends, and technical mentoring.',
-  },
-  {
-    id: 'section-04-connect',
-    orderNumber: '04',
-    title: 'Connect',
-    debugBg: 'bg-[#5c2415]', // Deep Rust Terracotta
-    debugBorder: 'border-orange-400',
-    debugTextColor: 'text-orange-100',
-    tagColor: 'bg-orange-500/30 text-orange-200 border-orange-400/50',
-    purpose: 'Networking lounges, researcher meetups, student-industry roundtables, and cross-disciplinary exchanges.',
-  },
-  {
-    id: 'section-05-ready-to-take-part',
-    orderNumber: '05',
-    title: 'Ready to Take Part?',
-    debugBg: 'bg-[#2e1065]', // Deep Indigo Violet
-    debugBorder: 'border-purple-400',
-    debugTextColor: 'text-purple-100',
-    tagColor: 'bg-purple-500/30 text-purple-200 border-purple-400/50',
-    purpose: 'Primary call-to-action redirecting participants to the official Unstop registration gateway.',
-  },
-];
-
+import * as React from 'react';
+import {
+  ExperienceHero,
+  EcosystemStrip,
+  ExperienceSection,
+  ExperienceSectionDivider,
+} from '@/components/experience';
+import {
+  LEARN_ITEMS,
+  BUILD_ITEMS,
+  CONNECT_ITEMS,
+} from '@/data/experience';
 import { Footer } from '@/components/shared/Footer';
 
-export default function ExperiencePage() {
+/**
+ * ExperiencePageContent
+ *
+ * Responsible strictly for composing the Experience page sections in the correct order:
+ * 1. ExperienceHero
+ * 2. EcosystemStrip
+ * 3. 01 LEARN Section (Unified ExperienceSection using ScrollLockedSection & ExperienceEventGallery)
+ * 4. Editorial Transition Divider (Learn -> Build)
+ * 5. 02 BUILD Section (Unified ExperienceSection)
+ * 6. Editorial Transition Divider (Build -> Connect)
+ * 7. 03 CONNECT Section (Unified ExperienceSection)
+ * 8. Shared Footer
+ */
+export default function ExperiencePageContent() {
   return (
-    <div className="w-full flex flex-col">
-      {EXPERIENCE_SECTIONS.map((section) => {
-        const Content = (
-          <div className="w-full max-w-5xl mx-auto border-2 border-dashed border-white/30 rounded-lg p-6 sm:p-10 flex flex-col items-center justify-center text-center space-y-4">
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              <span
-                className={`inline-flex items-center px-3 py-1 text-xs font-mono font-semibold tracking-wider uppercase rounded-full border ${section.tagColor}`}
-              >
-                Section {section.orderNumber}
-              </span>
-              <span className="inline-flex items-center px-3 py-1 text-xs font-mono uppercase rounded-full border border-white/20 bg-black/30 text-white/90">
-                Structure / Cross-Verification
-              </span>
-            </div>
+    <main className="relative w-full flex flex-col min-h-screen bg-[#F5F3F0] dark:bg-[#16171B] transition-colors duration-300">
+      {/* Primary Hero Section of Experience Page */}
+      <ExperienceHero />
 
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-wide font-sans">
-              {section.orderNumber}. {section.title}
-            </h2>
+      {/* Ecosystem & Partner Strip */}
+      <EcosystemStrip />
 
-            <p className="text-sm sm:text-base max-w-2xl text-white/80 font-mono leading-relaxed">
-              {section.purpose}
-            </p>
+      {/* 01 — LEARN Section (Scroll-Locked Chapter) */}
+      <ExperienceSection
+        id="section-01-learn"
+        sectionNumber="01"
+        sectionTitle="LEARN"
+        sectionSubtitle="Educational and knowledge-oriented quantum event experiences"
+        items={LEARN_ITEMS}
+        prevSectionId="experience-ecosystem-strip"
+        nextSectionId="section-02-build"
+        prevLabel="Ecosystem"
+        nextLabel="02 Build"
+      />
 
-            <div className="text-[11px] font-mono text-white/50 pt-2 border-t border-white/10 w-full flex flex-wrap justify-between items-center gap-2">
-              <span>Block ID: #{section.id}</span>
-              <span>Experience Page Skeleton</span>
-            </div>
-          </div>
-        );
+      {/* Chapter Gap & Transition: 01 LEARN -> 02 BUILD (Light Ivory Canvas with Human Editorial Typography) */}
+      <ExperienceSectionDivider
+        id="gap-learn-to-build"
+        fromTrackNumber="01"
+        fromTrackTitle="LEARN"
+        toTrackNumber="02"
+        toTrackTitle="BUILD"
+        headline="From Quantum Theory to Active System Engineering"
+        subtitle="Translate fundamental mathematical principles into working quantum circuits, hybrid algorithms, and physical hardware demonstrations."
+      />
 
-        return (
-          <section
-            key={section.id}
-            id={section.id}
-            aria-label={section.title}
-            className={`w-full min-h-[280px] sm:min-h-[320px] py-14 px-4 sm:px-6 lg:px-8 border-b-4 ${section.debugBg} ${section.debugBorder} ${section.debugTextColor} flex items-center justify-center`}
-          >
-            {Content}
-          </section>
-        );
-      })}
+      {/* 02 — BUILD Section (Scroll-Locked Chapter: Card Sheet sliding over the middle divider) */}
+      <ExperienceSection
+        id="section-02-build"
+        sectionNumber="02"
+        sectionTitle="BUILD"
+        sectionSubtitle="Hands-on quantum programming, circuit labs, and development sprints"
+        items={BUILD_ITEMS}
+        prevSectionId="section-01-learn"
+        nextSectionId="section-03-connect"
+        prevLabel="01 Learn"
+        nextLabel="03 Connect"
+      />
+
+      {/* Chapter Gap & Transition: 02 BUILD -> 03 CONNECT (Light Ivory Canvas with Human Editorial Typography) */}
+      <ExperienceSectionDivider
+        id="gap-build-to-connect"
+        fromTrackNumber="02"
+        fromTrackTitle="BUILD"
+        toTrackNumber="03"
+        toTrackTitle="CONNECT"
+        headline="From Individual Engineering to Global Scientific Dialogue"
+        subtitle="Connect with academic researchers, global quantum leaders, and student innovators shaping the future of computation."
+      />
+
+      {/* 03 — CONNECT Section (Scroll-Locked Chapter: Card Sheet sliding over the middle divider) */}
+      <ExperienceSection
+        id="section-03-connect"
+        sectionNumber="03"
+        sectionTitle="CONNECT"
+        sectionSubtitle="Panels, networking gala, career mentorship, and quantum summits"
+        items={CONNECT_ITEMS}
+        prevSectionId="section-02-build"
+        prevLabel="02 Build"
+      />
+
+      {/* Clean boundary reserved for future Ready to Take Part / Extended content */}
+      <div
+        id="experience-future-content"
+        className="w-full border-t border-[#6C151E]/10 dark:border-white/10"
+        aria-hidden="true"
+      />
+
+      {/* Global Footer */}
       <Footer />
-    </div>
+    </main>
   );
 }
