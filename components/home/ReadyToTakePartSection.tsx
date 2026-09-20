@@ -1,6 +1,7 @@
 import * as React from 'react';
 import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
+import { REGISTRATION_URL } from '@/lib/constants';
 
 const READY_TO_TAKE_PART_ASSETS = {
   backgroundLight: '/HOME-08-READY-TO-TAKE-PART-BACKGROUND-LIGHT.png',
@@ -149,7 +150,7 @@ export function ReadyToTakePartSection() {
           {/* CTA Button */}
           <div className="mt-[20px] sm:mt-[22px] xl:mt-[24px]">
             <a
-              href="https://unstop.com"
+              href={REGISTRATION_URL}
               target="_blank"
               rel="noopener noreferrer"
               data-cursor="cta"

@@ -1,566 +1,617 @@
 'use client';
 
-import * as React from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import gsap from 'gsap';
 
-interface LoadScreenProps {
+export interface LoadScreenProps {
+  /** Callback fired when the intro/loading sequence completes or is skipped */
   onComplete?: () => void;
+  /** Primary category / tag text above the title (default: "GLOBAL. OPEN. TOGETHER.") */
+  tagText?: string;
+  /** First part of main title (default: "QISKIT") */
+  titlePart1?: string;
+  /** Second part of main title (default: "FALL FEST 2026") */
+  titlePart2?: string;
+  /** Subtitle / host text (default: "SRM UNIVERSITY-AP × IBM QUANTUM") */
+  subtitle?: string;
+  /** Sub-headline or theme tagline (default: "A Decade of Quantum on Cloud") */
+  tagline?: string;
+  /** Tech status readout label (default: "INITIALIZING DILUTION CRYOSTAT [15 mK]") */
+  readoutText?: string;
+  /** Text shown above the progress bar (default: "LOADING SYSTEM") */
+  loadingLabel?: string;
+  /** Main solid background color (default: "#650015") */
+  backgroundColor?: string;
+  /** Primary text color (default: "#FFFFFF") */
+  textColor?: string;
+  /** Accent / border color (default: "#8A1B27") */
+  accentColor?: string;
+  /** Whether to display the skip button (default: true) */
+  showSkipButton?: boolean;
+  /** Text for the skip button (default: "Skip to Content") */
+  skipButtonText?: string;
+  /** Whether to lock page scrolling while the loading screen is active (default: true) */
+  lockScroll?: boolean;
+  /** Optional custom CSS class on the root container */
+  className?: string;
 }
 
+export type LoadingScreenProps = LoadScreenProps;
+
 /**
- * IMPORTANT:
- * Change these paths to match the final paths inside /public.
+ * Critical hero assets physically verified in /public
  */
 const CRITICAL_ASSETS = [
-  '/images/home/hero/HOME-01-HERO-BACKGROUND-DAR.png',
-  '/images/home/hero/HOME-01-HERO-BACKGROUND-LIGHT.png',
-
-  '/images/home/hero/HOME-01-HERO-QUANTUM-COMPUTER-DARK.png',
-  '/images/home/hero/HOME-01-HERO-QUANTUM-COMPUTER-LIGHT.png',
-
-  '/images/home/hero/HOME-01-HERO-GLOBE-LEFT-DARK.png',
-  '/images/home/hero/HOME-01-HERO-GLOBE-LEFT-LIGHT.png',
-
-  '/images/home/hero/HOME-01-HERO-GLOBE-RIGHT-DARK.png',
-  '/images/home/hero/HOME-01-HERO-GLOBE-RIGHT-LIGHT.png',
+  '/hero/HOME-01-HERO-BACKGROUND-LIGHT.png',
+  '/hero/HOME-01-HERO-BACKGROUND-DAR.png',
+  '/hero/HOME-01-HERO-CRYOSTAT-ORBITAL-LIGHT-02.png',
+  '/hero/HOME-01-HERO-GLOBE-LEFT-LIGHT.png',
+  '/hero/HOME-01-HERO-GLOBE-LEFT-DARK.png',
+  '/hero/HOME-01-HERO-GLOBE-RIGHT-LIGHT.png',
+  '/hero/HOME-01-HERO-GLOBE-RIGHT-DARK.png',
+  '/hero/HOME-01-HERO-DECADE-10-LIGHT.png',
+  '/hero/HOME-01-HERO-DECADE-10-DARK.png',
 ];
 
-export function LoadScreen({
+const HARD_TIMEOUT_MS = 3600;
+const FINAL_HOLD_MS = 250;
+const EXIT_FADE_DURATION_S = 0.5;
+
+/**
+ * LoadScreen - Cinematic intro loading screen with real critical asset preloading,
+ * GSAP optical beam/flash transitions, typography reveals, and safe route & scroll preservation.
+ */
+export const LoadScreen: React.FC<LoadScreenProps> = ({
   onComplete,
-}: LoadScreenProps) {
-  const [isVisible, setIsVisible] =
-    React.useState(true);
+  tagText = 'GLOBAL. OPEN. TOGETHER.',
+  titlePart1 = 'QISKIT',
+  titlePart2 = 'FALL FEST 2026',
+  subtitle = 'SRM UNIVERSITY-AP × IBM QUANTUM',
+  tagline = 'A Decade of Quantum on Cloud',
+  readoutText = 'INITIALIZING DILUTION CRYOSTAT [15 mK]',
+  loadingLabel = 'LOADING SYSTEM',
+  backgroundColor = '#650015',
+  textColor = '#FFFFFF',
+  accentColor = '#8A1B27',
+  showSkipButton = true,
+  skipButtonText = 'Skip to Content',
+  lockScroll = true,
+  className = '',
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const solidBgRef = useRef<HTMLDivElement>(null);
+  const lightBeamRef = useRef<HTMLDivElement>(null);
+  const lightFlashRef = useRef<HTMLDivElement>(null);
+  const topBarRef = useRef<HTMLDivElement>(null);
 
-  const [isLeaving, setIsLeaving] =
-    React.useState(false);
+  // Masked typography refs
+  const typographyRef = useRef<HTMLDivElement>(null);
+  const tagRef = useRef<HTMLDivElement>(null);
+  const titlePart1Ref = useRef<HTMLSpanElement>(null);
+  const titlePart2Ref = useRef<HTMLSpanElement>(null);
+  const subtitleRef = useRef<HTMLDivElement>(null);
+  const taglineRef = useRef<HTMLDivElement>(null);
+  const readoutRef = useRef<HTMLDivElement>(null);
 
-  const [isReady, setIsReady] =
-    React.useState(false);
+  // Loading progress bar refs
+  const loadingContainerRef = useRef<HTMLDivElement>(null);
+  const progressBarRef = useRef<HTMLDivElement>(null);
+  const percentTextRef = useRef<HTMLSpanElement>(null);
 
-  const [progress, setProgress] =
-    React.useState(0);
+  // State
+  const [canSkip, setCanSkip] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
+  const [isDone, setIsDone] = useState(false);
 
-  React.useEffect(() => {
-    if (!isVisible) return;
+  const isFinishingRef = useRef(false);
+  const tlIntroRef = useRef<gsap.core.Timeline | null>(null);
+  const progressTweenRef = useRef<gsap.core.Tween | null>(null);
+  const progressAnimRef = useRef<{ pct: number }>({ pct: 0 });
 
-    /*
-     * Prevent the user from scrolling the hero behind
-     * the loader while the opening sequence is active.
-     */
-    const previousOverflow =
-      document.body.style.overflow;
+  // Stable callback ref
+  const onCompleteRef = useRef(onComplete);
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
+  // ---------------------------------------------------------------------------
+  // 1. SCROLL LOCKING & SAFE RESTORATION
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    if (!lockScroll || isDone) return;
+
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalDocOverflow = document.documentElement.style.overflow;
 
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
+    const preventScroll = (e: Event) => {
+      e.preventDefault();
+    };
+
+    window.addEventListener('wheel', preventScroll, { passive: false });
+    window.addEventListener('touchmove', preventScroll, { passive: false });
 
     return () => {
-      document.body.style.overflow =
-        previousOverflow;
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalDocOverflow;
+      window.removeEventListener('wheel', preventScroll);
+      window.removeEventListener('touchmove', preventScroll);
     };
-  }, [isVisible]);
+  }, [lockScroll, isDone]);
 
-  React.useEffect(() => {
-    const MINIMUM_VISIBLE_TIME = 1900;
-    const HARD_TIMEOUT = 3400;
-    const FINAL_HOLD = 280;
-    const FADE_DURATION = 520;
+  // ---------------------------------------------------------------------------
+  // 2. EXIT HANDLER: NO FORCED REDIRECT, RESTORE SCROLL & FADE OUT
+  // ---------------------------------------------------------------------------
+  const finishLoading = useCallback(() => {
+    if (isFinishingRef.current) return;
+    isFinishingRef.current = true;
+    setIsExiting(true);
 
-    const startedAt = performance.now();
+    // Ensure visual progress displays 100% on finish
+    if (percentTextRef.current) {
+      percentTextRef.current.textContent = '100%';
+    }
+    if (progressBarRef.current) {
+      progressBarRef.current.style.width = '100%';
+    }
 
-    let cancelled = false;
-    let loadedCount = 0;
+    if (containerRef.current) {
+      gsap.to(containerRef.current, {
+        opacity: 0,
+        duration: EXIT_FADE_DURATION_S,
+        ease: 'power2.inOut',
+        onComplete: () => {
+          if (containerRef.current) {
+            containerRef.current.style.display = 'none';
+          }
+          setIsDone(true);
+          onCompleteRef.current?.();
+        },
+      });
+    } else {
+      setIsDone(true);
+      onCompleteRef.current?.();
+    }
+  }, []);
 
-    const updateProgress = () => {
-      loadedCount += 1;
+  // ---------------------------------------------------------------------------
+  // 3. FAST-FORWARD SKIP HANDLER
+  // ---------------------------------------------------------------------------
+  const handleSkip = useCallback(() => {
+    if (isFinishingRef.current) return;
+    tlIntroRef.current?.kill();
+    progressTweenRef.current?.kill();
+    finishLoading();
+  }, [finishLoading]);
 
-      if (!cancelled) {
-        setProgress(
-          loadedCount /
-            CRITICAL_ASSETS.length
+  // ---------------------------------------------------------------------------
+  // 4. GSAP CINEMATIC TIMELINE & REAL CRITICAL ASSET PRELOADING
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    if (isDone) return;
+
+    let isCleanedUp = false;
+    const startTime = performance.now();
+
+    // Enable skip button after brief initial flash
+    const skipTimer = setTimeout(() => {
+      if (!isCleanedUp) setCanSkip(true);
+    }, 600);
+
+    // Setup GSAP Context
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ paused: false });
+      tlIntroRef.current = tl;
+
+      // Chrome / top bar fades in
+      if (topBarRef.current) {
+        tl.to(topBarRef.current, { opacity: 1, duration: 0.5, ease: 'power1.out' }, 0.2);
+      }
+
+      // Step A: Horizontal white light beam expands across center (0.3s -> 0.8s)
+      if (lightBeamRef.current) {
+        tl.fromTo(
+          lightBeamRef.current,
+          { width: '0px', opacity: 0 },
+          {
+            width: '100vw',
+            opacity: 1,
+            duration: 0.5,
+            ease: 'power2.inOut',
+          },
+          0.3
         );
       }
-    };
 
-    const preloadPromises =
-      CRITICAL_ASSETS.map(
-        (src) =>
-          new Promise<void>((resolve) => {
-            const image = new Image();
-
-            const finish = () => {
-              updateProgress();
-              resolve();
-            };
-
-            image.onload = finish;
-            image.onerror = finish;
-
-            image.src = src;
-          })
-      );
-
-    const waitForMinimum =
-      new Promise<void>((resolve) => {
-        const elapsed =
-          performance.now() - startedAt;
-
-        window.setTimeout(
-          resolve,
-          Math.max(
-            0,
-            MINIMUM_VISIBLE_TIME -
-              elapsed
-          )
+      // Step B: Pure white light bursts vertically to illuminate screen (0.8s -> 1.1s)
+      if (lightFlashRef.current) {
+        tl.fromTo(
+          lightFlashRef.current,
+          { scaleY: 0, opacity: 0 },
+          {
+            scaleY: 1,
+            opacity: 0.85,
+            duration: 0.3,
+            ease: 'power3.out',
+          },
+          0.8
         );
-      });
 
-    const normalCompletion =
-      Promise.all([
-        Promise.all(preloadPromises),
-        waitForMinimum,
-      ]);
-
-    const hardTimeout =
-      new Promise<void>((resolve) => {
-        window.setTimeout(
-          resolve,
-          HARD_TIMEOUT
+        // Step C: Light dissolves away leaving pure solid background (1.1s -> 1.5s)
+        tl.to(
+          lightFlashRef.current,
+          {
+            opacity: 0,
+            duration: 0.4,
+            ease: 'power2.out',
+          },
+          1.1
         );
+      }
+
+      if (lightBeamRef.current) {
+        tl.to(
+          lightBeamRef.current,
+          {
+            opacity: 0,
+            duration: 0.35,
+            ease: 'power2.out',
+          },
+          1.15
+        );
+      }
+
+      // Typography container reveals
+      if (typographyRef.current) {
+        tl.to(typographyRef.current, { opacity: 1, duration: 0.3 }, 1.15);
+      }
+
+      // Text 1: Tag indicator
+      if (tagRef.current) {
+        tl.fromTo(
+          tagRef.current,
+          { y: 28, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' },
+          1.2
+        );
+      }
+
+      // Text 2: Title Part 1
+      if (titlePart1Ref.current) {
+        tl.fromTo(
+          titlePart1Ref.current,
+          { y: 55, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.7, ease: 'power3.out' },
+          1.35
+        );
+      }
+
+      // Text 3: Title Part 2
+      if (titlePart2Ref.current) {
+        tl.fromTo(
+          titlePart2Ref.current,
+          { y: 55, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.7, ease: 'power3.out' },
+          1.45
+        );
+      }
+
+      // Text 4: Subtitle
+      if (subtitleRef.current) {
+        tl.fromTo(
+          subtitleRef.current,
+          { y: 35, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.65, ease: 'power3.out' },
+          1.6
+        );
+      }
+
+      // Text 5: Tagline
+      if (taglineRef.current) {
+        tl.fromTo(
+          taglineRef.current,
+          { y: 30, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' },
+          1.75
+        );
+      }
+
+      // Text 6: Readout text
+      if (readoutRef.current) {
+        tl.fromTo(
+          readoutRef.current,
+          { y: 25, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.55, ease: 'power3.out' },
+          1.9
+        );
+      }
+
+      // Loading Progress Container reveals smoothly as the light flash bursts
+      if (loadingContainerRef.current) {
+        tl.fromTo(
+          loadingContainerRef.current,
+          { opacity: 0, y: 16 },
+          { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' },
+          0.85
+        );
+      }
+    }, containerRef);
+
+    // 1. Critical Asset Preloading in Parallel (independent from visible percentage)
+    const preloadPromises = CRITICAL_ASSETS.map((src) => {
+      return new Promise<void>((resolve) => {
+        const img = new Image();
+        const done = () => {
+          resolve();
+        };
+        img.onload = done;
+        img.onerror = done; // Fail-safe: error counts as complete so loader never freezes
+        img.src = src;
       });
+    });
+    const assetsReadyPromise = Promise.all(preloadPromises);
 
-    Promise.race([
-      normalCompletion,
-      hardTimeout,
-    ]).then(() => {
-      if (cancelled) return;
+    // 2. Smooth Continuous Visual Progress Animation (0% to 100%)
+    const visualProgressPromise = new Promise<void>((resolve) => {
+      progressAnimRef.current.pct = 0;
+      if (percentTextRef.current) {
+        percentTextRef.current.textContent = '0%';
+      }
+      if (progressBarRef.current) {
+        progressBarRef.current.style.width = '0%';
+      }
 
-      setProgress(1);
-      setIsReady(true);
+      progressTweenRef.current = gsap.to(progressAnimRef.current, {
+        pct: 100,
+        duration: 2.4,
+        delay: 0.85, // Starts synchronously with the appearance of the progress container
+        ease: 'power1.inOut',
+        onUpdate: () => {
+          if (isCleanedUp) return;
+          const current = Math.min(100, Math.max(0, Math.round(progressAnimRef.current.pct)));
+          if (percentTextRef.current) {
+            percentTextRef.current.textContent = `${current}%`;
+          }
+          if (progressBarRef.current) {
+            progressBarRef.current.style.width = `${current}%`;
+          }
+        },
+        onComplete: () => {
+          if (isCleanedUp) return;
+          progressAnimRef.current.pct = 100;
+          if (percentTextRef.current) {
+            percentTextRef.current.textContent = '100%';
+          }
+          if (progressBarRef.current) {
+            progressBarRef.current.style.width = '100%';
+          }
+          resolve();
+        },
+      });
+    });
 
-      window.setTimeout(() => {
-        if (cancelled) return;
+    // 3. Dual synchronization: wait for BOTH visual progress reaching 100% AND real assets
+    const normalCompletion = Promise.all([
+      assetsReadyPromise,
+      visualProgressPromise,
+    ]);
 
-        setIsLeaving(true);
+    const hardTimeoutPromise = new Promise<void>((resolve) => {
+      setTimeout(resolve, HARD_TIMEOUT_MS);
+    });
 
-        window.setTimeout(() => {
-          if (cancelled) return;
+    Promise.race([normalCompletion, hardTimeoutPromise]).then(() => {
+      if (isCleanedUp || isFinishingRef.current) return;
 
-          setIsVisible(false);
-          onComplete?.();
-        }, FADE_DURATION);
-      }, FINAL_HOLD);
+      // Always guarantee 100% display
+      progressAnimRef.current.pct = 100;
+      if (percentTextRef.current) {
+        percentTextRef.current.textContent = '100%';
+      }
+      if (progressBarRef.current) {
+        progressBarRef.current.style.width = '100%';
+      }
+
+      // Short intentional hold at 100%
+      setTimeout(() => {
+        if (isCleanedUp || isFinishingRef.current) return;
+
+        // Fade out progress container slightly before overall exit
+        if (loadingContainerRef.current) {
+          gsap.to(loadingContainerRef.current, {
+            opacity: 0,
+            y: 8,
+            duration: 0.25,
+            ease: 'power2.inOut',
+          });
+        }
+
+        setTimeout(() => {
+          if (!isCleanedUp) {
+            finishLoading();
+          }
+        }, FINAL_HOLD_MS);
+      }, 150);
     });
 
     return () => {
-      cancelled = true;
+      isCleanedUp = true;
+      clearTimeout(skipTimer);
+      progressTweenRef.current?.kill();
+      ctx.revert();
     };
-  }, [onComplete]);
+  }, [finishLoading, isDone]);
 
-  if (!isVisible) return null;
+  // If loading has completed, remove from DOM
+  if (isDone) {
+    return null;
+  }
 
   return (
     <div
-      aria-hidden="true"
-      className={`
-        fixed inset-0 z-[99999]
-        flex items-center justify-center
-        overflow-hidden
-        bg-[#120506]
-
-        transition-opacity
-        duration-[520ms]
-        ease-[cubic-bezier(.22,1,.36,1)]
-
-        ${
-          isLeaving
-            ? 'pointer-events-none opacity-0'
-            : 'pointer-events-auto opacity-100'
-        }
-      `}
+      ref={containerRef}
+      id="app-loading-screen"
+      className={`fixed inset-0 z-[99999] pointer-events-auto select-none overflow-hidden ${className}`}
+      style={{ backgroundColor }}
+      aria-live="polite"
+      aria-busy={!isDone}
     >
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes loaderBloom {
-          0%,
-          100% {
-            transform: scale(0.96);
-            opacity: 0.2;
-          }
-
-          50% {
-            transform: scale(1.08);
-            opacity: 0.34;
-          }
-        }
-
-        @keyframes loaderOpeningLine {
-          0% {
-            transform: scaleX(0);
-            opacity: 0;
-            filter: brightness(1.8);
-          }
-
-          18% {
-            opacity: 1;
-          }
-
-          62% {
-            transform: scaleX(0.92);
-            opacity: 0.9;
-          }
-
-          100% {
-            transform: scaleX(1.08);
-            opacity: 0;
-          }
-        }
-
-        @keyframes loaderReveal {
-          0% {
-            opacity: 0;
-            transform: translateY(16px);
-            filter: blur(5px);
-          }
-
-          100% {
-            opacity: 1;
-            transform: translateY(0);
-            filter: blur(0);
-          }
-        }
-
-        @keyframes loaderFinalSweep {
-          0% {
-            transform:
-              translateX(-150%)
-              skewX(-16deg);
-
-            opacity: 0;
-          }
-
-          20% {
-            opacity: 1;
-          }
-
-          80% {
-            opacity: 0.8;
-          }
-
-          100% {
-            transform:
-              translateX(150%)
-              skewX(-16deg);
-
-            opacity: 0;
-          }
-        }
-
-        .loader-line-1 {
-          opacity: 0;
-
-          animation:
-            loaderReveal
-            760ms
-            cubic-bezier(.22,1,.36,1)
-            520ms
-            forwards;
-        }
-
-        .loader-line-2 {
-          opacity: 0;
-
-          animation:
-            loaderReveal
-            760ms
-            cubic-bezier(.22,1,.36,1)
-            820ms
-            forwards;
-        }
-
-        .loader-line-3 {
-          opacity: 0;
-
-          animation:
-            loaderReveal
-            700ms
-            cubic-bezier(.22,1,.36,1)
-            1080ms
-            forwards;
-        }
-
-        .loader-line-4 {
-          opacity: 0;
-
-          animation:
-            loaderReveal
-            700ms
-            cubic-bezier(.22,1,.36,1)
-            1280ms
-            forwards;
-        }
-
-        .loader-ready-sweep {
-          animation:
-            loaderFinalSweep
-            900ms
-            cubic-bezier(.22,1,.36,1)
-            forwards;
-        }
-
-        @media (
-          prefers-reduced-motion:
-          reduce
-        ) {
-          .loader-line-1,
-          .loader-line-2,
-          .loader-line-3,
-          .loader-line-4 {
-            animation: none !important;
-            opacity: 1 !important;
-            transform: none !important;
-            filter: none !important;
-          }
-
-          .loader-ready-sweep {
-            display: none;
-          }
-        }
-      ` }} />
-
-      {/* Base atmosphere */}
+      {/* Background layer */}
       <div
-        className="
-          absolute inset-0
-          bg-[radial-gradient(ellipse_at_center,rgba(113,22,31,.42)_0%,rgba(55,9,14,.30)_35%,rgba(18,5,6,.97)_74%,#120506_100%)]
-        "
+        ref={solidBgRef}
+        className="absolute inset-0 pointer-events-none transition-opacity duration-700"
+        style={{ backgroundColor }}
       />
 
-      {/* Secondary atmospheric bloom */}
+      {/* Light Slit Beam */}
       <div
-        className="
-          pointer-events-none
-          absolute
-          left-1/2 top-1/2
-
-          h-[42vh]
-          w-[72vw]
-          max-h-[470px]
-          max-w-[900px]
-
-          -translate-x-1/2
-          -translate-y-1/2
-
-          rounded-[50%]
-          bg-[#721621]/25
-
-          blur-[90px]
-          sm:blur-[120px]
-        "
-        style={{
-          animation:
-            'loaderBloom 4.5s ease-in-out infinite',
-        }}
+        ref={lightBeamRef}
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[2px] bg-white pointer-events-none z-10"
+        style={{ width: '0px', opacity: 0 }}
       />
 
-      {/* Opening energy line */}
+      {/* Light Flash Burst */}
       <div
-        className="
-          pointer-events-none
-          absolute
-          left-1/2 top-1/2
+        ref={lightFlashRef}
+        className="absolute inset-0 bg-white pointer-events-none z-10 origin-center"
+        style={{ transform: 'scaleY(0)', opacity: 0 }}
+      />
 
-          z-10
-
-          w-[min(76vw,980px)]
-
-          -translate-x-1/2
-          -translate-y-1/2
-        "
+      {/* Top Bar with Skip Button */}
+      <div
+        ref={topBarRef}
+        className="absolute top-0 left-0 right-0 px-6 sm:px-12 py-5 flex items-center justify-end opacity-0 z-40"
       >
-        <div
-          className="
-            relative
-            h-8
-            origin-center
-          "
-          style={{
-            animation:
-              'loaderOpeningLine 850ms cubic-bezier(.22,1,.36,1) 180ms forwards',
-
-            opacity: 0,
-          }}
-        >
-          <div
-            className="
-              absolute
-              left-0 top-1/2
-
-              h-px w-full
-              -translate-y-1/2
-
-              bg-gradient-to-r
-              from-transparent
-              via-[#D1AD70]
-              to-transparent
-            "
-          />
-
-          <div
-            className="
-              absolute
-              left-0 top-1/2
-
-              h-[4px] w-full
-              -translate-y-1/2
-
-              bg-gradient-to-r
-              from-transparent
-              via-[#A72435]/70
-              to-transparent
-
-              blur-[3px]
-            "
-          />
-        </div>
+        {showSkipButton && canSkip && !isExiting && (
+          <button
+            type="button"
+            onClick={handleSkip}
+            className="group relative inline-flex min-w-32 cursor-pointer items-center justify-center overflow-hidden rounded-full border px-5 py-2 text-xs font-semibold tracking-wider backdrop-blur-sm transition-[border-color,background-color] duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+            style={{
+              borderColor: `${accentColor}80`,
+              backgroundColor: 'rgba(24, 25, 29, 0.65)',
+              color: textColor,
+            }}
+          >
+            <span className="inline-block transition-transform duration-300 group-hover:-translate-x-1">
+              {skipButtonText}
+            </span>
+            <svg
+              className="w-3.5 h-3.5 ml-1.5 transition-transform duration-300 group-hover:translate-x-1"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+            </svg>
+          </button>
+        )}
       </div>
 
-      {/* Main typography lockup */}
+      {/* Center Typography */}
       <div
-        className="
-          relative z-20
-
-          flex w-full
-          flex-col
-          items-center
-
-          px-5
-
-          text-center
-        "
+        ref={typographyRef}
+        className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 sm:px-6 pointer-events-none opacity-0 z-20"
+        style={{ color: textColor }}
       >
-        {/* Main event title */}
-        <div
-          className="
-            relative
-            overflow-hidden
-            px-2
-          "
-        >
-          <h1
-            className="
-              loader-line-1
-              font-serif
-              whitespace-nowrap
-              text-center
-              text-[clamp(1.75rem,5.6vw,6.2rem)]
-              font-bold
-              leading-[0.92]
-              tracking-[-0.04em]
-              text-[#F4EFED]
-            "
-          >
-            <span className="text-[#C64A59]">QISKIT</span> FALL FEST{' '}
-            <span className="ml-[0.14em] text-[#D9CFCC]">2026</span>
-          </h1>
-
-          {/* Final highlight sweep only
-              appears when assets are ready */}
-          {isReady && (
+        {/* Text 1: Tag indicator */}
+        {tagText && (
+          <div className="overflow-hidden mb-3 sm:mb-4">
             <div
-              className="
-                loader-ready-sweep
-                pointer-events-none
-                absolute
-                inset-y-[-30%]
-                w-[32%]
-                bg-gradient-to-r
-                from-transparent
-                via-[#F1C891]/25
-                to-transparent
-                blur-[8px]
-              "
-            />
-          )}
+              ref={tagRef}
+              className="font-mono text-[10px] sm:text-[11px] tracking-[0.35em] sm:tracking-[0.4em] uppercase text-slate-200"
+            >
+              {tagText}
+            </div>
+          </div>
+        )}
+
+        {/* Text 2: Main Title */}
+        <div className="overflow-hidden mb-3 sm:mb-4 py-1 max-w-full">
+          <h1 className="font-serif text-[clamp(1.75rem,5.8vw,5.5rem)] tracking-tight font-black uppercase leading-[1.02] text-white">
+            {titlePart1 && (
+              <span ref={titlePart1Ref} className="inline-block mr-2 sm:mr-4">
+                {titlePart1}
+              </span>
+            )}
+            {titlePart2 && (
+              <span ref={titlePart2Ref} className="inline-block">
+                {titlePart2}
+              </span>
+            )}
+          </h1>
         </div>
 
-        {/* Host */}
-        <div
-          className="
-            loader-line-3
-            mt-[20px] sm:mt-[24px] md:mt-[26px]
-            text-[clamp(.67rem,.85vw,.88rem)]
-            font-semibold
-            uppercase
-            tracking-[0.18em]
-            text-[#ECE5E2]
-          "
-        >
-          SRM University-AP
-          <span
-            className="
-              mx-2
-              text-[#B8ABA7]/70
-            "
-          >
-            ×
-          </span>
-          IBM Quantum
-        </div>
+        {/* Text 3: Subtitle */}
+        {subtitle && (
+          <div className="overflow-hidden mb-3">
+            <div ref={subtitleRef}>
+              <p className="font-mono text-[11px] sm:text-xs md:text-sm tracking-[0.2em] sm:tracking-[0.25em] text-slate-300 uppercase">
+                {subtitle}
+              </p>
+            </div>
+          </div>
+        )}
 
-        {/* Theme line */}
-        <div
-          className="
-            loader-line-4
-            mt-2.5 sm:mt-3
-            text-[clamp(.62rem,.75vw,.8rem)]
-            font-medium
-            uppercase
-            tracking-[0.22em]
-            text-[#C6A163]
-          "
-        >
-          A Decade of Quantum on Cloud
-        </div>
+        {/* Text 4: Tagline */}
+        {tagline && (
+          <div className="overflow-hidden mb-4">
+            <div ref={taglineRef}>
+              <p className="font-serif italic text-xs sm:text-sm md:text-base text-slate-300 tracking-wide">
+                {tagline}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Text 5: Status Readout */}
+        {readoutText && (
+          <div className="overflow-hidden mb-5 sm:mb-6">
+            <div
+              ref={readoutRef}
+              className="font-mono flex items-center justify-center gap-2 sm:gap-2.5 text-[9px] sm:text-[10px] tracking-[0.2em] sm:tracking-[0.25em] text-slate-200"
+            >
+              <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+              <span>{readoutText}</span>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Actual preload progress */}
+      {/* Progress Bar Container */}
       <div
-        className="
-          absolute
-          bottom-9
-          sm:bottom-11
-
-          left-1/2
-          z-30
-
-          h-px
-          w-[min(58vw,310px)]
-
-          -translate-x-1/2
-
-          overflow-hidden
-
-          bg-white/10
-        "
+        ref={loadingContainerRef}
+        className="absolute bottom-12 sm:bottom-16 md:bottom-20 left-1/2 -translate-x-1/2 w-[85vw] max-w-xs sm:max-w-sm flex flex-col items-center opacity-0 z-20"
       >
+        <div className="font-mono w-full flex items-center justify-between mb-2 text-[10px] sm:text-xs tracking-widest text-slate-300 uppercase">
+          <span>{loadingLabel}</span>
+          <span ref={percentTextRef} className="text-white font-semibold tabular-nums">
+            0%
+          </span>
+        </div>
+
         <div
-          className="
-            h-full
-            origin-left
-
-            bg-gradient-to-r
-            from-[#77151F]
-            via-[#D25A68]
-            to-[#C9A261]
-
-            shadow-[0_0_8px_rgba(201,162,97,.5)]
-
-            transition-transform
-            duration-300
-            ease-out
-          "
-          style={{
-            transform: `scaleX(${progress})`,
-          }}
-        />
+          className="w-full h-[3px] rounded-full overflow-hidden border border-white/20 p-[0.5px]"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
+        >
+          <div
+            ref={progressBarRef}
+            className="h-full rounded-full transition-[width] duration-75"
+            style={{
+              width: '0%',
+              background: 'linear-gradient(90deg, #77151F 0%, #D25A68 48%, #C9A261 78%, #E1BD78 100%)',
+              boxShadow: '0 0 8px rgba(201, 162, 97, 0.55), 0 0 14px rgba(201, 162, 97, 0.18)',
+            }}
+          />
+        </div>
       </div>
     </div>
   );
-}
+};
+
+export const LoadingScreen = LoadScreen;
+export default LoadScreen;
