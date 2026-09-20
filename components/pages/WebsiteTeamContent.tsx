@@ -16,6 +16,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { Footer } from '@/components/shared/Footer';
+import { REGISTRATION_URL } from '@/lib/constants';
 
 interface TeamMember {
   name: string;
@@ -540,7 +541,7 @@ export default function WebsiteTeamPage() {
           {/* Action CTAs */}
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 pt-4">
             <a
-              href="https://unstop.com"
+              href={REGISTRATION_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="group inline-flex items-center gap-3 px-8 py-4 rounded-xl text-base font-semibold bg-[#F5F3F0] text-[#3A0B10] hover:bg-white hover:shadow-2xl transition-all duration-300"

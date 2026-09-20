@@ -1,6 +1,7 @@
 import * as React from 'react';
 import Image from 'next/image';
 import { ArrowRight, CalendarDays, MapPin, Play } from 'lucide-react';
+import { REGISTRATION_URL } from '@/lib/constants';
 
 const HERO_ASSETS = {
   backgroundLight: '/hero/HOME-01-HERO-BACKGROUND-LIGHT.png',
@@ -376,7 +377,7 @@ export function HomeHero() {
           >
             {/* Primary Register Button */}
             <a
-              href="https://unstop.com"
+              href={REGISTRATION_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="

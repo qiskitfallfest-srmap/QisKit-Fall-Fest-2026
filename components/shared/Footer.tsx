@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, ArrowUp, Globe2 } from 'lucide-react';
+import { REGISTRATION_URL } from '@/lib/constants';
 
 const LEGAL_DOCUMENTS = {
   privacy: { path: '/documents/privacy-policy.pdf', available: false },
@@ -350,7 +351,7 @@ export function Footer() {
               <div className="reveal-base reveal-actions flex flex-col md:flex-row items-start md:items-center justify-between gap-[20px] md:gap-[36px] lg:gap-[50px] xl:gap-[64px] w-full pt-[18px] lg:pt-[18px] xl:pt-[20px]">
                 <div className="flex items-center w-full sm:w-auto">
                   <a 
-                    href="https://unstop.com" 
+                    href={REGISTRATION_URL} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="group flex-1 sm:flex-none inline-flex items-center justify-center gap-[10px] px-8 lg:px-9 xl:px-10 h-[54px] lg:h-[56px] xl:h-[58px] min-[1920px]:h-[60px] w-full sm:w-[205px] lg:w-[220px] xl:w-[250px] min-[1920px]:w-[270px] bg-gradient-to-r from-[#6C151E] to-[#521018] dark:from-[#3A0B10] dark:to-[#24090C] border border-transparent dark:border-[#521018] text-[#FCF8F2] dark:text-[#F4F4F4] font-semibold tracking-wide uppercase text-[13px] sm:text-[13.5px] rounded-[10px] sm:rounded-[12px] hover:-translate-y-[2px] active:translate-y-0 active:scale-[0.99] hover:shadow-[0_10px_28px_rgba(108,21,30,0.25)] dark:hover:shadow-[0_10px_30px_rgba(180,40,58,0.18)] hover:from-[#7c1822] hover:to-[#5e131b] dark:hover:from-[#4a0e14] dark:hover:to-[#310c11] transition-all duration-240 ease-[cubic-bezier(0.22,1,0.36,1)] relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#6C151E] focus:ring-offset-2 dark:focus:ring-offset-[#120506]"

@@ -29,7 +29,7 @@ export const ROUTE_RELEASE_CONFIG: Record<string, RouteConfig> = {
   about: {
     path: '/about',
     name: 'About',
-    status: 'coming-soon',
+    status: 'live',
     title: 'About | Qiskit Fall Fest 2026',
     description: 'Learn about the mission, partnership, and vision behind Qiskit Fall Fest 2026 at SRM University-AP.',
   },
