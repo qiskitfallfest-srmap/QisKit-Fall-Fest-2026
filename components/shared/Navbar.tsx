@@ -23,12 +23,12 @@ const NAV_LINKS = [
 
 export function Navbar() {
   const pathname = usePathname();
-  const { theme, setTheme, systemTheme } = useTheme();
+  const { theme, setTheme, resolvedTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const headerRef = React.useRef<HTMLElement>(null);
   const progressBarRef = React.useRef<HTMLDivElement>(null);
 
-  const activeTheme = theme === 'system' ? systemTheme : theme;
+  const activeTheme = resolvedTheme || theme;
 
   // Scroll-progress line handler (uses RAF and direct transform scaleX, no React re-renders)
   React.useEffect(() => {
@@ -236,7 +236,7 @@ export function Navbar() {
           {/* SRM Logo */}
           <div className="relative h-[56px] w-[140px] shrink-0">
             <Image
-              src="/images/branding/srm-ap-logo-horizontal-backgroundless.png"
+              src="/brand/srmap/SRMAP-Logo-Main.png"
               alt="SRM University-AP"
               width={140}
               height={56}

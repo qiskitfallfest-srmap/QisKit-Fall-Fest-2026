@@ -1,21 +1,18 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import { ROUTE_RELEASE_CONFIG, isRouteLive } from '@/config/page-release';
 import { ComingSoonPage } from '@/components/shared/ComingSoonPage';
-import ExperiencePageContent from '@/components/pages/ExperiencePageContent';
 
-const config = ROUTE_RELEASE_CONFIG['experience'];
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://qffsrmap2026.com';
 
 export const metadata: Metadata = {
-  title: config.title,
-  description: config.description,
+  title: 'Experience | Qiskit Fall Fest 2026',
+  description: 'The Qiskit Fall Fest 2026 experience is being prepared.',
+  alternates: {
+    canonical: `${baseUrl}/experience`,
+  },
 };
 
 export default function ExperiencePage() {
-  if (isRouteLive('experience')) {
-    return <ExperiencePageContent />;
-  }
-
   return (
     <ComingSoonPage
       pageTitle="Experience"
