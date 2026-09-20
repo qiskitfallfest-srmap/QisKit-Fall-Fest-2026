@@ -4,6 +4,7 @@ import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { REGISTRATION_URL } from '@/lib/constants';
 
 const ONLINE_PHASE_START = new Date('2026-10-05T00:00:00+05:30').getTime();
 
@@ -193,7 +194,7 @@ export function CountdownSection() {
             </div>
 
             <Link
-              href="https://unstop.com"
+              href={REGISTRATION_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="
