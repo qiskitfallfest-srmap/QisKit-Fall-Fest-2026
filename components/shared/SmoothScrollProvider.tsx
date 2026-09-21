@@ -5,12 +5,38 @@ import { usePathname } from 'next/navigation';
 import Lenis from 'lenis';
 import 'lenis/dist/lenis.css';
 
+interface SmoothScrollContextValue {
+  lenis: Lenis | null;
+  scrollTo: (
+    target: string | HTMLElement | number,
+    options?: {
+      offset?: number;
+      duration?: number;
+      easing?: (t: number) => number;
+      immediate?: boolean;
+      lock?: boolean;
+      force?: boolean;
+      onComplete?: () => void;
+    }
+  ) => void;
+}
+
+const SmoothScrollContext = React.createContext<SmoothScrollContextValue>({
+  lenis: null,
+  scrollTo: () => {},
+});
+
+export function useSmoothScroll(): SmoothScrollContextValue {
+  return React.useContext(SmoothScrollContext);
+}
+
 interface SmoothScrollProviderProps {
   children: React.ReactNode;
 }
 
 export function SmoothScrollProvider({ children }: SmoothScrollProviderProps) {
   const pathname = usePathname();
+  const [lenisInstance, setLenisInstance] = React.useState<Lenis | null>(null);
   const lenisRef = React.useRef<Lenis | null>(null);
 
   React.useEffect(() => {
@@ -32,6 +58,7 @@ export function SmoothScrollProvider({ children }: SmoothScrollProviderProps) {
     });
 
     lenisRef.current = lenis;
+    setLenisInstance(lenis);
 
     let rafId: number;
     const raf = (time: number) => {
@@ -68,6 +95,7 @@ export function SmoothScrollProvider({ children }: SmoothScrollProviderProps) {
       cancelAnimationFrame(rafId);
       lenis.destroy();
       lenisRef.current = null;
+      setLenisInstance(null);
     };
   }, []);
 
@@ -80,5 +108,51 @@ export function SmoothScrollProvider({ children }: SmoothScrollProviderProps) {
     }
   }, [pathname]);
 
-  return <>{children}</>;
+  const scrollTo = React.useCallback(
+    (
+      target: string | HTMLElement | number,
+      options?: {
+        offset?: number;
+        duration?: number;
+        easing?: (t: number) => number;
+        immediate?: boolean;
+        lock?: boolean;
+        force?: boolean;
+        onComplete?: () => void;
+      }
+    ) => {
+      if (lenisRef.current) {
+        lenisRef.current.scrollTo(target, options);
+      } else if (typeof window !== 'undefined') {
+        if (typeof target === 'number') {
+          window.scrollTo({ top: target, behavior: options?.immediate ? 'auto' : 'smooth' });
+        } else if (typeof target === 'string') {
+          const el = document.querySelector(target);
+          if (el) {
+            const top = (el as HTMLElement).offsetTop + (options?.offset || 0);
+            window.scrollTo({ top, behavior: options?.immediate ? 'auto' : 'smooth' });
+          }
+        } else if (target instanceof HTMLElement) {
+          const top = target.offsetTop + (options?.offset || 0);
+          window.scrollTo({ top, behavior: options?.immediate ? 'auto' : 'smooth' });
+        }
+      }
+    },
+    []
+  );
+
+  const contextValue = React.useMemo(
+    () => ({
+      lenis: lenisInstance,
+      scrollTo,
+    }),
+    [lenisInstance, scrollTo]
+  );
+
+  return (
+    <SmoothScrollContext.Provider value={contextValue}>
+      {children}
+    </SmoothScrollContext.Provider>
+  );
 }
+

@@ -2,11 +2,7 @@ import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-
-const HOSTED_AT_ASSETS = {
-  backgroundLight: '/HOME-07-HOSTED-AT-BACKGROUND-LIGHT.png',
-  backgroundDark: '/HOME-07-HOSTED-AT-BACKGROUND-DARK.png',
-};
+import { ResponsivePicture } from '@/components/shared/ResponsivePicture';
 
 export function HostedAtSection() {
   return (
@@ -16,6 +12,8 @@ export function HostedAtSection() {
       className="
         relative isolate w-full overflow-hidden
         bg-[#F5F0EA] dark:bg-[#0D0909]
+        min-h-[calc(100svh-var(--navbar-height,80px))]
+        flex flex-col justify-center
         transition-colors duration-300
       "
     >
@@ -26,78 +24,54 @@ export function HostedAtSection() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 z-0 select-none overflow-hidden"
       >
-        <Image
-          src={HOSTED_AT_ASSETS.backgroundLight}
-          alt=""
+        <ResponsivePicture
+          page="home"
+          index={3}
+          alt="SRM University-AP Campus Visual"
           fill
-          priority={false}
-          sizes="100vw"
-          className="
-            object-cover
-            object-[32%_center] sm:object-[42%_center] lg:object-center
-            dark:hidden
-          "
         />
-        <Image
-          src={HOSTED_AT_ASSETS.backgroundDark}
-          alt=""
-          fill
-          priority={false}
-          sizes="100vw"
+
+        {/* Desktop & Tablet Soft Readability Gradient Protecting Left Editorial Region */}
+        <div
+          aria-hidden="true"
           className="
-            hidden object-cover
-            object-[32%_center] sm:object-[42%_center] lg:object-center
-            dark:block
+            hidden sm:block pointer-events-none absolute inset-0 z-[1]
+            bg-[linear-gradient(90deg,rgba(245,240,234,0.92)_0%,rgba(245,240,234,0.72)_36%,rgba(245,240,234,0.20)_52%,transparent_66%)]
+            dark:bg-[linear-gradient(90deg,rgba(13,9,9,0.95)_0%,rgba(13,9,9,0.82)_36%,rgba(13,9,9,0.30)_52%,transparent_66%)]
           "
         />
 
-        {/* Subtle mobile overlay to protect right-side/bottom copy readability */}
+        {/* Mobile Readability Gradient */}
         <div
+          aria-hidden="true"
           className="
-            absolute inset-0 sm:hidden
-            bg-gradient-to-t from-[#F5F0EA]/95 via-[#F5F0EA]/60 to-transparent
-            dark:from-[#0D0909]/95 dark:via-[#0D0909]/60 dark:to-transparent
+            sm:hidden pointer-events-none absolute inset-0 z-[1]
+            bg-gradient-to-t from-[#F5F0EA] via-[#F5F0EA]/85 to-transparent
+            dark:from-[#0D0909] dark:via-[#0D0909]/85 dark:to-transparent
           "
         />
       </div>
 
       {/* =========================================================
-          CONTENT CONTAINER (58% Campus Artwork / 42% Editorial Grid)
+          CONTENT CONTAINER (46% Editorial Grid / 54% Campus Artwork)
       ========================================================== */}
       <div
         className="
           relative z-10 w-full max-w-[1920px] mx-auto
           px-5 sm:px-8 md:px-12 lg:px-16 xl:px-[70px] 2xl:px-[82px] min-[1920px]:px-[96px]
-          py-10 sm:py-12 md:py-14
-          lg:py-0 lg:h-[320px] xl:h-[340px] 2xl:h-[360px] min-[1920px]:h-[370px]
-          flex flex-col justify-end
-          lg:grid lg:grid-cols-[58%_42%] lg:items-center
+          py-12 sm:py-16 md:py-20 lg:py-24
+          min-h-[calc(100svh-var(--navbar-height,80px))]
+          flex flex-col justify-center
+          lg:grid lg:grid-cols-[46%_54%] lg:items-center
         "
       >
-        {/* Left Column Spacer for desktop (allows background campus visual to breathe) */}
-        <div aria-hidden="true" className="hidden lg:block h-full w-full pointer-events-none" />
-
-        {/* Right Editorial Block */}
+        {/* Left Editorial Block */}
         <div
           className="
             relative z-10 w-full max-w-[430px]
             lg:justify-self-start
-            lg:pl-[clamp(28px,4vw,72px)]
           "
         >
-          {/* Vertical Structural Marker (Desktop) */}
-          <div
-            aria-hidden="true"
-            className="
-              hidden lg:flex flex-col items-center
-              absolute -left-3.5 xl:-left-4 2xl:-left-5 top-1 bottom-3 w-[1px]
-              bg-[rgba(143,23,35,0.72)] dark:bg-[rgba(239,116,129,0.72)]
-              pointer-events-none select-none
-            "
-          >
-            <span className="w-[4px] h-[4px] rounded-full bg-[#8F1723] dark:bg-[#EF7481] -translate-y-1/2" />
-          </div>
-
           {/* Eyebrow */}
           <div className="flex items-center gap-[10px] mb-2 sm:mb-2.5">
             <span
@@ -162,6 +136,9 @@ export function HostedAtSection() {
             </Link>
           </div>
         </div>
+
+        {/* Right Column Spacer for desktop (allows background campus visual & SRM monument to breathe) */}
+        <div aria-hidden="true" className="hidden lg:block h-full w-full pointer-events-none" />
       </div>
     </section>
   );

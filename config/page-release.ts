@@ -36,14 +36,14 @@ export const ROUTE_RELEASE_CONFIG: Record<string, RouteConfig> = {
   experience: {
     path: '/experience',
     name: 'Experience',
-    status: 'coming-soon',
+    status: 'live',
     title: 'Experience | Qiskit Fall Fest 2026',
     description: 'Immersive quantum computing workshops, hackathons, and technical tracks.',
   },
   schedule: {
     path: '/schedule',
     name: 'Schedule',
-    status: 'coming-soon',
+    status: 'live',
     title: 'Schedule | Qiskit Fall Fest 2026',
     description: 'Detailed event timeline, speaker tracks, keynotes, and hackathon schedules.',
   },
@@ -57,7 +57,7 @@ export const ROUTE_RELEASE_CONFIG: Record<string, RouteConfig> = {
   team: {
     path: '/team',
     name: 'Team',
-    status: 'coming-soon',
+    status: 'live',
     title: 'Team | Qiskit Fall Fest 2026',
     description: 'Meet the organizing committee and student leadership behind Qiskit Fall Fest 2026.',
   },

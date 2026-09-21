@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, ArrowUp, Globe2 } from 'lucide-react';
 import { REGISTRATION_URL } from '@/lib/constants';
+import SingularityHorizon from '@/components/ui/singularity-horizon';
 
 const LEGAL_DOCUMENTS = {
   privacy: { path: '/documents/privacy-policy.pdf', available: false },
@@ -21,42 +22,6 @@ const FOOTER_LINKS = [
   { label: 'Team', href: '/team' },
   { label: 'FAQs', href: '/faqs' }
 ];
-
-function FooterGlobeArtwork() {
-  return (
-    <div className="relative w-full h-full flex items-center justify-center animate-[spin_26s_linear_infinite]">
-      <svg viewBox="0 0 400 400" className="w-[120%] h-[120%] max-w-none -ml-[10%] -mt-[10%]" aria-hidden="true" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Orbital paths */}
-        <ellipse cx="200" cy="200" rx="180" ry="70" transform="rotate(30 200 200)" className="stroke-[#A82334] dark:stroke-[#C9364D] opacity-60" strokeWidth="1" strokeDasharray="4 6" />
-        <ellipse cx="200" cy="200" rx="180" ry="70" transform="rotate(-30 200 200)" className="stroke-[#A82334] dark:stroke-[#C9364D] opacity-60" strokeWidth="1" strokeDasharray="4 6" />
-        <ellipse cx="200" cy="200" rx="180" ry="70" transform="rotate(90 200 200)" className="stroke-[#A82334] dark:stroke-[#C9364D] opacity-40" strokeWidth="1" strokeDasharray="4 6" />
-        <circle cx="200" cy="200" r="130" className="stroke-[#A82334] dark:stroke-[#C9364D] opacity-40" strokeWidth="1" />
-        
-        {/* Dotted Globe */}
-        <g className="fill-[#AA2033] dark:fill-[#D5465A] opacity-70">
-          {Array.from({ length: 16 }).map((_, i) => 
-            Array.from({ length: 16 }).map((_, j) => {
-              const x = 50 + i * 20;
-              const y = 50 + j * 20;
-              const dist = Math.sqrt(Math.pow(x - 200, 2) + Math.pow(y - 200, 2));
-              if (dist < 125 && dist > 20) {
-                const size = 1.5 + (125 - dist) / 60;
-                return <circle key={`${i}-${j}`} cx={x} cy={y} r={size} />
-              }
-              return null;
-            })
-          )}
-        </g>
-        
-        {/* Nodes */}
-        <circle cx="260" cy="130" r="4" className="fill-[#7A1321] dark:fill-[#F1A0AA]" />
-        <circle cx="140" cy="270" r="4" className="fill-[#7A1321] dark:fill-[#F1A0AA]" />
-        <circle cx="350" cy="280" r="3" className="fill-[#7A1321] dark:fill-[#F1A0AA]" />
-        <circle cx="50" cy="120" r="3" className="fill-[#7A1321] dark:fill-[#F1A0AA]" />
-      </svg>
-    </div>
-  );
-}
 
 export function Footer() {
   const [isVisible, setIsVisible] = useState(false);
@@ -172,10 +137,10 @@ export function Footer() {
         <div className="mx-auto w-full max-w-[1920px] px-[20px] min-[480px]:px-[24px] sm:px-[28px] md:px-[36px] lg:px-[44px] xl:px-[52px] 2xl:px-[64px] min-[1920px]:px-[72px] pt-[42px] sm:pt-[46px] md:pt-[50px] lg:pt-[50px] xl:pt-[52px] 2xl:pt-[56px] min-[1920px]:pt-[56px] pb-[24px] sm:pb-[24px] md:pb-[24px] lg:pb-[24px] xl:pb-[24px] 2xl:pb-[28px]">
           
           {/* Main Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1.12fr)_minmax(210px,0.88fr)] xl:grid-cols-[minmax(360px,1.05fr)_minmax(175px,0.42fr)_minmax(560px,1.48fr)] gap-y-[30px] sm:gap-y-[34px] xl:gap-y-0 gap-x-8 xl:gap-x-[32px] 2xl:gap-x-[38px] min-[1920px]:gap-x-[44px]">
+          <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1.12fr)_minmax(210px,0.88fr)] xl:grid-cols-[minmax(420px,1.05fr)_minmax(180px,0.42fr)_minmax(520px,1.15fr)] gap-y-[30px] sm:gap-y-[34px] xl:gap-y-0 gap-x-8 xl:gap-x-[32px] 2xl:gap-x-[38px] min-[1920px]:gap-x-[44px] items-start">
             
             {/* Zone 1: Brand / Host / Partners */}
-            <div className="reveal-base reveal-brand flex flex-col items-start relative space-y-[22px] sm:space-y-[22px] lg:space-y-[24px] 2xl:space-y-[26px]">
+            <div className="reveal-base reveal-brand flex flex-col items-start relative space-y-[20px] lg:space-y-[22px] xl:space-y-[22px] 2xl:space-y-[24px]">
               
               {/* Top Row: Badge + Event Title */}
               <div className="flex flex-row items-center gap-[18px] sm:gap-5 xl:gap-6">
@@ -201,7 +166,7 @@ export function Footer() {
                 target="_blank" 
                 rel="noopener noreferrer" 
                 aria-label="Visit SRM University-AP"
-                className="group flex items-center gap-[14px] lg:gap-[16px] hover:-translate-y-[1px] transition-transform duration-220 ease-[cubic-bezier(0.22,1,0.36,1)] mt-1"
+                className="group flex items-center gap-[14px] lg:gap-[16px] hover:-translate-y-[1px] transition-transform duration-220 ease-[cubic-bezier(0.22,1,0.36,1)]"
               >
                 <div className="relative w-[44px] h-[44px] sm:w-[46px] sm:h-[46px] lg:w-[48px] lg:h-[48px] xl:w-[50px] xl:h-[50px] min-[1920px]:w-[52px] min-[1920px]:h-[52px] flex-shrink-0 transition-transform duration-220 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]">
                   <Image 
@@ -218,7 +183,7 @@ export function Footer() {
               </a>
 
               {/* Third & Fourth Rows: Labels */}
-              <div className="space-y-[5px] pt-1">
+              <div className="space-y-[5px]">
                 <div className="text-[#771421] dark:text-[#D3A55D] font-semibold text-[11px] sm:text-[11.5px] lg:text-[12px] xl:text-[12.5px] min-[1920px]:text-[13px] tracking-[0.2em] uppercase">
                   Partner Plus Host
                 </div>
@@ -228,23 +193,35 @@ export function Footer() {
               </div>
 
               {/* Bottom Row: IBM + Qiskit */}
-              <div className="flex items-center gap-[16px] sm:gap-[20px] lg:gap-[22px] xl:gap-[24px] pt-1 sm:pt-2">
+              <div className="flex items-center justify-start gap-[20px] lg:gap-[22px] xl:gap-[24px]">
                 {/* IBM Quantum */}
                 <div className="flex-shrink-0">
-                  {/* Light Theme: Dark SVG */}
-                  <div className="dark:hidden h-[28px] w-[140px] sm:h-[31px] sm:w-[154px] lg:h-[33px] lg:w-[166px] xl:h-[37px] xl:w-[184px] min-[1920px]:h-[39px] min-[1920px]:w-[194px] relative">
-                    <svg viewBox="0 0 220 44" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full"><g fill="#161616"><rect x="0" y="8" width="14" height="2.5"/><rect x="0" y="11.5" width="14" height="2.5"/><rect x="0" y="15" width="14" height="2.5"/><rect x="0" y="18.5" width="14" height="2.5"/><rect x="0" y="22" width="14" height="2.5"/><rect x="0" y="25.5" width="14" height="2.5"/><rect x="0" y="29" width="14" height="2.5"/><rect x="0" y="32.5" width="14" height="2.5"/><rect x="20" y="8" width="22" height="2.5"/><rect x="20" y="11.5" width="24" height="2.5"/><rect x="20" y="15" width="10" height="2.5"/><rect x="34" y="15" width="10" height="2.5"/><rect x="20" y="18.5" width="22" height="2.5"/><rect x="20" y="22" width="24" height="2.5"/><rect x="20" y="25.5" width="10" height="2.5"/><rect x="34" y="25.5" width="10" height="2.5"/><rect x="20" y="29" width="24" height="2.5"/><rect x="20" y="32.5" width="22" height="2.5"/><rect x="50" y="8" width="8" height="2.5"/><rect x="70" y="8" width="8" height="2.5"/><rect x="50" y="11.5" width="11" height="2.5"/><rect x="67" y="11.5" width="11" height="2.5"/><rect x="50" y="15" width="14" height="2.5"/><rect x="64" y="15" width="14" height="2.5"/><rect x="50" y="18.5" width="17" height="2.5"/><rect x="61" y="18.5" width="17" height="2.5"/><rect x="50" y="22" width="10" height="2.5"/><rect x="68" y="22" width="10" height="2.5"/><rect x="50" y="25.5" width="8" height="2.5"/><rect x="70" y="25.5" width="8" height="2.5"/><rect x="50" y="29" width="8" height="2.5"/><rect x="70" y="29" width="8" height="2.5"/><rect x="50" y="32.5" width="8" height="2.5"/><rect x="70" y="32.5" width="8" height="2.5"/></g><text x="92" y="28" fill="#161616" fontFamily="'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" fontSize="18" fontWeight="300" letterSpacing="0.5">Quantum</text></svg>
+                  {/* Light Theme: Dark Positive Logotype with -ml compensation for internal transparent whitespace */}
+                  <div className="dark:hidden h-[68px] w-[188px] sm:h-[74px] sm:w-[205px] lg:h-[80px] lg:w-[222px] xl:h-[86px] xl:w-[240px] min-[1920px]:h-[92px] min-[1920px]:w-[254px] -ml-[28px] sm:-ml-[30px] xl:-ml-[32px] -my-[22px] sm:-my-[24px] lg:-my-[26px] xl:-my-[28px] relative flex items-center">
+                    <Image
+                      src="/images/branding/IBM_Quantum_logotype_pos_RGB.png"
+                      alt="IBM Quantum"
+                      fill
+                      className="object-contain object-left select-none"
+                      referrerPolicy="no-referrer"
+                    />
                   </div>
-                  {/* Dark Theme: Light SVG */}
-                  <div className="hidden dark:block h-[28px] w-[140px] sm:h-[31px] sm:w-[154px] lg:h-[33px] lg:w-[166px] xl:h-[37px] xl:w-[184px] min-[1920px]:h-[39px] min-[1920px]:w-[194px] relative">
-                    <svg viewBox="0 0 220 44" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full"><g fill="#F4F4F4"><rect x="0" y="8" width="14" height="2.5"/><rect x="0" y="11.5" width="14" height="2.5"/><rect x="0" y="15" width="14" height="2.5"/><rect x="0" y="18.5" width="14" height="2.5"/><rect x="0" y="22" width="14" height="2.5"/><rect x="0" y="25.5" width="14" height="2.5"/><rect x="0" y="29" width="14" height="2.5"/><rect x="0" y="32.5" width="14" height="2.5"/><rect x="20" y="8" width="22" height="2.5"/><rect x="20" y="11.5" width="24" height="2.5"/><rect x="20" y="15" width="10" height="2.5"/><rect x="34" y="15" width="10" height="2.5"/><rect x="20" y="18.5" width="22" height="2.5"/><rect x="20" y="22" width="24" height="2.5"/><rect x="20" y="25.5" width="10" height="2.5"/><rect x="34" y="25.5" width="10" height="2.5"/><rect x="20" y="29" width="24" height="2.5"/><rect x="20" y="32.5" width="22" height="2.5"/><rect x="50" y="8" width="8" height="2.5"/><rect x="70" y="8" width="8" height="2.5"/><rect x="50" y="11.5" width="11" height="2.5"/><rect x="67" y="11.5" width="11" height="2.5"/><rect x="50" y="15" width="14" height="2.5"/><rect x="64" y="15" width="14" height="2.5"/><rect x="50" y="18.5" width="17" height="2.5"/><rect x="61" y="18.5" width="17" height="2.5"/><rect x="50" y="22" width="10" height="2.5"/><rect x="68" y="22" width="10" height="2.5"/><rect x="50" y="25.5" width="8" height="2.5"/><rect x="70" y="25.5" width="8" height="2.5"/><rect x="50" y="29" width="8" height="2.5"/><rect x="70" y="29" width="8" height="2.5"/><rect x="50" y="32.5" width="8" height="2.5"/><rect x="70" y="32.5" width="8" height="2.5"/></g><text x="92" y="28" fill="#F4F4F4" fontFamily="'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" fontSize="18" fontWeight="300" letterSpacing="0.5">Quantum</text></svg>
+                  {/* Dark Theme: Light Reverse Logotype */}
+                  <div className="hidden dark:block h-[24px] w-[130px] sm:h-[26px] sm:w-[142px] lg:h-[28px] lg:w-[154px] xl:h-[30px] xl:w-[166px] min-[1920px]:h-[32px] min-[1920px]:w-[176px] relative">
+                    <Image
+                      src="/images/branding/IBM_Quantum_logotype_rev_RGB.png"
+                      alt="IBM Quantum"
+                      fill
+                      className="object-contain object-left select-none"
+                      referrerPolicy="no-referrer"
+                    />
                   </div>
                 </div>
                 
-                <div className="w-[1px] h-[34px] sm:h-[36px] lg:h-[38px] xl:h-[40px] bg-[#6C151E]/20 dark:bg-[#6C151E]/50"></div>
+                <div className="w-[1px] h-[34px] sm:h-[36px] lg:h-[38px] xl:h-[38px] bg-[#6C151E]/20 dark:bg-[#6C151E]/50"></div>
 
                 {/* Qiskit Logo & Text */}
-                <div className="flex items-center gap-[8px] sm:gap-[10px]">
+                <div className="flex items-center gap-[9px] sm:gap-[10px]">
                   <div className="relative h-[29px] w-[29px] sm:h-[31px] sm:w-[31px] lg:h-[33px] lg:w-[33px] xl:h-[36px] xl:w-[36px] min-[1920px]:h-[38px] min-[1920px]:w-[38px]">
                     {/* Light Theme: Dark Qiskit Mark */}
                     <Image 
@@ -268,17 +245,14 @@ export function Footer() {
                   </span>
                 </div>
               </div>
-
-              {/* Separator - Desktop only */}
-              <div className="reveal-sep-1 hidden xl:block absolute right-0 top-0 bottom-0 w-[1px] bg-[#6C151E]/15 dark:bg-[#6C151E]/30 translate-x-4 2xl:translate-x-5"></div>
             </div>
 
             {/* Zone 2: Event Navigation */}
-            <div className="reveal-base reveal-nav flex flex-col space-y-[18px] sm:space-y-[20px] xl:space-y-[21px] relative xl:pl-4 2xl:pl-5">
+            <div className="reveal-base reveal-nav flex flex-col items-start space-y-[18px] relative xl:pl-2 2xl:pl-3">
               <h4 className="text-[11.5px] sm:text-[12px] lg:text-[12.5px] xl:text-[13px] min-[1920px]:text-[13.5px] font-semibold tracking-[0.17em] uppercase text-[#771421] dark:text-[#D4A75F]">
                 EVENT
               </h4>
-              <ul className="grid grid-cols-2 xl:grid-cols-1 gap-y-[15px] sm:gap-y-[16px] lg:gap-y-[17px] gap-x-6 sm:gap-x-8 text-[15px] sm:text-[15.5px] lg:text-[16px] xl:text-[17px] min-[1920px]:text-[17.5px] font-medium">
+              <ul className="grid grid-cols-2 xl:grid-cols-1 gap-y-[16px] sm:gap-y-[16px] lg:gap-y-[17px] gap-x-6 sm:gap-x-8 text-[15px] sm:text-[15.5px] lg:text-[16px] xl:text-[16.5px] min-[1920px]:text-[17px] font-medium">
                 {FOOTER_LINKS.map((link) => (
                   <li key={link.href}>
                     <Link href={link.href} className="group relative inline-flex items-center text-[#1E1918] dark:text-[#F1ECEB] hover:text-[#781421] dark:hover:text-[#D9A75D] transition-colors duration-200">
@@ -288,73 +262,28 @@ export function Footer() {
                   </li>
                 ))}
               </ul>
-
-              {/* Separator - Desktop only */}
-              <div className="reveal-sep-2 hidden xl:block absolute right-0 top-0 bottom-0 w-[1px] bg-[#6C151E]/15 dark:bg-[#6C151E]/30 translate-x-4 2xl:translate-x-5"></div>
             </div>
 
-            {/* Zone 3: CTA & Socials */}
-            <div className="sm:col-span-2 xl:col-span-1 flex flex-col xl:pl-4 2xl:pl-5">
+            {/* Zone 3: Singularity Horizon & Actions */}
+            <div className="sm:col-span-2 xl:col-span-1 flex flex-col xl:pl-2 2xl:pl-3">
               
-              {/* CTA Card */}
-              {/* Mobile CTA (<640px) */}
-              <div className="sm:hidden reveal-base reveal-cta relative w-full overflow-hidden rounded-[16px] border border-[#D5C2C0] dark:border-[#4B1017] bg-[#FDF4EF] dark:bg-[#1B0609] min-h-[250px] p-[22px] flex flex-col justify-between transition-colors">
-                
-                {/* Top Content Zone */}
-                <div className="flex flex-col z-20 w-full text-left relative">
-                  <div className="text-[10.5px] font-semibold tracking-[0.17em] uppercase text-[#771421] dark:text-[#D5A557] mb-[12px]">
-                    EXPLORE THE FESTIVAL
-                  </div>
-                  <h3 className="font-serif font-bold text-[30px] leading-[1.02] text-[#171313] dark:text-[#F6F2F1] mb-[14px]">
-                    Everything in<br/>One Place.
-                  </h3>
-                  <p className="max-w-[250px] text-[13.5px] leading-[1.58] text-[#4A4442] dark:text-[#E3DAD8]">
-                    Find the schedule, venues, experiences, team, FAQs, and event information for Qiskit Fall Fest 2026 at SRM University-AP.
-                  </p>
-                </div>
-                
-                {/* Decorative Globe at lower-right */}
-                <div 
-                  className="absolute right-[14px] bottom-[10px] w-[112px] h-[112px] opacity-[0.16] dark:opacity-[0.25] pointer-events-none z-10"
-                  aria-hidden="true"
-                >
-                  <FooterGlobeArtwork />
-                </div>
-              </div>
-
-              {/* Tablet/Laptop/Desktop CTA (>=640px) */}
-              <div className="hidden sm:grid reveal-base reveal-cta relative w-full overflow-hidden rounded-[16px] border border-[#D5C2C0] dark:border-[#4B1017] bg-[#FDF4EF] dark:bg-[#1B0609] min-h-[220px] lg:min-h-[230px] xl:min-h-[242px] min-[1920px]:min-h-[248px] p-[24px] md:p-[26px] lg:p-[28px] xl:p-[30px] min-[1920px]:p-[32px] grid-cols-[minmax(260px,1.15fr)_minmax(145px,0.70fr)] lg:grid-cols-[minmax(300px,1.15fr)_minmax(185px,0.70fr)] xl:grid-cols-[minmax(300px,1.15fr)_minmax(190px,0.70fr)] items-center gap-x-[16px] lg:gap-x-[20px] xl:gap-x-[24px] transition-colors">
-                
-                {/* TEXT Area */}
-                <div className="flex flex-col z-20 w-full text-left">
-                  <div className="text-[11.5px] font-semibold tracking-[0.17em] uppercase text-[#771421] dark:text-[#D5A557] mb-[12px] lg:mb-[13px] xl:mb-[14px]">
-                    EXPLORE THE FESTIVAL
-                  </div>
-                  <h3 className="font-serif font-bold text-[34px] lg:text-[40px] xl:text-[44px] min-[1920px]:text-[44px] leading-[1.02] text-[#171313] dark:text-[#F6F2F1] mb-[14px] lg:mb-[15px] xl:mb-[16px]">
-                    Everything in<br/>One Place.
-                  </h3>
-                  <p className="max-w-[280px] md:max-w-[300px] lg:max-w-[340px] xl:max-w-[380px] min-[1920px]:max-w-[410px] text-[14px] lg:text-[14.5px] xl:text-[15px] min-[1920px]:text-[15px] leading-[1.58] text-[#4A4442] dark:text-[#E3DAD8]">
-                    Find the schedule, venues, experiences, team, FAQs, and event information for Qiskit Fall Fest 2026 at SRM University-AP.
-                  </p>
-                </div>
-
-                {/* GLOBE Area */}
-                <div 
-                  className="relative z-10 w-[145px] h-[145px] md:w-[160px] md:h-[160px] lg:w-[185px] lg:h-[185px] xl:w-[210px] xl:h-[210px] min-[1920px]:w-[220px] min-[1920px]:h-[220px] flex items-center justify-end opacity-[0.42] dark:opacity-[0.58] pointer-events-none ml-auto"
-                  aria-hidden="true"
-                >
-                   <FooterGlobeArtwork />
-                </div>
+              {/* Singularity Horizon Accretion Disk */}
+              <div className="reveal-base reveal-cta relative w-full h-[220px] sm:h-[230px] md:h-[240px] lg:h-[245px] xl:h-[250px] 2xl:h-[260px] min-[1920px]:h-[270px] flex items-center justify-center overflow-hidden">
+                <SingularityHorizon
+                  height="100%"
+                  hud={true}
+                  className="w-full h-full"
+                />
               </div>
 
               {/* Bottom Row: Register Now + Socials */}
-              <div className="reveal-base reveal-actions flex flex-col md:flex-row items-start md:items-center justify-between gap-[20px] md:gap-[36px] lg:gap-[50px] xl:gap-[64px] w-full pt-[18px] lg:pt-[18px] xl:pt-[20px]">
+              <div className="reveal-base reveal-actions flex flex-col md:flex-row items-start md:items-center justify-between gap-[16px] md:gap-[24px] lg:gap-[30px] xl:gap-[36px] w-full pt-[12px] lg:pt-[14px] xl:pt-[16px]">
                 <div className="flex items-center w-full sm:w-auto">
                   <a 
                     href={REGISTRATION_URL} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="group flex-1 sm:flex-none inline-flex items-center justify-center gap-[10px] px-8 lg:px-9 xl:px-10 h-[54px] lg:h-[56px] xl:h-[58px] min-[1920px]:h-[60px] w-full sm:w-[205px] lg:w-[220px] xl:w-[250px] min-[1920px]:w-[270px] bg-gradient-to-r from-[#6C151E] to-[#521018] dark:from-[#3A0B10] dark:to-[#24090C] border border-transparent dark:border-[#521018] text-[#FCF8F2] dark:text-[#F4F4F4] font-semibold tracking-wide uppercase text-[13px] sm:text-[13.5px] rounded-[10px] sm:rounded-[12px] hover:-translate-y-[2px] active:translate-y-0 active:scale-[0.99] hover:shadow-[0_10px_28px_rgba(108,21,30,0.25)] dark:hover:shadow-[0_10px_30px_rgba(180,40,58,0.18)] hover:from-[#7c1822] hover:to-[#5e131b] dark:hover:from-[#4a0e14] dark:hover:to-[#310c11] transition-all duration-240 ease-[cubic-bezier(0.22,1,0.36,1)] relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#6C151E] focus:ring-offset-2 dark:focus:ring-offset-[#120506]"
+                    className="group flex-1 sm:flex-none inline-flex items-center justify-center gap-[10px] px-8 lg:px-9 xl:px-10 h-[54px] lg:h-[54px] xl:h-[54px] min-[1920px]:h-[54px] w-full sm:w-[205px] lg:w-[220px] xl:w-[240px] min-[1920px]:w-[240px] bg-gradient-to-r from-[#6C151E] to-[#521018] dark:from-[#3A0B10] dark:to-[#24090C] border border-transparent dark:border-[#521018] text-[#FCF8F2] dark:text-[#F4F4F4] font-semibold tracking-wide uppercase text-[13px] sm:text-[13.5px] rounded-[10px] sm:rounded-[12px] hover:-translate-y-[2px] active:translate-y-0 active:scale-[0.99] hover:shadow-[0_10px_28px_rgba(108,21,30,0.25)] dark:hover:shadow-[0_10px_30px_rgba(180,40,58,0.18)] hover:from-[#7c1822] hover:to-[#5e131b] dark:hover:from-[#4a0e14] dark:hover:to-[#310c11] transition-all duration-240 ease-[cubic-bezier(0.22,1,0.36,1)] relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#6C151E] focus:ring-offset-2 dark:focus:ring-offset-[#120506]"
                   >
                     <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_800ms_ease-out_forwards]"></span>
                     <span className="relative">REGISTER NOW</span>
@@ -364,16 +293,16 @@ export function Footer() {
 
                 {/* Socials */}
                 <div className="flex items-center gap-[10px] lg:gap-[12px] w-full sm:w-auto justify-start sm:justify-center mt-1 sm:mt-0">
-                  <a href="https://www.instagram.com/srmuap/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-[42px] h-[42px] sm:w-[43px] sm:h-[43px] lg:w-[44px] lg:h-[44px] xl:w-[46px] xl:h-[46px] min-[1920px]:w-[48px] min-[1920px]:h-[48px] flex items-center justify-center rounded-full bg-[#F7F3EF] dark:bg-[#24090C]/50 border border-[#D9C5C2] dark:border-[#461017] hover:-translate-y-[2px] hover:scale-[1.04] hover:bg-[#F4EEEA] dark:hover:bg-[#3A0B10] hover:border-[#6C151E]/40 dark:hover:border-[#D9A75D]/40 text-[#171313] dark:text-[#F6F2F1] hover:text-[#781421] dark:hover:text-[#D9A75D] hover:shadow-[0_4px_12px_rgba(108,21,30,0.08)] transition-all duration-200 ease-out">
+                  <a href="https://www.instagram.com/srmuap/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-[42px] h-[42px] sm:w-[43px] sm:h-[43px] lg:w-[44px] lg:h-[44px] xl:w-[44px] xl:h-[44px] min-[1920px]:w-[46px] min-[1920px]:h-[46px] flex items-center justify-center rounded-full bg-[#F7F3EF] dark:bg-[#24090C]/50 border border-[#D9C5C2] dark:border-[#461017] hover:-translate-y-[2px] hover:scale-[1.04] hover:bg-[#F4EEEA] dark:hover:bg-[#3A0B10] hover:border-[#6C151E]/40 dark:hover:border-[#D9A75D]/40 text-[#171313] dark:text-[#F6F2F1] hover:text-[#781421] dark:hover:text-[#D9A75D] hover:shadow-[0_4px_12px_rgba(108,21,30,0.08)] transition-all duration-200 ease-out">
                     <svg className="w-[17px] h-[17px] xl:w-5 xl:h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fillRule="evenodd" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" clipRule="evenodd" /></svg>
                   </a>
-                  <a href="https://www.linkedin.com/school/srmuap/posts/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="w-[42px] h-[42px] sm:w-[43px] sm:h-[43px] lg:w-[44px] lg:h-[44px] xl:w-[46px] xl:h-[46px] min-[1920px]:w-[48px] min-[1920px]:h-[48px] flex items-center justify-center rounded-full bg-[#F7F3EF] dark:bg-[#24090C]/50 border border-[#D9C5C2] dark:border-[#461017] hover:-translate-y-[2px] hover:scale-[1.04] hover:bg-[#F4EEEA] dark:hover:bg-[#3A0B10] hover:border-[#6C151E]/40 dark:hover:border-[#D9A75D]/40 text-[#171313] dark:text-[#F6F2F1] hover:text-[#781421] dark:hover:text-[#D9A75D] hover:shadow-[0_4px_12px_rgba(108,21,30,0.08)] transition-all duration-200 ease-out">
+                  <a href="https://www.linkedin.com/school/srmuap/posts/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="w-[42px] h-[42px] sm:w-[43px] sm:h-[43px] lg:w-[44px] lg:h-[44px] xl:w-[44px] xl:h-[44px] min-[1920px]:w-[46px] min-[1920px]:h-[46px] flex items-center justify-center rounded-full bg-[#F7F3EF] dark:bg-[#24090C]/50 border border-[#D9C5C2] dark:border-[#461017] hover:-translate-y-[2px] hover:scale-[1.04] hover:bg-[#F4EEEA] dark:hover:bg-[#3A0B10] hover:border-[#6C151E]/40 dark:hover:border-[#D9A75D]/40 text-[#171313] dark:text-[#F6F2F1] hover:text-[#781421] dark:hover:text-[#D9A75D] hover:shadow-[0_4px_12px_rgba(108,21,30,0.08)] transition-all duration-200 ease-out">
                     <svg className="w-[17px] h-[17px] xl:w-5 xl:h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fillRule="evenodd" d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" clipRule="evenodd" /></svg>
                   </a>
-                  <a href="https://x.com/SRMUAP?s=20" target="_blank" rel="noopener noreferrer" aria-label="X" className="w-[42px] h-[42px] sm:w-[43px] sm:h-[43px] lg:w-[44px] lg:h-[44px] xl:w-[46px] xl:h-[46px] min-[1920px]:w-[48px] min-[1920px]:h-[48px] flex items-center justify-center rounded-full bg-[#F7F3EF] dark:bg-[#24090C]/50 border border-[#D9C5C2] dark:border-[#461017] hover:-translate-y-[2px] hover:scale-[1.04] hover:bg-[#F4EEEA] dark:hover:bg-[#3A0B10] hover:border-[#6C151E]/40 dark:hover:border-[#D9A75D]/40 text-[#171313] dark:text-[#F6F2F1] hover:text-[#781421] dark:hover:text-[#D9A75D] hover:shadow-[0_4px_12px_rgba(108,21,30,0.08)] transition-all duration-200 ease-out">
+                  <a href="https://x.com/SRMUAP?s=20" target="_blank" rel="noopener noreferrer" aria-label="X" className="w-[42px] h-[42px] sm:w-[43px] sm:h-[43px] lg:w-[44px] lg:h-[44px] xl:w-[44px] xl:h-[44px] min-[1920px]:w-[46px] min-[1920px]:h-[46px] flex items-center justify-center rounded-full bg-[#F7F3EF] dark:bg-[#24090C]/50 border border-[#D9C5C2] dark:border-[#461017] hover:-translate-y-[2px] hover:scale-[1.04] hover:bg-[#F4EEEA] dark:hover:bg-[#3A0B10] hover:border-[#6C151E]/40 dark:hover:border-[#D9A75D]/40 text-[#171313] dark:text-[#F6F2F1] hover:text-[#781421] dark:hover:text-[#D9A75D] hover:shadow-[0_4px_12px_rgba(108,21,30,0.08)] transition-all duration-200 ease-out">
                     <svg className="w-[13px] h-[13px] xl:w-[15px] xl:h-[15px]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.007 3.968H5.078z" /></svg>
                   </a>
-                  <a href="https://www.srmap.edu.in/" target="_blank" rel="noopener noreferrer" aria-label="SRM University-AP Website" className="w-[42px] h-[42px] sm:w-[43px] sm:h-[43px] lg:w-[44px] lg:h-[44px] xl:w-[46px] xl:h-[46px] min-[1920px]:w-[48px] min-[1920px]:h-[48px] flex items-center justify-center rounded-full bg-[#F7F3EF] dark:bg-[#24090C]/50 border border-[#D9C5C2] dark:border-[#461017] hover:-translate-y-[2px] hover:scale-[1.04] hover:bg-[#F4EEEA] dark:hover:bg-[#3A0B10] hover:border-[#6C151E]/40 dark:hover:border-[#D9A75D]/40 text-[#171313] dark:text-[#F6F2F1] hover:text-[#781421] dark:hover:text-[#D9A75D] hover:shadow-[0_4px_12px_rgba(108,21,30,0.08)] transition-all duration-200 ease-out">
+                  <a href="https://www.srmap.edu.in/" target="_blank" rel="noopener noreferrer" aria-label="SRM University-AP Website" className="w-[42px] h-[42px] sm:w-[43px] sm:h-[43px] lg:w-[44px] lg:h-[44px] xl:w-[44px] xl:h-[44px] min-[1920px]:w-[46px] min-[1920px]:h-[46px] flex items-center justify-center rounded-full bg-[#F7F3EF] dark:bg-[#24090C]/50 border border-[#D9C5C2] dark:border-[#461017] hover:-translate-y-[2px] hover:scale-[1.04] hover:bg-[#F4EEEA] dark:hover:bg-[#3A0B10] hover:border-[#6C151E]/40 dark:hover:border-[#D9A75D]/40 text-[#171313] dark:text-[#F6F2F1] hover:text-[#781421] dark:hover:text-[#D9A75D] hover:shadow-[0_4px_12px_rgba(108,21,30,0.08)] transition-all duration-200 ease-out">
                     <Globe2 size={18} strokeWidth={1.8} />
                   </a>
                 </div>
@@ -394,7 +323,7 @@ export function Footer() {
             <div className="flex flex-wrap items-center justify-center xl:justify-start gap-2 sm:gap-2.5 text-center xl:text-left w-full xl:w-auto flex-shrink-0">
               <span>&copy; 2026 Qiskit Fall Fest &middot; SRM University-AP. All rights reserved.</span>
               <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] sm:text-[10.5px] font-mono font-semibold tracking-wider uppercase bg-[rgba(108,21,30,0.08)] dark:bg-[rgba(240,107,120,0.12)] text-[#781421] dark:text-[#EF7481] border border-[rgba(108,21,30,0.18)] dark:border-[rgba(240,107,120,0.22)]">
-                v1.0 Beta
+                v1.0 Official
               </span>
             </div>
             
