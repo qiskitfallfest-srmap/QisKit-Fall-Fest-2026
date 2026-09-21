@@ -17,7 +17,7 @@ interface LocationDetailCardProps {
 
 export function LocationDetailCard({ location }: LocationDetailCardProps) {
   // SRM University AP Google Maps URL for directions
-  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=SRM+University+AP+Amaravati+Andhra+Pradesh`;
+  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${location.name}, SRM University AP, Amaravati, Andhra Pradesh`)}`;
 
   return (
     <div
