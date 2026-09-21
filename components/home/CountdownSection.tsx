@@ -5,12 +5,13 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { REGISTRATION_URL } from '@/lib/constants';
+import { ResponsivePicture } from '@/components/shared/ResponsivePicture';
 
 const ONLINE_PHASE_START = new Date('2026-10-05T00:00:00+05:30').getTime();
 
 const COUNTDOWN_ASSETS = {
-  backgroundLight: '/HOME-05-COUNTDOWN-BACKGROUND-LIGHT.png',
-  backgroundDark: '/HOME-05-COUNTDOWN-BACKGROUND-DARK.png',
+  backgroundLight: '/images/home/countdown/HOME-05-COUNTDOWN-BACKGROUND-LIGHT.png',
+  backgroundDark: '/images/home/countdown/HOME-05-COUNTDOWN-BACKGROUND-DARK.png',
 };
 
 interface TimeRemaining {
@@ -113,6 +114,8 @@ export function CountdownSection() {
       className="
         relative isolate w-full overflow-hidden
         bg-[#541018] dark:bg-[#140708]
+        min-h-[calc(100svh-var(--navbar-height,80px))]
+        flex flex-col justify-center
         transition-colors duration-300
       "
     >
@@ -123,21 +126,11 @@ export function CountdownSection() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 z-0 select-none overflow-hidden"
       >
-        <Image
-          src={COUNTDOWN_ASSETS.backgroundLight}
-          alt=""
+        <ResponsivePicture
+          page="home"
+          index={4}
+          alt="Online Phase Countdown Background"
           fill
-          priority={false}
-          sizes="100vw"
-          className="object-cover object-center dark:hidden"
-        />
-        <Image
-          src={COUNTDOWN_ASSETS.backgroundDark}
-          alt=""
-          fill
-          priority={false}
-          sizes="100vw"
-          className="hidden object-cover object-center dark:block"
         />
 
         {/* Cinematic Gradient Overlays */}
@@ -162,8 +155,8 @@ export function CountdownSection() {
         className="
           relative z-10 w-full max-w-[1920px] mx-auto
           px-5 sm:px-[34px] md:px-[52px] lg:px-[64px] xl:px-[76px] 2xl:px-[96px]
-          py-[34px] sm:py-[38px] lg:py-[38px]
-          min-h-[auto] md:min-h-[240px] lg:min-h-[260px] 2xl:min-h-[280px]
+          py-12 sm:py-16 lg:py-20
+          min-h-[calc(100svh-var(--navbar-height,80px))]
           flex flex-col justify-center
         "
       >

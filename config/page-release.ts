@@ -57,7 +57,7 @@ export const ROUTE_RELEASE_CONFIG: Record<string, RouteConfig> = {
   team: {
     path: '/team',
     name: 'Team',
-    status: 'coming-soon',
+    status: 'live',
     title: 'Team | Qiskit Fall Fest 2026',
     description: 'Meet the organizing committee and student leadership behind Qiskit Fall Fest 2026.',
   },

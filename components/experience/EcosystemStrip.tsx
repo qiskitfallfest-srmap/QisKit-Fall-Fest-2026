@@ -125,12 +125,22 @@ export function EcosystemStrip() {
                 POWERED BY
               </span>
               <div className="relative flex items-center h-7 xl:h-8">
+                {/* Light Theme: Dark Positive Logotype */}
+                <Image
+                  src="/images/branding/IBM_Quantum_logotype_pos_RGB.png"
+                  alt="IBM Quantum"
+                  width={284}
+                  height={109}
+                  className="h-[78px] xl:h-[90px] w-auto object-contain select-none dark:hidden -my-[26px] xl:-my-[30px]"
+                  priority
+                />
+                {/* Dark Theme: Light Reverse Logotype */}
                 <Image
                   src="/images/branding/IBM_Quantum_logotype_rev_RGB.png"
                   alt="IBM Quantum"
                   width={196}
                   height={28}
-                  className="h-6 xl:h-7 w-auto object-contain select-none brightness-0 opacity-90 dark:brightness-100 dark:opacity-100"
+                  className="h-6 xl:h-7 w-auto object-contain select-none brightness-0 opacity-90 dark:brightness-100 dark:opacity-100 hidden dark:block"
                   priority
                 />
               </div>
@@ -231,12 +241,21 @@ export function EcosystemStrip() {
                 <span className="text-[10px] font-semibold tracking-[0.2em] text-[#6E7076] dark:text-[#C7C8CC] uppercase font-sans">
                   POWERED BY
                 </span>
+                {/* Light Theme: Dark Positive Logotype */}
+                <Image
+                  src="/images/branding/IBM_Quantum_logotype_pos_RGB.png"
+                  alt="IBM Quantum"
+                  width={203}
+                  height={78}
+                  className="h-[65px] w-auto object-contain select-none dark:hidden -my-[22px]"
+                />
+                {/* Dark Theme: Light Reverse Logotype */}
                 <Image
                   src="/images/branding/IBM_Quantum_logotype_rev_RGB.png"
                   alt="IBM Quantum"
                   width={154}
                   height={22}
-                  className="h-5 w-auto object-contain brightness-0 opacity-90 dark:brightness-100 dark:opacity-100"
+                  className="h-5 w-auto object-contain brightness-0 opacity-90 dark:brightness-100 dark:opacity-100 hidden dark:block"
                 />
               </div>
 
@@ -315,12 +334,21 @@ export function EcosystemStrip() {
               <span className="text-[9px] font-semibold tracking-[0.18em] text-[#6E7076] dark:text-[#C7C8CC] uppercase font-sans">
                 POWERED BY
               </span>
+              {/* Light Theme: Dark Positive Logotype */}
+              <Image
+                src="/images/branding/IBM_Quantum_logotype_pos_RGB.png"
+                alt="IBM Quantum"
+                width={182}
+                height={70}
+                className="h-[58px] w-auto object-contain select-none dark:hidden -my-[20px]"
+              />
+              {/* Dark Theme: Light Reverse Logotype */}
               <Image
                 src="/images/branding/IBM_Quantum_logotype_rev_RGB.png"
                 alt="IBM Quantum"
                 width={130}
                 height={20}
-                className="h-4.5 w-auto object-contain brightness-0 opacity-90 dark:brightness-100 dark:opacity-100"
+                className="h-4.5 w-auto object-contain brightness-0 opacity-90 dark:brightness-100 dark:opacity-100 hidden dark:block"
               />
             </div>
 
