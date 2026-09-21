@@ -112,7 +112,7 @@ export const CAMPUS_LOCATIONS: CampusLocation[] = [
     isKeyVenue: true,
     description:
       'North academic wing connected with Homi Bhabha block, housing seminar classrooms and computer labs for hands-on sessions.',
-    image: '/images/venues/homi-bhabha.png',
+    image: '/images/venues/v-block.jpg',
     map: {
       footprintId: 'bldg-v-block',
       x: 370,
