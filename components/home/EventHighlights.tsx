@@ -19,7 +19,7 @@ const HIGHLIGHTS: HighlightItem[] = [
     title: 'World-Class Workshops',
     description: 'Learn from experts and get hands-on with Qiskit.',
     icon: BriefcaseBusiness,
-    imageSrc: 'https://picsum.photos/seed/qiskit-workshop-2026/600/300',
+    imageSrc: '/images/home/highlights/workshops.jpg',
     imageAlt: 'World-Class Quantum Workshops and hands-on laboratory sessions',
     href: '/experience',
   },
@@ -28,7 +28,7 @@ const HIGHLIGHTS: HighlightItem[] = [
     title: 'Quantum Hackathons',
     description: 'Build real solutions to global challenges.',
     icon: Boxes,
-    imageSrc: 'https://picsum.photos/seed/quantum-hackathon-2026/600/300',
+    imageSrc: '/images/home/highlights/hackathons.jpg',
     imageAlt: 'Quantum Hackathon collaboration and software builds',
     href: '/experience',
   },
@@ -37,7 +37,7 @@ const HIGHLIGHTS: HighlightItem[] = [
     title: 'Inspiring Technical Sessions',
     description: 'Explore the latest in quantum technology.',
     icon: Atom,
-    imageSrc: 'https://picsum.photos/seed/quantum-session-2026/600/300',
+    imageSrc: '/images/home/highlights/sessions.jpg',
     imageAlt: 'Keynotes and technical presentations on quantum computing',
     href: '/schedule',
   },
@@ -46,7 +46,7 @@ const HIGHLIGHTS: HighlightItem[] = [
     title: 'Global Community',
     description: 'Connect with a diverse and growing quantum ecosystem.',
     icon: Users,
-    imageSrc: 'https://picsum.photos/seed/quantum-community-2026/600/300',
+    imageSrc: '/images/home/highlights/community.jpg',
     imageAlt: 'Global quantum community networking and collaboration',
     href: '/team',
   },
@@ -69,6 +69,7 @@ export function EventHighlights() {
           px-5 sm:px-[34px] md:px-[54px] lg:px-[72px] 2xl:px-[92px]
           py-[30px] sm:py-[34px] md:py-[38px] lg:py-[42px] 2xl:py-[46px]
           pb-[36px] sm:pb-[42px] md:pb-[48px] lg:pb-[54px] 2xl:pb-[58px]
+          lg:min-h-[calc(100svh-var(--navbar-height))] lg:flex lg:flex-col lg:justify-center
         "
       >
         {/* =========================================================

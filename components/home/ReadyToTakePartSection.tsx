@@ -2,11 +2,7 @@ import * as React from 'react';
 import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
 import { REGISTRATION_URL } from '@/lib/constants';
-
-const READY_TO_TAKE_PART_ASSETS = {
-  backgroundLight: '/HOME-08-READY-TO-TAKE-PART-BACKGROUND-LIGHT.png',
-  backgroundDark: '/HOME-08-READY-TO-TAKE-PART-BACKGROUND-DARK.png',
-};
+import { ResponsivePicture } from '@/components/shared/ResponsivePicture';
 
 const SIDE_WORDS = [
   'PEOPLE',
@@ -24,8 +20,8 @@ export function ReadyToTakePartSection() {
       className="
         relative isolate w-full overflow-hidden
         bg-[#F5EFEA] dark:bg-[#160608]
-        min-h-[590px] md:min-h-[390px] md:h-[clamp(390px,48vw,500px)]
-        xl:h-auto xl:aspect-[1435/353] xl:min-h-[350px] xl:max-h-[480px]
+        min-h-[calc(100svh-var(--navbar-height,80px))]
+        flex flex-col justify-center
         transition-colors duration-300
       "
     >
@@ -36,29 +32,11 @@ export function ReadyToTakePartSection() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 z-0 select-none overflow-hidden"
       >
-        <Image
-          src={READY_TO_TAKE_PART_ASSETS.backgroundLight}
-          alt=""
+        <ResponsivePicture
+          page="home"
+          index={4}
+          alt="Ready to Take Part Background"
           fill
-          priority={false}
-          sizes="100vw"
-          className="
-            object-cover
-            object-[66%_center] md:object-[58%_center] xl:object-center
-            dark:hidden
-          "
-        />
-        <Image
-          src={READY_TO_TAKE_PART_ASSETS.backgroundDark}
-          alt=""
-          fill
-          priority={false}
-          sizes="100vw"
-          className="
-            hidden object-cover
-            object-[66%_center] md:object-[58%_center] xl:object-center
-            dark:block
-          "
         />
 
         {/* Minimal Readability Gradients (preserves native background art) */}
@@ -81,10 +59,11 @@ export function ReadyToTakePartSection() {
       ========================================================== */}
       <div
         className="
-          relative z-10 w-full max-w-[1920px] mx-auto h-full
+          relative z-10 w-full max-w-[1920px] mx-auto
           px-5 sm:px-9 md:px-12 lg:px-12 xl:px-[58px] 2xl:px-[64px] min-[1600px]:px-[72px] min-[1920px]:px-[82px]
-          py-9 sm:py-11 md:py-0
-          flex flex-col justify-start md:justify-center
+          py-12 sm:py-16 md:py-20
+          min-h-[calc(100svh-var(--navbar-height,80px))]
+          flex flex-col justify-center
         "
       >
         {/* Left Editorial Block */}
@@ -126,7 +105,7 @@ export function ReadyToTakePartSection() {
               font-serif font-bold
               tracking-[-0.035em] leading-[0.92]
               text-[40px] md:text-[clamp(42px,3.2vw,48px)] xl:text-[clamp(46px,3.2vw,62px)]
-              text-[#241718] dark:text-[#FFF2EF]
+              text-white dark:text-[#FFF2EF]
             "
           >
             <span className="block">Ready to</span>
@@ -141,7 +120,7 @@ export function ReadyToTakePartSection() {
               font-sans font-normal
               text-[13px] md:text-[13.5px] xl:text-[14px]
               leading-[1.52]
-              text-[#514744] dark:text-[#DED3D0]
+              text-white/85 dark:text-[#DED3D0]
             "
           >
             Join students, developers, researchers, and industry leaders at Qiskit Fall Fest 2026 — SRM University-AP × IBM.

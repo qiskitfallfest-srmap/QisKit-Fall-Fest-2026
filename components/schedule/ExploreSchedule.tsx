@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight,
@@ -171,15 +172,16 @@ export function ExploreSchedule({ currentPhase, onPhaseChange }: ExploreSchedule
 
       {/* Poster Visual Card */}
       <div className="relative h-44 w-full overflow-hidden rounded-2xl border border-[#D9D0CB] dark:border-white/10 bg-gradient-to-br from-[#3A0B10] to-[#120506]">
-        <img
-          src={posterImage}
-          alt="Quantum visual"
-          className="h-full w-full object-cover opacity-80"
-          onError={(e) => {
-            // Graceful fallback if image doesn't exist
-            (e.target as HTMLElement).style.display = 'none';
-          }}
-        />
+        {posterImage && (
+          <Image
+            src={posterImage}
+            alt="Quantum visual"
+            fill
+            sizes="(max-width: 768px) 100vw, 400px"
+            className="object-cover opacity-80"
+            referrerPolicy="no-referrer"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-[#13090A] via-transparent to-transparent opacity-80" />
         <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-white">
           <span className="text-[10px] font-mono font-bold uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded backdrop-blur-sm">

@@ -4,4 +4,4 @@ export { ExperienceSection } from './ExperienceSection';
 export { ScrollLockedSection } from './ScrollLockedSection';
 export { ExperienceEventGallery } from './ExperienceEventGallery';
 export { ExperienceSectionDivider } from './ExperienceSectionDivider';
-
+export { QuantumOrbitalAtom } from './QuantumOrbitalAtom';

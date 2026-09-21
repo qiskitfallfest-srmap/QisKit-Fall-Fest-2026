@@ -190,7 +190,7 @@ interface Props {
     linkThickness?: number
 }
 
-function __OriginkitBase_ParticleDrift(props: Props) {
+function OriginkitBase_ParticleDrift(props: Props) {
     const {
         style,
         background = "transparent",
@@ -208,13 +208,10 @@ function __OriginkitBase_ParticleDrift(props: Props) {
     } = props
 
     const canvasRef = useRef<HTMLCanvasElement>(null)
-    const sizeRef = useRef({ w: 0, h: 0 })
-    sizeRef.current = { w: num(width, 0), h: num(height, 0) }
-
+    const sizeRef = useRef({ w: num(width, 0), h: num(height, 0) })
     const ptrRef = useRef({ x: -10000, y: -10000 })
 
-    const vRef = useRef<Record<string, number | string>>({})
-    vRef.current = {
+    const vRef = useRef<Record<string, number | string>>({
         base: baseColor,
         accent: accentColor,
         density: Math.round(clampN(num(density, 90), 10, 400)),
@@ -224,7 +221,22 @@ function __OriginkitBase_ParticleDrift(props: Props) {
         hover: clampN(num(hover, 100), 0, 200) / 100,
         linkDistance: clampN(num(linkDistance, 226), 0, 400),
         linkThickness: clampN(num(linkThickness, 1.5), 0.5, 8),
-    }
+    })
+
+    useEffect(() => {
+        sizeRef.current = { w: num(width, 0), h: num(height, 0) }
+        vRef.current = {
+            base: baseColor,
+            accent: accentColor,
+            density: Math.round(clampN(num(density, 90), 10, 400)),
+            dotSize: clampN(num(dotSize, 10), 1, 24),
+            speed: clampN(num(speed, 51), 0, 100) / 50,
+            direction: clampN(num(direction, 0), 0, 360),
+            hover: clampN(num(hover, 100), 0, 200) / 100,
+            linkDistance: clampN(num(linkDistance, 226), 0, 400),
+            linkThickness: clampN(num(linkThickness, 1.5), 0.5, 8),
+        }
+    }, [width, height, baseColor, accentColor, density, dotSize, speed, direction, hover, linkDistance, linkThickness])
 
     useEffect(() => {
         const canvas = canvasRef.current
@@ -538,5 +550,5 @@ const __originkitPresetProps = {
 };
 
 export default function ParticleDrift(props: Record<string, unknown>) {
-  return <__OriginkitBase_ParticleDrift {...(__originkitPresetProps as Record<string, unknown>)} {...props} />;
+  return <OriginkitBase_ParticleDrift {...(__originkitPresetProps as Record<string, unknown>)} {...props} />;
 }

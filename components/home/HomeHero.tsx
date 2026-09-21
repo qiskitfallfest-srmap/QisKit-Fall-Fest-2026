@@ -2,6 +2,7 @@ import * as React from 'react';
 import Image from 'next/image';
 import { ArrowRight, CalendarDays, MapPin, Play } from 'lucide-react';
 import { REGISTRATION_URL } from '@/lib/constants';
+import { ResponsivePicture } from '@/components/shared/ResponsivePicture';
 import styles from './HomeHero.module.css';
 
 const HERO_ASSETS = {
@@ -32,72 +33,53 @@ export function HomeHero() {
       `}
     >
       {/* =========================================================
-          LAYER 0: THEME BACKGROUND (z-0)
-          Mobile: Upper 720px concentration letting base theme background show below.
-          Tablet & Desktop: Full inset-0 coverage with centered anchor [50% 50%].
+          LAYER 0: DEVICE-SPECIFIC THEME BACKGROUND (z-0)
+          Widescreen Desktop (>=1280px), Laptop (1024-1279px),
+          Tablet (768-1023px), and Mobile (<768px portrait)
       ========================================================== */}
       <div
         aria-hidden="true"
         className="
           pointer-events-none absolute
-          inset-x-0 top-0 h-[720px]
-          md:inset-0 md:h-full
+          inset-0 w-full h-full
           z-0 overflow-hidden
         "
       >
-        <Image
-          src={HERO_ASSETS.backgroundLight}
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-[60%_center] md:object-[50%_50%] dark:hidden"
-        />
-        <Image
-          src={HERO_ASSETS.backgroundDark}
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="hidden object-cover object-[60%_center] md:object-[50%_50%] dark:block"
-        />
-      </div>
-
-      {/* =========================================================
-          LAYER 1: RIGHT DECORATIVE GLOBE (z-1)
-          Height-based scaling with transformX (+82% to +84%)
-          framing the right edge without colliding with cryostat or microcopy.
-          Left globe is completely removed.
-      ========================================================== */}
-      <div
-        aria-hidden="true"
-        className={styles.rightGlobeWrapper}
-      >
-        <Image
-          src={HERO_ASSETS.globeRightLight}
-          alt=""
-          width={1266}
-          height={1243}
-          priority
-          className="h-full w-auto object-contain dark:hidden"
-        />
-        <Image
-          src={HERO_ASSETS.globeRightDark}
-          alt=""
-          width={1268}
-          height={1241}
-          priority
-          className="hidden h-full w-auto object-contain dark:block"
-        />
+        <picture className="w-full h-full block">
+          {/* 1. Desktop: Widescreen (1280px and wider) */}
+          <source
+            media="(min-width: 1280px)"
+            srcSet="/hero/HOME-HERO-BG-DESKTOP.png"
+            type="image/png"
+          />
+          {/* 2. Laptop: Mid-wide screen (1024px to 1279px) */}
+          <source
+            media="(min-width: 1024px)"
+            srcSet="/hero/HOME-HERO-BG-LAPTOP.png"
+            type="image/png"
+          />
+          {/* 3. Tablet: Portrait / Tablet screen (768px to 1023px) */}
+          <source
+            media="(min-width: 768px)"
+            srcSet="/hero/HOME-HERO-BG-TABLET.png"
+            type="image/png"
+          />
+          {/* 4. Mobile fallback: Phone screen (< 768px) */}
+          <img
+            src="/hero/HOME-HERO-BG-MOBILE.png"
+            alt="Qiskit Fall Fest 2026 Background"
+            fetchPriority="high"
+            className="w-full h-full object-cover object-center select-none"
+          />
+        </picture>
       </div>
 
       {/* =========================================================
           HERO STAGE CONTAINER (FULL VIEWPORT COORDINATE SYSTEM)
-          Mobile: Normal responsive flow (px-5, pt-[28px], pb-[24px])
+          Mobile: Responsive flow with breathing room (px-6, pt-[34px], pb-[26px])
           Tablet & Desktop: Relative stage with absolute layered units.
-          No max-width constraint to preserve unified full-width coordinates.
       ========================================================== */}
-      <div className="relative w-full h-full px-5 pt-[28px] pb-[24px] md:p-0">
+      <div className="relative w-full h-full px-6 pt-[34px] pb-[26px] md:p-0">
         {/* =======================================================
             LAYER 4: MAIN TYPOGRAPHY AND CTAS (z-4)
             Governed by explicit height + width rules in styles.textBlock.
@@ -107,6 +89,7 @@ export function HomeHero() {
           <p
             className={`
               ${styles.eyebrow}
+              ${styles.animEyebrow}
               font-bold
               uppercase
               tracking-[0.28em]
@@ -118,11 +101,12 @@ export function HomeHero() {
             GLOBAL. OPEN. TOGETHER.
           </p>
 
-          {/* Headline with editorial transition gradient */}
+          {/* Headline with typography entrance and subtle luminous shimmer */}
           <h1
             id="home-hero-title"
             className={`
               ${styles.headline}
+              ${styles.headlineShimmer}
               font-serif
               font-bold
               tracking-[-0.045em]
@@ -133,17 +117,16 @@ export function HomeHero() {
               dark:bg-[linear-gradient(90deg,#EA8793_0%,#EFB0B5_45%,#FFF1EE_100%)]
             `}
           >
-            QISKIT
-            <br />
-            <span className="whitespace-nowrap">FALL FEST</span>
-            <br />
-            2026
+            <span className={styles.animTitleLine1}>QISKIT</span>
+            <span className={`${styles.animTitleLine2} whitespace-nowrap`}>FALL FEST</span>
+            <span className={styles.animTitleLine3}>2026</span>
           </h1>
 
           {/* Host */}
           <div
             className={`
               ${styles.host}
+              ${styles.animHost}
               font-bold
               tracking-[-0.01em]
               text-[#211818]
@@ -153,23 +136,11 @@ export function HomeHero() {
             SRM UNIVERSITY-AP × IBM
           </div>
 
-          {/* Theme */}
-          <div
-            className={`
-              ${styles.theme}
-              font-serif
-              font-semibold
-              text-[#261A19]
-              dark:text-[#F0E4DF]
-            `}
-          >
-            A Decade of Quantum on Cloud
-          </div>
-
           {/* Description */}
           <p
             className={`
               ${styles.description}
+              ${styles.animDescription}
               font-normal
               text-[#4E4441]
               dark:text-[#D6CDCA]
@@ -184,6 +155,7 @@ export function HomeHero() {
           <div
             className={`
               ${styles.ctaRow}
+              ${styles.animCta}
               flex
               flex-row
               items-center
@@ -283,15 +255,12 @@ export function HomeHero() {
         </div>
 
         {/* =======================================================
-            LAYER 3: CRYOSTAT (z-3)
-            Height-driven sizing preserving actual 1024 × 1535 ratio (0.6671).
-            In laptop mode: Height 94-95%, bottom: 0, left: 60%.
-            Image intrinsic dimensions 1024 x 1535, object-contain.
+            LAYER 3: CRYOSTAT (SINGLE QUANTUM COMPUTER) (z-3)
+            Height-driven sizing, lowered position, interactive hover.
         ======================================================== */}
         <div
           className={`
             ${styles.cryostatWrapper}
-            pointer-events-none
             select-none
           `}
         >
@@ -304,8 +273,8 @@ export function HomeHero() {
             className="
               h-auto
               w-full
-              max-h-[350px]
-              max-[389px]:max-h-[320px]
+              max-h-[330px]
+              max-[389px]:max-h-[290px]
               md:max-h-none
               md:h-full
               md:w-auto
@@ -316,25 +285,6 @@ export function HomeHero() {
           />
         </div>
 
-        {/* =======================================================
-            LAYER 5: RIGHT MICROCOPY (z-5)
-            QUANTUM / IDEAS / REAL / IMPACT
-            Visible on desktop / wide laptop (1280px+)
-        ======================================================== */}
-        <div
-          className={`
-            ${styles.rightMicrocopy}
-            font-[650]
-            uppercase
-            text-[#F7EBE8]
-          `}
-        >
-          <div>QUANTUM</div>
-          <div>IDEAS</div>
-          <div>REAL</div>
-          <div>IMPACT</div>
-          <div className="mt-[10px] h-[1px] w-[28px] bg-[#E77A86]" />
-        </div>
 
         {/* =======================================================
             LAYER 5: MOBILE METADATA (z-5)

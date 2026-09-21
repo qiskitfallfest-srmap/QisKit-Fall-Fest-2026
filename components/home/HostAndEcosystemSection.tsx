@@ -54,90 +54,28 @@ const ENTITIES: EcosystemEntity[] = [
     actionLabel: 'Explore IBM Quantum',
     renderLogo: () => (
       <div className="flex items-center">
-        {/* Light Mode SVG */}
-        <div className="dark:hidden h-[32px] w-[160px] sm:h-[34px] sm:w-[170px] relative">
-          <svg viewBox="0 0 220 44" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full" aria-label="IBM Quantum Logo">
-            <g fill="#161616">
-              <rect x="0" y="8" width="14" height="2.5"/>
-              <rect x="0" y="11.5" width="14" height="2.5"/>
-              <rect x="0" y="15" width="14" height="2.5"/>
-              <rect x="0" y="18.5" width="14" height="2.5"/>
-              <rect x="0" y="22" width="14" height="2.5"/>
-              <rect x="0" y="25.5" width="14" height="2.5"/>
-              <rect x="0" y="29" width="14" height="2.5"/>
-              <rect x="0" y="32.5" width="14" height="2.5"/>
-              <rect x="20" y="8" width="22" height="2.5"/>
-              <rect x="20" y="11.5" width="24" height="2.5"/>
-              <rect x="20" y="15" width="10" height="2.5"/>
-              <rect x="34" y="15" width="10" height="2.5"/>
-              <rect x="20" y="18.5" width="22" height="2.5"/>
-              <rect x="20" y="22" width="24" height="2.5"/>
-              <rect x="20" y="25.5" width="10" height="2.5"/>
-              <rect x="34" y="25.5" width="10" height="2.5"/>
-              <rect x="20" y="29" width="24" height="2.5"/>
-              <rect x="20" y="32.5" width="22" height="2.5"/>
-              <rect x="50" y="8" width="8" height="2.5"/>
-              <rect x="70" y="8" width="8" height="2.5"/>
-              <rect x="50" y="11.5" width="11" height="2.5"/>
-              <rect x="67" y="11.5" width="11" height="2.5"/>
-              <rect x="50" y="15" width="14" height="2.5"/>
-              <rect x="64" y="15" width="14" height="2.5"/>
-              <rect x="50" y="18.5" width="17" height="2.5"/>
-              <rect x="61" y="18.5" width="17" height="2.5"/>
-              <rect x="50" y="22" width="10" height="2.5"/>
-              <rect x="68" y="22" width="10" height="2.5"/>
-              <rect x="50" y="25.5" width="8" height="2.5"/>
-              <rect x="70" y="25.5" width="8" height="2.5"/>
-              <rect x="50" y="29" width="8" height="2.5"/>
-              <rect x="70" y="29" width="8" height="2.5"/>
-              <rect x="50" y="32.5" width="8" height="2.5"/>
-              <rect x="70" y="32.5" width="8" height="2.5"/>
-            </g>
-            <text x="90" y="28" fill="#161616" fontFamily="'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" fontSize="18" fontWeight="400" letterSpacing="0.5">Quantum</text>
-          </svg>
+        {/* Light Theme: Dark Positive Logotype with -ml compensation for internal transparent whitespace */}
+        <div className="dark:hidden relative h-[76px] w-[200px] sm:h-[82px] sm:w-[216px] -ml-[28px] sm:-ml-[30px] -my-[22px] sm:-my-[24px] flex items-center">
+          <Image
+            src="/images/branding/IBM_Quantum_logotype_pos_RGB.png"
+            alt="IBM Quantum"
+            fill
+            sizes="216px"
+            className="object-contain object-left select-none"
+            referrerPolicy="no-referrer"
+          />
         </div>
 
-        {/* Dark Mode SVG */}
-        <div className="hidden dark:block h-[32px] w-[160px] sm:h-[34px] sm:w-[170px] relative">
-          <svg viewBox="0 0 220 44" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full" aria-label="IBM Quantum Logo">
-            <g fill="#FFF4F1">
-              <rect x="0" y="8" width="14" height="2.5"/>
-              <rect x="0" y="11.5" width="14" height="2.5"/>
-              <rect x="0" y="15" width="14" height="2.5"/>
-              <rect x="0" y="18.5" width="14" height="2.5"/>
-              <rect x="0" y="22" width="14" height="2.5"/>
-              <rect x="0" y="25.5" width="14" height="2.5"/>
-              <rect x="0" y="29" width="14" height="2.5"/>
-              <rect x="0" y="32.5" width="14" height="2.5"/>
-              <rect x="20" y="8" width="22" height="2.5"/>
-              <rect x="20" y="11.5" width="24" height="2.5"/>
-              <rect x="20" y="15" width="10" height="2.5"/>
-              <rect x="34" y="15" width="10" height="2.5"/>
-              <rect x="20" y="18.5" width="22" height="2.5"/>
-              <rect x="20" y="22" width="24" height="2.5"/>
-              <rect x="20" y="25.5" width="10" height="2.5"/>
-              <rect x="34" y="25.5" width="10" height="2.5"/>
-              <rect x="20" y="29" width="24" height="2.5"/>
-              <rect x="20" y="32.5" width="22" height="2.5"/>
-              <rect x="50" y="8" width="8" height="2.5"/>
-              <rect x="70" y="8" width="8" height="2.5"/>
-              <rect x="50" y="11.5" width="11" height="2.5"/>
-              <rect x="67" y="11.5" width="11" height="2.5"/>
-              <rect x="50" y="15" width="14" height="2.5"/>
-              <rect x="64" y="15" width="14" height="2.5"/>
-              <rect x="50" y="18.5" width="17" height="2.5"/>
-              <rect x="61" y="18.5" width="17" height="2.5"/>
-              <rect x="50" y="22" width="10" height="2.5"/>
-              <rect x="68" y="22" width="10" height="2.5"/>
-              <rect x="50" y="25.5" width="8" height="2.5"/>
-              <rect x="70" y="25.5" width="8" height="2.5"/>
-              <rect x="50" y="29" width="8" height="2.5"/>
-              <rect x="70" y="29" width="8" height="2.5"/>
-              <rect x="50" y="32.5" width="8" height="2.5"/>
-              <rect x="70" y="32.5" width="8" height="2.5"/>
-            </g>
-            <text x="90" y="28" fill="#FFF4F1" fontFamily="'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" fontSize="18" fontWeight="400" letterSpacing="0.5">Quantum</text>
-          </svg>
+        {/* Dark Theme: Light Reverse Logotype */}
+        <div className="hidden dark:block relative h-[28px] w-[155px] sm:h-[30px] sm:w-[166px]">
+          <Image
+            src="/images/branding/IBM_Quantum_logotype_rev_RGB.png"
+            alt="IBM Quantum"
+            fill
+            sizes="166px"
+            className="object-contain object-left select-none"
+            referrerPolicy="no-referrer"
+          />
         </div>
       </div>
     ),
@@ -186,6 +124,7 @@ export function HostAndEcosystemSection() {
           w-full max-w-[1920px] mx-auto
           px-5 sm:px-[34px] md:px-[52px] lg:px-[64px] xl:px-[76px] 2xl:px-[96px]
           py-[38px] sm:py-[46px] lg:py-[52px] 2xl:py-[58px]
+          lg:min-h-[calc(100svh-var(--navbar-height))] lg:flex lg:flex-col lg:justify-center
         "
       >
         {/* =========================================================
