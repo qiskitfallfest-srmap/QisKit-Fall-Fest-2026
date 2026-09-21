@@ -50,9 +50,9 @@ export const ROUTE_RELEASE_CONFIG: Record<string, RouteConfig> = {
   venues: {
     path: '/venues',
     name: 'Venues',
-    status: 'coming-soon',
-    title: 'Venues & Campus Map | Qiskit Fall Fest 2026',
-    description: 'SRM University-AP campus layout, auditoriums, quantum laboratories, and transit guide.',
+    status: 'live',
+    title: 'Campus Atlas & Venues | Qiskit Fall Fest 2026',
+    description: 'Interactive SRM University-AP campus atlas, academic blocks, research laboratories, and facilities.',
   },
   team: {
     path: '/team',
