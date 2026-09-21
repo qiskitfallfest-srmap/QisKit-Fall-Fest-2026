@@ -2,10 +2,11 @@ import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { ResponsivePicture } from '@/components/shared/ResponsivePicture';
 
 const NEXT_DECADE_ASSETS = {
-  backgroundLight: '/HOME-03-NEXT-DECADE-BACKGROUND-LIGHT.png',
-  backgroundDark: '/HOME-03-NEXT-DECADE-BACKGROUND-DARK.png',
+  backgroundLight: '/images/home/next-decade/HOME-03-NEXT-DECADE-BACKGROUND-LIGHT.png',
+  backgroundDark: '/images/home/next-decade/HOME-03-NEXT-DECADE-BACKGROUND-DARK.png',
 };
 
 const STATS = [
@@ -42,37 +43,11 @@ export function NextDecadeSection() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 z-0 select-none overflow-hidden"
       >
-        <Image
-          src={NEXT_DECADE_ASSETS.backgroundLight}
-          alt=""
+        <ResponsivePicture
+          page="home"
+          index={2}
+          alt="The Next Decade Together Background"
           fill
-          priority={false}
-          sizes="100vw"
-          className="
-            object-cover object-[56%_center]
-            sm:object-[55%_center]
-            md:object-[55%_center]
-            lg:object-[54%_center]
-            xl:object-[53%_center]
-            2xl:object-[52%_center]
-            dark:hidden
-          "
-        />
-        <Image
-          src={NEXT_DECADE_ASSETS.backgroundDark}
-          alt=""
-          fill
-          priority={false}
-          sizes="100vw"
-          className="
-            hidden object-cover object-[56%_center]
-            sm:object-[55%_center]
-            md:object-[55%_center]
-            lg:object-[53%_center]
-            xl:object-[52%_center]
-            2xl:object-[51%_center]
-            dark:block
-          "
         />
 
         {/* Subtle theme-aware overlay on mobile to keep copy crisp against central graphics */}

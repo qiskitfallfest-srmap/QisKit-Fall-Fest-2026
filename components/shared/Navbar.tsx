@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { Sun, Moon, ArrowRight, Menu, X } from 'lucide-react';
+import { motion } from 'motion/react';
 import clsx from 'clsx';
 import { REGISTRATION_URL } from '@/lib/constants';
 
@@ -13,6 +14,7 @@ export const NAVBAR_JOIN_HREF = REGISTRATION_URL;
 export { REGISTRATION_URL };
 
 const NAV_LINKS = [
+  { label: 'Home', href: '/' },
   { label: 'About', href: '/about' },
   { label: 'Experience', href: '/experience' },
   { label: 'Schedule', href: '/schedule' },
@@ -20,6 +22,13 @@ const NAV_LINKS = [
   { label: 'Team', href: '/team' },
   { label: 'FAQs', href: '/faqs' },
 ];
+
+function isRouteActive(pathname: string, href: string): boolean {
+  if (href === '/') {
+    return pathname === '/';
+  }
+  return pathname === href || pathname.startsWith(href + '/');
+}
 
 export function Navbar() {
   const pathname = usePathname();
@@ -66,39 +75,6 @@ export function Navbar() {
     };
   }, [pathname]);
 
-  // Route-aware navigation links:
-  // When on an inner page, the current route is excluded, and Home is prepended at the first position.
-  const visibleLinks = React.useMemo(() => {
-    if (pathname === '/about') {
-      return [
-        { label: 'Home', href: '/' },
-        { label: 'Experience', href: '/experience' },
-        { label: 'Schedule', href: '/schedule' },
-        { label: 'Venues', href: '/venues' },
-        { label: 'Team', href: '/team' },
-        { label: 'FAQs', href: '/faqs' },
-      ];
-    }
-    if (pathname.startsWith('/team')) {
-      return [
-        { label: 'Home', href: '/' },
-        { label: 'About', href: '/about' },
-        { label: 'Experience', href: '/experience' },
-        { label: 'Schedule', href: '/schedule' },
-        { label: 'Venues', href: '/venues' },
-        { label: 'FAQs', href: '/faqs' },
-      ];
-    }
-    if (pathname === '/') {
-      return NAV_LINKS;
-    }
-    // For other routes: include Home first, and filter out current route
-    return [
-      { label: 'Home', href: '/' },
-      ...NAV_LINKS.filter((link) => link.href !== pathname),
-    ];
-  }, [pathname]);
-
   // Close menu on route change during render
   const [prevPathname, setPrevPathname] = React.useState(pathname);
   if (prevPathname !== pathname) {
@@ -129,7 +105,11 @@ export function Navbar() {
   return (
     <header 
       ref={headerRef}
-      className="sticky top-0 z-50 w-full border-b border-[var(--nav-border)] [background:var(--nav-bg)] text-[var(--nav-text)] transition-colors duration-300"
+      className="sticky top-0 z-50 w-full border-b border-[var(--nav-border)]/60 bg-[#F5F3F0]/85 dark:bg-[linear-gradient(105deg,rgba(22,6,8,0.85)_0%,rgba(36,9,12,0.85)_42%,rgba(58,11,16,0.85)_72%,rgba(36,9,12,0.85)_100%)] backdrop-blur-xl text-[var(--nav-text)] transition-colors duration-300 shadow-[0_4px_24px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.28)]"
+      style={{
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+      }}
     >
       {/* =========================================================
           TOP EDGE SCROLL PROGRESS LINE
@@ -188,17 +168,36 @@ export function Navbar() {
           </Link>
         </div>
 
-        {/* CENTER BLOCK: Primary Navigation (Desktop) */}
-        <nav className="hidden xl:flex items-center gap-8 2xl:gap-10">
-          {visibleLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-[15px] font-medium transition-colors hover:text-[var(--nav-hover)] outline-none focus-visible:ring-2 focus-visible:ring-burgundy rounded-sm px-1 py-0.5"
-            >
-              {link.label}
-            </Link>
-          ))}
+        {/* CENTER BLOCK: Primary Navigation (Desktop - All 7 Links Persistent) */}
+        <nav className="hidden xl:flex items-center gap-1.5 2xl:gap-2" aria-label="Primary Navigation">
+          {NAV_LINKS.map((link) => {
+            const isActive = isRouteActive(pathname, link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={isActive ? 'page' : undefined}
+                className={clsx(
+                  "relative px-3.5 2xl:px-4 py-2 text-[14px] 2xl:text-[15px] font-medium transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-burgundy rounded-full",
+                  isActive
+                    ? "font-semibold text-burgundy dark:text-[#B08D57]"
+                    : "text-[var(--nav-text)]/85 hover:text-[var(--nav-hover)] hover:bg-black/[0.03] dark:hover:bg-white/[0.05]"
+                )}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="navbar-active-pill"
+                    className="absolute inset-0 rounded-full bg-burgundy/[0.08] dark:bg-[#B08D57]/[0.16] border border-burgundy/20 dark:border-[#B08D57]/35 shadow-[0_1px_6px_rgba(108,21,30,0.06)] dark:shadow-[0_1px_12px_rgba(176,141,87,0.18)]"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    aria-hidden="true"
+                  >
+                    <div className="absolute -top-[1px] left-1/2 -translate-x-1/2 w-3/5 h-[1.5px] bg-burgundy/70 dark:bg-[#B08D57]/90 rounded-full blur-[0.5px]" />
+                  </motion.div>
+                )}
+                <span className="relative z-10">{link.label}</span>
+              </Link>
+            );
+          })}
         </nav>
 
         {/* RIGHT BLOCK: Theme Toggle + Join + SRM Logo (Desktop) */}
@@ -207,7 +206,7 @@ export function Navbar() {
           {/* Theme Toggle */}
           <button
             onClick={() => setTheme(activeTheme === 'dark' ? 'light' : 'dark')}
-            className="group relative flex h-[34px] w-[72px] cursor-pointer items-center rounded-full border border-[var(--nav-border)] bg-[var(--background)] p-1 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-burgundy shadow-sm"
+            className="group relative flex h-[34px] w-[72px] cursor-pointer items-center rounded-full border border-[var(--nav-border)]/70 bg-white/30 dark:bg-black/25 backdrop-blur-md p-1 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-burgundy shadow-sm"
             aria-label="Toggle theme"
           >
             {/* Toggle background indicator */}
@@ -272,24 +271,29 @@ export function Navbar() {
       {/* MOBILE & TABLET EXPANDED OVERLAY MENU (POSITIONS ABOVE PAGE CONTENT WITHOUT LAYOUT SHIFT) */}
       {mobileMenuOpen && (
         <div 
-          className="absolute top-full left-0 w-full border-b border-[var(--nav-border)] [background:var(--nav-bg)] text-[var(--nav-text)] shadow-2xl xl:hidden max-h-[calc(100dvh-78px)] sm:max-h-[calc(100dvh-84px)] overflow-y-auto"
+          className="absolute top-full left-0 w-full border-b border-[var(--nav-border)]/60 bg-[#F5F3F0]/95 dark:bg-[linear-gradient(105deg,rgba(22,6,8,0.95)_0%,rgba(36,9,12,0.95)_42%,rgba(58,11,16,0.95)_72%,rgba(36,9,12,0.95)_100%)] backdrop-blur-2xl text-[var(--nav-text)] shadow-2xl xl:hidden max-h-[calc(100dvh-78px)] sm:max-h-[calc(100dvh-84px)] overflow-y-auto"
           role="dialog"
           aria-modal="false"
           aria-label="Navigation menu"
+          style={{
+            backdropFilter: 'blur(24px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+          }}
         >
           <div className="mx-auto max-w-xl md:max-w-2xl px-4 py-6 sm:px-8 sm:py-8 flex flex-col">
-            <nav className="flex flex-col gap-1.5 sm:gap-2 w-full">
-              {visibleLinks.map((link) => {
-                const isActive = pathname === link.href;
+            <nav className="flex flex-col gap-1.5 sm:gap-2 w-full" aria-label="Mobile Navigation">
+              {NAV_LINKS.map((link) => {
+                const isActive = isRouteActive(pathname, link.href);
                 return (
                   <Link
                     key={link.href}
                     href={link.href}
+                    aria-current={isActive ? 'page' : undefined}
                     onClick={() => setMobileMenuOpen(false)}
                     className={clsx(
                       "flex h-12 sm:h-[50px] min-h-[48px] w-full items-center justify-start text-left px-4 sm:px-5 rounded-lg text-base sm:text-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-burgundy",
                       isActive
-                        ? "font-semibold text-burgundy dark:text-[#B08D57] bg-burgundy/10 dark:bg-white/10"
+                        ? "font-semibold text-burgundy dark:text-[#B08D57] bg-burgundy/10 dark:bg-[#B08D57]/15 border border-burgundy/20 dark:border-[#B08D57]/25"
                         : "font-medium text-[var(--nav-text)] hover:text-burgundy hover:bg-burgundy/5 dark:hover:text-[#B08D57] dark:focus-visible:text-[#B08D57] dark:hover:bg-white/5 active:bg-burgundy/10 dark:active:bg-white/10"
                     )}
                   >
@@ -300,7 +304,7 @@ export function Navbar() {
             </nav>
 
             {/* Thin Horizontal Divider */}
-            <div className="my-5 sm:my-6 h-px w-full bg-[var(--nav-divider)]" />
+            <div className="my-5 sm:my-6 h-px w-full bg-[var(--nav-divider)]/40" />
 
             {/* Full-width Join Button */}
             <a
