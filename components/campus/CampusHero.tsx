@@ -3,7 +3,6 @@
 import * as React from 'react';
 import Image from 'next/image';
 import { Map, Compass, ArrowRight } from 'lucide-react';
-import { header } from 'motion/react-client';
 
 export function CampusHero() {
   const handleScrollToAtlas = (e: React.MouseEvent) => {
