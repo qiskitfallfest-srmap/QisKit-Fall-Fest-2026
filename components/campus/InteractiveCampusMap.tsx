@@ -712,7 +712,7 @@ export function InteractiveCampusMap({
               />
               <line x1="528" y1="146" x2="607" y2="146" stroke="currentColor" strokeWidth="1" className={isSelected('annapurna-mess') ? 'text-[#B08D57]/60' : 'text-white/60 dark:text-white/10'} />
               <text x="567" y="169" textAnchor="middle" className="font-sans text-[10.5px] font-medium fill-stone-700 dark:fill-stone-300 select-none pointer-events-none">
-                Anapurna mess
+                Annapurna mess
               </text>
             </g>
 
