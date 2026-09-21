@@ -60,7 +60,7 @@ export function PlanVisitCTA() {
           </Link>
 
           <a
-            href="https://unstop.com"
+            href="https://unstop.com/college-fests/qiskit-fall-fest-srmap-2026-srm-university-amaravati-515345"
             target="_blank"
             rel="noopener noreferrer"
             data-cursor="cta"
