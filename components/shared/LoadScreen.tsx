@@ -53,9 +53,9 @@ const CRITICAL_ASSETS = [
   '/hero/HOME-01-HERO-DECADE-10-DARK.png',
 ];
 
-const HARD_TIMEOUT_MS = 3600;
-const FINAL_HOLD_MS = 250;
-const EXIT_FADE_DURATION_S = 0.5;
+const HARD_TIMEOUT_MS = 1600;
+const FINAL_HOLD_MS = 150;
+const EXIT_FADE_DURATION_S = 0.35;
 
 /**
  * LoadScreen - Cinematic intro loading screen with real critical asset preloading,
@@ -98,10 +98,10 @@ export const LoadScreen: React.FC<LoadScreenProps> = ({
   const progressBarRef = useRef<HTMLDivElement>(null);
   const percentTextRef = useRef<HTMLSpanElement>(null);
 
-  // State
-  const [canSkip, setCanSkip] = useState(false);
-  const [isExiting, setIsExiting] = useState(false);
-  const [isDone, setIsDone] = useState(false);
+  // State - default to true so full-screen overlay does not block page rendering
+  const [canSkip, setCanSkip] = useState(true);
+  const [isExiting, setIsExiting] = useState(true);
+  const [isDone, setIsDone] = useState(true);
 
   const isFinishingRef = useRef(false);
   const tlIntroRef = useRef<gsap.core.Timeline | null>(null);
@@ -148,6 +148,9 @@ export const LoadScreen: React.FC<LoadScreenProps> = ({
     if (isFinishingRef.current) return;
     isFinishingRef.current = true;
     setIsExiting(true);
+    try {
+      sessionStorage.setItem('qiskit_loadscreen_seen', 'true');
+    } catch {}
 
     // Ensure visual progress displays 100% on finish
     if (percentTextRef.current) {
@@ -190,6 +193,12 @@ export const LoadScreen: React.FC<LoadScreenProps> = ({
   // 4. GSAP CINEMATIC TIMELINE & REAL CRITICAL ASSET PRELOADING
   // ---------------------------------------------------------------------------
   useEffect(() => {
+    if (typeof window !== 'undefined' && sessionStorage.getItem('qiskit_loadscreen_seen')) {
+      setIsDone(true);
+      onCompleteRef.current?.();
+      return;
+    }
+
     if (isDone) return;
 
     let isCleanedUp = false;

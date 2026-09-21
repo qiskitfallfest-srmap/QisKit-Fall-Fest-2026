@@ -48,7 +48,7 @@ export function CoverflowCarousel({
   depth = 0.6,
   perspective = 3,
   falloff = 0.56,
-  fade = 0.1,
+  fade = 0,
   cardWidth = "clamp(180px, 24vw, 300px)",
   gap = 0.08,
   loop = true,
@@ -115,8 +115,14 @@ export function CoverflowCarousel({
         `translateX(calc(-50% + ${offset * pitch}px)) ` +
         `translateZ(${-depth * width * ramp}px) rotateY(${-tilt}deg)`;
 
-      const edge = loop ? Math.min(1, Math.max(0, count / 2 - distance)) : 1;
-      card.style.opacity = String(Math.max(0, 1 - fade * distance) * edge);
+      // Visible cards maintain full 100% opacity to prevent white bleed/fading on corners
+      if (fade === 0) {
+        const isBackside = loop && distance > count / 2;
+        card.style.opacity = isBackside ? "0" : "1";
+      } else {
+        const edge = loop ? Math.min(1, Math.max(0, count / 2 - distance)) : 1;
+        card.style.opacity = String(Math.max(0, 1 - fade * distance) * edge);
+      }
       card.style.zIndex = String(100 - Math.round(distance));
     });
   }, [count, depth, fade, falloff, gap, loop, rotate]);
@@ -287,7 +293,7 @@ export function CoverflowCarousel({
                 aria-label={`${index + 1} of ${count}`}
                 onClick={() => goTo(index)}
                 className={cn(
-                  "absolute left-1/2 top-0 aspect-square overflow-hidden rounded-2xl bg-muted shadow-2xl will-change-transform cursor-pointer border border-[#3A0B10]/20 dark:border-white/20 transition-shadow",
+                  "absolute left-1/2 top-0 aspect-square overflow-hidden rounded-2xl bg-white dark:bg-[#1A0507] shadow-2xl will-change-transform cursor-pointer border border-[#3A0B10]/20 dark:border-white/20 transition-shadow",
                   index === selected ? "ring-2 ring-[#800020] dark:ring-[#B08D57] shadow-[#800020]/20" : "",
                   cardClassName,
                 )}
@@ -312,7 +318,7 @@ export function CoverflowCarousel({
               type="button"
               aria-label="Previous slide"
               onClick={() => nudge(-1)}
-              className="absolute left-4 top-1/2 z-[200] -translate-y-1/2 rounded-full border border-black/10 dark:border-white/20 bg-white/80 dark:bg-black/80 p-2.5 text-[#3A0B10] dark:text-[#F5F3F0] backdrop-blur-md transition hover:bg-[#800020] hover:text-white dark:hover:bg-[#800020] dark:hover:text-white shadow-lg"
+              className="absolute left-2 sm:left-4 top-1/2 z-[200] -translate-y-1/2 rounded-full border border-black/10 dark:border-white/20 bg-white dark:bg-[#1A0507] p-2.5 text-[#3A0B10] dark:text-[#F5F3F0] transition hover:bg-[#800020] hover:text-white dark:hover:bg-[#800020] dark:hover:text-white shadow-lg"
             >
               <ChevronLeft className="size-5" />
             </button>
@@ -320,7 +326,7 @@ export function CoverflowCarousel({
               type="button"
               aria-label="Next slide"
               onClick={() => nudge(1)}
-              className="absolute right-4 top-1/2 z-[200] -translate-y-1/2 rounded-full border border-black/10 dark:border-white/20 bg-white/80 dark:bg-black/80 p-2.5 text-[#3A0B10] dark:text-[#F5F3F0] backdrop-blur-md transition hover:bg-[#800020] hover:text-white dark:hover:bg-[#800020] dark:hover:text-white shadow-lg"
+              className="absolute right-2 sm:right-4 top-1/2 z-[200] -translate-y-1/2 rounded-full border border-black/10 dark:border-white/20 bg-white dark:bg-[#1A0507] p-2.5 text-[#3A0B10] dark:text-[#F5F3F0] transition hover:bg-[#800020] hover:text-white dark:hover:bg-[#800020] dark:hover:text-white shadow-lg"
             >
               <ChevronRight className="size-5" />
             </button>

@@ -57,69 +57,58 @@ const IMPACT_STATS = [
 // ─────────────────────────────────────────────────────────────
 const WEBSITE_TEAM_SLIDES: CoverflowSlide[] = [
   {
-    src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
+    src: '/images/team/srihaas-pigilam.jpg',
     alt: 'Srihaas Pigilam',
     title: 'Srihaas Pigilam',
-    subtitle: 'Lead Architect & Systems Engineer',
+    subtitle: 'Team Leader',
     meta: [
       { label: 'Branch', value: 'Website Team' },
-      { label: 'Focus', value: 'Next.js 15 & System Architecture' },
-      { label: 'Track', value: 'Full-Stack Engineering' },
+      { label: 'Role', value: 'Team Leader' },
+      { label: 'Track', value: 'Full-Stack Engineering & Architecture' },
     ],
   },
   {
-    src: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80',
-    alt: 'Ananya Sharma',
-    title: 'Ananya Sharma',
-    subtitle: 'Visual Design & Editorial Interface Lead',
+    src: '/images/team/pradnish-chintada.jpg',
+    alt: 'Pradnish Chintada',
+    title: 'Pradnish Chintada',
+    subtitle: 'Lead UI/UX and Frontend',
     meta: [
       { label: 'Branch', value: 'Website Team' },
-      { label: 'Focus', value: 'Editorial UI & Burgundy Token Palette' },
-      { label: 'Track', value: 'Design Systems' },
+      { label: 'Role', value: 'Lead UI/UX and Frontend' },
+      { label: 'Track', value: 'UI/UX Design & Component Systems' },
     ],
   },
   {
-    src: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80',
-    alt: 'Vikram Patel',
-    title: 'Vikram Patel',
-    subtitle: 'Frontend Systems & Accessibility Engineer',
+    src: '/images/team/shaik-subhani.jpg',
+    alt: 'Shaik Mahaboob Subhani',
+    title: 'Shaik Mahaboob Subhani',
+    subtitle: 'Co-lead UI/UX and Components',
     meta: [
       { label: 'Branch', value: 'Website Team' },
-      { label: 'Focus', value: 'WCAG 2.1 AA & React 19 Components' },
-      { label: 'Track', value: 'Component Architecture' },
+      { label: 'Role', value: 'Co-lead UI/UX and Components' },
+      { label: 'Track', value: 'UI/UX Architecture & Primitives' },
     ],
   },
   {
-    src: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=800&q=80',
-    alt: 'Elena Rostova',
-    title: 'Elena Rostova',
-    subtitle: 'Creative Technologist & Quantum Visualizer',
+    src: '/images/team/robert-bandaru.jpg',
+    alt: 'Robert Bandaru',
+    title: 'Robert Bandaru',
+    subtitle: 'UI/UX and documentation',
     meta: [
       { label: 'Branch', value: 'Website Team' },
-      { label: 'Focus', value: 'Circuits, Bloch Spheres & WebGL' },
-      { label: 'Track', value: 'Creative Assets' },
+      { label: 'Role', value: 'UI/UX and documentation' },
+      { label: 'Track', value: 'Design Flow & Technical Docs' },
     ],
   },
   {
-    src: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=800&q=80',
-    alt: 'Aarav Nair',
-    title: 'Aarav Nair',
-    subtitle: 'Platform Reliability & Edge Systems Lead',
+    src: '/images/team/sandeep-nambi.jpg',
+    alt: 'Sandeep Nambi',
+    title: 'Sandeep Nambi',
+    subtitle: 'UI/UX Technical and Documentation',
     meta: [
       { label: 'Branch', value: 'Website Team' },
-      { label: 'Focus', value: 'Cloudflare Edge CDN & Core Web Vitals' },
-      { label: 'Track', value: 'Platform Performance' },
-    ],
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
-    alt: 'Maya Lin',
-    title: 'Maya Lin',
-    subtitle: 'Interactive Experience & Registration Engineer',
-    meta: [
-      { label: 'Branch', value: 'Website Team' },
-      { label: 'Focus', value: 'Dynamic Agenda Feeds & Unstop Gateway' },
-      { label: 'Track', value: 'Interactive Flow' },
+      { label: 'Role', value: 'UI/UX Technical and Documentation' },
+      { label: 'Track', value: 'Technical UI/UX & Interface Docs' },
     ],
   },
 ];
@@ -421,7 +410,7 @@ export default function TeamPage() {
                         rotate={36}
                         depth={0.5}
                         perspective={2.5}
-                        fade={0.15}
+                        fade={0}
                         cardWidth="clamp(210px, 62vw, 290px)"
                         showCaption={true}
                         showNavigation={true}
@@ -432,7 +421,7 @@ export default function TeamPage() {
 
                     <div className="pt-3 border-t border-[#3A0B10]/10 dark:border-white/10 flex items-center justify-between text-xs font-mono">
                       <span className="text-[#16171B]/60 dark:text-[#C7C8CC]/60">
-                        6 Active Members
+                        {WEBSITE_TEAM_SLIDES.length} Active Members
                       </span>
                       <Link
                         href="/team/website"
@@ -494,7 +483,7 @@ export default function TeamPage() {
                         rotate={36}
                         depth={0.5}
                         perspective={2.5}
-                        fade={0.15}
+                        fade={0}
                         cardWidth="clamp(210px, 62vw, 290px)"
                         showCaption={true}
                         showNavigation={true}
@@ -598,7 +587,7 @@ export default function TeamPage() {
               rotate={44}
               depth={0.65}
               perspective={3}
-              fade={0.12}
+              fade={0}
               cardWidth="clamp(220px, 22vw, 320px)"
               showCaption={true}
               showNavigation={true}

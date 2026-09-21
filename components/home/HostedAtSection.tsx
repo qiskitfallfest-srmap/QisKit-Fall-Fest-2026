@@ -68,7 +68,12 @@ export function HostedAtSection() {
         {/* Left Editorial Block */}
         <div
           className="
-            relative z-10 w-full max-w-[430px]
+            relative z-10 w-full max-w-[460px]
+            p-6 sm:p-8 rounded-xl
+            bg-white/60 dark:bg-black/65
+            backdrop-blur-md
+            border border-white/40 dark:border-white/10
+            shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.40)]
             lg:justify-self-start
           "
         >

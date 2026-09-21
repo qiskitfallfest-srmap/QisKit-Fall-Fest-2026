@@ -6,6 +6,7 @@ import { BriefcaseBusiness, Boxes, Atom, Users, ArrowRight } from 'lucide-react'
 interface HighlightItem {
   id: string;
   title: string;
+  tag: string;
   description: string;
   icon: React.ElementType;
   imageSrc: string;
@@ -17,7 +18,8 @@ const HIGHLIGHTS: HighlightItem[] = [
   {
     id: 'workshops',
     title: 'World-Class Workshops',
-    description: 'Learn from experts and get hands-on with Qiskit.',
+    tag: 'WORKSHOPS',
+    description: 'Learn from experts and get hands-on experience with Qiskit SDK & quantum circuits.',
     icon: BriefcaseBusiness,
     imageSrc: '/images/home/highlights/workshops.jpg',
     imageAlt: 'World-Class Quantum Workshops and hands-on laboratory sessions',
@@ -26,7 +28,8 @@ const HIGHLIGHTS: HighlightItem[] = [
   {
     id: 'hackathons',
     title: 'Quantum Hackathons',
-    description: 'Build real solutions to global challenges.',
+    tag: 'COMPETITION',
+    description: 'Build real solutions to global quantum computing challenges in collaborative teams.',
     icon: Boxes,
     imageSrc: '/images/home/highlights/hackathons.jpg',
     imageAlt: 'Quantum Hackathon collaboration and software builds',
@@ -35,7 +38,8 @@ const HIGHLIGHTS: HighlightItem[] = [
   {
     id: 'sessions',
     title: 'Inspiring Technical Sessions',
-    description: 'Explore the latest in quantum technology.',
+    tag: 'KEYNOTES',
+    description: 'Explore state-of-the-art research, industry developments, and quantum algorithms.',
     icon: Atom,
     imageSrc: '/images/home/highlights/sessions.jpg',
     imageAlt: 'Keynotes and technical presentations on quantum computing',
@@ -44,7 +48,8 @@ const HIGHLIGHTS: HighlightItem[] = [
   {
     id: 'community',
     title: 'Global Community',
-    description: 'Connect with a diverse and growing quantum ecosystem.',
+    tag: 'NETWORKING',
+    description: 'Connect with a diverse and growing global ecosystem of quantum pioneers and researchers.',
     icon: Users,
     imageSrc: '/images/home/highlights/community.jpg',
     imageAlt: 'Global quantum community networking and collaboration',
@@ -67,23 +72,16 @@ export function EventHighlights() {
         className="
           w-full max-w-[1920px] mx-auto
           px-5 sm:px-[34px] md:px-[54px] lg:px-[72px] 2xl:px-[92px]
-          py-[30px] sm:py-[34px] md:py-[38px] lg:py-[42px] 2xl:py-[46px]
-          pb-[36px] sm:pb-[42px] md:pb-[48px] lg:pb-[54px] 2xl:pb-[58px]
-          lg:min-h-[calc(100svh-var(--navbar-height))] lg:flex lg:flex-col lg:justify-center
+          py-8 sm:py-10 lg:py-12 xl:py-14
+          lg:min-h-[calc(100svh-88px)] lg:flex lg:flex-col lg:justify-between
         "
       >
         {/* =========================================================
-            HEADER ROW: Label on left, supporting text on right
+            HEADER SECTION: Primary Title & Description Layout
         ========================================================== */}
-        <div
-          className="
-            flex flex-col sm:flex-row sm:items-center sm:justify-between
-            gap-y-2
-            mb-[18px] sm:mb-[20px] lg:mb-[24px]
-          "
-        >
+        <div className="mb-8 lg:mb-10 xl:mb-12">
           {/* Eyebrow Label with Diamond Marker */}
-          <div className="flex items-center gap-[10px]">
+          <div className="flex items-center gap-[10px] mb-3">
             <span
               aria-hidden="true"
               className="
@@ -91,31 +89,46 @@ export function EventHighlights() {
                 bg-[#8F1723] dark:bg-[#EC7481]
               "
             />
-            <h2
-              id="highlights-heading"
+            <span
               className="
                 font-sans font-bold uppercase
                 text-[11px] sm:text-[12px] lg:text-[13px]
-                tracking-[0.18em] leading-none
-                text-[#211718] dark:text-[#F7F1EE]
+                tracking-[0.2em] leading-none
+                text-[#8F1723] dark:text-[#EC7481]
               "
             >
               EVENT HIGHLIGHTS
-            </h2>
+            </span>
           </div>
 
-          {/* Supporting line */}
-          <p
-            className="
-              font-sans font-normal
-              text-[11.5px] sm:text-[12px] lg:text-[12.5px]
-              leading-[1.4]
-              text-[#5F5754] dark:text-[#BFB5B1]
-              text-left sm:text-right
-            "
-          >
-            More than an event — a global movement.
-          </p>
+          {/* Dual Column Section Title & Description */}
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 pb-6 border-b border-[#8F1723]/15 dark:border-white/10">
+            <h2
+              id="highlights-heading"
+              className="
+                font-serif font-bold tracking-[-0.035em]
+                text-[32px] sm:text-[40px] md:text-[46px] lg:text-[50px] 2xl:text-[56px]
+                leading-[1.05] max-w-[780px]
+                text-transparent bg-clip-text
+                bg-[linear-gradient(90deg,#6C101A_0%,#3A090E_70%,#181313_100%)]
+                dark:bg-[linear-gradient(90deg,#F5EDEB_0%,#EFB0B5_50%,#F5EDEB_100%)]
+              "
+            >
+              Immersive Quantum Experiences & Tracks.
+            </h2>
+
+            <p
+              className="
+                font-sans font-normal
+                text-[14px] sm:text-[15px] lg:text-[15.5px]
+                leading-[1.6]
+                text-[#5F5754] dark:text-[#BFB5B1]
+                max-w-[440px] shrink-0
+              "
+            >
+              From hands-on Qiskit SDK workshops and competitive hackathons to keynote sessions and global community networking at SRM University-AP.
+            </p>
+          </div>
         </div>
 
         {/* =========================================================
@@ -129,7 +142,7 @@ export function EventHighlights() {
             grid grid-cols-1
             sm:grid-cols-2
             lg:grid-cols-4
-            gap-[14px] sm:gap-[16px] 2xl:gap-[18px]
+            gap-4 sm:gap-5 xl:gap-6
           "
         >
           {HIGHLIGHTS.map((card) => {
@@ -139,22 +152,22 @@ export function EventHighlights() {
                 key={card.id}
                 className="
                   group relative flex flex-col
-                  rounded-[6px] overflow-hidden
+                  rounded-[10px] overflow-hidden
                   bg-[#FBF7F3] dark:bg-[#121111]
                   border border-[rgba(108,21,30,0.14)] dark:border-[rgba(255,235,231,0.13)]
-                  hover:border-[rgba(143,23,35,0.28)] dark:hover:border-[rgba(239,116,129,0.28)]
+                  hover:border-[rgba(143,23,35,0.38)] dark:hover:border-[rgba(239,116,129,0.40)]
                   shadow-[0_8px_26px_rgba(67,30,32,0.05)] dark:shadow-[0_8px_28px_rgba(0,0,0,0.18)]
-                  hover:shadow-[0_10px_30px_rgba(67,30,32,0.09)] dark:hover:shadow-[0_10px_32px_rgba(0,0,0,0.30)]
-                  transition-all duration-200 ease-out
-                  hover:-translate-y-[2px]
-                  min-h-[auto] sm:min-h-[250px] lg:min-h-[258px] 2xl:min-h-[276px]
+                  hover:shadow-[0_14px_36px_rgba(67,30,32,0.12)] dark:hover:shadow-[0_14px_38px_rgba(0,0,0,0.38)]
+                  transition-all duration-300 ease-out
+                  hover:-translate-y-1
+                  min-h-[auto] sm:min-h-[290px] lg:min-h-[310px]
                 "
               >
                 {/* Image Top Area */}
                 <div
                   className="
                     relative w-full overflow-hidden
-                    h-[168px] sm:h-[122px] lg:h-[118px] 2xl:h-[128px]
+                    h-[175px] sm:h-[135px] lg:h-[145px] 2xl:h-[160px]
                     bg-[#E9E2DC] dark:bg-[#191717]
                   "
                 >
@@ -165,8 +178,8 @@ export function EventHighlights() {
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                     className="
                       object-cover object-center
-                      transition-transform duration-[220ms] ease-out
-                      group-hover:scale-[1.025]
+                      transition-transform duration-500 ease-out
+                      group-hover:scale-105
                     "
                     referrerPolicy="no-referrer"
                   />
@@ -175,33 +188,39 @@ export function EventHighlights() {
                     aria-hidden="true"
                     className="
                       absolute inset-0 pointer-events-none
-                      bg-[#3A0B10]/[0.06] dark:bg-[#000000]/[0.22]
+                      bg-gradient-to-t from-[#240609]/60 via-transparent to-transparent
                     "
                   />
+
+                  {/* Category Tag Pill */}
+                  <div className="absolute top-3 left-3 z-10">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[9.5px] font-mono font-bold tracking-wider uppercase bg-[#181313]/80 dark:bg-black/80 backdrop-blur-md text-white border border-white/20">
+                      {card.tag}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Card Body */}
                 <div
                   className="
                     flex flex-col flex-1
-                    p-4 lg:p-[16px_16px_14px] 2xl:p-[17px_18px_16px]
+                    p-4 sm:p-5 lg:p-5
                   "
                 >
                   {/* Title row with icon */}
-                  <div className="flex items-center gap-2">
-                    <IconComponent
-                      aria-hidden="true"
-                      strokeWidth={1.8}
-                      className="
-                        w-[17px] h-[17px] 2xl:w-[18px] 2xl:h-[18px] shrink-0
-                        text-[#9B1E2C] dark:text-[#EF7481]
-                      "
-                    />
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <div className="p-1.5 rounded-md bg-[#8F1723]/10 dark:bg-[#EC7481]/15 text-[#8F1723] dark:text-[#EC7481]">
+                      <IconComponent
+                        aria-hidden="true"
+                        strokeWidth={2}
+                        className="w-4 h-4 shrink-0"
+                      />
+                    </div>
                     <h3
                       className="
                         font-sans font-bold
-                        text-[14px] sm:text-[13px] 2xl:text-[13.5px]
-                        leading-[1.2] tracking-[-0.01em]
+                        text-[15px] sm:text-[14.5px] xl:text-[15px]
+                        leading-[1.25] tracking-[-0.01em]
                         text-[#261B1B] dark:text-[#F6F1EF]
                       "
                     >
@@ -212,10 +231,9 @@ export function EventHighlights() {
                   {/* Card Description */}
                   <p
                     className="
-                      mt-[9px] max-w-[260px]
                       font-sans font-normal
-                      text-[12.5px] sm:text-[11.5px] 2xl:text-[12px]
-                      leading-[1.45]
+                      text-[13px] sm:text-[12.5px] xl:text-[13px]
+                      leading-[1.5]
                       text-[#665E5A] dark:text-[#BDB4B1]
                     "
                   >
@@ -223,21 +241,25 @@ export function EventHighlights() {
                   </p>
 
                   {/* Card Action Link */}
-                  <div className="mt-auto pt-3 flex justify-end">
+                  <div className="mt-auto pt-4 flex items-center justify-between border-t border-[#8F1723]/10 dark:border-white/10 mt-3">
+                    <span className="text-[11.5px] font-semibold text-[#8F1723] dark:text-[#EC7481] group-hover:underline">
+                      Explore Track
+                    </span>
                     <Link
                       href={card.href}
                       aria-label={`View ${card.title}`}
                       className="
-                        w-[26px] h-[26px] rounded-full shrink-0
-                        border border-[rgba(108,21,30,0.30)] dark:border-[rgba(240,116,129,0.40)]
+                        w-7 h-7 rounded-full shrink-0
+                        bg-[#8F1723]/10 dark:bg-[#EC7481]/15
+                        border border-[rgba(108,21,30,0.25)] dark:border-[rgba(240,116,129,0.30)]
                         flex items-center justify-center
-                        text-[#8F1723] dark:text-[#F48A95]
-                        transition-all duration-200
-                        group-hover:translate-x-[2px]
-                        group-hover:bg-[rgba(143,23,35,0.05)] dark:group-hover:bg-[rgba(239,116,129,0.06)]
+                        text-[#8F1723] dark:text-[#EC7481]
+                        transition-all duration-300
+                        group-hover:translate-x-1 group-hover:bg-[#8F1723] group-hover:text-white
+                        dark:group-hover:bg-[#EC7481] dark:group-hover:text-black
                       "
                     >
-                      <ArrowRight className="w-[13px] h-[13px]" strokeWidth={2} />
+                      <ArrowRight className="w-3.5 h-3.5" strokeWidth={2.2} />
                     </Link>
                   </div>
                 </div>

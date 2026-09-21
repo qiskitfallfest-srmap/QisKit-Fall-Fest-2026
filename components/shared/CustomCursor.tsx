@@ -75,8 +75,8 @@ export function CustomCursor() {
 
       if (currentHover === 'cta') {
         // CTA hover state
-        dotEl.style.width = '6px';
-        dotEl.style.height = '6px';
+        dotEl.style.width = '10px';
+        dotEl.style.height = '10px';
         dotEl.style.transform = `translate(-50%, -50%) scale(${scaleDownDot})`;
 
         ringEl.style.width = '50px';
@@ -85,8 +85,8 @@ export function CustomCursor() {
         ringEl.setAttribute('data-cta', 'true');
       } else if (currentHover === 'interactive') {
         // Standard interactive hover (links, buttons)
-        dotEl.style.width = '6px';
-        dotEl.style.height = '6px';
+        dotEl.style.width = '10px';
+        dotEl.style.height = '10px';
         dotEl.style.transform = `translate(-50%, -50%) scale(${scaleDownDot})`;
 
         ringEl.style.width = '46px';
@@ -95,8 +95,8 @@ export function CustomCursor() {
         ringEl.removeAttribute('data-cta');
       } else {
         // Default cursor state
-        dotEl.style.width = '9px';
-        dotEl.style.height = '9px';
+        dotEl.style.width = '14px';
+        dotEl.style.height = '14px';
         dotEl.style.transform = `translate(-50%, -50%) scale(${scaleDownDot})`;
 
         ringEl.style.width = '36px';
@@ -277,8 +277,8 @@ export function CustomCursor() {
             duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]
           "
           style={{
-            width: '9px',
-            height: '9px',
+            width: '14px',
+            height: '14px',
             transform: 'translate(-50%, -50%)',
           }}
         />

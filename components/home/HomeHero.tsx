@@ -46,30 +46,27 @@ export function HomeHero() {
         "
       >
         <picture className="w-full h-full block">
-          {/* 1. Desktop: Widescreen (1280px and wider) */}
           <source
             media="(min-width: 1280px)"
             srcSet="/hero/HOME-HERO-BG-DESKTOP.png"
             type="image/png"
           />
-          {/* 2. Laptop: Mid-wide screen (1024px to 1279px) */}
           <source
             media="(min-width: 1024px)"
             srcSet="/hero/HOME-HERO-BG-LAPTOP.png"
             type="image/png"
           />
-          {/* 3. Tablet: Portrait / Tablet screen (768px to 1023px) */}
-          <source
-            media="(min-width: 768px)"
-            srcSet="/hero/HOME-HERO-BG-TABLET.png"
-            type="image/png"
-          />
-          {/* 4. Mobile fallback: Phone screen (< 768px) */}
           <img
-            src="/hero/HOME-HERO-BG-MOBILE.png"
+            src="/hero/HOME-01-HERO-BACKGROUND-LIGHT.png"
             alt="Qiskit Fall Fest 2026 Background"
             fetchPriority="high"
-            className="w-full h-full object-cover object-center select-none"
+            className="w-full h-full object-cover object-center select-none dark:hidden"
+          />
+          <img
+            src="/hero/HOME-01-HERO-BACKGROUND-DAR.png"
+            alt="Qiskit Fall Fest 2026 Background"
+            fetchPriority="high"
+            className="w-full h-full object-cover object-center select-none hidden dark:block"
           />
         </picture>
       </div>
@@ -357,23 +354,8 @@ export function HomeHero() {
             Always visible without scrolling on laptop and desktop.
         ======================================================== */}
         <div className={styles.metadataRail}>
-          {/* Left Metadata Cluster with Circular N Compass Marker */}
+          {/* Left Metadata Cluster */}
           <div className="flex items-center h-full">
-            {/* Reference N Compass Marker */}
-            <div
-              aria-hidden="true"
-              className={`
-                ${styles.metadataCompass}
-                flex shrink-0 items-center justify-center
-                rounded-full
-                bg-[#2B2B2B] dark:bg-[#161616]
-                border border-white/35 text-white
-                text-[11px] font-bold font-mono
-                select-none
-              `}
-            >
-              N
-            </div>
 
             {/* 3 Information Blocks */}
             <div className={styles.metadataCols}>

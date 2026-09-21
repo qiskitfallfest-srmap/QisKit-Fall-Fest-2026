@@ -64,6 +64,7 @@ export default function HomePage() {
         num="05"
         title="Countdown"
         tag="Online Phase Countdown"
+        fitContent={true}
       >
         <CountdownSection />
       </ScrollSection>

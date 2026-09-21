@@ -7,6 +7,7 @@ export interface ScrollSectionProps extends React.HTMLAttributes<HTMLElement> {
   num: string;
   children: React.ReactNode;
   className?: string;
+  fitContent?: boolean;
 }
 
 export function ScrollSection({
@@ -16,6 +17,7 @@ export function ScrollSection({
   num,
   children,
   className = '',
+  fitContent = false,
   ...props
 }: ScrollSectionProps) {
   return (
@@ -29,7 +31,7 @@ export function ScrollSection({
       aria-label={`${num} — ${title}`}
       className={`
         w-full relative
-        min-h-[calc(100svh-var(--navbar-height,80px))]
+        ${fitContent ? 'min-h-0' : 'min-h-[calc(100svh-var(--navbar-height,80px))]'}
         flex flex-col justify-center
         overflow-x-hidden
         transition-colors duration-300

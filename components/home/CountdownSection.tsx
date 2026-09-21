@@ -114,7 +114,7 @@ export function CountdownSection() {
       className="
         relative isolate w-full overflow-hidden
         bg-[#541018] dark:bg-[#140708]
-        min-h-[calc(100svh-var(--navbar-height,80px))]
+        min-h-0
         flex flex-col justify-center
         transition-colors duration-300
       "
@@ -155,8 +155,8 @@ export function CountdownSection() {
         className="
           relative z-10 w-full max-w-[1920px] mx-auto
           px-5 sm:px-[34px] md:px-[52px] lg:px-[64px] xl:px-[76px] 2xl:px-[96px]
-          py-12 sm:py-16 lg:py-20
-          min-h-[calc(100svh-var(--navbar-height,80px))]
+          py-10 sm:py-12 lg:py-14
+          min-h-0
           flex flex-col justify-center
         "
       >
@@ -260,8 +260,8 @@ export function CountdownSection() {
                     key={unit.key}
                     className="
                       group flex flex-col items-center justify-center
-                      h-[96px] sm:h-[100px] lg:h-[116px] 2xl:h-[124px]
-                      p-[14px_8px] sm:p-[16px_10px] lg:p-[18px_12px]
+                      h-[82px] sm:h-[88px] lg:h-[96px] 2xl:h-[102px]
+                      p-[10px_6px] sm:p-[12px_8px] lg:p-[14px_10px]
                       rounded-[5px]
                       bg-[#23080B]/40
                       border border-[#F6D0CF]/30

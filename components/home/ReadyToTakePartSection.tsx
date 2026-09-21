@@ -61,7 +61,7 @@ export function ReadyToTakePartSection() {
         className="
           relative z-10 w-full max-w-[1920px] mx-auto
           px-5 sm:px-9 md:px-12 lg:px-12 xl:px-[58px] 2xl:px-[64px] min-[1600px]:px-[72px] min-[1920px]:px-[82px]
-          py-12 sm:py-16 md:py-20
+          py-12 sm:py-16 md:py-20 lg:py-24
           min-h-[calc(100svh-var(--navbar-height,80px))]
           flex flex-col justify-center
         "
@@ -91,9 +91,9 @@ export function ReadyToTakePartSection() {
           <div className="flex items-center gap-[10px] mb-2 sm:mb-2.5">
             <span
               aria-hidden="true"
-              className="w-[5px] h-[5px] rotate-45 shrink-0 bg-[#8F1723] dark:bg-[#EF7481]"
+              className="w-[5px] h-[5px] rotate-45 shrink-0 bg-[#FFB3BA] dark:bg-[#EF7481]"
             />
-            <span className="font-sans font-bold text-[11px] xl:text-[12px] tracking-[0.20em] uppercase text-[#8F1723] dark:text-[#EF7481]">
+            <span className="font-sans font-bold text-[11px] xl:text-[12px] tracking-[0.20em] uppercase text-[#FFB3BA] dark:text-[#EF7481]">
               BE PART OF IT
             </span>
           </div>
@@ -176,7 +176,7 @@ export function ReadyToTakePartSection() {
               font-sans font-semibold uppercase
               text-[8.5px] md:text-[9px] xl:text-[10px] 2xl:text-[10.5px]
               leading-[1.65] tracking-[0.16em]
-              text-[#75615F] dark:text-[#D9C7C4]
+              text-white/65 dark:text-[#D9C7C4]
             "
           >
             {SIDE_WORDS.map((word) => (

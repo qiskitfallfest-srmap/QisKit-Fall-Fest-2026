@@ -1,16 +1,17 @@
+import Image from 'next/image';
 import Link from 'next/link';
-import { 
-  ArrowRight, 
-  ArrowUpRight, 
-  Github, 
-  Linkedin, 
-  Terminal, 
-  Code2, 
-  Layers, 
-  ShieldCheck, 
-  Sparkles, 
-  Radio, 
-  Cpu, 
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Github,
+  Linkedin,
+  Terminal,
+  Code2,
+  Layers,
+  ShieldCheck,
+  Sparkles,
+  Radio,
+  Cpu,
   Palette,
   ExternalLink,
   CheckCircle2
@@ -28,52 +29,69 @@ interface TeamMember {
   linkedin?: string;
   initials: string;
   avatarGradient: string;
+  image?: string;
 }
 
 const WEBSITE_TEAM_MEMBERS: TeamMember[] = [
   {
     name: 'Srihaas Pigilam',
-    role: 'Lead Architect & Systems Engineer',
+    role: 'Team Leader',
     category: 'Architecture / Full-Stack',
-    bio: 'Overseeing frontend architecture, theme systems, Next.js App Router implementation, and responsive editorial layout specifications.',
-    skills: ['Next.js 15', 'TypeScript', 'Tailwind CSS', 'Systems Design'],
+    bio: 'Overseeing website team leadership, frontend architecture, theme systems, Next.js App Router implementation, and responsive layout specifications.',
+    skills: ['Team Leadership', 'Next.js 15', 'TypeScript', 'Tailwind CSS', 'Systems Design'],
     github: 'https://github.com',
     linkedin: 'https://linkedin.com',
     initials: 'SP',
     avatarGradient: 'from-[#6C151E] via-[#521018] to-[#3A0B10]',
+    image: '/images/team/srihaas-pigilam.jpg',
   },
   {
-    name: 'Quantum UI Engineer',
-    role: 'Visual Design & Editorial Interface',
-    category: 'UI/UX & Editorial Craft',
-    bio: 'Specializing in quantum orbital visual language, bespoke typography pairing, and dark/light atmospheric art direction.',
-    skills: ['Editorial UI', 'Responsive Design', 'Design Systems', 'Motion'],
+    name: 'Pradnish Chintada',
+    role: 'Lead UI/UX and Frontend',
+    category: 'UI/UX & Frontend Engineering',
+    bio: 'Directing user experience design, orbital visual language, responsive component architecture, and high-fidelity interactive design systems.',
+    skills: ['Lead UI/UX', 'Frontend Engineering', 'Design Systems', 'Responsive UI'],
     github: 'https://github.com',
     linkedin: 'https://linkedin.com',
-    initials: 'QU',
+    initials: 'PC',
     avatarGradient: 'from-[#521018] via-[#3A0B10] to-[#16171B]',
+    image: '/images/team/pradnish-chintada.jpg',
   },
   {
-    name: 'Frontend Systems Engineer',
-    role: 'Component Architecture & Accessibility',
-    category: 'Frontend Engineering',
-    bio: 'Crafting accessible UI primitives, navigation workflows, cross-device viewport adaptations, and WCAG AA compliance.',
-    skills: ['WCAG AA', 'Next.js App Router', 'React 19', 'Performance'],
+    name: 'Shaik Mahaboob Subhani',
+    role: 'Co-lead UI/UX and Components',
+    category: 'UI/UX & Component Systems',
+    bio: 'Architecting core component primitives, design-to-code translations, responsive UI layouts, and interactive coverflow modules.',
+    skills: ['Co-lead UI/UX', 'Component Systems', 'Tailwind CSS', 'React 19'],
     github: 'https://github.com',
     linkedin: 'https://linkedin.com',
-    initials: 'FE',
+    initials: 'SMS',
+    avatarGradient: 'from-[#1B1425] via-[#451220] to-[#16171B]',
+    image: '/images/team/shaik-subhani.jpg',
+  },
+  {
+    name: 'Robert Bandaru',
+    role: 'UI/UX and documentation',
+    category: 'UI/UX & Documentation',
+    bio: 'Collaborating on user flows, design system documentation, typography pairings, and layout design consistency.',
+    skills: ['UI/UX Design', 'Technical Writing', 'Design Docs', 'User Journey'],
+    github: 'https://github.com',
+    linkedin: 'https://linkedin.com',
+    initials: 'RB',
+    avatarGradient: 'from-[#2E1015] via-[#4A0D15] to-[#16171B]',
+    image: '/images/team/robert-bandaru.jpg',
+  },
+  {
+    name: 'Sandeep Nambi',
+    role: 'UI/UX Technical and Documentation',
+    category: 'UI/UX & Documentation',
+    bio: 'Spearheading technical UI/UX implementation, component specifications, interface documentation, and accessible frontend workflows.',
+    skills: ['Technical UI/UX', 'Documentation', 'Interface Specs', 'Component Standards'],
+    github: 'https://github.com',
+    linkedin: 'https://linkedin.com',
+    initials: 'SN',
     avatarGradient: 'from-[#3A0B10] via-[#6C151E] to-[#521018]',
-  },
-  {
-    name: 'Creative Technologist',
-    role: 'Quantum Visualizer & Assets',
-    category: 'Creative Tech & Graphics',
-    bio: 'Translating quantum circuit logic, Bloch spheres, and event telemetry into restrained vector aesthetics and brand assets.',
-    skills: ['SVG Vectors', 'Quantum Circuits', 'Interaction', 'Brand Identity'],
-    github: 'https://github.com',
-    linkedin: 'https://linkedin.com',
-    initials: 'CT',
-    avatarGradient: 'from-[#16171B] via-[#3A0B10] to-[#521018]',
+    image: '/images/team/sandeep-nambi.jpg',
   },
 ];
 
@@ -111,7 +129,7 @@ const CAPABILITIES = [
 export default function WebsiteTeamPage() {
   return (
     <div className="w-full flex flex-col min-h-screen bg-[var(--background)] text-[var(--foreground)] selection:bg-[#6C151E] selection:text-[#F5F3F0]">
-      
+
       {/* ─────────────────────────────────────────────────────────────
           SECTION 01: HERO — "Designing Connections."
           Asymmetric editorial composition with left content & right visual
@@ -129,13 +147,13 @@ export default function WebsiteTeamPage() {
         </div>
 
         <div className="relative mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-12 pt-16 sm:pt-20 lg:pt-24 pb-20 sm:pb-24 lg:pb-28">
-          
+
           {/* Main Grid: Left Editorial Statement + Right Code Visual Area */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-            
+
             {/* Left Column: Editorial Headline & Statement */}
             <div className="lg:col-span-7 space-y-6 sm:space-y-8">
-              
+
               {/* Category / Eyebrow Badge */}
               <div className="flex flex-wrap items-center gap-3">
                 <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-bold tracking-[0.2em] uppercase bg-[#6C151E]/10 dark:bg-[#6C151E]/30 text-[#6C151E] dark:text-[#E5E5E7] border border-[#6C151E]/20">
@@ -192,7 +210,7 @@ export default function WebsiteTeamPage() {
             {/* Right Column: Large Website / Code / Development Visual Area */}
             <div className="lg:col-span-5 relative">
               <div className="relative mx-auto max-w-lg lg:max-w-none rounded-2xl border border-[#3A0B10]/20 dark:border-[#F5F3F0]/20 bg-[#16171B] text-[#F5F3F0] shadow-2xl overflow-hidden">
-                
+
                 {/* Code Window Titlebar */}
                 <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-black/40 text-xs font-mono">
                   <div className="flex items-center gap-2">
@@ -284,7 +302,7 @@ export default function WebsiteTeamPage() {
         className="w-full py-16 sm:py-20 lg:py-24 bg-[#FAF9F6] dark:bg-[#1E0608] border-b border-[#3A0B10]/15 dark:border-[#F5F3F0]/10 transition-colors duration-300"
       >
         <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-12 space-y-12">
-          
+
           {/* Header Row */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-[#3A0B10]/15 dark:border-[#F5F3F0]/15">
             <div className="space-y-3 max-w-2xl">
@@ -301,12 +319,12 @@ export default function WebsiteTeamPage() {
 
             <div className="text-xs font-mono text-[#16171B]/60 dark:text-[#C7C8CC]/60 flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-[#6C151E] dark:bg-[#B08D57]" />
-              <span>4 Verified Engineering Leads</span>
+              <span>{WEBSITE_TEAM_MEMBERS.length} Verified Engineering Members</span>
             </div>
           </div>
 
-          {/* Responsive Card Grid: Multi-Column on Desktop (4 cols), Tablet (2 cols), Mobile (1 col) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 xl:gap-8">
+          {/* Responsive Card Grid: Multi-Column on Desktop (3 cols), Tablet (2 cols), Mobile (1 col) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 xl:gap-8">
             {WEBSITE_TEAM_MEMBERS.map((member) => (
               <div
                 key={member.name}
@@ -314,20 +332,30 @@ export default function WebsiteTeamPage() {
               >
                 {/* Top Section: Portrait & Bio */}
                 <div className="space-y-5">
-                  
-                  {/* Portrait Area */}
-                  <div className="relative aspect-square w-full rounded-lg overflow-hidden border border-black/10 dark:border-white/10 bg-gradient-to-br from-[#3A0B10] via-[#521018] to-[#16171B] flex flex-col items-center justify-center text-center p-4">
-                    <div className="relative z-10 flex flex-col items-center space-y-2">
-                      <div className="h-16 w-16 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-xl font-mono font-bold text-white shadow-inner">
-                        {member.initials}
-                      </div>
-                      <span className="text-[10px] font-mono uppercase tracking-widest text-[#B08D57]">
-                        Verified Contributor
-                      </span>
-                    </div>
 
-                    {/* Orbital accent ring */}
-                    <div className="absolute inset-0 border border-white/5 rounded-full scale-125 pointer-events-none" />
+                  {/* Portrait Area */}
+                  <div className="relative aspect-square w-full rounded-lg overflow-hidden border border-black/10 dark:border-white/10 bg-gradient-to-br from-[#3A0B10] via-[#521018] to-[#16171B] flex flex-col items-center justify-center text-center">
+                    {member.image ? (
+                      <Image
+                        src={member.image}
+                        alt={member.name}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      />
+                    ) : (
+                      <div className="relative z-10 flex flex-col items-center space-y-2 p-4">
+                        <div className="h-16 w-16 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-xl font-mono font-bold text-white shadow-inner">
+                          {member.initials}
+                        </div>
+                        <span className="text-[10px] font-mono uppercase tracking-widest text-[#B08D57]">
+                          Verified Contributor
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Subtle gradient overlay at bottom */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                   </div>
 
                   {/* Identification */}
@@ -413,15 +441,15 @@ export default function WebsiteTeamPage() {
         className="w-full py-16 sm:py-20 lg:py-24 bg-[#F5F3F0] dark:bg-[#24080B] border-b border-[#3A0B10]/15 dark:border-[#F5F3F0]/10 transition-colors duration-300"
       >
         <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-12">
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
-            
+
             {/* Left Side: Editorial Block */}
             <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-28">
               <span className="text-xs font-mono font-semibold tracking-[0.2em] uppercase text-[#6C151E] dark:text-[#B08D57]">
                 03 • WHAT WE DO
               </span>
-              
+
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-[#3A0B10] dark:text-[#F5F3F0] leading-tight">
                 From Ideas to Interfaces<span className="text-[#6C151E] dark:text-[#B08D57]">.</span>
               </h2>
@@ -523,12 +551,12 @@ export default function WebsiteTeamPage() {
         </div>
 
         <div className="relative mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-12 text-center space-y-8">
-          
+
           <div className="space-y-4 max-w-3xl mx-auto">
             <span className="text-xs font-mono font-semibold tracking-[0.25em] uppercase text-[#B08D57]">
               04 • FESTIVAL CTA
             </span>
-            
+
             <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-white leading-tight">
               A Stronger Quantum Tomorrow<span className="text-[#B08D57]">.</span>
             </h2>

@@ -1,12 +1,14 @@
 'use client';
 
 import * as React from 'react';
-import Image from 'next/image';
+import { ResponsivePicture } from '@/components/shared/ResponsivePicture';
 import { ArrowRight, Building2, UsersRound, MapPin } from 'lucide-react';
 
 const HOST_ASSETS = {
-  artworkLight: '/ABOUT-03-HOST-SRM-LIGHT.png',
-  artworkDark: '/ABOUT-03-HOST-SRM-DARK.png',
+  desktop: '/Assets2/desktop/about/3.png',
+  laptop: '/Assets2/laptop/about/3.png',
+  tablet: '/Assets2/tablet/about/3.png',
+  mobile: '/Assets2/mobile/about/3.png',
 };
 
 interface HostFeatureProps {
@@ -37,25 +39,20 @@ export function AboutOurHost() {
       aria-labelledby="our-host-title"
       className="relative isolate overflow-hidden min-h-[520px] lg:min-h-[clamp(520px,30vw,610px)] scroll-mt-24 md:scroll-mt-28 bg-[#F7F1EC] text-[#141213] dark:bg-[#0D0B0C] dark:text-[#F8F4EF] transition-colors duration-300"
     >
-      {/* Full-Bleed Campus Artwork Layer */}
-      <div className="absolute inset-0 z-0 overflow-hidden">
-        <Image
-          src={HOST_ASSETS.artworkLight}
-          alt=""
+      {/* Full-Bleed Campus Artwork Layer (Responsive across all device perspectives) */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
+        <ResponsivePicture
+          page="about"
+          index={3}
+          desktop={HOST_ASSETS.desktop}
+          laptop={HOST_ASSETS.laptop}
+          tablet={HOST_ASSETS.tablet}
+          mobile={HOST_ASSETS.mobile}
+          alt="SRM University-AP XLab Campus"
           fill
-          sizes="100vw"
-          quality={88}
-          referrerPolicy="no-referrer"
-          className="object-cover dark:hidden object-[61%_50%]"
-        />
-        <Image
-          src={HOST_ASSETS.artworkDark}
-          alt=""
-          fill
-          sizes="100vw"
-          quality={88}
-          referrerPolicy="no-referrer"
-          className="hidden object-cover dark:block object-[61%_50%]"
+          priority
+          objectFit="cover"
+          objectPosition="right center"
         />
       </div>
 
