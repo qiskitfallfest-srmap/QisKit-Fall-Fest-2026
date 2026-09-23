@@ -69,12 +69,12 @@ export const CAMPUS_LOCATIONS: CampusLocation[] = [
   {
     id: 'jc-bose',
     name: 'J.C. Bose Block',
-    shortName: 'JC Bose',
+    shortName: 'JC Bose (PhD)',
     category: 'academic',
-    categoryLabel: 'Academic Block',
+    categoryLabel: 'PhD & Research Block',
     isKeyVenue: true,
     description:
-      'Central academic block on campus housing lecture halls and classrooms.',
+      'Dedicated academic and research block primarily housing PhD scholars, research chambers, and advanced seminar spaces.',
     image: '/images/venues/jc-bose.jpg',
     map: {
       footprintId: 'bldg-jc-bose',
@@ -93,10 +93,10 @@ export const CAMPUS_LOCATIONS: CampusLocation[] = [
     name: 'V-Block (Vikram Sarabhai)',
     shortName: 'V-Block',
     category: 'academic',
-    categoryLabel: 'Academic Block',
+    categoryLabel: 'Academic & Lab Block',
     isKeyVenue: true,
     description:
-      'Academic building housing computing laboratories, the Quantum Computing Lab, and classrooms.',
+      'Academic building housing student laboratories, computing centers, and the Quantum Computing Lab. Connected to Homi J. Bhabha Block via the 5th-floor skybridge.',
     image: '/images/venues/v-block.jpg',
     map: {
       footprintId: 'bldg-v-block',
@@ -115,10 +115,10 @@ export const CAMPUS_LOCATIONS: CampusLocation[] = [
     name: 'Homi J. Bhabha Block',
     shortName: 'Homi Bhabha',
     category: 'academic',
-    categoryLabel: 'Academic Block',
+    categoryLabel: 'Administrative & Depts',
     isKeyVenue: true,
     description:
-      'Academic and sciences block adjoining the Vikram Sarabhai block.',
+      'Houses the CR-CS Department, Examination Department, Finance Department, and central university offices. Connected to V-Block via the 5th-floor skybridge.',
     image: '/images/venues/homi-bhabha.png',
     map: {
       footprintId: 'bldg-homi-bhabha',
@@ -137,10 +137,10 @@ export const CAMPUS_LOCATIONS: CampusLocation[] = [
     name: 'Campus Food Court',
     shortName: 'Food Court',
     category: 'dining',
-    categoryLabel: 'Dining',
+    categoryLabel: 'Dining & Outlets',
     isKeyVenue: true,
     description:
-      'Central dining concourse with food stalls, cafeteria counters, and seating areas.',
+      'Central dining concourse and commercial hub featuring Total Fresh Supermarket, Domino\'s, Belgian Waffle, Baskin Robbins, US Pizza, Hello Idly, and Chat & Chill.',
     image: '/images/venues/food-court.png',
     map: {
       footprintId: 'bldg-food-court',
@@ -159,10 +159,10 @@ export const CAMPUS_LOCATIONS: CampusLocation[] = [
     name: 'S.R. Block (Srinivasa Ramanujan)',
     shortName: 'S.R. Block',
     category: 'academic',
-    categoryLabel: 'Academic Block',
+    categoryLabel: 'Academic & Mini Audi',
     isKeyVenue: true,
     description:
-      'Multi-story academic building along the western avenue with classrooms and seminar halls.',
+      'Major multi-story academic block featuring student classrooms, engineering labs, and the university Mini Auditorium.',
     image: '/images/venues/sr-block.jpg',
     map: {
       footprintId: 'bldg-sr-block',

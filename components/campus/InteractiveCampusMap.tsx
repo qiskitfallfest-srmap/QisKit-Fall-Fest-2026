@@ -717,8 +717,48 @@ export function InteractiveCampusMap({
             </g>
 
             {/* =========================================================
-                MIDDLE ROW ABOVE ROAD: V-BLOCK & HOMI J BHABHA BLOCK
+                MIDDLE ROW ABOVE ROAD: V-BLOCK, SKYBRIDGE & HOMI J BHABHA BLOCK
             ========================================================== */}
+            {/* 5th Floor Skybridge Connector between V-Block and Homi J Bhabha Block */}
+            <g className="pointer-events-none">
+              {/* Elevated Bridge Shadow */}
+              <rect
+                x="492"
+                y="253"
+                width="26"
+                height="18"
+                rx="3"
+                fill="#000000"
+                opacity="0.35"
+                filter="url(#shadow-3d)"
+              />
+              {/* Elevated Glass Skybridge Deck */}
+              <rect
+                x="492"
+                y="247"
+                width="26"
+                height="18"
+                rx="3"
+                className="fill-[#1A0A0E] dark:fill-[#250C12] stroke-[#B08D57] stroke-[1.5]"
+              />
+              {/* Upper & Lower Glass Handrail Strips */}
+              <line x1="494" y1="249" x2="516" y2="249" stroke="#B08D57" strokeWidth="1" strokeOpacity="0.9" />
+              <line x1="494" y1="263" x2="516" y2="263" stroke="#B08D57" strokeWidth="1" strokeOpacity="0.9" />
+              {/* Interior Skywalk Pathway Line */}
+              <line x1="492" y1="256" x2="518" y2="256" stroke="#FFFFFF" strokeWidth="1" strokeDasharray="2 2" strokeOpacity="0.7" />
+              {/* 5F Skybridge Label */}
+              <rect x="488" y="235" width="34" height="11" rx="3" fill="#1C0D11" stroke="#B08D57" strokeWidth="0.75" />
+              <text
+                x="505"
+                y="243"
+                textAnchor="middle"
+                className="font-mono text-[7px] font-bold fill-[#B08D57] select-none"
+              >
+                5F Bridge
+              </text>
+            </g>
+
+            {/* V-Block */}
             <g
               className="cursor-pointer group"
               onClick={() => handleBuildingClick('v-block')}
@@ -738,14 +778,23 @@ export function InteractiveCampusMap({
               <line x1="380" y1="226" x2="485" y2="226" stroke="currentColor" strokeWidth="1" className={isSelected('v-block') ? 'text-[#B08D57]/60' : 'text-white/60 dark:text-white/10'} />
               <text
                 x="432"
-                y="260"
+                y="256"
                 textAnchor="middle"
                 className={`font-sans text-xs font-semibold select-none pointer-events-none ${isSelected('v-block') ? 'fill-white' : 'fill-[#16171B] dark:fill-[#F5F3F0]'}`}
               >
-                v block
+                V-Block
+              </text>
+              <text
+                x="432"
+                y="269"
+                textAnchor="middle"
+                className={`font-mono text-[9px] select-none pointer-events-none ${isSelected('v-block') ? 'fill-white/80' : 'fill-stone-500 dark:fill-stone-400'}`}
+              >
+                (Vikram Sarabhai)
               </text>
             </g>
 
+            {/* Homi J. Bhabha Block */}
             <g
               className="cursor-pointer group"
               onClick={() => handleBuildingClick('homi-bhabha')}
@@ -765,11 +814,19 @@ export function InteractiveCampusMap({
               <line x1="525" y1="226" x2="640" y2="226" stroke="currentColor" strokeWidth="1" className={isSelected('homi-bhabha') ? 'text-[#B08D57]/60' : 'text-white/60 dark:text-white/10'} />
               <text
                 x="582"
-                y="260"
+                y="256"
                 textAnchor="middle"
                 className={`font-sans text-xs font-semibold select-none pointer-events-none ${isSelected('homi-bhabha') ? 'fill-white' : 'fill-[#16171B] dark:fill-[#F5F3F0]'}`}
               >
-                homi j baba block
+                Homi J. Bhabha
+              </text>
+              <text
+                x="582"
+                y="269"
+                textAnchor="middle"
+                className={`font-mono text-[8.5px] select-none pointer-events-none ${isSelected('homi-bhabha') ? 'fill-white/80' : 'fill-stone-500 dark:fill-stone-400'}`}
+              >
+                (CR-CS & Depts)
               </text>
             </g>
 
@@ -830,11 +887,19 @@ export function InteractiveCampusMap({
               <line x1="535" y1="336" x2="640" y2="336" stroke="currentColor" strokeWidth="1" className={isSelected('jc-bose') ? 'text-[#B08D57]/60' : 'text-white/60 dark:text-white/10'} />
               <text
                 x="587"
-                y="387"
+                y="382"
                 textAnchor="middle"
                 className={`font-serif text-sm font-bold select-none pointer-events-none ${isSelected('jc-bose') ? 'fill-white' : 'fill-[#16171B] dark:fill-[#F5F3F0]'}`}
               >
                 JC Bose
+              </text>
+              <text
+                x="587"
+                y="397"
+                textAnchor="middle"
+                className={`font-mono text-[8.5px] select-none pointer-events-none ${isSelected('jc-bose') ? 'fill-white/80' : 'fill-stone-500 dark:fill-stone-400'}`}
+              >
+                (PhD Scholars)
               </text>
             </g>
 
@@ -932,11 +997,19 @@ export function InteractiveCampusMap({
               <line x1="258" y1="411" x2="302" y2="411" stroke="currentColor" strokeWidth="1" className={isSelected('sr-block') ? 'text-[#B08D57]/60' : 'text-white/60 dark:text-white/10'} />
               <text
                 x="280"
-                y="495"
+                y="488"
                 textAnchor="middle"
                 className={`font-sans text-xs font-semibold select-none pointer-events-none ${isSelected('sr-block') ? 'fill-white' : 'fill-[#16171B] dark:fill-[#F5F3F0]'}`}
               >
-                S-block
+                S.R. Block
+              </text>
+              <text
+                x="280"
+                y="502"
+                textAnchor="middle"
+                className={`font-mono text-[8px] select-none pointer-events-none ${isSelected('sr-block') ? 'fill-white/80' : 'fill-stone-500 dark:fill-stone-400'}`}
+              >
+                (Mini Audi)
               </text>
             </g>
 
