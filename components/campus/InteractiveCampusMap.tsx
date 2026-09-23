@@ -249,7 +249,14 @@ export function InteractiveCampusMap({
                   >
                     Schedule
                   </Link>
-                  <button
+{activeLocation.id !== 'gate-3' && (
+  <button
+    onClick={toggleRoute}
+    className="flex-1 py-2 px-3 rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-white/5 text-[#16171B] dark:text-[#F5F3F0] cursor-pointer"
+  >
+    {showRoute ? 'Hide Route' : 'Show Route'}
+  </button>
+)}
                     onClick={toggleRoute}
                     className="flex-1 py-2 px-3 rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-white/5 text-[#16171B] dark:text-[#F5F3F0] cursor-pointer"
                   >
