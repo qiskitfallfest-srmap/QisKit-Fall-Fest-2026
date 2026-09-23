@@ -8,7 +8,6 @@ import {
   ArrowRight,
   ArrowUpRight,
   ArrowDown,
-  Sparkles,
   Users,
   Code,
   Layers,
@@ -293,7 +292,6 @@ export default function TeamPage() {
           
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-semibold uppercase tracking-[0.2em] bg-white/10 text-white border border-white/20">
-            <Sparkles size={12} className="text-[#B08D57]" />
             <span>01.5 • The Narrative</span>
           </div>
 
@@ -392,7 +390,6 @@ export default function TeamPage() {
                   <div className="p-4 sm:p-6 rounded-2xl bg-white dark:bg-[#150406] border-2 border-[#3A0B10]/15 dark:border-white/10 shadow-lg space-y-5">
                     <div className="space-y-1.5">
                       <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-mono font-semibold uppercase tracking-[0.2em] bg-[#6C151E]/10 dark:bg-[#6C151E]/30 text-[#6C151E] dark:text-[#B08D57] border border-[#6C151E]/20">
-                        <Sparkles size={11} />
                         <span>Website Team Roster</span>
                       </div>
                       <h3 className="text-xl sm:text-2xl font-serif font-bold text-[#3A0B10] dark:text-[#F5F3F0]">
@@ -465,7 +462,6 @@ export default function TeamPage() {
                   <div className="p-4 sm:p-6 rounded-2xl bg-white dark:bg-[#150406] border-2 border-[#3A0B10]/15 dark:border-white/10 shadow-lg space-y-5">
                     <div className="space-y-1.5">
                       <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-mono font-semibold uppercase tracking-[0.2em] bg-[#B08D57]/10 text-[#B08D57] border border-[#B08D57]/20">
-                        <Sparkles size={11} />
                         <span>Organising Team Roster</span>
                       </div>
                       <h3 className="text-xl sm:text-2xl font-serif font-bold text-[#3A0B10] dark:text-[#F5F3F0]">
@@ -528,7 +524,6 @@ export default function TeamPage() {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-[#3A0B10]/15 dark:border-[#F5F3F0]/15">
             <div className="space-y-3 max-w-2xl">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-semibold uppercase tracking-[0.2em] bg-[#6C151E]/10 dark:bg-[#6C151E]/30 text-[#6C151E] dark:text-[#B08D57] border border-[#6C151E]/20">
-                <Sparkles size={12} />
                 <span>03.5 • Member Roster Showcase</span>
               </div>
               
@@ -681,7 +676,6 @@ export default function TeamPage() {
           {/* Section Header */}
           <div className="text-center max-w-3xl mx-auto space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-semibold uppercase tracking-[0.2em] bg-[#6C151E]/10 dark:bg-[#6C151E]/30 text-[#6C151E] dark:text-[#B08D57] border border-[#6C151E]/20">
-              <Sparkles size={12} />
               <span>05 • Organizational Structure</span>
             </div>
 

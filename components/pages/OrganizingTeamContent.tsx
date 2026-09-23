@@ -13,7 +13,6 @@ import {
   X,
   ArrowRight,
   ArrowUpRight,
-  Sparkles,
   CheckCircle2,
   ShieldCheck,
   Mail,
@@ -1548,7 +1547,6 @@ export default function OrganizingTeamPage() {
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center space-y-8">
           
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-semibold uppercase tracking-[0.2em] bg-[#6C151E]/10 dark:bg-[#6C151E]/30 text-[#6C151E] dark:text-[#B08D57] border border-[#6C151E]/20">
-            <Sparkles size={12} />
             <span>04 • Philosophy</span>
           </div>
 

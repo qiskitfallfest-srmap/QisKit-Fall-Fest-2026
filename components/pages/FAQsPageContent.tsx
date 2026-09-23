@@ -7,7 +7,6 @@ import {
   ChevronDown,
   ChevronUp,
   HelpCircle,
-  Sparkles,
   Layers,
   ArrowRight,
   Filter,

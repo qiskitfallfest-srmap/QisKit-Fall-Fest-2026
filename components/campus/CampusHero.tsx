@@ -87,17 +87,16 @@ export function CampusHero() {
 
             {/* Description Subtitle */}
             <p className="text-sm sm:text-base text-[#16171B]/80 dark:text-[#F5F3F0]/80 font-sans max-w-xl leading-relaxed">
-              Qiskit Fall Fest 2026 will be hosted at the beautiful SRM University-AP,
-              Amaravati. Discover key locations and plan your visit.
+              Hosted at SRM University-AP, Amaravati. Locate keynotes at the Main Auditorium (X-Lab), workshop halls, dining concourses, and walking routes from Gate 3.
             </p>
 
             {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-4 pt-1">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-1">
               <a
                 href="#interactive-atlas"
                 onClick={handleScrollToAtlas}
                 className="
-                  inline-flex items-center gap-3
+                  inline-flex items-center justify-center gap-3
                   px-6 py-3 rounded-full font-sans text-sm font-semibold tracking-wide
                   bg-[#6C151E] text-[#F5F3F0]
                   hover:bg-[#521018] active:scale-[0.98]
@@ -116,17 +115,17 @@ export function CampusHero() {
                 href="#getting-around"
                 onClick={handleScrollToGuidelines}
                 className="
-                  inline-flex items-center gap-3
+                  inline-flex items-center justify-center gap-3
                   px-6 py-3 rounded-full font-sans text-sm font-semibold tracking-wide
                   border border-stone-300 dark:border-stone-700
-                  bg-white/70 dark:bg-[#1E1416]/60
+                  bg-white/80 dark:bg-[#1E1416]/70
                   text-[#16171B] dark:text-[#F5F3F0]
                   hover:bg-stone-100 dark:hover:bg-white/10 active:scale-[0.98]
                   shadow-sm transition-all duration-200 cursor-pointer
                 "
               >
                 <Compass className="w-4 h-4" />
-                <span>Before You Arrive</span>
+                <span>Logistics & Parking</span>
                 <span className="w-5 h-5 rounded-full bg-stone-200 dark:bg-white/10 flex items-center justify-center">
                   <ArrowRight className="w-3 h-3" />
                 </span>

@@ -9,7 +9,6 @@ import {
   Code2,
   Layers,
   ShieldCheck,
-  Sparkles,
   Radio,
   Cpu,
   Palette,
@@ -120,7 +119,7 @@ const CAPABILITIES = [
   {
     title: 'Innovate',
     subtitle: 'Interactive Quantum Experiences',
-    icon: Sparkles,
+    icon: Cpu,
     description: 'Developing dynamic schedule agendas, campus venue navigators, countdown timers, and seamless integration with the external Unstop registration portal.',
     tags: ['Quantum Circuits', 'Interactive Maps', 'Dynamic Agendas', 'Unstop Integration'],
   },

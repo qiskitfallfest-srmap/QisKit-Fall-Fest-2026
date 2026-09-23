@@ -7,6 +7,15 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig([
+  {
+    ignores: [
+      "dt_venue/**",
+      ".next/**",
+      "node_modules/**",
+      "public/**",
+      "dist/**",
+    ],
+  },
   ...next,
   {
     rules: {

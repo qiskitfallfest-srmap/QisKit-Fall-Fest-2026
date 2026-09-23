@@ -15,7 +15,6 @@ import {
   MapPin,
   Play,
   Search,
-  Sparkles,
   Users,
   BookOpen,
   Award,
@@ -607,7 +606,7 @@ export function ExploreSchedule({ currentPhase, onPhaseChange }: ExploreSchedule
       {/* TOAST NOTIFICATION POPUP */}
       {toast && (
         <div className="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2.5 rounded-2xl bg-[#13090A] text-white px-4 py-3 text-xs font-semibold shadow-2xl border border-[#6C151E]/40 animate-bounce">
-          <Sparkles size={16} className="text-[#F5DABF]" />
+          <Check size={16} className="text-[#F5DABF]" />
           <span>{toast.message}</span>
         </div>
       )}

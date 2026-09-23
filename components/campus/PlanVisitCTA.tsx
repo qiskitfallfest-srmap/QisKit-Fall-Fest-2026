@@ -45,12 +45,12 @@ export function PlanVisitCTA() {
         </div>
 
         {/* Center / Action Buttons */}
-        <div className="flex flex-wrap items-center justify-center gap-3.5 shrink-0">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 shrink-0 w-full sm:w-auto">
           <Link
             href="/schedule"
             className="
-              inline-flex items-center justify-center gap-2
-              px-5 py-3 rounded-full font-sans text-xs font-semibold
+              w-full sm:w-auto inline-flex items-center justify-center gap-2
+              px-6 py-3 rounded-full font-sans text-xs font-semibold
               bg-white text-[#16171B] hover:bg-stone-100 active:scale-[0.98]
               shadow-md transition-all duration-200
             "
@@ -66,24 +66,16 @@ export function PlanVisitCTA() {
             data-cursor="cta"
             aria-label="Register Now on Unstop"
             className="
-              inline-flex items-center justify-center gap-2
-              px-6 py-3 rounded-full font-sans text-xs font-semibold tracking-wide
+              w-full sm:w-auto inline-flex items-center justify-center gap-2
+              px-7 py-3 rounded-full font-sans text-xs font-semibold tracking-wide
               bg-[#6C151E] text-white border border-[#B08D57]/40
               hover:bg-[#851D28] active:scale-[0.98]
               shadow-lg shadow-black/30 transition-all duration-200
             "
           >
-            <span>Register Now</span>
+            <span>Register on Unstop</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </a>
-        </div>
-
-        {/* Right: Vertical Editorial Taglines */}
-        <div className="hidden xl:flex flex-col text-right font-mono text-[10px] tracking-[0.25em] uppercase text-stone-400 space-y-0.5 border-l border-white/10 pl-6">
-          <span>IDEAS</span>
-          <span>PEOPLE</span>
-          <span>COMMUNITY</span>
-          <span className="text-[#B08D57] font-semibold">IMPACT</span>
         </div>
       </div>
     </section>
