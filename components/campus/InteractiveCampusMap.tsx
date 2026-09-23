@@ -18,10 +18,13 @@ import {
   CAMPUS_LOCATIONS,
 } from '@/data/campus-locations';
 
-interface InteractiveCampusMapProps {
+export interface InteractiveCampusMapProps {
   locations?: CampusLocation[];
   selectedLocationId?: string | null;
   onSelectLocation?: (location: CampusLocation) => void;
+  showRoute?: boolean;
+  onToggleRoute?: () => void;
+  className?: string;
 }
 
 /**
@@ -89,23 +92,27 @@ export function InteractiveCampusMap({
   locations = CAMPUS_LOCATIONS,
   selectedLocationId = 'x-lab',
   onSelectLocation,
+  showRoute: externalShowRoute,
+  onToggleRoute,
+  className = '',
 }: InteractiveCampusMapProps) {
   const [zoom, setZoom] = React.useState<number>(1);
   const [pan, setPan] = React.useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [activeId, setActiveId] = React.useState<string>(selectedLocationId || 'x-lab');
+  const [internalActiveId, setInternalActiveId] = React.useState<string>(selectedLocationId || 'x-lab');
   const [isDragging, setIsDragging] = React.useState<boolean>(false);
   const [dragStart, setDragStart] = React.useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isFullscreen, setIsFullscreen] = React.useState<boolean>(false);
-  const [showPill, setShowPill] = React.useState<boolean>(true);
-  const [showRoute, setShowRoute] = React.useState<boolean>(true);
+  const [internalShowRoute, setInternalShowRoute] = React.useState<boolean>(true);
+  const [showFullscreenDrawer, setShowFullscreenDrawer] = React.useState<boolean>(false);
 
   const containerRef = React.useRef<HTMLDivElement>(null);
 
+  const activeId = selectedLocationId || internalActiveId;
+  const showRoute = externalShowRoute !== undefined ? externalShowRoute : internalShowRoute;
+
   React.useEffect(() => {
     if (selectedLocationId) {
-      setActiveId(selectedLocationId);
-      setShowPill(true);
-      setShowRoute(true);
+      setInternalActiveId(selectedLocationId);
     }
   }, [selectedLocationId]);
 
@@ -170,12 +177,18 @@ export function InteractiveCampusMap({
     setIsFullscreen(!isFullscreen);
   };
 
+  const toggleRoute = () => {
+    if (onToggleRoute) {
+      onToggleRoute();
+    } else {
+      setInternalShowRoute((prev) => !prev);
+    }
+  };
+
   const isSelected = (id: string) => activeId === id;
 
   const handleBuildingClick = (id: string) => {
-    setActiveId(id);
-    setShowPill(true);
-    setShowRoute(true);
+    setInternalActiveId(id);
     const loc = locations.find((l) => l.id === id);
     if (loc && onSelectLocation) {
       onSelectLocation(loc);
@@ -183,7 +196,7 @@ export function InteractiveCampusMap({
   };
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className={`relative w-full ${className}`}>
       {/* Map Card Container */}
       <div
         ref={containerRef}
@@ -196,7 +209,7 @@ export function InteractiveCampusMap({
           select-none cursor-grab active:cursor-grabbing
           touch-none overscroll-none
           transition-all duration-300
-          ${isFullscreen ? 'fixed inset-2 sm:inset-4 z-50 rounded-2xl h-auto' : 'h-[500px] sm:h-[620px] lg:h-[700px]'}
+          ${isFullscreen ? 'fixed inset-0 z-50 rounded-none h-screen w-screen' : 'h-[440px] sm:h-[540px] lg:h-[620px] xl:h-[660px]'}
         `}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -206,80 +219,67 @@ export function InteractiveCampusMap({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Responsive Building Preview Card (Bottom docked on mobile, top-left on desktop) */}
-        {showPill && activeLocation && (
-          <div className="
-            absolute z-30
-            bottom-3 inset-x-3 sm:bottom-auto sm:inset-x-auto sm:top-4 sm:left-4
-            w-auto sm:w-[340px] md:w-[360px]
-            max-h-[58vh] sm:max-h-none overflow-y-auto
-            p-3 sm:p-4 rounded-2xl
-            bg-white/95 dark:bg-[#180A0D]/95 backdrop-blur-md
-            border border-stone-200/90 dark:border-[#B08D57]/30
-            shadow-2xl transition-all duration-300
-          ">
-            {/* Top Bar with Badge and Close */}
-            <div className="flex items-center justify-between pb-2 mb-2">
-              <span className="inline-block px-2.5 py-1 rounded-full font-mono text-[10px] font-bold uppercase tracking-wider bg-[#6C151E]/10 dark:bg-[#6C151E]/30 text-[#6C151E] dark:text-[#B08D57]">
-                {activeLocation.categoryLabel}
-              </span>
-              <button
-                onClick={() => setShowPill(false)}
-                className="w-7 h-7 rounded-full bg-stone-100 dark:bg-white/10 hover:bg-stone-200 dark:hover:bg-white/20 flex items-center justify-center text-stone-500 dark:text-stone-300 transition-colors cursor-pointer"
-                aria-label="Dismiss building preview"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
-            {/* Real Building Image */}
-            <div className="relative w-full h-32 sm:h-44 rounded-xl overflow-hidden bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-inner">
-              <Image
-                src={activeLocation.image}
-                alt={activeLocation.name}
-                fill
-                sizes="(max-width: 640px) 100vw, 360px"
-                className="object-cover object-center transition-transform duration-500 hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent pointer-events-none" />
-              <div className="absolute bottom-2 left-3 right-3 text-white text-[11px] font-mono flex items-center gap-1.5">
-                <MapPin className="w-3 h-3 text-[#B08D57]" />
-                <span className="truncate">{activeLocation.locationLabel}</span>
+        {/* Fullscreen Minimal Non-Obstructive Floating Drawer */}
+        {isFullscreen && activeLocation && (
+          <div className="absolute bottom-4 left-4 right-4 sm:left-auto sm:right-4 z-40 sm:max-w-sm pointer-events-auto">
+            {showFullscreenDrawer ? (
+              <div className="p-4 rounded-2xl bg-white/95 dark:bg-[#180A0D]/95 backdrop-blur-md border border-stone-200 dark:border-[#B08D57]/30 shadow-2xl space-y-3 animate-in fade-in slide-in-from-bottom-3 duration-200">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#6C151E] dark:text-[#B08D57]">
+                    {activeLocation.categoryLabel}
+                  </span>
+                  <button
+                    onClick={() => setShowFullscreenDrawer(false)}
+                    className="p-1 rounded-lg text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 cursor-pointer"
+                    aria-label="Collapse info"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <h4 className="font-serif text-base font-bold text-[#16171B] dark:text-[#F5F3F0]">
+                  {activeLocation.name}
+                </h4>
+                <p className="text-xs text-stone-600 dark:text-stone-400 line-clamp-2">
+                  {activeLocation.description}
+                </p>
+                <div className="flex items-center gap-2 pt-1 text-xs font-semibold">
+                  <Link
+                    href="/schedule"
+                    className="flex-1 py-2 px-3 rounded-lg text-center bg-[#6C151E] text-white"
+                  >
+                    Schedule
+                  </Link>
+                  <button
+                    onClick={toggleRoute}
+                    className="flex-1 py-2 px-3 rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-white/5 text-[#16171B] dark:text-[#F5F3F0] cursor-pointer"
+                  >
+                    {showRoute ? 'Hide Route' : 'Show Route'}
+                  </button>
+                </div>
               </div>
-            </div>
-
-            {/* Title */}
-            <div className="pt-2 sm:pt-2.5">
-              <h4 className="font-serif text-base sm:text-lg font-bold text-[#16171B] dark:text-[#F5F3F0] leading-snug">
-                {activeLocation.name}
-              </h4>
-            </div>
-
-            {/* Actions: View Schedule & Toggle On-Map Path from Gate 3 */}
-            <div className="flex items-center gap-2 pt-2.5 sm:pt-3 mt-2 sm:mt-2.5 border-t border-stone-200 dark:border-stone-800 text-xs">
-              <Link
-                href="/schedule"
-                className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg font-sans font-semibold bg-[#6C151E] text-white hover:bg-[#521018] dark:bg-[#6C151E] dark:hover:bg-[#851D28] transition-colors"
-              >
-                <span>Schedule</span>
-                <ArrowRight className="w-3 h-3" />
-              </Link>
+            ) : (
               <button
-                onClick={() => setShowRoute(!showRoute)}
-                className={`
-                  flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg font-sans font-semibold
-                  border transition-all cursor-pointer
-                  ${showRoute
-                    ? 'bg-[#B08D57]/20 border-[#B08D57] text-[#6C151E] dark:text-[#B08D57]'
-                    : 'bg-white dark:bg-white/5 border-stone-300 dark:border-stone-700 text-[#16171B] dark:text-[#F5F3F0] hover:bg-stone-100 dark:hover:bg-white/10'}
-                `}
+                onClick={() => setShowFullscreenDrawer(true)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/95 dark:bg-[#180A0D]/95 backdrop-blur-md border border-stone-200 dark:border-[#B08D57]/30 shadow-lg text-xs font-semibold text-[#16171B] dark:text-[#F5F3F0] cursor-pointer"
               >
-                <Navigation className="w-3.5 h-3.5 text-[#B08D57]" />
-                <span>{showRoute ? 'Hide Path' : 'Show Path'}</span>
+                <MapPin className="w-3.5 h-3.5 text-[#B08D57]" />
+                <span className="max-w-[180px] sm:max-w-[220px] truncate">{activeLocation.name}</span>
+                <span className="text-[10px] text-stone-400 font-mono">Info ▲</span>
               </button>
-            </div>
+            )}
           </div>
         )}
+
+        {/* Top-Left: Minimal Live Venue Indicator Pill */}
+        <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20 pointer-events-none">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/85 dark:bg-[#1A0C0F]/85 backdrop-blur-md border border-stone-200/80 dark:border-[#B08D57]/25 shadow-sm text-xs font-medium text-[#16171B] dark:text-[#F5F3F0]">
+            <span className="w-2 h-2 rounded-full bg-[#B08D57] animate-pulse" />
+            <span className="font-mono text-[11px] uppercase tracking-wider text-stone-500 dark:text-stone-400">Selected:</span>
+            <span className="font-semibold text-[#6C151E] dark:text-[#B08D57] max-w-[140px] sm:max-w-[200px] truncate">
+              {activeLocation.shortName || activeLocation.name}
+            </span>
+          </div>
+        </div>
 
         {/* Top-Right: Map Controls (Zoom, Reset, Fullscreen) — Replaces old N compass and bottom buttons */}
         <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 flex items-center gap-1 sm:gap-1.5 p-1 rounded-xl bg-white/90 dark:bg-[#1C0D11]/90 backdrop-blur-md border border-stone-300/80 dark:border-[#B08D57]/30 shadow-lg">
@@ -1035,69 +1035,29 @@ export function InteractiveCampusMap({
               </text>
             </g>
 
-            {/* =========================================================
-                MAP BEACON PIN: MAIN AUDITORIUM IS IN X-LAB!
-            ========================================================== */}
-            <g
-              className="cursor-pointer"
-              onClick={() => handleBuildingClick('x-lab')}
-            >
-              <circle cx="437" cy="335" r="7" fill="#6C151E" stroke="#B08D57" strokeWidth="2" />
-              <circle cx="437" cy="335" r="14" fill="none" stroke="#B08D57" strokeWidth="1.5" opacity="0.6" className="animate-ping" />
-              <rect x="375" y="300" width="124" height="24" rx="12" fill="#6C151E" stroke="#B08D57" strokeWidth="1" />
-              <circle cx="387" cy="312" r="3.5" fill="#B08D57" />
-              <text x="398" y="316" className="font-sans text-[10px] font-bold fill-white">
-                Main Auditorium
-              </text>
-            </g>
-
-            <g
-              className="cursor-pointer"
-              onClick={() => handleBuildingClick('jc-bose')}
-            >
-              <circle cx="587" cy="335" r="5" fill="#6C151E" stroke="#B08D57" strokeWidth="1.5" />
-              <rect x="535" y="302" width="105" height="22" rx="11" fill="#24090C" stroke="#B08D57" strokeWidth="1" />
-              <circle cx="546" cy="313" r="3" fill="#B08D57" />
-              <text x="555" y="317" className="font-sans text-[9.5px] font-bold fill-white">
-                J.C. Bose Block
-              </text>
-            </g>
-
-            <g
-              className="cursor-pointer"
-              onClick={() => handleBuildingClick('v-block')}
-            >
-              <circle cx="432" cy="225" r="5" fill="#6C151E" stroke="#B08D57" strokeWidth="1.5" />
-              <rect x="382" y="192" width="100" height="22" rx="11" fill="#24090C" stroke="#B08D57" strokeWidth="1" />
-              <circle cx="393" cy="203" r="3" fill="#B08D57" />
-              <text x="402" y="207" className="font-sans text-[9.5px] font-bold fill-white">
-                V-Block
-              </text>
-            </g>
-
-            <g
-              className="cursor-pointer"
-              onClick={() => handleBuildingClick('food-court')}
-            >
-              <circle cx="627" cy="465" r="5" fill="#6C151E" stroke="#B08D57" strokeWidth="1.5" />
-              <rect x="582" y="432" width="90" height="22" rx="11" fill="#24090C" stroke="#B08D57" strokeWidth="1" />
-              <circle cx="593" cy="443" r="3" fill="#B08D57" />
-              <text x="602" y="447" className="font-sans text-[9.5px] font-bold fill-white">
-                Food Court
-              </text>
-            </g>
-
-            <g
-              className="cursor-pointer"
-              onClick={() => handleBuildingClick('sr-block')}
-            >
-              <circle cx="280" cy="410" r="5" fill="#6C151E" stroke="#B08D57" strokeWidth="1.5" />
-              <rect x="235" y="377" width="90" height="22" rx="11" fill="#24090C" stroke="#B08D57" strokeWidth="1" />
-              <circle cx="246" cy="388" r="3" fill="#B08D57" />
-              <text x="255" y="392" className="font-sans text-[9.5px] font-bold fill-white">
-                S-Block
-              </text>
-            </g>
+            {/* Active Destination Pinpoint Beacon */}
+            {activeId !== 'gate-3' && currentRoute && (
+              <g className="pointer-events-none">
+                <circle
+                  cx={currentRoute.destPoint.x}
+                  cy={currentRoute.destPoint.y}
+                  r="5"
+                  fill="#6C151E"
+                  stroke="#B08D57"
+                  strokeWidth="2"
+                />
+                <circle
+                  cx={currentRoute.destPoint.x}
+                  cy={currentRoute.destPoint.y}
+                  r="12"
+                  fill="none"
+                  stroke="#B08D57"
+                  strokeWidth="1.5"
+                  opacity="0.75"
+                  className="animate-ping"
+                />
+              </g>
+            )}
           </svg>
         </div>
       </div>
