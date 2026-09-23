@@ -7,7 +7,6 @@ import {
   MapPin,
   ArrowRight,
   Navigation,
-  Sparkles,
 } from 'lucide-react';
 import { CampusLocation } from '@/data/campus-locations';
 
@@ -40,8 +39,7 @@ export function LocationDetailCard({
       <div className="space-y-4">
         {/* Top Header: Category Tag */}
         <div className="flex items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-mono text-[10px] sm:text-[11px] font-bold tracking-wider uppercase bg-[#6C151E]/10 dark:bg-[#6C151E]/30 text-[#6C151E] dark:text-[#B08D57] border border-[#6C151E]/20 dark:border-[#B08D57]/30">
-            {location.isKeyVenue && <Sparkles className="w-3 h-3 text-[#B08D57]" />}
+          <span className="inline-flex items-center px-3 py-1 rounded-full font-mono text-[10px] sm:text-[11px] font-bold tracking-wider uppercase bg-[#6C151E]/10 dark:bg-[#6C151E]/30 text-[#6C151E] dark:text-[#B08D57] border border-[#6C151E]/20 dark:border-[#B08D57]/30">
             {location.categoryLabel}
           </span>
         </div>

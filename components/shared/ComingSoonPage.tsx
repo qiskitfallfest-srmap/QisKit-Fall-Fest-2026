@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Footer } from '@/components/shared/Footer';
 
 interface ComingSoonPageProps {
@@ -58,7 +58,6 @@ export function ComingSoonPage({
               border border-[rgba(108,21,30,0.18)] dark:border-[rgba(240,120,132,0.25)]
             "
           >
-            <Sparkles size={12} className="opacity-80" />
             <span>{categoryName}</span>
           </div>
 

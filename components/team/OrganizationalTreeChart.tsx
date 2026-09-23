@@ -6,7 +6,6 @@ import Link from 'next/link';
 import {
   ArrowDown,
   ArrowUpRight,
-  Sparkles,
   ChevronDown,
   Layers,
   Cpu,
@@ -544,7 +543,6 @@ export function OrganizationalTreeChart() {
           >
             {/* Top decorative seal pin */}
             <div className="absolute -top-3.5 px-3 py-0.5 rounded-full bg-[#3A0B10] text-[#B08D57] text-[10px] font-mono uppercase tracking-[0.25em] font-bold border border-[#B08D57]/40 shadow-sm flex items-center gap-1.5">
-              <Sparkles size={10} />
               <span>OFFICIAL GOVERNANCE</span>
             </div>
 
