@@ -6,7 +6,6 @@ import Link from 'next/link';
 import {
   MapPin,
   ArrowRight,
-  ExternalLink,
   Navigation,
   Sparkles,
 } from 'lucide-react';
@@ -25,9 +24,6 @@ export function LocationDetailCard({
   onToggleRoute,
   className = '',
 }: LocationDetailCardProps) {
-  // SRM University AP Google Maps URL for directions
-  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${location.name}, SRM University AP, Amaravati, Andhra Pradesh`)}`;
-
   return (
     <div
       aria-label={`Details for ${location.name}`}
@@ -42,28 +38,19 @@ export function LocationDetailCard({
       `}
     >
       <div className="space-y-4">
-        {/* Top Header: Category Tag & Building Code */}
+        {/* Top Header: Category Tag */}
         <div className="flex items-center justify-between gap-2">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-mono text-[10px] sm:text-[11px] font-bold tracking-wider uppercase bg-[#6C151E]/10 dark:bg-[#6C151E]/30 text-[#6C151E] dark:text-[#B08D57] border border-[#6C151E]/20 dark:border-[#B08D57]/30">
             {location.isKeyVenue && <Sparkles className="w-3 h-3 text-[#B08D57]" />}
-            {location.isKeyVenue ? 'KEY FESTIVAL VENUE' : location.categoryLabel}
+            {location.categoryLabel}
           </span>
-
-          {location.metadata?.buildingCode && (
-            <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-stone-100 dark:bg-white/5 text-stone-600 dark:text-stone-400">
-              {location.metadata.buildingCode}
-            </span>
-          )}
         </div>
 
-        {/* Building Title & Subtitle */}
+        {/* Building Title */}
         <div>
           <h3 className="text-xl sm:text-2xl font-serif font-bold text-[#16171B] dark:text-[#F5F3F0] tracking-tight leading-snug">
             {location.name}
           </h3>
-          <p className="text-xs sm:text-sm font-sans text-[#6C151E] dark:text-[#B08D57] font-medium mt-1">
-            {location.subtitle || location.categoryLabel}
-          </p>
         </div>
 
         {/* Building Image */}
@@ -86,21 +73,9 @@ export function LocationDetailCard({
         <p className="text-xs sm:text-sm text-[#16171B]/80 dark:text-[#F5F3F0]/80 font-sans leading-relaxed">
           {location.description}
         </p>
-
-        {/* Fest Role */}
-        {location.festRole && (
-          <div className="p-3 rounded-xl bg-stone-50 dark:bg-white/[0.03] border border-stone-200/80 dark:border-white/5 text-xs font-sans text-stone-700 dark:text-stone-300">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-[#6C151E] dark:text-[#B08D57] shrink-0">
-                Festival Focus:
-              </span>
-              <span className="truncate">{location.festRole}</span>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Action Buttons & Walking Route Toggle */}
+      {/* Action Buttons: Route Toggle and Festival Schedule */}
       <div className="space-y-2.5 pt-5 mt-4 border-t border-stone-200 dark:border-stone-800">
         {onToggleRoute && location.id !== 'gate-3' && (
           <button
@@ -119,39 +94,19 @@ export function LocationDetailCard({
           </button>
         )}
 
-        <div className="grid grid-cols-2 gap-2.5">
-          <Link
-            href="/schedule"
-            className="
-              inline-flex items-center justify-center gap-1.5
-              py-2.5 px-3.5 rounded-xl font-sans text-xs font-semibold
-              bg-[#6C151E] text-white hover:bg-[#521018]
-              dark:bg-[#6C151E] dark:hover:bg-[#851D28]
-              shadow-sm transition-colors
-            "
-          >
-            <span>Schedule</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-
-          <a
-            href={directionsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="
-              inline-flex items-center justify-center gap-1.5
-              py-2.5 px-3.5 rounded-xl font-sans text-xs font-semibold
-              border border-stone-300 dark:border-stone-700
-              bg-white dark:bg-white/5
-              text-[#16171B] dark:text-[#F5F3F0]
-              hover:bg-stone-100 dark:hover:bg-white/10
-              transition-colors
-            "
-          >
-            <span>Directions</span>
-            <ExternalLink className="w-3.5 h-3.5 text-stone-400" />
-          </a>
-        </div>
+        <Link
+          href="/schedule"
+          className="
+            w-full inline-flex items-center justify-center gap-2
+            py-2.5 px-4 rounded-xl font-sans text-xs font-semibold
+            bg-[#6C151E] text-white hover:bg-[#521018]
+            dark:bg-[#6C151E] dark:hover:bg-[#851D28]
+            shadow-sm transition-colors
+          "
+        >
+          <span>View Festival Schedule</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
       </div>
     </div>
   );

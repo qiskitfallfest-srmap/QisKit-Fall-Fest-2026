@@ -14,7 +14,7 @@ const QUICK_VENUES = [
   { id: 'v-block', label: 'V-Block' },
   { id: 'homi-bhabha', label: 'Homi Bhabha' },
   { id: 'food-court', label: 'Food Court' },
-  { id: 'sr-block', label: 'S-Block' },
+  { id: 'sr-block', label: 'S.R. Block' },
   { id: 'gate-3', label: 'Gate 3' },
   { id: 'ground', label: 'Ground' },
 ];
