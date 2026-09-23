@@ -16,7 +16,7 @@ const QUICK_VENUES = [
   { id: 'food-court', label: 'Food Court' },
   { id: 'sr-block', label: 'S.R. Block' },
   { id: 'gate-3', label: 'Gate 3' },
-  { id: 'ground', label: 'Ground' },
+  { id: 'ground', label: 'Sports Ground' }
 ];
 
 export function CampusAtlasSection() {
