@@ -107,7 +107,7 @@ export function InteractiveCampusMap({
 
   const containerRef = React.useRef<HTMLDivElement>(null);
 
-  const activeId = selectedLocationId || internalActiveId;
+  const activeId = internalActiveId;
   const showRoute = externalShowRoute !== undefined ? externalShowRoute : internalShowRoute;
 
   React.useEffect(() => {
