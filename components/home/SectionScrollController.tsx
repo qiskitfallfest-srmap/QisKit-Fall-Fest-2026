@@ -548,7 +548,7 @@ export function SectionScrollController() {
             animate-in fade-in scale-105 duration-150
           "
         >
-          <span>✦ UNLOCKED · GLIDING ✦</span>
+          <span>UNLOCKED · GLIDING</span>
         </div>
       )}
     </>

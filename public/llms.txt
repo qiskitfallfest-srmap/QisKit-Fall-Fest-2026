@@ -1,0 +1,38 @@
+# Qiskit Fall Fest 2026 — SRM University-AP (Amaravati)
+
+> Official Digital Summit Platform: https://www.qffsrmap2026.com/
+> Companion Planning Repository: https://github.com/sahgyan9/Qiskit-Fall-Fest-SRMAP-2026
+> Web Platform Repository: https://github.com/qiskitfallfest-srmap/QisKit-Fall-Fest-2026
+
+## Overview
+Qiskit Fall Fest 2026 at SRM University-AP (Amaravati) is a premier quantum computing festival organized as part of IBM's global Qiskit Fall Fest initiative. Recognized as a Partner Plus Host, SRM University-AP hosts a multi-track celebration marking "A Decade of Quantum on Cloud" (10 years of cloud quantum computing).
+
+## Key Dates
+- **Online Phase:** 5 October 2026 to 13 October 2026
+  - **Quantum Computing Masterclass Series:** 5 to 9 October 2026 (10 foundational to advanced sessions)
+  - **Hackathon Phase 1 Qualification:** 5 to 13 October 2026 (Submissions close 13 October, 11:59 PM IST)
+  - **Online Challenges & Games:** 9 to 13 October 2026
+  - **Phase 1 Finalist Announcement:** 17 October 2026 (~200 qualified participants)
+- **Offline Campus Phase:** 26 October 2026 to 30 October 2026
+  - **Venue:** SRM University-AP Campus, Amaravati, Andhra Pradesh, India
+  - **Flagship Onsite Hackathon (Phase 2):** 27 to 28 October 2026 (24 to 26 hours in the Auditorium)
+  - **QCTF (Quantum Capture the Flag):** 28 October 2026 (8-hour offline challenge in the Auditorium)
+  - **Hardware Quantum Tech Expo:** 29 October 2026
+  - **Keynote Lectures & Valedictory:** 30 October 2026
+
+## Total Event Portfolio (59 Events)
+- **Offline Events (38):** Hardware Tech Expo, Keynotes, 24-26h Hackathon, QCTF, Qescapes, 6 Offline Challenges, 3 Workshops, and 24 Classroom Games.
+- **Online Events (21):** 10-Session Masterclass Series, Hackathon Phase 1, Python Coding Challenge, ML Competition, Essay, Posters, Reels, Code Golf, Noise Forensics, and 10 Online Games.
+
+## Key Website Routes
+- Home: https://www.qffsrmap2026.com/
+- About: https://www.qffsrmap2026.com/about
+- Experience (Event Directory): https://www.qffsrmap2026.com/experience
+- Schedule (Interactive Timeline): https://www.qffsrmap2026.com/schedule
+- Venues (Campus Atlas): https://www.qffsrmap2026.com/venues
+- Team (Organizers & Mentors): https://www.qffsrmap2026.com/team
+- FAQs: https://www.qffsrmap2026.com/faqs
+
+## Host Institution
+SRM University-AP, Amaravati, Andhra Pradesh, India.
+Organized in partnership with IBM Quantum and Aanutattva - The Singularity Lab.

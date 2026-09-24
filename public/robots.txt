@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+
+# AI Search Engines & LLM Indexers
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+# LLMs Manifest
+# Reference: https://www.qffsrmap2026.com/llms.txt
