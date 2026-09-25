@@ -54,6 +54,8 @@ The following operational ground truths were directly reviewed, clarified, and f
 | **GT-13** | **Official SRM University-AP Event Portal Association** | **Official Institutional Event Listing: `https://events.srmap.edu.in/event/qiskit-fall-fest-2026/`. Primary Web Platform: `https://www.qffsrmap2026.com/`.** | Excises erroneous legacy subdomain placeholders (`qiskitfallfest2026.srmap.edu.in`) and wires university-level endorsement into Organization & Event schemas. |
 | **GT-14** | **Circular Alpha Matting for Brand Icons** | **Circular medallions and logos must never be bounded inside arbitrary solid black or colored square boxes.** | Mandates supersampled anti-aliased circular alpha masking to output 100% transparent PNGs/ICOs (`favicon.ico`, `icon.png`, `apple-icon.png`, `qff-srmap-logo-circular.png`). Guarantees Google Search renders a crisp circular icon. |
 | **GT-15** | **Two-Tier Staggered Schedule Phrasing** | **Never publish a monolithic 25-day date span (e.g. `Oct 5–30`) on public cards, metadata, or share banners.** | Eliminates attendee fatigue and confusion regarding continuous attendance. Always formulate as: `Online: Oct 5–9 | Offline: Oct 26–30 (Amaravati)`. |
+| **GT-16** | **Vercel Deployment Storage & Asset Hygiene Standard** | **Cumulative Deployment Storage strictly capped under 10 GB Hobby limit via active pruning and `.vercelignore` exclusions.** | Vercel Deployment Storage measures cumulative retained deployments (~380 MB each). Keep only the latest 3 production deployments. Exclude loose root PNGs, design reference mockups, and duplicate responsive folders from uploads via `.vercelignore`. Follows `docs/INFRASTRUCTURE_VERCEL_SUPABASE.md`. |
+| **GT-17** | **Supabase Cloud Infrastructure & Database Architecture** | **Primary Backend: Supabase project `jpciyrodeppqpkwqblpk` (PostgreSQL 17, `ap-southeast-2`).** | Synchronized with Vercel environment variables (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`). Provisioned `media` public storage bucket for asset CDN offloading, and `public.registrations` table with Row Level Security (RLS) for attendee/event RSVPs. Client helper initialized at `lib/supabase.ts`. |
 
 ---
 
@@ -106,6 +108,11 @@ The application uses the Next.js App Router:
 qiskitfallfest-srmap/QisKit-Fall-Fest-2026 (THIS REPO)
 ├── PROJECT_LEARNINGS.md                                      # Living knowledge base for web platform
 ├── README.md                                                 # Production documentation for web platform
+├── .vercelignore                                             # Deployment payload exclusion rules
+├── .env.local                                                # Local environment secrets (gitignored)
+├── docs/
+│   ├── TECHNICAL_SEO_STANDARDS.md                            # Search engine & Google Site Name standards
+│   └── INFRASTRUCTURE_VERCEL_SUPABASE.md                     # Vercel storage & Supabase backend spec
 ├── tools/
 │   └── convert_documents.py                                  # Document conversion utility
 ├── public/
@@ -116,7 +123,9 @@ qiskitfallfest-srmap/QisKit-Fall-Fest-2026 (THIS REPO)
 ├── config/                                                   # Global site metadata and navigation items
 ├── data/                                                     # Centralized schedules, locations, and FAQs
 ├── hooks/                                                    # Custom React hooks (scroll, media queries)
-└── lib/                                                      # Utility functions and class mergers
+└── lib/
+    ├── supabase.ts                                           # Supabase client SDK initialization
+    └── utils.ts                                              # Utility functions and class mergers
 
 sahgyan9/Qiskit-Fall-Fest-SRMAP-2026 (PLANNING REPO)
 ├── 01 _ Technical Programs  Cell/                            # Masterclass curriculum, syllabi, planning
@@ -137,5 +146,6 @@ sahgyan9/Qiskit-Fall-Fest-SRMAP-2026 (PLANNING REPO)
 | **2026-09-25 07:57** | Antigravity (Gemini 3.8 Flash) | Comprehensive overhaul and expansion of LLMs manifest suite (llms.txt, llms-full.txt, public/docs/*.md) | `tools/generate_llms_manifests.py`, `tools/verify_llms_manifests.py`, `workflows/update_llms_manifests.md`, `public/llms.txt`, `public/llms-full.txt`, `public/docs/*.md`, `public/robots.txt`, `PROJECT_LEARNINGS.md` | Replaced 39-line stub with llmstxt.org v2 standard index and comprehensive 31k-char llms-full.txt dossier. Built deterministic generation and verification tooling in tools/, authored SOP workflow in workflows/, exported standalone markdown endpoints to public/docs/, updated robots.txt, and synchronized across both web and planning repositories. |
 | **2026-09-25 08:33** | Antigravity (Gemini 3.8 Flash) | Comprehensive Technical SEO & Google Site Name optimization | `config/seo.ts`, `components/shared/JsonLd.tsx`, `app/layout.tsx`, `config/page-release.ts`, `app/*/page.tsx`, `app/robots.ts`, `app/sitemap.ts`, `public/robots.txt`, `public/manifest.json`, favicons & OG assets, `docs/TECHNICAL_SEO_STANDARDS.md`, `PROJECT_LEARNINGS.md` | Implemented full Google Site Name architecture (`Qiskit Fall Fest SRMAP 2026`), multi-size 48px+ favicons, JSON-LD schemas (WebSite, Organization, EventSeries, BreadcrumbList, FAQPage), automatic noindex guards on coming-soon pages, synchronized sitemaps and robots, redirected registration paths to official event portal, and authored master documentation for future AI agents. |
 | **2026-09-25 09:05** | Antigravity (Gemini 3.8 Flash) | Campus DNS sinkhole diagnosis and production fallback mirror integration | `PROJECT_LEARNINGS.md`, `README.md`, `config/seo.ts`, `tools/generate_llms_manifests.py`, `public/llms.txt`, `public/llms-full.txt`, `public/docs/faq.md` | Diagnosed `ERR_QUIC_PROTOCOL_ERROR` on campus WiFi as Check Point firewall DNS sinkhole (`62.0.58.94`) intercepting newly registered domain `qffsrmap2026.com`. Discovered and verified live Vercel production deployment `https://qis-kit-fall-fest-2026.vercel.app/` which works natively without blockage on campus WiFi. Updated master docs, SEO config, README, and LLM manifests to guide future agents and provide immediate alternative endpoints for campus registrations. |
+| **2026-09-25 19:15** | Antigravity (Gemini 3.8 Flash) | Vercel Deployment Storage remediation and Supabase cloud backend integration | `.vercelignore`, `.env.local`, `lib/supabase.ts`, `package.json`, `docs/INFRASTRUCTURE_VERCEL_SUPABASE.md`, `PROJECT_LEARNINGS.md` | Diagnosed 75% Deployment Storage alert on Vercel as cumulative retention of 38 deployments. Deleted 34 stale/failed/preview deployments via Vercel REST API, reclaiming ~12.9 GB. Authored `.vercelignore` to strip >137 MB of root PNGs and unreferenced mockups per build. Connected Supabase project (`jpciyrodeppqpkwqblpk`), synchronized environment variables across all Vercel environments, installed `@supabase/supabase-js`, provisioned public `media` storage bucket, created `public.registrations` table with RLS, and verified 100% clean Next.js 15 production build. |
 
 

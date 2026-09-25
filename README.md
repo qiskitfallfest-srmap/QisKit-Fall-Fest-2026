@@ -30,8 +30,11 @@ Built to international quantum symposium standards as part of IBM Quantum's glob
 * **Library:** React 19
 * **Language:** TypeScript
 * **Styling:** Tailwind CSS (Utility-first, responsive, accessible contrast)
+* **Backend & Cloud Database:** Supabase (PostgreSQL 17, Storage CDN, Row Level Security)
+* **Hosting & Edge Delivery:** Vercel (Edge Network, Automated Deployments)
 * **Icons:** Semantic SVG Icons (Lucide Icons)
 * **Code Quality:** ESLint, Prettier, PostCSS
+* **Infrastructure Reference:** [docs/INFRASTRUCTURE_VERCEL_SUPABASE.md](docs/INFRASTRUCTURE_VERCEL_SUPABASE.md)
 
 ### Route Structure
 ```

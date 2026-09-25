@@ -1,0 +1,29 @@
+# Vercel Ignore File
+# Prevents bulky non-production assets, raw design mockups, and tooling from uploading to build snapshots
+
+# Root-level loose design PNGs
+/*.png
+
+# Design reference screenshots & raw unedited sources
+*REFERENCE*
+*.original.*
+public/references/
+public/ABOUT-00-PAGE-REFERENCE-*
+public/hero/*REFERENCE*
+public/images/home/*/*REFERENCE*
+
+# Redundant duplicate responsive asset folder (active assets are in /Assets2/)
+public/images/home/responsive/
+
+# Unused high-res raw venue footage (>12 MB)
+public/images/venues/drone-hero.png
+public/images/venues/drone-overview.png
+public/images/venues/satellite-reference.png
+
+# Development and agent tooling / scratch
+scratch/
+tools/
+workflows/
+.system_generated/
+.user_uploaded/
+*.log
