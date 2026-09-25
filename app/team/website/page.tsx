@@ -1,26 +1,34 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import { ROUTE_RELEASE_CONFIG, isRouteLive } from '@/config/page-release';
+import { isRouteLive, getRouteMetadata } from '@/config/page-release';
 import { ComingSoonPage } from '@/components/shared/ComingSoonPage';
 import WebsiteTeamContent from '@/components/pages/WebsiteTeamContent';
+import { JsonLd } from '@/components/shared/JsonLd';
+import { generateBreadcrumbSchema } from '@/config/seo';
 
-const config = ROUTE_RELEASE_CONFIG['team/website'];
-
-export const metadata: Metadata = {
-  title: config.title,
-  description: config.description,
-};
+export const metadata: Metadata = getRouteMetadata('team/website');
 
 export default function WebsiteTeamPage() {
   if (isRouteLive('team/website')) {
-    return <WebsiteTeamContent />;
+    return (
+      <>
+        <JsonLd
+          id="breadcrumb-team-website"
+          schema={generateBreadcrumbSchema([
+            { name: 'Team', path: '/team' },
+            { name: 'Website Team', path: '/team/website' },
+          ])}
+        />
+        <WebsiteTeamContent />
+      </>
+    );
   }
 
   return (
     <ComingSoonPage
       pageTitle="Website Team"
-      sectionSubtitle="The design and engineering contributors behind the Qiskit Fall Fest 2026 digital experience."
-      categoryName="DIGITAL PLATFORM"
+      sectionSubtitle="Detailed profiles of the web engineering, design systems, and platform infrastructure leads for Qiskit Fall Fest SRMAP 2026 will be published shortly."
+      categoryName="WEBSITE ENGINEERING"
     />
   );
 }

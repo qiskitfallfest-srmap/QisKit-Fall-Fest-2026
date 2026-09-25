@@ -27,7 +27,25 @@ const nextConfig: NextConfig = {
     ],
   },
   output: 'standalone',
-  transpilePackages: ['motion'],
+  async redirects() {
+    return [
+      {
+        source: '/join',
+        destination: 'https://events.srmap.edu.in/event/qiskit-fall-fest-2026/',
+        permanent: false,
+      },
+      {
+        source: '/register',
+        destination: 'https://events.srmap.edu.in/event/qiskit-fall-fest-2026/',
+        permanent: false,
+      },
+      {
+        source: '/signup',
+        destination: 'https://events.srmap.edu.in/event/qiskit-fall-fest-2026/',
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     return [
       {

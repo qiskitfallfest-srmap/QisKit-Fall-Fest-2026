@@ -1,21 +1,16 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import { ROUTE_RELEASE_CONFIG } from '@/config/page-release';
+import { getRouteMetadata } from '@/config/page-release';
 import { ComingSoonPage } from '@/components/shared/ComingSoonPage';
 
-const config = ROUTE_RELEASE_CONFIG['accessibility'];
-
-export const metadata: Metadata = {
-  title: config.title,
-  description: config.description,
-};
+export const metadata: Metadata = getRouteMetadata('accessibility');
 
 export default function AccessibilityPage() {
   return (
     <ComingSoonPage
       pageTitle="Accessibility Statement"
-      sectionSubtitle="Our commitment to physical and digital accessibility across all event venues and online resources."
-      categoryName="LEGAL & POLICIES"
+      sectionSubtitle="Physical campus access maps, assistive technology provisions, and inclusivity guidelines will be available here."
+      categoryName="CAMPUS ACCESSIBILITY"
     />
   );
 }

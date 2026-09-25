@@ -4,14 +4,17 @@ import { isRouteLive } from '@/config/page-release';
 import { ComingSoonPage } from '@/components/shared/ComingSoonPage';
 import ExperiencePageContent from '@/components/pages/ExperiencePageContent';
 import { LEARN_ITEMS, BUILD_ITEMS, CONNECT_ITEMS } from '@/data/experience';
+import { SITE_CONFIG, generateBreadcrumbSchema } from '@/config/seo';
+import { JsonLd } from '@/components/shared/JsonLd';
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://qiskitfallfest2026.srmap.edu.in';
+const baseUrl = SITE_CONFIG.primaryDomain;
 
 export const metadata: Metadata = {
-  title: 'Interactive Quantum Tracks: Learn, Build & Connect | Qiskit Fall Fest 2026',
+  title: `Interactive Quantum Tracks: Learn, Build & Connect | ${SITE_CONFIG.brandName}`,
   description:
     'Immerse in utility-scale quantum computing at SRM University-AP with IBM Quantum. Register for hands-on Qiskit 1.0 workshops, error mitigation labs, pulse-level control masterclasses, quantum hackathons, and research mentorship.',
   keywords: [
+    'Qiskit Fall Fest SRMAP 2026',
     'Qiskit Fall Fest 2026',
     'Quantum Computing Experience',
     'IBM Quantum Workshops',
@@ -29,25 +32,25 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     url: `${baseUrl}/experience`,
-    title: 'Experience Tracks: Learn, Build & Connect | Qiskit Fall Fest 2026',
+    title: `Experience Tracks: Learn, Build & Connect | ${SITE_CONFIG.brandName}`,
     description:
       'Immerse in utility-scale quantum computing at SRM University-AP with IBM Quantum. Register for hands-on Qiskit 1.0 workshops, error mitigation labs, quantum hackathons, and research mentorship.',
-    siteName: 'Qiskit Fall Fest 2026',
+    siteName: SITE_CONFIG.brandName,
     images: [
       {
-        url: `${baseUrl}/images/branding/srm-ap-logo-horizontal-backgroundless.png`,
+        url: `${baseUrl}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: 'Qiskit Fall Fest 2026 Experience Tracks',
+        alt: `${SITE_CONFIG.brandName} Experience Tracks`,
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Experience Tracks: Learn, Build & Connect | Qiskit Fall Fest 2026',
+    title: `Experience Tracks: Learn, Build & Connect | ${SITE_CONFIG.brandName}`,
     description:
       'Interactive quantum computing masterclasses, hands-on hackathons, and research gala at SRM University-AP with IBM Quantum.',
-    images: [`${baseUrl}/images/branding/srm-ap-logo-horizontal-backgroundless.png`],
+    images: [`${baseUrl}/og-image.png`],
   },
 };
 
@@ -157,6 +160,10 @@ export default function ExperiencePage() {
   if (isRouteLive('experience')) {
     return (
       <>
+        <JsonLd
+          id="breadcrumb-experience"
+          schema={generateBreadcrumbSchema([{ name: 'Experience', path: '/experience' }])}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
@@ -169,7 +176,7 @@ export default function ExperiencePage() {
   return (
     <ComingSoonPage
       pageTitle="Experience"
-      sectionSubtitle="The interactive experience, quantum computing masterclasses, and hands-on tracks are being prepared for Qiskit Fall Fest 2026."
+      sectionSubtitle="The interactive experience, quantum computing masterclasses, and hands-on tracks are being prepared for Qiskit Fall Fest SRMAP 2026."
       categoryName="EVENT EXPERIENCE"
     />
   );

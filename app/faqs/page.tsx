@@ -1,19 +1,29 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import { ROUTE_RELEASE_CONFIG, isRouteLive } from '@/config/page-release';
+import { isRouteLive, getRouteMetadata } from '@/config/page-release';
 import { ComingSoonPage } from '@/components/shared/ComingSoonPage';
 import FAQsPageContent from '@/components/pages/FAQsPageContent';
+import { JsonLd } from '@/components/shared/JsonLd';
+import { generateBreadcrumbSchema, generateFAQSchema } from '@/config/seo';
+import { FAQS_DATA } from '@/data/faqs';
 
-const config = ROUTE_RELEASE_CONFIG['faqs'];
-
-export const metadata: Metadata = {
-  title: config.title,
-  description: config.description,
-};
+export const metadata: Metadata = getRouteMetadata('faqs');
 
 export default function FAQsPage() {
   if (isRouteLive('faqs')) {
-    return <FAQsPageContent />;
+    return (
+      <>
+        <JsonLd
+          id="breadcrumb-faqs"
+          schema={generateBreadcrumbSchema([{ name: 'FAQs', path: '/faqs' }])}
+        />
+        <JsonLd
+          id="schema-faqs"
+          schema={generateFAQSchema(FAQS_DATA)}
+        />
+        <FAQsPageContent />
+      </>
+    );
   }
 
   return (

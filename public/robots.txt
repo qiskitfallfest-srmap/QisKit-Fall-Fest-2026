@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /api/
 
 # AI Search Engines & LLM Indexers
 User-agent: GPTBot
@@ -14,6 +15,7 @@ Allow: /
 User-agent: Google-Extended
 Allow: /
 
-# LLMs Manifest & Full Dossier
+# Sitemap Index & Manifests
+Sitemap: https://www.qffsrmap2026.com/sitemap.xml
 # Reference: https://www.qffsrmap2026.com/llms.txt
 # Reference: https://www.qffsrmap2026.com/llms-full.txt

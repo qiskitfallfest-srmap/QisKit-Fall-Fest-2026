@@ -1,19 +1,24 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import { ROUTE_RELEASE_CONFIG, isRouteLive } from '@/config/page-release';
+import { isRouteLive, getRouteMetadata } from '@/config/page-release';
 import { ComingSoonPage } from '@/components/shared/ComingSoonPage';
 import VenuesPageContent from '@/components/pages/VenuesPageContent';
+import { JsonLd } from '@/components/shared/JsonLd';
+import { generateBreadcrumbSchema } from '@/config/seo';
 
-const config = ROUTE_RELEASE_CONFIG['venues'];
-
-export const metadata: Metadata = {
-  title: config.title,
-  description: config.description,
-};
+export const metadata: Metadata = getRouteMetadata('venues');
 
 export default function VenuesPage() {
   if (isRouteLive('venues')) {
-    return <VenuesPageContent />;
+    return (
+      <>
+        <JsonLd
+          id="breadcrumb-venues"
+          schema={generateBreadcrumbSchema([{ name: 'Venues', path: '/venues' }])}
+        />
+        <VenuesPageContent />
+      </>
+    );
   }
 
   return (

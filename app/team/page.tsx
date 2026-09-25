@@ -1,25 +1,30 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import { ROUTE_RELEASE_CONFIG, isRouteLive } from '@/config/page-release';
+import { isRouteLive, getRouteMetadata } from '@/config/page-release';
 import { ComingSoonPage } from '@/components/shared/ComingSoonPage';
 import TeamPageContent from '@/components/pages/TeamPageContent';
+import { JsonLd } from '@/components/shared/JsonLd';
+import { generateBreadcrumbSchema } from '@/config/seo';
 
-const config = ROUTE_RELEASE_CONFIG['team'];
-
-export const metadata: Metadata = {
-  title: config.title,
-  description: config.description,
-};
+export const metadata: Metadata = getRouteMetadata('team');
 
 export default function TeamPage() {
   if (isRouteLive('team')) {
-    return <TeamPageContent />;
+    return (
+      <>
+        <JsonLd
+          id="breadcrumb-team"
+          schema={generateBreadcrumbSchema([{ name: 'Team', path: '/team' }])}
+        />
+        <TeamPageContent />
+      </>
+    );
   }
 
   return (
     <ComingSoonPage
       pageTitle="Team"
-      sectionSubtitle="The student committees, technical leadership, and organizational tracks driving Qiskit Fall Fest 2026 will be unveiled shortly."
+      sectionSubtitle="The student committees, technical leadership, and organizational tracks driving Qiskit Fall Fest SRMAP 2026 will be unveiled shortly."
       categoryName="EVENT LEADERSHIP"
     />
   );
