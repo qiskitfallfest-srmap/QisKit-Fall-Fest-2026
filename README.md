@@ -13,7 +13,7 @@
 
 This repository contains the production source code for the official website of **Qiskit Fall Fest 2026 at SRM University-AP (Amaravati)**.
 
-Built to international quantum symposium standards, the platform serves approximately 200 global institutions, delivering interactive schedules, campus wayfinding, event catalogues, and speaker registries across 59 curated events.
+Built to international quantum symposium standards as part of IBM Quantum's global network of 200+ host institutions, the platform powers SRM University-AP's flagship festival edition—delivering interactive schedules, campus wayfinding, event catalogues, and speaker registries across 59 curated events.
 
 ---
 
