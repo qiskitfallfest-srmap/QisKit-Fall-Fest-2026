@@ -1,7 +1,8 @@
 # Qiskit Fall Fest 2026 — SRM University-AP (Amaravati)
 ### Official Digital Web Platform
 
-**Live Platform:** [https://www.qffsrmap2026.com/](https://www.qffsrmap2026.com/)  
+**Live Platform (Primary Domain):** [https://www.qffsrmap2026.com/](https://www.qffsrmap2026.com/)  
+**Verified Production Mirror (Campus Direct / Fallback URL):** [https://qis-kit-fall-fest-2026.vercel.app/](https://qis-kit-fall-fest-2026.vercel.app/)  
 **Host Category:** Partner Plus Host  
 **Milestone Theme:** A Decade of Quantum on Cloud (Celebrating 10 Years of Cloud Quantum Computing)  
 **Event Timeline:** Online Phase: 5–13 October 2026 | Offline Phase: 26–30 October 2026  
@@ -14,6 +15,12 @@
 This repository contains the production source code for the official website of **Qiskit Fall Fest 2026 at SRM University-AP (Amaravati)**.
 
 Built to international quantum symposium standards as part of IBM Quantum's global network of 200+ host institutions, the platform powers SRM University-AP's flagship festival edition—delivering interactive schedules, campus wayfinding, event catalogues, and speaker registries across 59 curated events.
+
+### Production Endpoints & Campus Access
+
+* **Primary Custom Domain (`qffsrmap2026.com`):** Serves global public traffic, search engine crawlers, and external visitors. Protected by Cloudflare and Vercel.
+* **Campus Direct Mirror (`qis-kit-fall-fest-2026.vercel.app`):** Direct Vercel production deployment. Use this URL for distribution on the SRM University-AP campus network and for registration links in campus groups. Because the campus Check Point firewall sinkholes newly registered domains like `qffsrmap2026.com` to `62.0.58.94` (`ERR_QUIC_PROTOCOL_ERROR`), the `.vercel.app` mirror provides 100% reliable, zero-configuration access for students and faculty across all campus Wi-Fi access points and labs.
+* **Developer Client Bypass:** Developers on campus Wi-Fi can access `qffsrmap2026.com` directly by enabling **Secure DNS (DoH)** in their browser (`chrome://settings/security` -> select Cloudflare 1.1.1.1 or Google Public DNS).
 
 ---
 

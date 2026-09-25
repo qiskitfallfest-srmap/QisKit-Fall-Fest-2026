@@ -139,12 +139,13 @@ def verify_manifests():
             all_errors.extend(check_no_emojis(doc_text, doc))
             print(f"[OK] {doc_path.name} verified ({len(doc_text):,} chars).")
 
-    # 4. Verify planning repo root llms.txt
-    planning_llms = planning_repo / "llms.txt"
-    errs = verify_llms_txt(planning_llms)
-    all_errors.extend(errs)
-    if not errs:
-        print(f"[OK] {planning_llms} passed schema validation.")
+    # 4. Verify planning repo root llms.txt (only if separate planning repo is present)
+    if planning_repo.resolve() != web_repo.resolve():
+        planning_llms = planning_repo / "llms.txt"
+        errs = verify_llms_txt(planning_llms)
+        all_errors.extend(errs)
+        if not errs:
+            print(f"[OK] {planning_llms} passed schema validation.")
 
     print("\n" + "=" * 50)
     if all_errors:

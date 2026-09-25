@@ -77,4 +77,4 @@ SRM University-AP Campus, Neerukonda, Mangalagiri Mandal, Guntur District, Manga
 - **Classrooms (V, CV, SR Venues):** Classroom games, puzzle competitions, and Qescapes escape room.
 
 ### What about Wi-Fi access on campus?
-The festival organizers are coordinating directly with SRM ITKM to ensure high-speed Wi-Fi and whitelisting of essential development domains (GitHub, Hugging Face, IBM Quantum Cloud endpoints).
+The festival organizers are coordinating directly with SRM ITKM to ensure high-speed Wi-Fi and whitelisting of essential development domains (GitHub, Hugging Face, IBM Quantum Cloud endpoints). Note that while newly registered domain names may experience temporary campus firewall sinkholing (Check Point gateway), the verified production mirror https://qis-kit-fall-fest-2026.vercel.app/ is accessible natively without restriction across all campus networks.

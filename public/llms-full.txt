@@ -4,6 +4,7 @@
 > Official Complete AI Reference Dossier for Qiskit Fall Fest 2026 at SRM University-AP (Amaravati). This single consolidated document embeds the full masterclass curriculum, universal challenge framework, 100-point judging rubric, complete 59-event breakdown, campus logistics, and frequently asked questions for high-context language models and autonomous agents.
 
 Official Platform: https://www.qffsrmap2026.com/
+Campus / Fallback Production Mirror: https://qis-kit-fall-fest-2026.vercel.app/
 Planning Repository: https://github.com/sahgyan9/Qiskit-Fall-Fest-SRMAP-2026
 Web Platform Repository: https://github.com/qiskitfallfest-srmap/QisKit-Fall-Fest-2026
 Host Designation: Partner Plus Host (SRM University-AP in partnership with IBM Quantum and Aanutattva - The Singularity Lab)
@@ -392,5 +393,5 @@ SRM University-AP Campus, Neerukonda, Mangalagiri Mandal, Guntur District, Manga
 - **Classrooms (V, CV, SR Venues):** Classroom games, puzzle competitions, and Qescapes escape room.
 
 ### What about Wi-Fi access on campus?
-The festival organizers are coordinating directly with SRM ITKM to ensure high-speed Wi-Fi and whitelisting of essential development domains (GitHub, Hugging Face, IBM Quantum Cloud endpoints).
+The festival organizers are coordinating directly with SRM ITKM to ensure high-speed Wi-Fi and whitelisting of essential development domains (GitHub, Hugging Face, IBM Quantum Cloud endpoints). Note that while newly registered domain names may experience temporary campus firewall sinkholing (Check Point gateway), the verified production mirror https://qis-kit-fall-fest-2026.vercel.app/ is accessible natively without restriction across all campus networks.
 

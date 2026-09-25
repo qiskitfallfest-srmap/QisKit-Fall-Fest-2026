@@ -19,6 +19,7 @@ export const SITE_CONFIG = {
     'Qiskit Fall Fest SRM University-AP',
   ],
   primaryDomain: 'https://www.qffsrmap2026.com',
+  campusMirrorDomain: 'https://qis-kit-fall-fest-2026.vercel.app',
   officialEventUrl: 'https://events.srmap.edu.in/event/qiskit-fall-fest-2026/',
   registrationUrl: 'https://unstop.com', // Launches 25 September 2026
   description:

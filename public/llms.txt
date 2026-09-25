@@ -5,6 +5,7 @@
 The Qiskit Fall Fest 2026 at SRM University-AP is an international quantum computing festival featuring a 59-event technical portfolio, an intensive 10-session masterclass series, a 5-track hackathon centered on Algorithm-Architecture Co-Design, a hardware technology expo, keynotes, and a 24-26 hour onsite hackathon.
 
 Official Website: https://www.qffsrmap2026.com/
+Campus / Fallback Production Mirror: https://qis-kit-fall-fest-2026.vercel.app/
 Host Institution: SRM University-AP, Amaravati, Andhra Pradesh, India (Partner Plus Host)
 Online Phase: 5 October 2026 to 13 October 2026
 Campus Phase: 26 October 2026 to 30 October 2026

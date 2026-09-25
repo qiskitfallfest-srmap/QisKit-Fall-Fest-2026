@@ -43,6 +43,7 @@ def build_llms_txt() -> str:
 The Qiskit Fall Fest 2026 at SRM University-AP is an international quantum computing festival featuring a 59-event technical portfolio, an intensive 10-session masterclass series, a 5-track hackathon centered on Algorithm-Architecture Co-Design, a hardware technology expo, keynotes, and a 24-26 hour onsite hackathon.
 
 Official Website: https://www.qffsrmap2026.com/
+Campus / Fallback Production Mirror: https://qis-kit-fall-fest-2026.vercel.app/
 Host Institution: SRM University-AP, Amaravati, Andhra Pradesh, India (Partner Plus Host)
 Online Phase: 5 October 2026 to 13 October 2026
 Campus Phase: 26 October 2026 to 30 October 2026
@@ -517,7 +518,7 @@ SRM University-AP Campus, Neerukonda, Mangalagiri Mandal, Guntur District, Manga
 - **Classrooms (V, CV, SR Venues):** Classroom games, puzzle competitions, and Qescapes escape room.
 
 ### What about Wi-Fi access on campus?
-The festival organizers are coordinating directly with SRM ITKM to ensure high-speed Wi-Fi and whitelisting of essential development domains (GitHub, Hugging Face, IBM Quantum Cloud endpoints).
+The festival organizers are coordinating directly with SRM ITKM to ensure high-speed Wi-Fi and whitelisting of essential development domains (GitHub, Hugging Face, IBM Quantum Cloud endpoints). Note that while newly registered domain names may experience temporary campus firewall sinkholing (Check Point gateway), the verified production mirror https://qis-kit-fall-fest-2026.vercel.app/ is accessible natively without restriction across all campus networks.
 """
 
 def build_llms_full_txt() -> str:
@@ -532,6 +533,7 @@ def build_llms_full_txt() -> str:
 > Official Complete AI Reference Dossier for Qiskit Fall Fest 2026 at SRM University-AP (Amaravati). This single consolidated document embeds the full masterclass curriculum, universal challenge framework, 100-point judging rubric, complete 59-event breakdown, campus logistics, and frequently asked questions for high-context language models and autonomous agents.
 
 Official Platform: https://www.qffsrmap2026.com/
+Campus / Fallback Production Mirror: https://qis-kit-fall-fest-2026.vercel.app/
 Planning Repository: https://github.com/sahgyan9/Qiskit-Fall-Fest-SRMAP-2026
 Web Platform Repository: https://github.com/qiskitfallfest-srmap/QisKit-Fall-Fest-2026
 Host Designation: Partner Plus Host (SRM University-AP in partnership with IBM Quantum and Aanutattva - The Singularity Lab)
@@ -600,21 +602,23 @@ def main():
             f.write(doc_content)
         print(f"Wrote {doc_path} ({len(doc_content):,} chars)")
         
-    # 4. Generate planning repo root llms.txt
-    planning_llms_path = planning_repo / "llms.txt"
-    planning_llms_content = build_planning_llms_txt()
-    with open(planning_llms_path, "w", encoding="utf-8") as f:
-        f.write(planning_llms_content)
-    print(f"Wrote {planning_llms_path} ({len(planning_llms_content):,} chars)")
+    # 4. Generate planning repo root llms.txt (only if separate planning repo is detected)
+    if planning_repo.resolve() != web_repo.resolve():
+        planning_llms_path = planning_repo / "llms.txt"
+        planning_llms_content = build_planning_llms_txt()
+        with open(planning_llms_path, "w", encoding="utf-8") as f:
+            f.write(planning_llms_content)
+        print(f"Wrote {planning_llms_path} ({len(planning_llms_content):,} chars)")
     
-    # 5. Mirror tools and workflows to web repo if present
+    # 5. Mirror tools to web repo if running from separate planning repo
     web_tools = web_repo / "tools"
     web_tools.mkdir(parents=True, exist_ok=True)
     web_tool_dest = web_tools / "generate_llms_manifests.py"
-    with open(web_tool_dest, "w", encoding="utf-8") as f:
-        with open(__file__, "r", encoding="utf-8") as src:
-            f.write(src.read())
-    print(f"Mirrored generator tool to {web_tool_dest}")
+    if web_tool_dest.resolve() != Path(__file__).resolve():
+        with open(web_tool_dest, "w", encoding="utf-8") as f:
+            with open(__file__, "r", encoding="utf-8") as src:
+                f.write(src.read())
+        print(f"Mirrored generator tool to {web_tool_dest}")
 
     print("Generation completed successfully.")
 
