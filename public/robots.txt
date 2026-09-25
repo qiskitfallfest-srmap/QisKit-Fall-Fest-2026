@@ -11,5 +11,9 @@ Allow: /
 User-agent: PerplexityBot
 Allow: /
 
-# LLMs Manifest
+User-agent: Google-Extended
+Allow: /
+
+# LLMs Manifest & Full Dossier
 # Reference: https://www.qffsrmap2026.com/llms.txt
+# Reference: https://www.qffsrmap2026.com/llms-full.txt

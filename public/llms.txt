@@ -1,38 +1,68 @@
 # Qiskit Fall Fest 2026 — SRM University-AP (Amaravati)
 
-> Official Digital Summit Platform: https://www.qffsrmap2026.com/
-> Companion Planning Repository: https://github.com/sahgyan9/Qiskit-Fall-Fest-SRMAP-2026
-> Web Platform Repository: https://github.com/qiskitfallfest-srmap/QisKit-Fall-Fest-2026
+> Official Digital Summit Platform & AI Knowledge Manifest for Qiskit Fall Fest 2026 at SRM University-AP (Amaravati), organized in partnership with IBM Quantum and Aanutattva - The Singularity Lab under the global milestone theme "A Decade of Quantum on Cloud" (celebrating 10 years of cloud quantum computing).
 
-## Overview
-Qiskit Fall Fest 2026 at SRM University-AP (Amaravati) is a premier quantum computing festival organized as part of IBM's global Qiskit Fall Fest initiative. Recognized as a Partner Plus Host, SRM University-AP hosts a multi-track celebration marking "A Decade of Quantum on Cloud" (10 years of cloud quantum computing).
+The Qiskit Fall Fest 2026 at SRM University-AP is an international quantum computing festival featuring a 59-event technical portfolio, an intensive 10-session masterclass series, a 5-track hackathon centered on Algorithm-Architecture Co-Design, a hardware technology expo, keynotes, and a 24-26 hour onsite hackathon.
 
-## Key Dates
-- **Online Phase:** 5 October 2026 to 13 October 2026
-  - **Quantum Computing Masterclass Series:** 5 to 9 October 2026 (10 foundational to advanced sessions)
-  - **Hackathon Phase 1 Qualification:** 5 to 13 October 2026 (Submissions close 13 October, 11:59 PM IST)
-  - **Online Challenges & Games:** 9 to 13 October 2026
-  - **Phase 1 Finalist Announcement:** 17 October 2026 (~200 qualified participants)
-- **Offline Campus Phase:** 26 October 2026 to 30 October 2026
-  - **Venue:** SRM University-AP Campus, Amaravati, Andhra Pradesh, India
-  - **Flagship Onsite Hackathon (Phase 2):** 27 to 28 October 2026 (24 to 26 hours in the Auditorium)
-  - **QCTF (Quantum Capture the Flag):** 28 October 2026 (8-hour offline challenge in the Auditorium)
-  - **Hardware Quantum Tech Expo:** 29 October 2026
-  - **Keynote Lectures & Valedictory:** 30 October 2026
+Official Website: https://www.qffsrmap2026.com/
+Host Institution: SRM University-AP, Amaravati, Andhra Pradesh, India (Partner Plus Host)
+Online Phase: 5 October 2026 to 13 October 2026
+Campus Phase: 26 October 2026 to 30 October 2026
+Registration Platform: Unstop (Official Public Launch: 25 September 2026)
 
-## Total Event Portfolio (59 Events)
-- **Offline Events (38):** Hardware Tech Expo, Keynotes, 24-26h Hackathon, QCTF, Qescapes, 6 Offline Challenges, 3 Workshops, and 24 Classroom Games.
-- **Online Events (21):** 10-Session Masterclass Series, Hackathon Phase 1, Python Coding Challenge, ML Competition, Essay, Posters, Reels, Code Golf, Noise Forensics, and 10 Online Games.
+## Full AI Manifests & Markdown Dossiers
 
-## Key Website Routes
-- Home: https://www.qffsrmap2026.com/
-- About: https://www.qffsrmap2026.com/about
-- Experience (Event Directory): https://www.qffsrmap2026.com/experience
-- Schedule (Interactive Timeline): https://www.qffsrmap2026.com/schedule
-- Venues (Campus Atlas): https://www.qffsrmap2026.com/venues
-- Team (Organizers & Mentors): https://www.qffsrmap2026.com/team
-- FAQs: https://www.qffsrmap2026.com/faqs
+- [Full Festival AI Dossier](https://www.qffsrmap2026.com/llms-full.txt): Complete, consolidated markdown dossier containing the masterclass syllabus, universal challenge framework, 100-point rubric, 59-event directory, campus venues, and FAQs for single-request ingestion.
+- [Masterclass Curriculum v1.2](https://www.qffsrmap2026.com/docs/masterclass-curriculum.md): Comprehensive 10-session learning arc covering quantum fundamentals, hardware topologies, transpiler routing, variational tracks, PQC, and quantum utility.
+- [Hackathon Universal Challenge Framework](https://www.qffsrmap2026.com/docs/hackathon-challenge-framework.md): Two-phase hackathon specification, Processors A/B/C/D architecture constraints, 100-point rubric, and 5 domain tracks.
+- [Complete 59-Event Portfolio](https://www.qffsrmap2026.com/docs/event-portfolio-59.md): Exhaustive operational directory of all 38 offline campus events and 21 online virtual events.
+- [Frequently Asked Questions (FAQ)](https://www.qffsrmap2026.com/docs/faq.md): Definitive answers regarding team eligibility, registration, travel, campus logistics, and certificates.
 
-## Host Institution
-SRM University-AP, Amaravati, Andhra Pradesh, India.
-Organized in partnership with IBM Quantum and Aanutattva - The Singularity Lab.
+## Web Platform Routes
+
+- [Summit Home](https://www.qffsrmap2026.com/): Official portal, keynote speaker announcements, event countdown, and partner showcases.
+- [About the Festival](https://www.qffsrmap2026.com/about): Host institution profile, IBM Quantum collaboration, and decade milestone commemoration.
+- [Experience & Event Tracks](https://www.qffsrmap2026.com/experience): Filterable directory of technical workshops, challenges, gaming sessions, and hackathon modules.
+- [Interactive Schedule](https://www.qffsrmap2026.com/schedule): Chronological schedule for the Online Phase (5-13 Oct) and Campus Phase (26-30 Oct).
+- [Campus Venues & Atlas](https://www.qffsrmap2026.com/venues): SRM-AP campus atlas, University Auditorium, Quantum Computing Labs, and seminar halls.
+- [Organizing Team & Mentors](https://www.qffsrmap2026.com/team): Festival leadership, faculty patrons, track leads, and IBM Quantum advocates.
+- [FAQ Portal](https://www.qffsrmap2026.com/faqs): Participant query resolution regarding accommodation, hackathon submissions, and rules.
+
+## Masterclass Series: Algorithm-Architecture Co-Design (5-9 October 2026)
+
+- [Session 1: Quantum Basics Workshop](https://www.qffsrmap2026.com/docs/masterclass-curriculum.md#session-1): Qubits, superposition, entanglement, single and two-qubit quantum gates, and statevector simulation.
+- [Session 2: QISKIT 101 - Exploring Track](https://www.qffsrmap2026.com/docs/masterclass-curriculum.md#session-2): Hands-on circuit building, operator representation, and Qiskit Primitives V2 (SamplerV2 and EstimatorV2).
+- [Session 3: Quantum Hardware Topologies](https://www.qffsrmap2026.com/docs/masterclass-curriculum.md#session-3): Physical qubit constraints, from 1D linear chains (Processor A) to IBM heavy-hex lattices (Processor B) and graph topologies (Processor C).
+- [Session 4: Qiskit Transpiler Deep Dive](https://www.qffsrmap2026.com/docs/masterclass-curriculum.md#session-4): Transpiler pass managers, layout selection, routing algorithms, SWAP insertion overhead, and depth minimization.
+- [Session 5: Hands-on Lab - Benchmarking Processors A & B](https://www.qffsrmap2026.com/docs/masterclass-curriculum.md#session-5): Empirical measurement of two-qubit (CX) gate count, circuit depth, and SWAP penalty on linear vs heavy-hex topologies.
+- [Session 6: Variational Algorithms (VQE & QML)](https://www.qffsrmap2026.com/docs/masterclass-curriculum.md#session-6): Molecular ground state energy estimation with Qiskit Nature and parameterized quantum feature maps for machine learning.
+- [Session 7: Variational Optimization (QAOA) & Simulation](https://www.qffsrmap2026.com/docs/masterclass-curriculum.md#session-7): Combinatorial optimization via QUBO/QAOA and Hamiltonian time-evolution with Trotterization for spin chains.
+- [Session 8: Post-Quantum Cryptography & Cryptanalysis](https://www.qffsrmap2026.com/docs/masterclass-curriculum.md#session-8): Quantum threat models, reversible arithmetic circuits (carry-ripple adders, modular multipliers), and routing constraints.
+- [Session 9: Lab - Processor C Analysis & Designing Processor D](https://www.qffsrmap2026.com/docs/masterclass-curriculum.md#session-9): Evaluation of experimental graph topologies and principles of designing custom 12-qubit coupling maps.
+- [Session 10: The Road to Quantum Utility & Capstone Strategy](https://www.qffsrmap2026.com/docs/masterclass-curriculum.md#session-10): Quantum utility at 100+ qubits, error mitigation (ZNE, PEC), and hackathon final submission strategy.
+
+## Hackathon Universal Challenge Framework (Phase 1: 5-13 October 2026)
+
+- [Universal Challenge Framework Overview](https://www.qffsrmap2026.com/docs/hackathon-challenge-framework.md#framework): Multi-track hackathon for teams of 2 to 4 members focusing on co-designing quantum algorithms with hardware architectures.
+- [Fixed Processor Specifications (A, B, C)](https://www.qffsrmap2026.com/docs/hackathon-challenge-framework.md#processors): Processor A (5-qubit linear Falcon/Yorktown), Processor B (7-qubit heavy-hex), and Processor C (8-10 qubit experimental graph).
+- [Custom Processor D Innovation Task](https://www.qffsrmap2026.com/docs/hackathon-challenge-framework.md#processor-d): Up to 12 qubits, custom coupling map, bounded native gate errors, and rigorous architectural rationale resolving identified algorithm bottlenecks.
+- [100-Point Evaluation Rubric](https://www.qffsrmap2026.com/docs/hackathon-challenge-framework.md#rubric): 40 points for Solution Correctness & Domain Performance; 30 points for Architectural Benchmarking (A/B/C); 30 points for Custom Processor D Innovation.
+- [Submission Guidelines](https://www.qffsrmap2026.com/docs/hackathon-challenge-framework.md#submission): Reproducible GitHub or Hugging Face Space containing main.ipynb, processors/ coupling map JSONs, results/ artifacts, and README.md.
+
+## Total Event Portfolio (59 Active Events)
+
+- [Portfolio Architecture Summary](https://www.qffsrmap2026.com/docs/event-portfolio-59.md#summary): Breakdown of 38 offline physical campus events and 21 online virtual events.
+- [Offline Campus Events (38)](https://www.qffsrmap2026.com/docs/event-portfolio-59.md#offline): Flagship 24-26h Onsite Hackathon Phase 2 (27-28 Oct), QCTF 8-hour competition (28 Oct), Hardware Quantum Tech Expo (29 Oct), Keynote Speeches (30 Oct), Qescapes, 6 Offline Challenges, 3 Workshops, and 24 Classroom Games.
+- [Online Virtual Events (21)](https://www.qffsrmap2026.com/docs/event-portfolio-59.md#online): 10-Session Masterclass Series (5-9 Oct), Hackathon Phase 1 Sprint (5-13 Oct), Python Coding Challenge, ML Competition, Essay Competition, Digital Posters, Tech Reels, Quantum Code Golf, Quantum Entropy, Quantum Noise Forensics, and 10 Online Games.
+
+## Companion Repositories & Planning
+
+- [Planning & Governance Repository](https://github.com/sahgyan9/Qiskit-Fall-Fest-SRMAP-2026): Academic planning, masterclass curricula, problem statement dossiers, and multi-agent governance.
+- [Web Platform Source Repository](https://github.com/qiskitfallfest-srmap/QisKit-Fall-Fest-2026): Production Next.js 15 web platform, Tailwind CSS, TypeScript schemas, and interactive schedule engine.
+
+## Optional
+
+- [IBM Quantum Platform](https://quantum.cloud.ibm.com/): Cloud access to utility-scale 127+ qubit superconducting quantum processors.
+- [Qiskit Documentation](https://docs.quantum.ibm.com/): Official API references for Qiskit 1.2+, Primitives V2, and the Qiskit Transpiler Service.
+- [Hyperbolic Futures Challenge Model](https://github.com/sahgyan9/Qiskit-Fall-Fest-SRMAP-2026): Architectural precedent for benchmarking quantum circuits across constrained device graphs.
+- [A Decade of Quantum on Cloud Whitepaper](https://www.ibm.com/quantum): Historical retrospective on 10 years of cloud quantum computing (2016-2026).
