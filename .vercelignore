@@ -15,6 +15,11 @@ public/images/home/*/*REFERENCE*
 # Redundant duplicate responsive asset folder (active assets are in /Assets2/)
 public/images/home/responsive/
 
+# Unreferenced duplicate images in public root and subdirectories
+public/HOME-*.png
+public/images/home/hero/
+public/images/home/hosted-at/
+
 # Unused high-res raw venue footage (>12 MB)
 public/images/venues/drone-hero.png
 public/images/venues/drone-overview.png
