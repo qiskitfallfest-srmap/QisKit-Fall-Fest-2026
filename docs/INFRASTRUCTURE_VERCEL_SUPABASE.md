@@ -217,3 +217,10 @@ The static deployment bundle was audited and optimized:
 * Expanded `.vercelignore` to exclude redundant hero/hosted-at duplicates (`public/HOME-*.png`, `public/images/home/hero/`, `public/images/home/hosted-at/`).
 * Total static deployment payload reduced from **407.45 MB** to **7.71 MB**.
 
+### 7.3 Live Dashboard Verification
+On 26 September 2026 at 12:01 IST, Vercel's Usage Dashboard officially updated to reflect the new baseline:
+* **Deployment Storage:** `961.65 MB / 10 GB` (Healthy blue status; previous 8.07 GB amber warning cleared).
+* **Per-Build Storage Impact:** Reduced from ~430–450 MB down to ~25–28 MB per deployment.
+* **Risk Status:** Zero downtime incurred; production mirror `https://qis-kit-fall-fest-2026.vercel.app/` and custom domain `https://www.qffsrmap2026.com/` remained 100% operational throughout remediation.
+
+
