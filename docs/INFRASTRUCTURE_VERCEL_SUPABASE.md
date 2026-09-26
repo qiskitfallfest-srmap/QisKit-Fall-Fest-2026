@@ -197,3 +197,23 @@ A full static build was executed on the updated tree (`npx next build`):
    * For large media (>1 MB), upload directly to the Supabase `media` bucket and reference via `https://jpciyrodeppqpkwqblpk.supabase.co/storage/v1/object/public/media/...`.
 3. **Automated Pruning:**
    * Run the deployment pruner script in `scratch/prune_deployments.py` whenever storage exceeds 50% on Vercel.
+
+---
+
+## 7. Storage Hardening & Retention Policy (26 September 2026)
+
+### 7.1 Retention Policy Configuration
+To permanently eliminate historical build bloat across the project, the Vercel Team/Project Deployment Retention Policy was hardened to a 1-day threshold:
+* **Canceled Deployments:** 1 day
+* **Errored Deployments:** 1 day
+* **Pre-Production Deployments:** 1 day
+* **Production Deployments:** 1 day (active deployment remains protected by Vercel's immutable production guard)
+
+Following this configuration and Vercel's automated retention sweep, active storage plummeted from **8.1 GB down to 961.65 MB** (<10% of the 10 GB Hobby tier allocation).
+
+### 7.2 Static Payload Compression (98.1% Reduction)
+The static deployment bundle was audited and optimized:
+* Compressed 5 raw venue photographs from 37.3 MB down to 2.3 MB web JPEGs (`c-block.jpg`, `jc-bose.jpg`, `sr-block.jpg`, `v-block.jpg`, `x-lab.jpg`).
+* Expanded `.vercelignore` to exclude redundant hero/hosted-at duplicates (`public/HOME-*.png`, `public/images/home/hero/`, `public/images/home/hosted-at/`).
+* Total static deployment payload reduced from **407.45 MB** to **7.71 MB**.
+
