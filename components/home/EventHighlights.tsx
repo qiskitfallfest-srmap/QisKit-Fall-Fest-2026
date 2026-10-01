@@ -73,7 +73,6 @@ export function EventHighlights() {
           w-full max-w-[1920px] mx-auto
           px-5 sm:px-[34px] md:px-[54px] lg:px-[72px] 2xl:px-[92px]
           py-8 sm:py-10 lg:py-12 xl:py-14
-          lg:min-h-[calc(100svh-88px)] lg:flex lg:flex-col lg:justify-between
         "
       >
         {/* =========================================================

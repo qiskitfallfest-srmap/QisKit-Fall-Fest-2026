@@ -36,32 +36,20 @@ export function Navbar() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const headerRef = React.useRef<HTMLElement>(null);
-  const progressBarRef = React.useRef<HTMLDivElement>(null);
 
   const [isNavbarVisible, setIsNavbarVisible] = React.useState(true);
   const lastScrollY = React.useRef(0);
 
   const activeTheme = resolvedTheme || theme;
 
-  // Scroll-progress line handler (uses RAF and direct transform scaleX, no React re-renders)
+  // Auto-hide handler for /learning routes
   React.useEffect(() => {
     let ticking = false;
-
-    const updateScrollProgress = () => {
-      if (!progressBarRef.current) return;
-      const scrollY = window.scrollY || document.documentElement.scrollTop;
-      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = maxScroll > 0 ? Math.min(Math.max(scrollY / maxScroll, 0), 1) : 0;
-      progressBarRef.current.style.transform = `scaleX(${progress})`;
-      ticking = false;
-    };
 
     const handleScroll = () => {
       if (!ticking) {
         ticking = true;
         requestAnimationFrame(() => {
-          updateScrollProgress();
-          
           // Auto-hide logic for /learning routes
           if (pathname?.startsWith('/learning')) {
             // Visibility is strictly controlled by mouse hover (handleMouseMove)
@@ -70,6 +58,7 @@ export function Navbar() {
             // Always visible on non-learning routes
             setIsNavbarVisible(true);
           }
+          ticking = false;
         });
       }
     };
@@ -91,9 +80,6 @@ export function Navbar() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', handleResize, { passive: true });
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
-
-    // Initial update
-    updateScrollProgress();
 
     // Hide navbar initially on learning routes
     if (pathname?.startsWith('/learning')) {
@@ -149,26 +135,6 @@ export function Navbar() {
         WebkitBackdropFilter: 'blur(20px) saturate(180%)',
       }}
     >
-      {/* =========================================================
-          TOP EDGE SCROLL PROGRESS LINE
-      ========================================================== */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute top-0 left-0 h-[2px] w-full z-40 overflow-hidden"
-      >
-        <div
-          ref={progressBarRef}
-          className="
-            h-full w-full origin-left will-change-transform
-            bg-[linear-gradient(90deg,#6C101A_0%,#A9182A_60%,#C44352_100%)]
-            shadow-[0_0_5px_rgba(143,23,35,0.18)]
-            dark:bg-[linear-gradient(90deg,#8F1723_0%,#E45464_55%,#FF9AA3_100%)]
-            dark:shadow-[0_0_6px_rgba(239,116,129,0.20)]
-          "
-          style={{ transform: 'scaleX(0)' }}
-        />
-      </div>
-
       <div className="mx-auto flex h-[78px] sm:h-[84px] xl:h-[90px] max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8 xl:px-12">
         
         {/* LEFT BLOCK: Qiskit Mark + Event Branding */}
