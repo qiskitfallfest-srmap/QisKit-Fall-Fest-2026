@@ -8,14 +8,10 @@ import { HostedAtSection } from '@/components/home/HostedAtSection';
 import { ReadyToTakePartSection } from '@/components/home/ReadyToTakePartSection';
 import { Footer } from '@/components/shared/Footer';
 import { ScrollSection } from '@/components/home/ScrollSection';
-import { SectionScrollController } from '@/components/home/SectionScrollController';
 
 export default function HomePage() {
   return (
     <div className="w-full flex flex-col relative">
-      {/* Lenis-Style Smooth Scroll-Lock Transition Controller & HUD */}
-      <SectionScrollController />
-
       {/* Slide 01: Hero Section */}
       <ScrollSection
         id="home-slide-1"
