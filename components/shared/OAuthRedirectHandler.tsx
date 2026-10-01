@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 
 export function OAuthRedirectHandler() {
+  const isSyncingRef = useRef(false);
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -17,9 +19,10 @@ export function OAuthRedirectHandler() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user?.email) {
+      if (event === 'SIGNED_IN' && session?.user?.email && !isSyncingRef.current) {
+        isSyncingRef.current = true;
         try {
-          const res = await fetch('/api/auth/session', {
+          await fetch('/api/auth/session', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -27,7 +30,11 @@ export function OAuthRedirectHandler() {
               fullName: session.user.user_metadata?.full_name || '',
             }),
           });
-          const data = await res.json();
+
+          // Clean URL hash
+          if (window.location.hash && window.history?.replaceState) {
+            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+          }
 
           // If on home page, forward to /learning
           if (window.location.pathname === '/') {
@@ -35,6 +42,8 @@ export function OAuthRedirectHandler() {
           }
         } catch (err) {
           console.error('Error synchronizing auth session:', err);
+        } finally {
+          isSyncingRef.current = false;
         }
       }
     });
@@ -45,6 +54,8 @@ export function OAuthRedirectHandler() {
   }, []);
 
   async function handleOAuthHash() {
+    if (isSyncingRef.current) return;
+    isSyncingRef.current = true;
     try {
       // Allow Supabase SDK to parse the hash fragment from window.location
       const {
@@ -67,6 +78,11 @@ export function OAuthRedirectHandler() {
           }),
         });
 
+        // Clean up hash fragment from the URL for security and clean navigation
+        if (window.history?.replaceState) {
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+
         // Redirect from root to /learning
         if (window.location.pathname !== '/learning') {
           window.location.replace('/learning');
@@ -74,6 +90,8 @@ export function OAuthRedirectHandler() {
       }
     } catch (err) {
       console.error('Failed to handle OAuth hash redirect:', err);
+    } finally {
+      isSyncingRef.current = false;
     }
   }
 

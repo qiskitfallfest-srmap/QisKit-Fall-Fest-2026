@@ -37,59 +37,106 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
   const [errorMessage, setErrorMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
 
-  // 1. Check existing session on mount
-  useEffect(() => {
-    checkCurrentSession();
-  }, []);
-
-  async function checkCurrentSession() {
+  async function syncSessionWithBackend(email: string, fullName: string) {
     try {
-      setIsLoading(true);
-      // Check server session cookie first
-      const res = await fetch('/api/auth/session');
-      const data = await res.json();
-
-      if (data.authenticated && data.session) {
-        setSession(data.session);
-        onSessionChange?.(data.session);
-        setIsLoading(false);
-        return;
-      }
-
-      // If no server cookie, check Supabase auth
-      const {
-        data: { session: sbSession },
-      } = await supabase.auth.getSession();
-
-      if (sbSession?.user?.email) {
-        const verifyRes = await fetch('/api/auth/session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: sbSession.user.email,
-            fullName: sbSession.user.user_metadata?.full_name || '',
-          }),
-        });
-        const verifyData = await verifyRes.json();
-        if (verifyData.success) {
-          setSession(verifyData.session);
-          onSessionChange?.(verifyData.session);
-        } else {
-          // User is not whitelisted / not eligible
-          await supabase.auth.signOut();
-          setShowToast(true);
-          setErrorMessage(
-            verifyData.error ||
-              'You are not eligible participant. Please register in Unstop and check back after October 7, 11:59 PM.'
-          );
-        }
+      const verifyRes = await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          fullName,
+        }),
+      });
+      const verifyData = await verifyRes.json();
+      if (verifyRes.ok && verifyData.success) {
+        setSession(verifyData.session);
+        onSessionChange?.(verifyData.session);
+        return true;
+      } else if (verifyRes.status === 403) {
+        // User is not whitelisted / not eligible
+        await supabase.auth.signOut();
+        setSession(null);
+        onSessionChange?.(null);
+        setShowToast(true);
+        setErrorMessage(
+          verifyData.error ||
+            'You are not eligible participant. Please register in Unstop and check back after October 7, 11:59 PM.'
+        );
+        return false;
       }
     } catch (err) {
-      console.error('Session check error:', err);
-    } finally {
-      setIsLoading(false);
+      console.error('Session sync error:', err);
     }
+    return false;
   }
+
+  // 1. Check existing session on mount and subscribe to auth state changes
+  useEffect(() => {
+    let isMounted = true;
+
+    async function checkCurrentSession() {
+      try {
+        setIsLoading(true);
+        // Check server session cookie first
+        const res = await fetch('/api/auth/session');
+        const data = await res.json();
+
+        if (data.authenticated && data.session) {
+          if (isMounted) {
+            setSession(data.session);
+            onSessionChange?.(data.session);
+            setIsLoading(false);
+          }
+          return;
+        }
+
+        // If no server cookie, check Supabase auth
+        const {
+          data: { session: sbSession },
+        } = await supabase.auth.getSession();
+
+        if (sbSession?.user?.email) {
+          await syncSessionWithBackend(
+            sbSession.user.email,
+            sbSession.user.user_metadata?.full_name || ''
+          );
+        }
+      } catch (err) {
+        console.error('Session check error:', err);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    checkCurrentSession();
+
+    // Listen to Supabase auth events (initial session, sign-in, token refresh)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, sbSession) => {
+      if (
+        (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') &&
+        sbSession?.user?.email
+      ) {
+        await syncSessionWithBackend(
+          sbSession.user.email,
+          sbSession.user.user_metadata?.full_name || ''
+        );
+      } else if (event === 'SIGNED_OUT') {
+        if (isMounted) {
+          setSession(null);
+          onSessionChange?.(null);
+        }
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   // 2. Google OAuth sign-in handler
   async function handleGoogleSignIn() {
@@ -97,22 +144,20 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
     setShowToast(false);
     try {
       setIsSubmitting(true);
-      // Prefer the env-configured site URL so production builds always redirect
-      // to the real domain, not localhost. Falls back to window.location.origin
-      // for local development when NEXT_PUBLIC_SITE_URL is not set.
+      // Prefer current origin dynamically so dev on localhost stays on localhost,
+      // and production stays on whichever host the visitor accessed.
       const siteUrl =
-        process.env.NEXT_PUBLIC_SITE_URL ||
-        (typeof window !== 'undefined' ? window.location.origin : '');
+        typeof window !== 'undefined'
+          ? window.location.origin
+          : (process.env.NEXT_PUBLIC_SITE_URL || '');
       const redirectUrl = `${siteUrl}/learning`;
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: redirectUrl,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
+          // Omitting prompt: 'consent' and access_type: 'offline' so Google
+          // reuses prior consent and avoids repeated 2FA challenges.
         },
       });
 
