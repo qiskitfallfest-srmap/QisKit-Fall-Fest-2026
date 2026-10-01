@@ -52,10 +52,10 @@ export function ExploreSchedule({ currentPhase, onPhaseChange }: ExploreSchedule
       if (stored) {
         setSavedIds(JSON.parse(stored));
       } else {
-        setSavedIds(['on-d1-session-1']);
+        setSavedIds(['on-d1-s1-qiskit']);
       }
     } catch {
-      setSavedIds(['on-d1-session-1']);
+      setSavedIds(['on-d1-s1-qiskit']);
     }
   }, []);
 

@@ -25,7 +25,7 @@ export function PhaseSelector({ currentPhase, onPhaseChange, variant = 'cards' }
         >
           <Monitor size={15} />
           <span>Online Phase</span>
-          <span className="hidden sm:inline text-[11px] opacity-80">(5–9 Oct)</span>
+          <span className="hidden sm:inline text-[11px] opacity-80">(8–10 Oct)</span>
         </button>
 
         <button
@@ -81,7 +81,7 @@ export function PhaseSelector({ currentPhase, onPhaseChange, variant = 'cards' }
                 currentPhase === 'online' ? 'text-[#F5DABF]' : 'text-[#6C151E] dark:text-[#D9A75D]'
               }`}
             >
-              5 – 9 October 2026
+              8 – 10 October 2026
             </p>
             <p
               className={`mt-1 text-xs leading-relaxed ${
