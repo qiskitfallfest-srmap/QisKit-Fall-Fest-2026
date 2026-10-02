@@ -6,7 +6,15 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { Sun, Moon, ArrowRight, Menu, X } from 'lucide-react';
-import { motion } from 'motion/react';
+import {
+  motion,
+  AnimatePresence,
+  useMotionValue,
+  useTransform,
+  useSpring,
+  useReducedMotion,
+  type MotionValue,
+} from 'motion/react';
 import clsx from 'clsx';
 import { REGISTRATION_URL } from '@/lib/constants';
 
@@ -30,59 +38,237 @@ function isRouteActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(href + '/');
 }
 
+interface MagneticNavLinkProps {
+  link: { label: string; href: string };
+  isActive: boolean;
+  activeTheme: string | undefined;
+  mouseX: MotionValue<number>;
+  isHoveredLink: boolean;
+  onHoverStart: () => void;
+  onHoverEnd: () => void;
+}
+
+function MagneticNavLink({
+  link,
+  isActive,
+  activeTheme,
+  mouseX,
+  isHoveredLink,
+  onHoverStart,
+  onHoverEnd,
+}: MagneticNavLinkProps) {
+  const itemRef = React.useRef<HTMLDivElement>(null);
+  const shouldReduceMotion = useReducedMotion();
+  const isDark = activeTheme === 'dark';
+
+  // Real DOM center calculation
+  const distance = useTransform(mouseX, (val: number) => {
+    if (val === Infinity || !itemRef.current) return Infinity;
+    const bounds = itemRef.current.getBoundingClientRect();
+    return val - (bounds.left + bounds.width / 2);
+  });
+
+  // Magnetic scale mapping: -150px to +150px around each link center
+  const rawScale = useTransform(
+    distance,
+    [-150, -75, 0, 75, 150],
+    [1.0, 1.015, 1.048, 1.015, 1.0],
+    { clamp: true }
+  );
+
+  // Magnetic translateY mapping: -150px to +150px around each link center
+  const rawTranslateY = useTransform(
+    distance,
+    [-150, -75, 0, 75, 150],
+    [0, -0.75, -2.25, -0.75, 0],
+    { clamp: true }
+  );
+
+  const springConfig = { mass: 0.12, stiffness: 180, damping: 18 };
+  const springScale = useSpring(rawScale, springConfig);
+  const springTranslateY = useSpring(rawTranslateY, springConfig);
+
+  const scale = shouldReduceMotion ? 1 : springScale;
+  const translateY = shouldReduceMotion ? 0 : springTranslateY;
+
+  return (
+    <div
+      ref={itemRef}
+      className="relative inline-flex items-center"
+      onMouseEnter={onHoverStart}
+      onMouseLeave={onHoverEnd}
+    >
+      {/* Shared Glass Hover Lens */}
+      <AnimatePresence>
+        {isHoveredLink && (
+          <motion.div
+            layoutId="navbar-shared-lens"
+            className="absolute inset-0 rounded-full pointer-events-none -z-10"
+            style={{
+              backgroundColor: isDark ? 'rgba(255,255,255,0.045)' : 'rgba(255,255,255,0.30)',
+              border: isDark ? '1px solid rgba(239,116,129,0.055)' : '1px solid rgba(122,17,27,0.055)',
+              boxShadow: isDark
+                ? '0 5px 14px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.035)'
+                : '0 5px 14px rgba(55,20,25,0.05), inset 0 1px 0 rgba(255,255,255,0.50)',
+              backdropFilter: isDark ? undefined : 'blur(10px)',
+              WebkitBackdropFilter: isDark ? undefined : 'blur(10px)',
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+            aria-hidden="true"
+          />
+        )}
+      </AnimatePresence>
+
+      <motion.div
+        style={{
+          scale,
+          translateY,
+          transformOrigin: 'center bottom',
+        }}
+        className="relative flex items-center"
+      >
+        <Link
+          href={link.href}
+          aria-current={isActive ? 'page' : undefined}
+          className={clsx(
+            "relative px-3.5 2xl:px-4 py-1.5 text-[14px] 2xl:text-[15px] font-medium outline-none rounded-full select-none focus-visible:ring-2 focus-visible:ring-burgundy transition-colors duration-160",
+            isActive
+              ? (isDark
+                  ? "font-semibold text-[#F28A96]"
+                  : "font-semibold text-[#8F1723]")
+              : (isDark
+                  ? "text-[#EFE5E3] hover:text-[#FFF7F5]"
+                  : "text-[var(--nav-text)]/85 hover:text-burgundy")
+          )}
+        >
+          <span className="relative z-10">{link.label}</span>
+
+          {/* Resting Active Route Accent (Subtle persistent underline/accent) */}
+          {isActive && (
+            <motion.span
+              layoutId="navbar-active-accent"
+              className="absolute bottom-0.5 left-3.5 right-3.5 h-[2px] rounded-full pointer-events-none"
+              style={{
+                backgroundColor: isDark ? 'rgba(242,138,150,0.82)' : 'rgba(143,23,35,0.75)',
+              }}
+              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+              aria-hidden="true"
+            />
+          )}
+        </Link>
+      </motion.div>
+    </div>
+  );
+}
+
 export function Navbar() {
   const pathname = usePathname();
   const { theme, setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const mouseX = useMotionValue(Infinity);
+  const [hoveredLensIndex, setHoveredLensIndex] = React.useState<number | null>(null);
+  const [isJoinHovered, setIsJoinHovered] = React.useState(false);
+  const [isMobileJoinHovered, setIsMobileJoinHovered] = React.useState(false);
+
   const headerRef = React.useRef<HTMLElement>(null);
-  const progressBarRef = React.useRef<HTMLDivElement>(null);
 
-  const activeTheme = resolvedTheme || theme;
-
-  // Scroll-progress line handler (uses RAF and direct transform scaleX, no React re-renders)
+  // Mount detection to avoid hydration theme mismatch
   React.useEffect(() => {
-    let ticking = false;
+    setMounted(true);
+  }, []);
 
-    const updateScrollProgress = () => {
-      if (!progressBarRef.current) return;
-      const scrollY = window.scrollY || document.documentElement.scrollTop;
-      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = maxScroll > 0 ? Math.min(Math.max(scrollY / maxScroll, 0), 1) : 0;
-      progressBarRef.current.style.transform = `scaleX(${progress})`;
-      ticking = false;
-    };
+  const activeTheme = mounted ? (resolvedTheme || theme) : 'light';
 
-    const handleScroll = () => {
-      if (!ticking) {
-        ticking = true;
-        requestAnimationFrame(updateScrollProgress);
+  // =========================================================
+  // UNIVERSAL SCROLL / FLOATING-STATE DETECTION (V7)
+  // - Identical integrated-to-floating behavior across all routes.
+  // - At page top: integrated state on every route (Home, About, etc.).
+  // - Meaningful downward scroll or wheel intent sets isFloating = true.
+  // - Returning genuinely to top (scrollY <= 4) restores isFloating = false.
+  // - Recomputes from actual scroll position upon route change.
+  // =========================================================
+  const [isFloating, setIsFloating] = React.useState(false);
+
+  React.useEffect(() => {
+    const WHEEL_THRESHOLD = 14;
+    const TOUCH_THRESHOLD = 18;
+    const SCROLL_Y_THRESHOLD = 16;
+
+    const checkScroll = () => {
+      const currentScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+      if (currentScrollY > SCROLL_Y_THRESHOLD) {
+        setIsFloating(true);
+      } else if (currentScrollY <= 4) {
+        setIsFloating(false);
       }
     };
 
-    const handleResize = () => {
-      handleScroll();
+    // Evaluate scroll position immediately on mount and route change
+    checkScroll();
+    const rafId = requestAnimationFrame(checkScroll);
+
+    const handleScroll = () => {
+      checkScroll();
+    };
+
+    const handleWheel = (e: WheelEvent) => {
+      if (e.deltaY > WHEEL_THRESHOLD) {
+        setIsFloating(true);
+      } else if (e.deltaY < -WHEEL_THRESHOLD) {
+        const currentScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+        if (currentScrollY <= 4) {
+          setIsFloating(false);
+        }
+      }
+    };
+
+    let touchStartY = 0;
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        touchStartY = e.touches[0].clientY;
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        const deltaY = touchStartY - e.touches[0].clientY;
+        if (deltaY > TOUCH_THRESHOLD) {
+          setIsFloating(true);
+        } else if (deltaY < -TOUCH_THRESHOLD) {
+          const currentScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+          if (currentScrollY <= 4) {
+            setIsFloating(false);
+          }
+        }
+      }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', handleResize, { passive: true });
-
-    // Initial update
-    updateScrollProgress();
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
 
     return () => {
+      cancelAnimationFrame(rafId);
       window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
     };
   }, [pathname]);
 
-  // Close menu on route change during render
+  // Close mobile menu on route change
   const [prevPathname, setPrevPathname] = React.useState(pathname);
   if (prevPathname !== pathname) {
     setPrevPathname(pathname);
     setMobileMenuOpen(false);
   }
 
-  // Handle escape key and click outside to close open menu
+  // Handle escape key and click outside to close mobile menu
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setMobileMenuOpen(false);
@@ -102,40 +288,112 @@ export function Navbar() {
     };
   }, [mobileMenuOpen]);
 
+  // =========================================================
+  // FIX 1: HEADER & SHELL SURFACE STYLING SPECIFICATION (V6)
+  // - Integrated state: outer header carries continuous burgundy surface, inner shell is transparent.
+  // - Floating state: outer header is transparent, inner shell becomes elevated floating glass.
+  // =========================================================
+  const headerStyles: React.CSSProperties = React.useMemo(() => {
+    const isDark = activeTheme === 'dark';
+    if (!isFloating) {
+      return isDark
+        ? {
+            background: 'linear-gradient(105deg, #26060A 0%, #30080D 50%, #3A0A10 100%)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+          }
+        : {
+            background: 'rgba(248,244,239,0.96)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+          };
+    }
+    return {
+      background: 'transparent',
+      backdropFilter: 'none',
+      WebkitBackdropFilter: 'none',
+    };
+  }, [isFloating, activeTheme]);
+
+  const shellStyles: React.CSSProperties = React.useMemo(() => {
+    const isDark = activeTheme === 'dark';
+    if (!isFloating) {
+      // Fix 1: Home top integrated state — inner shell is transparent, borderless, flat, shadowless
+      return {
+        background: 'transparent',
+        border: 'none',
+        boxShadow: 'none',
+        borderRadius: '0px',
+        backdropFilter: 'none',
+        WebkitBackdropFilter: 'none',
+        color: isDark ? '#F6EEEC' : undefined,
+      };
+    }
+
+    // Fix 1 & Fix 2: Floating state — separate floating glass component
+    return isDark
+      ? {
+          background: 'linear-gradient(105deg, rgba(38,6,10,0.86) 0%, rgba(48,8,13,0.84) 52%, rgba(58,10,16,0.82) 100%)',
+          color: '#F7EFED',
+          border: '1px solid rgba(239,116,129,0.09)',
+          boxShadow: '0 12px 32px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.05)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderRadius: '18px',
+        }
+      : {
+          backgroundColor: 'rgba(248,244,239,0.80)',
+          border: '1px solid rgba(108,21,30,0.07)',
+          boxShadow: '0 12px 32px rgba(38,18,22,0.09), inset 0 1px 0 rgba(255,255,255,0.68)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderRadius: '18px',
+        };
+  }, [isFloating, activeTheme]);
+
+  // Tactile Theme Toggle track styling
+  const toggleTrackStyles: React.CSSProperties = React.useMemo(() => {
+    const isDark = activeTheme === 'dark';
+    return isDark
+      ? {
+          backgroundColor: 'rgba(255,255,255,0.045)',
+          border: '1px solid rgba(255,255,255,0.09)',
+          boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.5)',
+          backdropFilter: 'blur(14px)',
+          WebkitBackdropFilter: 'blur(14px)',
+        }
+      : {
+          backgroundColor: 'rgba(255,255,255,0.40)',
+          border: '1px solid rgba(108,21,30,0.08)',
+          boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.06)',
+          backdropFilter: 'blur(14px)',
+          WebkitBackdropFilter: 'blur(14px)',
+        };
+  }, [activeTheme]);
+
   return (
-    <header 
+    <header
       ref={headerRef}
-      className="sticky top-0 z-50 w-full border-b border-[var(--nav-border)]/60 bg-[#F5F3F0]/85 dark:bg-[linear-gradient(105deg,rgba(22,6,8,0.85)_0%,rgba(36,9,12,0.85)_42%,rgba(58,11,16,0.85)_72%,rgba(36,9,12,0.85)_100%)] backdrop-blur-xl text-[var(--nav-text)] transition-colors duration-300 shadow-[0_4px_24px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.28)]"
-      style={{
-        backdropFilter: 'blur(20px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-      }}
+      style={headerStyles}
+      className={clsx(
+        "sticky top-0 z-50 w-full border-none shadow-none pointer-events-none transition-[padding,background] duration-350 ease-[cubic-bezier(0.22,1,0.36,1)]",
+        isFloating ? "px-2 sm:px-4 lg:px-6 xl:px-8 pt-1 sm:pt-1.5" : "px-0 pt-0"
+      )}
     >
       {/* =========================================================
-          TOP EDGE SCROLL PROGRESS LINE
+          INNER NAVBAR CONTENT SHELL
+          Visible surface, exact height/width preservation, constant max-width
       ========================================================== */}
       <div
-        aria-hidden="true"
-        className="pointer-events-none absolute top-0 left-0 h-[2px] w-full z-40 overflow-hidden"
+        style={shellStyles}
+        className="pointer-events-auto mx-auto flex h-[76px] sm:h-[82px] xl:h-[88px] max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8 xl:px-8 2xl:px-12 relative overflow-hidden transition-[background,background-color,border-color,box-shadow,backdrop-filter,border-radius] duration-350 ease-[cubic-bezier(0.22,1,0.36,1)]"
       >
-        <div
-          ref={progressBarRef}
-          className="
-            h-full w-full origin-left will-change-transform
-            bg-[linear-gradient(90deg,#6C101A_0%,#A9182A_60%,#C44352_100%)]
-            shadow-[0_0_5px_rgba(143,23,35,0.18)]
-            dark:bg-[linear-gradient(90deg,#8F1723_0%,#E45464_55%,#FF9AA3_100%)]
-            dark:shadow-[0_0_6px_rgba(239,116,129,0.20)]
-          "
-          style={{ transform: 'scaleX(0)' }}
-        />
-      </div>
-
-      <div className="mx-auto flex h-[78px] sm:h-[84px] xl:h-[90px] max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8 xl:px-12">
-        
-        {/* LEFT BLOCK: Qiskit Mark + Event Branding */}
-        <div className="flex items-center">
-          <Link href="/" className="flex items-center gap-2.5 sm:gap-3 xl:gap-3.5 group outline-none focus-visible:ring-2 focus-visible:ring-burgundy rounded-sm">
+        {/* LEFT BLOCK: Qiskit Mark + Event Identity */}
+        <div className="flex items-center shrink-0">
+          <Link
+            href="/"
+            className="group flex items-center gap-2.5 sm:gap-3 xl:gap-3.5 outline-none rounded-md focus-visible:ring-2 focus-visible:ring-burgundy"
+          >
             {/* Qiskit Globe Mark */}
             <div className="relative h-[48px] w-[48px] sm:h-[54px] sm:w-[54px] xl:h-[52px] xl:w-[52px] shrink-0">
               <Image
@@ -156,84 +414,133 @@ export function Navbar() {
               />
             </div>
 
-            {/* Event Branding */}
-            <div className="flex flex-col justify-center leading-none mt-0.5">
+            {/* Event Branding Typography */}
+            <div className="flex flex-col justify-center leading-none mt-0.5 select-none">
               <span className="text-[13px] sm:text-[14px] xl:text-[13px] 2xl:text-sm font-semibold tracking-[0.14em] text-[var(--brand-text)]">
                 QISKIT FALL FEST
               </span>
-              <span className="text-[26px] sm:text-[28px] xl:text-[30px] font-bold text-[var(--brand-text)] mt-0.5 sm:mt-1">
+              <span className="text-[26px] sm:text-[28px] xl:text-[30px] font-bold text-[var(--brand-text)] mt-0.5 sm:mt-1 font-serif tracking-tight">
                 2026
               </span>
             </div>
           </Link>
         </div>
 
-        {/* CENTER BLOCK: Primary Navigation (Desktop - All 7 Links Persistent) */}
-        <nav className="hidden xl:flex items-center gap-1.5 2xl:gap-2" aria-label="Primary Navigation">
-          {NAV_LINKS.map((link) => {
+        {/* CENTER BLOCK: Magnetic Cursor-Distance Navigation + Shared Glass Lens */}
+        <nav
+          className="hidden xl:flex items-center gap-1 2xl:gap-1.5 relative"
+          aria-label="Primary Navigation"
+          onMouseMove={(e) => mouseX.set(e.clientX)}
+          onMouseLeave={() => {
+            mouseX.set(Infinity);
+            setHoveredLensIndex(null);
+          }}
+        >
+          {NAV_LINKS.map((link, index) => {
             const isActive = isRouteActive(pathname, link.href);
             return (
-              <Link
+              <MagneticNavLink
                 key={link.href}
-                href={link.href}
-                aria-current={isActive ? 'page' : undefined}
-                className={clsx(
-                  "relative px-3.5 2xl:px-4 py-2 text-[14px] 2xl:text-[15px] font-medium transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-burgundy rounded-full",
-                  isActive
-                    ? "font-semibold text-burgundy dark:text-[#B08D57]"
-                    : "text-[var(--nav-text)]/85 hover:text-[var(--nav-hover)] hover:bg-black/[0.03] dark:hover:bg-white/[0.05]"
-                )}
-              >
-                {isActive && (
-                  <motion.div
-                    layoutId="navbar-active-pill"
-                    className="absolute inset-0 rounded-full bg-burgundy/[0.08] dark:bg-[#B08D57]/[0.16] border border-burgundy/20 dark:border-[#B08D57]/35 shadow-[0_1px_6px_rgba(108,21,30,0.06)] dark:shadow-[0_1px_12px_rgba(176,141,87,0.18)]"
-                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                    aria-hidden="true"
-                  >
-                    <div className="absolute -top-[1px] left-1/2 -translate-x-1/2 w-3/5 h-[1.5px] bg-burgundy/70 dark:bg-[#B08D57]/90 rounded-full blur-[0.5px]" />
-                  </motion.div>
-                )}
-                <span className="relative z-10">{link.label}</span>
-              </Link>
+                link={link}
+                isActive={isActive}
+                activeTheme={activeTheme}
+                mouseX={mouseX}
+                isHoveredLink={hoveredLensIndex === index}
+                onHoverStart={() => setHoveredLensIndex(index)}
+                onHoverEnd={() => {}}
+              />
             );
           })}
         </nav>
 
-        {/* RIGHT BLOCK: Theme Toggle + Join + SRM Logo (Desktop) */}
-        <div className="hidden xl:flex items-center gap-6 2xl:gap-8">
+        {/* RIGHT BLOCK: Tactile Theme Toggle + Arrow-Fill Join CTA + SRM Logo */}
+        <div className="hidden xl:flex items-center gap-4 2xl:gap-6 shrink-0">
           
-          {/* Theme Toggle */}
+          {/* Theme Toggle (Preserved dimensions & functionality) */}
           <button
+            type="button"
             onClick={() => setTheme(activeTheme === 'dark' ? 'light' : 'dark')}
-            className="group relative flex h-[34px] w-[72px] cursor-pointer items-center rounded-full border border-[var(--nav-border)]/70 bg-white/30 dark:bg-black/25 backdrop-blur-md p-1 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-burgundy shadow-sm"
+            style={toggleTrackStyles}
+            className="group relative flex h-[34px] w-[72px] cursor-pointer items-center rounded-full p-[3px] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-burgundy focus-visible:ring-offset-1"
             aria-label="Toggle theme"
           >
-            {/* Toggle background indicator */}
+            {/* Sliding Thumb Indicator */}
             <div
-              className="absolute h-[26px] w-[26px] rounded-full bg-[var(--nav-text)] transition-transform duration-300 translate-x-0 dark:translate-x-[38px] shadow-sm"
+              className={clsx(
+                "absolute h-[26px] w-[26px] rounded-full transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                activeTheme === 'dark'
+                  ? "translate-x-[38px] bg-[#2C0A0E] border border-[#8F1723]/40 shadow-[0_2px_8px_rgba(0,0,0,0.45)]"
+                  : "translate-x-0 bg-white border border-black/[0.05] shadow-[0_2px_6px_rgba(0,0,0,0.10)]"
+              )}
             />
             
-            <div className="relative z-10 flex w-full justify-between px-[5px] text-[var(--background)] items-center">
-              <Sun size={14} className="transition-opacity opacity-100 dark:opacity-50 dark:text-[var(--nav-text)]" />
-              <Moon size={14} className="transition-opacity opacity-50 text-[var(--nav-text)] dark:opacity-100 dark:text-[var(--background)]" />
+            {/* Icon Alignment Track */}
+            <div className="relative z-10 flex w-full items-center justify-between px-[6px]">
+              <Sun
+                size={14}
+                strokeWidth={2}
+                className={clsx(
+                  "transition-all duration-250",
+                  activeTheme === 'dark'
+                    ? "opacity-35 text-white/50"
+                    : "opacity-100 text-[#7A111B]"
+                )}
+              />
+              <Moon
+                size={14}
+                strokeWidth={2}
+                className={clsx(
+                  "transition-all duration-250",
+                  activeTheme === 'dark'
+                    ? "opacity-100 text-[#E5B869]"
+                    : "opacity-35 text-black/40"
+                )}
+              />
             </div>
           </button>
 
-          {/* Join CTA */}
+          {/* Join CTA (Fix 3: Subtle Border in Default State, Clean Ivory Surface on Hover) */}
           <a
-            href={NAVBAR_JOIN_HREF} 
+            href={NAVBAR_JOIN_HREF}
             target="_blank"
             rel="noopener noreferrer"
             data-cursor="cta"
-            className="group flex h-[44px] min-w-[110px] items-center justify-center gap-[14px] rounded-[8px] px-[24px] text-[14px] font-semibold tracking-[0.01em] outline-none transition-all duration-160 ease-[cubic-bezier(0.22,1,0.36,1)] bg-[#7A111B] text-[#FFF9F6] border border-[rgba(108,21,30,0.90)] shadow-[0_4px_14px_rgba(108,21,30,0.08)] hover:bg-[#961824] hover:shadow-[0_7px_20px_rgba(108,21,30,0.14)] hover:-translate-y-[1px] active:translate-y-0 active:scale-[0.985] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] focus-visible:ring-burgundy dark:bg-transparent dark:text-[#FFF5F3] dark:border dark:border-burgundy dark:shadow-none dark:hover:bg-burgundy/10 dark:hover:shadow-[0_0_15px_rgba(108,21,30,0.5)] dark:hover:translate-y-0 dark:active:scale-100"
+            onMouseEnter={() => setIsJoinHovered(true)}
+            onMouseLeave={() => setIsJoinHovered(false)}
+            style={{
+              borderColor: isJoinHovered
+                ? 'transparent'
+                : (activeTheme === 'dark' ? 'rgba(239,116,129,0.30)' : 'rgba(108,21,30,0.55)'),
+              transition: 'border-color 180ms cubic-bezier(0.22,1,0.36,1), background-color 200ms cubic-bezier(0.22,1,0.36,1), color 200ms cubic-bezier(0.22,1,0.36,1), box-shadow 200ms cubic-bezier(0.22,1,0.36,1), transform 200ms cubic-bezier(0.22,1,0.36,1)',
+            }}
+            className="group relative flex h-[44px] min-w-[110px] items-center justify-between overflow-hidden rounded-[8px] pl-5 pr-2 text-[14px] font-semibold tracking-[0.01em] outline-none border bg-[#7A111B] text-[#FFF9F6] shadow-[0_4px_14px_rgba(108,21,30,0.12)] active:scale-[0.985] focus-visible:ring-2 focus-visible:ring-burgundy focus-visible:ring-offset-2 dark:bg-[#6C151E] dark:text-[#FFF5F3] dark:shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
           >
-            <span>Join</span>
-            <ArrowRight size={17} strokeWidth={1.8} className="transition-transform duration-160 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-[3px]" />
+            {/* Expanding Chamber: strictly clipped inside button */}
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute right-[8px] top-1/2 -translate-y-1/2 h-[28px] w-[28px] rounded-full bg-[#FFF7F2] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[6.5] -z-0"
+            />
+
+            {/* CTA Label */}
+            <span className="relative z-10 transition-colors duration-250 ease-out group-hover:text-[#7A111B] dark:group-hover:text-[#7A111B]">
+              Join
+            </span>
+
+            {/* Circular Arrow Chamber & Icon (seamlessly merges into expanding fill) */}
+            <span
+              aria-hidden="true"
+              className="relative z-10 flex h-[28px] w-[28px] items-center justify-center rounded-full bg-[#FFF7F2] text-[#7A111B] dark:text-[#7A111B] border-0 border-transparent shadow-none transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]"
+            >
+              <ArrowRight
+                size={15}
+                strokeWidth={2.2}
+                className="transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-[2px]"
+              />
+            </span>
           </a>
 
-          {/* SRM Logo */}
-          <div className="relative h-[56px] w-[140px] shrink-0">
+          {/* Official SRM University-AP Production Logo */}
+          <div className="relative h-[56px] w-[124px] 2xl:w-[140px] shrink-0">
             <Image
               src="/brand/srmap/SRMAP-Logo-Main.png"
               alt="SRM University-AP"
@@ -247,20 +554,22 @@ export function Navbar() {
 
         {/* MOBILE & TABLET CONTROLS */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 xl:hidden">
-          {/* Mobile/Tablet Theme Toggle */}
+          {/* Mobile Theme Toggle Button */}
           <button
+            type="button"
             onClick={() => setTheme(activeTheme === 'dark' ? 'light' : 'dark')}
-            className="flex h-11 w-11 items-center justify-center rounded-md text-[var(--nav-text)] transition-colors hover:text-[var(--nav-hover)] outline-none focus-visible:ring-2 focus-visible:ring-burgundy"
+            className="flex h-11 w-11 items-center justify-center rounded-lg text-[var(--nav-text)] transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.06] outline-none focus-visible:ring-2 focus-visible:ring-burgundy"
             aria-label="Toggle theme"
           >
             <span className="hidden dark:inline"><Moon size={20} /></span>
             <span className="inline dark:hidden"><Sun size={20} /></span>
           </button>
           
-          {/* Mobile/Tablet Menu / Close Button */}
+          {/* Mobile Menu / Close Trigger */}
           <button
+            type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="flex h-11 w-11 items-center justify-center rounded-md text-[var(--nav-text)] transition-colors hover:text-[var(--nav-hover)] outline-none focus-visible:ring-2 focus-visible:ring-burgundy"
+            className="flex h-11 w-11 items-center justify-center rounded-lg text-[var(--nav-text)] transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.06] outline-none focus-visible:ring-2 focus-visible:ring-burgundy"
             aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
           >
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -268,58 +577,89 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* MOBILE & TABLET EXPANDED OVERLAY MENU (POSITIONS ABOVE PAGE CONTENT WITHOUT LAYOUT SHIFT) */}
-      {mobileMenuOpen && (
-        <div 
-          className="absolute top-full left-0 w-full border-b border-[var(--nav-border)]/60 bg-[#F5F3F0]/95 dark:bg-[linear-gradient(105deg,rgba(22,6,8,0.95)_0%,rgba(36,9,12,0.95)_42%,rgba(58,11,16,0.95)_72%,rgba(36,9,12,0.95)_100%)] backdrop-blur-2xl text-[var(--nav-text)] shadow-2xl xl:hidden max-h-[calc(100dvh-78px)] sm:max-h-[calc(100dvh-84px)] overflow-y-auto"
-          role="dialog"
-          aria-modal="false"
-          aria-label="Navigation menu"
-          style={{
-            backdropFilter: 'blur(24px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-          }}
-        >
-          <div className="mx-auto max-w-xl md:max-w-2xl px-4 py-6 sm:px-8 sm:py-8 flex flex-col">
-            <nav className="flex flex-col gap-1.5 sm:gap-2 w-full" aria-label="Mobile Navigation">
-              {NAV_LINKS.map((link) => {
-                const isActive = isRouteActive(pathname, link.href);
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    aria-current={isActive ? 'page' : undefined}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={clsx(
-                      "flex h-12 sm:h-[50px] min-h-[48px] w-full items-center justify-start text-left px-4 sm:px-5 rounded-lg text-base sm:text-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-burgundy",
-                      isActive
-                        ? "font-semibold text-burgundy dark:text-[#B08D57] bg-burgundy/10 dark:bg-[#B08D57]/15 border border-burgundy/20 dark:border-[#B08D57]/25"
-                        : "font-medium text-[var(--nav-text)] hover:text-burgundy hover:bg-burgundy/5 dark:hover:text-[#B08D57] dark:focus-visible:text-[#B08D57] dark:hover:bg-white/5 active:bg-burgundy/10 dark:active:bg-white/10"
-                    )}
-                  >
-                    {link.label}
-                  </Link>
-                );
-              })}
-            </nav>
+      {/* =========================================================
+          MOBILE & TABLET EXPANDED OVERLAY MENU
+          Floating glass card style, no layout shift, fully accessible
+      ========================================================== */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="pointer-events-auto absolute top-full left-0 right-0 mx-auto mt-2 w-[calc(100%-16px)] sm:w-[calc(100%-32px)] max-w-xl md:max-w-2xl rounded-2xl border border-[#6C151E]/15 dark:border-white/10 bg-[#F8F4EF]/96 dark:bg-[#1A060A]/96 backdrop-blur-2xl text-[var(--nav-text)] shadow-2xl xl:hidden max-h-[calc(100dvh-90px)] overflow-y-auto"
+            role="dialog"
+            aria-modal="false"
+            aria-label="Navigation menu"
+            style={{
+              backdropFilter: 'blur(24px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+            }}
+          >
+            <div className="px-4 py-6 sm:px-8 sm:py-8 flex flex-col">
+              <nav className="flex flex-col gap-1.5 sm:gap-2 w-full" aria-label="Mobile Navigation">
+                {NAV_LINKS.map((link) => {
+                  const isActive = isRouteActive(pathname, link.href);
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      aria-current={isActive ? 'page' : undefined}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={clsx(
+                        "flex h-12 sm:h-[50px] min-h-[48px] w-full items-center justify-start text-left px-4 sm:px-5 rounded-lg text-base sm:text-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-burgundy",
+                        isActive
+                          ? "font-semibold text-burgundy dark:text-[#F28A96] bg-burgundy/10 dark:bg-[#EF7481]/15 border border-burgundy/20 dark:border-[#EF7481]/25"
+                          : "font-medium text-[var(--nav-text)] dark:text-[#EFE5E3] hover:text-burgundy hover:bg-burgundy/5 dark:hover:text-[#FFF7F5] dark:focus-visible:text-[#FFF7F5] dark:hover:bg-white/5 active:bg-burgundy/10 dark:active:bg-white/10"
+                      )}
+                    >
+                      {link.label}
+                    </Link>
+                  );
+                })}
+              </nav>
 
-            {/* Thin Horizontal Divider */}
-            <div className="my-5 sm:my-6 h-px w-full bg-[var(--nav-divider)]/40" />
+              {/* Thin Horizontal Divider */}
+              <div className="my-5 sm:my-6 h-px w-full bg-[var(--nav-divider)]/40" />
 
-            {/* Full-width Join Button */}
-            <a
-              href={NAVBAR_JOIN_HREF}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-cursor="cta"
-              className="group flex h-12 w-full items-center justify-center gap-[14px] rounded-[8px] text-[15px] sm:text-base font-semibold tracking-[0.01em] outline-none transition-all duration-160 bg-[#7A111B] text-[#FFF9F6] border border-[rgba(108,21,30,0.90)] shadow-[0_4px_14px_rgba(108,21,30,0.08)] hover:bg-[#961824] active:scale-[0.985] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] focus-visible:ring-burgundy dark:border dark:border-burgundy dark:bg-transparent dark:text-[#FFF5F3] dark:shadow-none dark:hover:bg-burgundy/10"
-            >
-              <span>Join</span>
-              <ArrowRight size={17} strokeWidth={1.8} className="transition-transform duration-160 group-hover:translate-x-[3px]" />
-            </a>
-          </div>
-        </div>
-      )}
+              {/* Full-width Join Button with Arrow Fill */}
+              <a
+                href={NAVBAR_JOIN_HREF}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-cursor="cta"
+                onMouseEnter={() => setIsMobileJoinHovered(true)}
+                onMouseLeave={() => setIsMobileJoinHovered(false)}
+                style={{
+                  borderColor: isMobileJoinHovered
+                    ? 'transparent'
+                    : (activeTheme === 'dark' ? 'rgba(239,116,129,0.30)' : 'rgba(108,21,30,0.55)'),
+                  transition: 'border-color 180ms cubic-bezier(0.22,1,0.36,1), background-color 200ms cubic-bezier(0.22,1,0.36,1), color 200ms cubic-bezier(0.22,1,0.36,1), box-shadow 200ms cubic-bezier(0.22,1,0.36,1), transform 200ms cubic-bezier(0.22,1,0.36,1)',
+                }}
+                className="group relative flex h-12 w-full items-center justify-between overflow-hidden rounded-[8px] pl-6 pr-3 text-[15px] sm:text-base font-semibold tracking-[0.01em] outline-none border bg-[#7A111B] text-[#FFF9F6] shadow-[0_4px_14px_rgba(108,21,30,0.12)] active:scale-[0.985] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-burgundy dark:bg-[#6C151E] dark:text-[#FFF5F3]"
+              >
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute right-[10px] top-1/2 -translate-y-1/2 h-[32px] w-[32px] rounded-full bg-[#FFF7F2] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[16] -z-0"
+                />
+                <span className="relative z-10 transition-colors duration-250 group-hover:text-[#7A111B] dark:group-hover:text-[#7A111B]">
+                  Join Festival
+                </span>
+                <span
+                  aria-hidden="true"
+                  className="relative z-10 flex h-[32px] w-[32px] items-center justify-center rounded-full bg-[#FFF7F2] text-[#7A111B] dark:text-[#7A111B] border-0 border-transparent shadow-none"
+                >
+                  <ArrowRight size={17} strokeWidth={2.2} className="transition-transform duration-200 group-hover:translate-x-[2px]" />
+                </span>
+              </a>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }
+
+
+
