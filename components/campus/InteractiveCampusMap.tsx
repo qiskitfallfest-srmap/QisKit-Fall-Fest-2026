@@ -13,6 +13,7 @@ import {
   Navigation,
   ArrowRight,
   X,
+  Compass,
 } from 'lucide-react';
 import {
   CampusLocation,
@@ -328,6 +329,16 @@ export function InteractiveCampusMap({
             ${isFullscreen ? 'top-5 right-5 sm:top-6 sm:right-6 ring-2 ring-[#B08D57]/40 shadow-2xl' : 'top-3 right-3 sm:top-4 sm:right-4'}
           `}
         >
+          <button
+            onClick={handleReset}
+            title="North / Reset View"
+            aria-label="Face North"
+            className="group w-7 h-7 sm:w-8 sm:h-8 flex flex-col items-center justify-center rounded-lg hover:bg-stone-100 dark:hover:bg-white/10 text-stone-500 dark:text-stone-400 hover:text-red-600 dark:hover:text-red-500 transition-all cursor-pointer relative"
+          >
+            <Compass className="w-4 h-4 sm:w-4.5 sm:h-4.5 group-hover:-rotate-12 transition-transform duration-300" />
+            <span className="absolute -top-1 right-0 text-[9px] font-black text-red-600 dark:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300">N</span>
+          </button>
+          <div className="w-px h-4 bg-stone-300 dark:bg-stone-700 mx-0.5" />
           <button
             onClick={handleZoomOut}
             title="Zoom out"
@@ -1258,8 +1269,10 @@ export function InteractiveCampusMap({
                   stroke="#B08D57"
                   strokeWidth="1.5"
                   opacity="0.75"
-                  className="animate-ping"
-                />
+                >
+                  <animate attributeName="r" from="5" to="18" dur="1.5s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" from="0.75" to="0" dur="1.5s" repeatCount="indefinite" />
+                </circle>
               </g>
             )}
           </svg>
