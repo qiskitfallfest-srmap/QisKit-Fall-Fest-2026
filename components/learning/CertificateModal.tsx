@@ -226,7 +226,7 @@ export function CertificateModal({
   const progressPercent = Math.round((completedTasks / totalTasks) * 100);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs font-sans">
       <div className="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="p-6 border-b border-slate-100 flex items-center justify-between">
@@ -235,10 +235,10 @@ export function CertificateModal({
               <Award className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900">
+              <h2 className="font-serif text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
                 Official Masterclass Credential
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="font-mono text-[11px] text-slate-500 uppercase tracking-wider">
                 IBM Quantum × SRM University-AP Certification
               </p>
             </div>

@@ -268,17 +268,17 @@ export default function HackathonWorkspacePage() {
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-1.5">
-              <span className="px-2.5 py-0.5 rounded bg-slate-200 text-slate-800 font-bold text-sm">
+              <span className="font-mono px-2.5 py-0.5 rounded bg-burgundy/10 text-burgundy font-semibold text-xs uppercase tracking-[0.2em]">
                 Phase 1 Sprint
               </span>
-              <span className="text-xs text-slate-500 font-medium">
+              <span className="font-mono text-xs text-slate-500 font-medium tracking-wide">
                 Releases 10 October 2026 · Algorithm-Architecture Co-Design
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+            <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-[#181313] dark:text-[#FAF6F3] tracking-tight">
               Flagship Hackathon Workspace
             </h1>
-            <p className="text-sm sm:text-base text-slate-600 mt-1 max-w-2xl leading-relaxed">
+            <p className="font-sans text-sm sm:text-base text-slate-600 dark:text-slate-300 mt-1 max-w-2xl leading-relaxed">
               Form your team of 1 to 6 members, select your specialized domain track and problem
               statement, and benchmark quantum algorithms across Processors A, B, and C before
               proposing custom Processor D.
@@ -288,7 +288,7 @@ export default function HackathonWorkspacePage() {
           {/* Pending Invitations Alert Banner */}
           {pendingInvitations.length > 0 && (
             <div className="mb-8 space-y-3">
-              <h2 className="text-sm font-bold uppercase tracking-wider text-burgundy flex items-center gap-1.5">
+              <h2 className="font-mono text-xs font-bold uppercase tracking-[0.18em] text-burgundy flex items-center gap-1.5">
                 <Users className="w-4 h-4" />
                 Action Required: Pending Team Invitations ({pendingInvitations.length})
               </h2>
@@ -414,7 +414,7 @@ export default function HackathonWorkspacePage() {
                   <h3 className="text-base font-bold">Hackathon Code Submission</h3>
                 </div>
                 <p className="text-base text-slate-600 leading-relaxed">
-                  Provide your team's public GitHub, GitLab, or Hugging Face Space repository link.
+                  Provide your team&apos;s public GitHub, GitLab, or Hugging Face Space repository link.
                   Ensure your repository includes `main.ipynb` (or `main.py`), `processors/` with
                   `processor_D.json`, and benchmark plots in `results/`.
                 </p>
