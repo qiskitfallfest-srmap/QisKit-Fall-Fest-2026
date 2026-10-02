@@ -231,7 +231,7 @@ export function CustomCursor() {
     window.addEventListener('pointerdown', onPointerDown, { passive: true });
     window.addEventListener('pointerup', onPointerUp, { passive: true });
     document.addEventListener('mouseleave', onPointerLeave, { passive: true });
-    document.addEventListener('mouseenter', onPointerEnter, { passive: true });
+    document.addEventListener('pointerenter', onPointerEnter, { passive: true });
 
     animationFrameId = requestAnimationFrame(renderLoop);
 
@@ -241,7 +241,7 @@ export function CustomCursor() {
       window.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('pointerup', onPointerUp);
       document.removeEventListener('mouseleave', onPointerLeave);
-      document.removeEventListener('mouseenter', onPointerEnter);
+      document.removeEventListener('pointerenter', onPointerEnter);
       cancelAnimationFrame(animationFrameId);
     };
   }, [isSupported]);
