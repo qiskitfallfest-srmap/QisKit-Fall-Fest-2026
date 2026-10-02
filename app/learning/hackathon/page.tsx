@@ -37,7 +37,7 @@ export default function HackathonWorkspacePage() {
   const { data: teamDataObj, error: teamError, mutate: mutateTeam } = useSWR('/api/hackathon/team', fetcher);
   
   const team = teamDataObj?.team || null;
-  const pendingInvitations = teamDataObj?.pendingInvitations || [];
+  const pendingInvitations: any[] = teamDataObj?.pendingInvitations || [];
   const isLoading = !teamDataObj && !teamError;
 
   useEffect(() => {
