@@ -164,7 +164,11 @@ export function CustomCursor() {
     };
 
     const onPointerDown = (e: PointerEvent) => {
-      if (e.pointerType === 'touch') return;
+      if (e.pointerType === 'touch') {
+        isVisible = false;
+        updateHoverStyles();
+        return;
+      }
       isDown = true;
       if (!isVisible) {
         isVisible = true;
