@@ -175,22 +175,6 @@ function LearningDashboardContent() {
               {session.title}
             </h1>
           </div>
-
-          <div className="flex items-center gap-3 shrink-0">
-            {sessionProgress.quizPassed ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold">
-                <CheckCircle2 className="w-4 h-4" /> Passed ({sessionProgress.quizScore}%)
-              </span>
-            ) : (
-              <button
-                onClick={() => setIsQuizOpen(true)}
-                className="px-4 py-2 bg-burgundy text-white text-xs font-semibold rounded-lg hover:bg-burgundy-deep transition-colors shadow-xs flex items-center gap-1.5"
-              >
-                <Award className="w-4 h-4" />
-                {sessionProgress.videoCompleted ? 'Take Concept Quiz' : 'Concept Quiz'}
-              </button>
-            )}
-          </div>
         </div>
 
         {/* Video Player */}

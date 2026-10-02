@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { AuthGate } from '@/components/learning/AuthGate';
 import { QuizModal } from '@/components/learning/QuizModal';
@@ -23,6 +23,7 @@ import {
 export default function SessionPlayerPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const sessionId = params.id as string;
 
   const session = CURRICULUM_SESSIONS.find((s) => s.id === sessionId);
@@ -38,6 +39,14 @@ export default function SessionPlayerPage() {
   useEffect(() => {
     fetchSessionProgress();
   }, [sessionId]);
+
+  useEffect(() => {
+    if (searchParams.get('quiz') === 'true' && quiz) {
+      setIsQuizOpen(true);
+    } else {
+      setIsQuizOpen(false);
+    }
+  }, [searchParams, quiz]);
 
   async function fetchSessionProgress() {
     try {
