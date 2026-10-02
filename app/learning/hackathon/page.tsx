@@ -51,8 +51,8 @@ export default function HackathonWorkspacePage() {
   const [repoSuccessMsg, setRepoSuccessMsg] = useState('');
   const [repoErrorMsg, setRepoErrorMsg] = useState('');
 
-  // Release status state
-  const [isReleased, setIsReleased] = useState(false);
+  // Release status state (Temporarily set to true for testing)
+  const [isReleased, setIsReleased] = useState(true);
 
   useEffect(() => {
     fetchTeamData();
@@ -60,6 +60,10 @@ export default function HackathonWorkspacePage() {
   }, []);
 
   async function checkReleaseStatus() {
+    // TEMPORARY: Bypass release date check for testing purposes
+    setIsReleased(true);
+    return;
+    
     const targetDate = new Date('2026-10-10T00:00:00+05:30');
     if (new Date() >= targetDate) {
       setIsReleased(true);
