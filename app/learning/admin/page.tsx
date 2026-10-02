@@ -32,26 +32,23 @@ export default function AdminConsolePage() {
   const [newRole, setNewRole] = useState('participant');
   const [isAddingEmail, setIsAddingEmail] = useState(false);
   const [singleMsg, setSingleMsg] = useState('');
+  const [singleMsgIsError, setSingleMsgIsError] = useState(false);
 
   // Bulk email form
   const [bulkText, setBulkText] = useState('');
   const [bulkRole, setBulkRole] = useState('participant');
   const [isAddingBulk, setIsAddingBulk] = useState(false);
   const [bulkMsg, setBulkMsg] = useState('');
+  const [bulkMsgIsError, setBulkMsgIsError] = useState(false);
 
   // System config overrides
   const [config, setConfig] = useState<any>({});
   const [stats, setStats] = useState<any>({});
   const [isUpdatingConfig, setIsUpdatingConfig] = useState(false);
 
-  // Teams & Submissions Overview
-  const [teams, setTeams] = useState<any[]>([]);
-  const [competitions, setCompetitions] = useState<any[]>([]);
-
   useEffect(() => {
     fetchWhitelist();
     fetchConfig();
-    fetchTeamsAndSubmissions();
   }, []);
 
   async function fetchWhitelist() {
@@ -84,14 +81,6 @@ export default function AdminConsolePage() {
     }
   }
 
-  async function fetchTeamsAndSubmissions() {
-    // In admin view, query team and competition tables directly or via endpoints
-    try {
-      const res = await fetch('/api/hackathon/team');
-      // If needed
-    } catch {}
-  }
-
   // Add single email
   async function handleAddSingle(e: React.FormEvent) {
     e.preventDefault();
@@ -100,6 +89,7 @@ export default function AdminConsolePage() {
     try {
       setIsAddingEmail(true);
       setSingleMsg('');
+      setSingleMsgIsError(false);
       const res = await fetch('/api/admin/emails', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -113,14 +103,17 @@ export default function AdminConsolePage() {
       const data = await res.json();
       if (data.success) {
         setSingleMsg('Email added to whitelist & synced to Redis!');
+        setSingleMsgIsError(false);
         setNewEmail('');
         setNewName('');
         await fetchWhitelist();
       } else {
         setSingleMsg(data.error || 'Failed to add email');
+        setSingleMsgIsError(true);
       }
     } catch (err: any) {
       setSingleMsg(err?.message || 'Error adding email');
+      setSingleMsgIsError(true);
     } finally {
       setIsAddingEmail(false);
     }
@@ -134,6 +127,7 @@ export default function AdminConsolePage() {
     try {
       setIsAddingBulk(true);
       setBulkMsg('');
+      setBulkMsgIsError(false);
       const res = await fetch('/api/admin/emails', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -146,13 +140,16 @@ export default function AdminConsolePage() {
       const data = await res.json();
       if (data.success) {
         setBulkMsg(`Successfully whitelisted ${data.addedCount} email(s)!`);
+        setBulkMsgIsError(false);
         setBulkText('');
         await fetchWhitelist();
       } else {
         setBulkMsg(data.error || 'Failed to bulk add');
+        setBulkMsgIsError(true);
       }
     } catch (err: any) {
       setBulkMsg(err?.message || 'Error processing bulk add');
+      setBulkMsgIsError(true);
     } finally {
       setIsAddingBulk(false);
     }
@@ -352,8 +349,16 @@ export default function AdminConsolePage() {
               </div>
 
               {singleMsg && (
-                <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <div className={`p-3 rounded-lg text-xs flex items-center gap-2 ${
+                  singleMsgIsError
+                    ? 'bg-rose-50 border border-rose-200 text-rose-800'
+                    : 'bg-emerald-50 border border-emerald-200 text-emerald-800'
+                }`}>
+                  {singleMsgIsError ? (
+                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  ) : (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  )}
                   <span>{singleMsg}</span>
                 </div>
               )}
@@ -418,8 +423,16 @@ export default function AdminConsolePage() {
               </div>
 
               {bulkMsg && (
-                <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <div className={`p-3 rounded-lg text-xs flex items-center gap-2 ${
+                  bulkMsgIsError
+                    ? 'bg-rose-50 border border-rose-200 text-rose-800'
+                    : 'bg-emerald-50 border border-emerald-200 text-emerald-800'
+                }`}>
+                  {bulkMsgIsError ? (
+                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  ) : (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  )}
                   <span>{bulkMsg}</span>
                 </div>
               )}

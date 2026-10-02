@@ -230,13 +230,44 @@ export default function HackathonWorkspacePage() {
     <AuthGate onSessionChange={setSessionUser}>
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
 
+          {/* Loading state */}
+          {isLoading ? (
+            <div className="min-h-[50vh] flex items-center justify-center">
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-8 h-8 border-2 border-burgundy border-t-transparent rounded-full animate-spin" />
+                <p className="text-sm font-medium text-slate-600">Loading hackathon workspace...</p>
+              </div>
+            </div>
+          ) : !isReleased ? (
+            /* RELEASE GATE — Hackathon not yet available */
+            <div className="min-h-[60vh] flex items-center justify-center px-4">
+              <div className="max-w-md text-center space-y-5">
+                <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto ring-8 ring-slate-100">
+                  <Lock className="w-8 h-8" />
+                </div>
+                <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                  Hackathon Workspace Locked
+                </h1>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  The Flagship Hackathon Workspace will unlock on{' '}
+                  <span className="font-bold text-slate-900">October 10, 2026 at 12:00 AM IST</span>.
+                  Complete the Learning Phase sessions and daily challenges in the meantime to prepare!
+                </p>
+                <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center gap-2 justify-center">
+                  <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>Team formation, problem statements, and code submission will be available after release.</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+          <>
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-1.5">
               <span className="px-2.5 py-0.5 rounded bg-slate-200 text-slate-800 font-bold text-sm">
                 Phase 1 Sprint
               </span>
-              <span className="text-base text-slate-500 font-medium">
+              <span className="text-xs text-slate-500 font-medium">
                 Releases 10 October 2026 · Algorithm-Architecture Co-Design
               </span>
             </div>
@@ -670,6 +701,8 @@ export default function HackathonWorkspacePage() {
                 </div>
               </div>
             </div>
+          )}
+          </>
           )}
         </div>
     </AuthGate>

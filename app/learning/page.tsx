@@ -23,6 +23,7 @@ function LearningDashboardContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams?.get('session');
   const challengeDay = searchParams?.get('challenge');
+  const quizRequested = searchParams?.get('quiz') === 'true';
 
   const [competitions, setCompetitions] = useState<Record<string, any>>({});
   const [competitionUrls, setCompetitionUrls] = useState<Record<string, string>>({});
@@ -43,6 +44,18 @@ function LearningDashboardContent() {
     fetchProgress();
     fetchSessionUser();
   }, []);
+
+  // Auto-open quiz modal when ?quiz=true is in the URL
+  useEffect(() => {
+    if (quizRequested && sessionId) {
+      const sessionQuiz = SESSION_QUIZZES[sessionId];
+      if (sessionQuiz) {
+        setIsQuizOpen(true);
+      }
+    } else {
+      setIsQuizOpen(false);
+    }
+  }, [quizRequested, sessionId]);
 
   async function fetchSessionUser() {
     try {
@@ -96,7 +109,7 @@ function LearningDashboardContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId: currentSessionId,
-          videoCompleted: true,
+          action: 'mark_video',
         }),
       });
       const data = await res.json();
@@ -294,7 +307,7 @@ function LearningDashboardContent() {
               fetchProgress();
             }}
             quiz={sessionQuiz}
-            onPassed={() => fetchProgress()}
+            onPassed={(_score: number) => fetchProgress()}
           />
         )}
       </div>
