@@ -135,7 +135,10 @@ export function Navbar() {
         WebkitBackdropFilter: 'blur(20px) saturate(180%)',
       }}
     >
-      <div className="mx-auto flex h-[78px] sm:h-[84px] xl:h-[90px] max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8 xl:px-12">
+      <div className={clsx(
+        "mx-auto flex h-[78px] sm:h-[84px] xl:h-[90px] max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8 xl:px-12",
+        pathname?.startsWith('/learning') && "md:pl-[312px] lg:pl-[320px] xl:pl-[336px]"
+      )}>
         
         {/* LEFT BLOCK: Qiskit Mark + Event Branding */}
         <div className="flex items-center">
@@ -161,11 +164,11 @@ export function Navbar() {
             </div>
 
             {/* Event Branding */}
-            <div className="flex flex-col justify-center leading-none mt-0.5">
+            <div className="flex flex-col justify-center leading-none ">
               <span className="text-[13px] sm:text-[14px] xl:text-[13px] 2xl:text-sm font-semibold tracking-[0.14em] text-[var(--brand-text)]">
                 QISKIT FALL FEST
               </span>
-              <span className="text-[26px] sm:text-[28px] xl:text-[30px] font-bold text-[var(--brand-text)] mt-0.5 sm:mt-1">
+              <span className="text-[26px] sm:text-[28px] xl:text-[30px] font-bold text-[var(--brand-text)]  sm:mt-1">
                 2026
               </span>
             </div>

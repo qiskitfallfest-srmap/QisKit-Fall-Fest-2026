@@ -13,6 +13,7 @@ import {
   Navigation,
   ArrowRight,
   X,
+  Compass,
 } from 'lucide-react';
 import {
   CampusLocation,
@@ -237,7 +238,7 @@ export function InteractiveCampusMap({
       <div
         ref={containerRef}
         className={`
-          relative w-full overflow-hidden
+          w-full overflow-hidden
           rounded-2xl
           border border-[rgba(22,23,27,0.15)] dark:border-[rgba(108,21,30,0.3)]
           bg-[#F3EFE9] dark:bg-[#140A0D]
@@ -245,7 +246,7 @@ export function InteractiveCampusMap({
           select-none cursor-grab active:cursor-grabbing
           touch-none overscroll-none
           transition-all duration-300
-          ${isFullscreen ? 'fixed inset-0 z-[99980] rounded-none h-screen w-screen bg-[#F3EFE9] dark:bg-[#140A0D]' : 'h-[440px] sm:h-[540px] lg:h-[620px] xl:h-[660px]'}
+          ${isFullscreen ? 'fixed inset-0 z-[99980] rounded-none bg-[#F3EFE9] dark:bg-[#140A0D]' : 'relative h-[440px] sm:h-[540px] lg:h-[620px] xl:h-[660px]'}
         `}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -320,57 +321,64 @@ export function InteractiveCampusMap({
         </div>
 
         {/* Top-Right: Map Controls (Zoom, Reset, Fullscreen) */}
-        <div
-          className={`
-            absolute z-30 flex items-center gap-1 sm:gap-1.5 p-1 rounded-xl
-            bg-white/95 dark:bg-[#1C0D11]/95 backdrop-blur-md
-            border border-stone-300/80 dark:border-[#B08D57]/30 shadow-lg
-            ${isFullscreen ? 'top-5 right-5 sm:top-6 sm:right-6 ring-2 ring-[#B08D57]/40 shadow-2xl' : 'top-3 right-3 sm:top-4 sm:right-4'}
-          `}
-        >
-          <button
-            onClick={handleZoomOut}
-            title="Zoom out"
-            aria-label="Zoom out"
-            className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg hover:bg-stone-100 dark:hover:bg-white/10 text-stone-700 dark:text-stone-200 transition-colors cursor-pointer"
-          >
-            <ZoomOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          </button>
-          <button
-            onClick={handleZoomIn}
-            title="Zoom in"
-            aria-label="Zoom in"
-            className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg hover:bg-stone-100 dark:hover:bg-white/10 text-stone-700 dark:text-stone-200 transition-colors cursor-pointer"
-          >
-            <ZoomIn className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          </button>
+        <div className={`absolute z-30 flex flex-col gap-2 ${isFullscreen ? 'top-5 right-5 sm:top-6 sm:right-6' : 'top-3 right-3 sm:top-4 sm:right-4'}`}>
+          {/* Compass / North Indicator (Standalone) */}
           <button
             onClick={handleReset}
-            title="Reset View"
-            aria-label="Reset View"
-            className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg hover:bg-stone-100 dark:hover:bg-white/10 text-stone-700 dark:text-stone-200 transition-colors cursor-pointer"
+            title="North / Reset View"
+            aria-label="Face North"
+            className="w-10 h-10 sm:w-11 sm:h-11 flex flex-col items-center justify-center rounded-full bg-white/95 dark:bg-[#1C0D11]/95 backdrop-blur-md border border-stone-300/80 dark:border-[#B08D57]/30 shadow-lg hover:bg-stone-100 dark:hover:bg-white/10 text-[#6C151E] dark:text-[#B08D57] transition-all cursor-pointer group pointer-events-auto self-end ring-2 ring-transparent hover:ring-[#B08D57]/30"
           >
-            <RotateCcw className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+            <span className="text-[10px] sm:text-[11px] font-black leading-none mb-0.5">N</span>
+            <Compass className="w-5 h-5 sm:w-5 sm:h-5 group-hover:-rotate-12 transition-transform duration-300" />
           </button>
-          <div className="w-px h-4 bg-stone-300 dark:bg-stone-700 mx-0.5" />
-          <button
-            onClick={toggleFullscreen}
-            title={isFullscreen ? 'Exit Fullscreen (Esc)' : 'View Full Map'}
-            aria-label={isFullscreen ? 'Exit Fullscreen' : 'View Full Map'}
-            className="h-7 sm:h-8 px-2 flex items-center gap-1.5 rounded-lg hover:bg-stone-100 dark:hover:bg-white/10 text-[#6C151E] dark:text-[#B08D57] transition-colors cursor-pointer"
-          >
-            {isFullscreen ? (
-              <>
-                <Minimize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span className="text-xs font-semibold text-[#6C151E] dark:text-[#B08D57]">Exit Fullscreen</span>
-              </>
-            ) : (
-              <>
-                <Maximize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span className="text-xs font-semibold hidden md:inline text-stone-700 dark:text-stone-300">Enlarge</span>
-              </>
-            )}
-          </button>
+
+          {/* Zoom and Fullscreen Controls */}
+          <div className="flex items-center gap-1 sm:gap-1.5 p-1 rounded-xl bg-white/95 dark:bg-[#1C0D11]/95 backdrop-blur-md border border-stone-300/80 dark:border-[#B08D57]/30 shadow-lg pointer-events-auto">
+            <button
+              onClick={handleZoomOut}
+              title="Zoom out"
+              aria-label="Zoom out"
+              className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg hover:bg-stone-100 dark:hover:bg-white/10 text-stone-700 dark:text-stone-200 transition-colors cursor-pointer"
+            >
+              <ZoomOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </button>
+            <button
+              onClick={handleZoomIn}
+              title="Zoom in"
+              aria-label="Zoom in"
+              className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg hover:bg-stone-100 dark:hover:bg-white/10 text-stone-700 dark:text-stone-200 transition-colors cursor-pointer"
+            >
+              <ZoomIn className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </button>
+            <button
+              onClick={handleReset}
+              title="Reset View"
+              aria-label="Reset View"
+              className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg hover:bg-stone-100 dark:hover:bg-white/10 text-stone-700 dark:text-stone-200 transition-colors cursor-pointer"
+            >
+              <RotateCcw className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+            </button>
+            <div className="w-px h-4 bg-stone-300 dark:bg-stone-700 mx-0.5" />
+            <button
+              onClick={toggleFullscreen}
+              title={isFullscreen ? 'Exit Fullscreen (Esc)' : 'Enlarge Map'}
+              aria-label={isFullscreen ? 'Exit Fullscreen' : 'Enlarge Map'}
+              className="h-7 sm:h-8 px-2 flex items-center gap-1.5 rounded-lg hover:bg-stone-100 dark:hover:bg-white/10 text-[#6C151E] dark:text-[#B08D57] transition-colors cursor-pointer"
+            >
+              {isFullscreen ? (
+                <>
+                  <Minimize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="text-xs font-semibold text-[#6C151E] dark:text-[#B08D57]">Exit Fullscreen</span>
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">Enlarge</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* SVG Map Canvas */}
@@ -578,10 +586,12 @@ export function InteractiveCampusMap({
 
                 {/* Gate 3 Departure Point Marker */}
                 <circle cx="740" cy="310" r="8" fill="#10B981" stroke="#FFFFFF" strokeWidth="2" />
-                <circle cx="740" cy="310" r="14" fill="none" stroke="#10B981" strokeWidth="1.5" opacity="0.7">
+                <g transform="translate(740, 310)">
+                  <circle cx="0" cy="0" r="14" fill="none" stroke="#10B981" strokeWidth="1.5" opacity="0.7">
                   <animate attributeName="r" from="8" to="18" dur="1.5s" repeatCount="indefinite" />
                   <animate attributeName="opacity" from="0.7" to="0" dur="1.5s" repeatCount="indefinite" />
                 </circle>
+                </g>
 
                 {/* Destination Arrival Point Marker */}
                 <circle
@@ -592,10 +602,8 @@ export function InteractiveCampusMap({
                   stroke="#B08D57"
                   strokeWidth="2"
                 />
-                <circle
-                  cx={currentRoute.destPoint.x}
-                  cy={currentRoute.destPoint.y}
-                  r="14"
+                <g transform={`translate(${currentRoute.destPoint.x}, ${currentRoute.destPoint.y})`}>
+                  <circle cx="0" cy="0" r="14"
                   fill="none"
                   stroke="#B08D57"
                   strokeWidth="1.5"
@@ -604,6 +612,7 @@ export function InteractiveCampusMap({
                   <animate attributeName="r" from="8" to="20" dur="1.5s" repeatCount="indefinite" />
                   <animate attributeName="opacity" from="0.7" to="0" dur="1.5s" repeatCount="indefinite" />
                 </circle>
+                </g>
               </g>
             )}
 
@@ -1250,16 +1259,17 @@ export function InteractiveCampusMap({
                   stroke="#B08D57"
                   strokeWidth="2"
                 />
-                <circle
-                  cx={currentRoute.destPoint.x}
-                  cy={currentRoute.destPoint.y}
-                  r="12"
+                <g transform={`translate(${currentRoute.destPoint.x}, ${currentRoute.destPoint.y})`}>
+                  <circle cx="0" cy="0" r="12"
                   fill="none"
                   stroke="#B08D57"
                   strokeWidth="1.5"
                   opacity="0.75"
-                  className="animate-ping"
-                />
+                >
+                  <animate attributeName="r" from="5" to="18" dur="1.5s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" from="0.75" to="0" dur="1.5s" repeatCount="indefinite" />
+                </circle>
+                </g>
               </g>
             )}
           </svg>
