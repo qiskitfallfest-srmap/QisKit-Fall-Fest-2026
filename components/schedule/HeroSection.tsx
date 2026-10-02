@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import ParticleDrift from './ParticleDrift';
 import { PhaseSelector } from './PhaseSelector';
 import { SchedulePhase } from '@/data/schedule.types';
+import { StaggeredTextReveal } from '@/components/ui/StaggeredTextReveal';
 
 interface HeroSectionProps {
   currentPhase: SchedulePhase;
@@ -84,13 +85,14 @@ export function HeroSection({ currentPhase, onPhaseChange }: HeroSectionProps) {
 
             {/* Headline */}
             <motion.h1 
-              className="font-serif text-[clamp(2.75rem,5.5vw,5.25rem)] font-bold leading-[0.96] tracking-[-0.045em] m-0 text-transparent bg-clip-text bg-[linear-gradient(90deg,#A7192A_0%,#851722_38%,#241617_85%)] dark:bg-[linear-gradient(90deg,#EA8793_0%,#EFB0B5_45%,#FFF1EE_100%)]"
+              className="font-serif text-[clamp(2.75rem,5.5vw,5.25rem)] font-bold leading-[0.96] tracking-[-0.045em] m-0 text-[#A7192A] dark:text-[#EA8793]"
               initial="hidden"
               animate="visible"
               custom={0.15}
               variants={fadeInUpVariant}
             >
-              Full Event <span className="font-serif italic font-semibold text-transparent bg-clip-text bg-[linear-gradient(90deg,#6C151E_0%,#A7192A_100%)] dark:bg-[linear-gradient(90deg,#F5DABF_0%,#EF7885_100%)]">Schedule.</span>
+              <StaggeredTextReveal text="Full Event" delay={0.1} stagger={0.02} letterClassName="text-[#A7192A] dark:text-[#EA8793]" />{' '}
+              <StaggeredTextReveal text="Schedule." delay={0.3} stagger={0.025} letterClassName="font-serif italic font-semibold text-[#6C151E] dark:text-[#F5DABF]" />
             </motion.h1>
 
             {/* Subheadline & Description */}
@@ -102,7 +104,7 @@ export function HeroSection({ currentPhase, onPhaseChange }: HeroSectionProps) {
                 custom={0.25}
                 variants={fadeInUpVariant}
               >
-                Two phases. One global community.
+                <StaggeredTextReveal text="Two phases. One global community." delay={0.4} stagger={0.015} letterClassName="text-[#211818] dark:text-[#F8F2F0]" />
               </motion.div>
               <motion.p 
                 className="font-sans font-normal text-[#4E4441] dark:text-[#D6CDCA] text-base sm:text-lg leading-relaxed max-w-[660px]"

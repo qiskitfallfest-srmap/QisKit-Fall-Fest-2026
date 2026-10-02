@@ -23,6 +23,7 @@ import { Day, SchedulePhase, Session, Track } from '@/data/schedule.types';
 import { getPhaseDays, getPhaseInfo, filterSessions } from '@/data/schedule.utils';
 import { REGISTRATION_URL } from '@/lib/constants';
 import { PhaseSelector } from './PhaseSelector';
+import { StaggeredTextReveal } from '@/components/ui/StaggeredTextReveal';
 
 const posterImage = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="300" viewBox="0 0 600 300"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%233A0B10"/><stop offset="50%" stop-color="%236C151E"/><stop offset="100%" stop-color="%23120506"/></linearGradient></defs><rect width="600" height="300" fill="url(%23g)"/><g opacity="0.3" stroke="%23F5DABF" stroke-width="1.5" fill="none"><polygon points="300,40 420,95 420,205 300,260 180,205 180,95"/><line x1="300" y1="40" x2="300" y2="150"/><line x1="420" y1="95" x2="300" y2="150"/><line x1="180" y1="95" x2="300" y2="150"/><line x1="300" y1="150" x2="300" y2="260"/><line x1="420" y1="205" x2="300" y2="150"/><line x1="180" y1="205" x2="300" y2="150"/></g></svg>';
 
@@ -233,8 +234,9 @@ export function ExploreSchedule({ currentPhase, onPhaseChange }: ExploreSchedule
                 {phaseInfo.title} &middot; {phaseInfo.dateRange}
               </div>
 
-              <h2 className="mt-2 font-serif text-[clamp(2rem,3.5vw,3.5rem)] font-bold leading-[0.96] tracking-[-0.04em] text-transparent bg-clip-text bg-[linear-gradient(90deg,#A7192A_0%,#851722_38%,#241617_85%)] dark:bg-[linear-gradient(90deg,#EA8793_0%,#EFB0B5_45%,#FFF1EE_100%)]">
-                Explore the <em className="font-serif italic font-semibold text-transparent bg-clip-text bg-[linear-gradient(90deg,#6C151E_0%,#A7192A_100%)] dark:bg-[linear-gradient(90deg,#F5DABF_0%,#EF7885_100%)]">schedule.</em>
+              <h2 className="mt-2 font-serif text-[clamp(2rem,3.5vw,3.5rem)] font-bold leading-[0.96] tracking-[-0.04em] text-[#A7192A] dark:text-[#EA8793]">
+                <StaggeredTextReveal text="Explore the" delay={0.1} stagger={0.02} letterClassName="text-[#A7192A] dark:text-[#EA8793]" />{' '}
+                <StaggeredTextReveal text="schedule." delay={0.25} stagger={0.025} letterClassName="font-serif italic font-semibold text-[#6C151E] dark:text-[#F5DABF]" />
               </h2>
 
               <p className="mt-3 max-w-[720px] font-sans font-normal text-sm sm:text-base leading-relaxed text-[#4E4441] dark:text-[#D6CDCA]">
@@ -261,17 +263,21 @@ export function ExploreSchedule({ currentPhase, onPhaseChange }: ExploreSchedule
                     role="tab"
                     aria-selected={isActive}
                     onClick={() => selectDay(index)}
-                    className={`flex min-w-[100px] sm:min-w-[120px] flex-col items-center justify-center rounded-[16px] px-4 py-2.5 text-center transition-all duration-200 ${
+                    className={`group relative flex min-w-[100px] sm:min-w-[120px] flex-col items-center justify-center overflow-hidden rounded-[16px] px-4 py-2.5 text-center transition-all duration-[600ms] ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.96] cursor-pointer ${
                       isActive
-                        ? 'bg-gradient-to-b from-[#6C151E] to-[#4A0D14] text-white shadow-md'
-                        : 'text-[#665B57] dark:text-[#BEB5B4] hover:bg-white/40 dark:hover:bg-white/10'
+                        ? 'bg-gradient-to-b from-[#6C151E] to-[#4A0D14] text-white shadow-md scale-[1.02]'
+                        : 'text-[#665B57] dark:text-[#BEB5B4] hover:text-white'
                     }`}
                   >
-                    <span className="text-[10px] font-extrabold uppercase tracking-[0.14em] opacity-90">
+                    {/* Fluid expanding hover circle */}
+                    {!isActive && (
+                      <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-[#6C151E] dark:bg-[#A7192A] rounded-full opacity-0 pointer-events-none transition-all duration-[2400ms] ease-[cubic-bezier(0.25,1,0.35,1)] group-hover:w-[300px] group-hover:h-[300px] group-hover:opacity-100" />
+                    )}
+                    <span className="relative z-[1] text-[10px] font-extrabold uppercase tracking-[0.14em] opacity-90 transition-transform duration-300 group-hover:scale-105">
                       {item.label}
                     </span>
-                    <span className="text-xs sm:text-sm font-bold mt-0.5">{item.date}</span>
-                    <span className="text-[10px] opacity-75">{item.weekday}</span>
+                    <span className="relative z-[1] text-xs sm:text-sm font-bold mt-0.5">{item.date}</span>
+                    <span className="relative z-[1] text-[10px] opacity-75">{item.weekday}</span>
                   </button>
                 );
               })}
@@ -291,13 +297,17 @@ export function ExploreSchedule({ currentPhase, onPhaseChange }: ExploreSchedule
                     key={item}
                     type="button"
                     onClick={() => setActiveTrack(item)}
-                    className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                    className={`group relative overflow-hidden rounded-full border px-4 py-1.5 text-xs font-semibold transition-all duration-[600ms] ease-[cubic-bezier(0.23,1,0.32,1)] cursor-pointer active:scale-[0.95] ${
                       isActive
-                        ? 'border-[#6C151E] bg-[#6C151E] text-white shadow-sm'
-                        : 'border-[#D9D0CB] dark:border-white/15 bg-white/40 dark:bg-white/5 text-[#261F1D] dark:text-[#E8E0DE] hover:bg-white'
+                        ? 'border-[#6C151E] bg-[#6C151E] text-white shadow-md'
+                        : 'border-[#D9D0CB] dark:border-white/15 bg-white/40 dark:bg-white/5 text-[#261F1D] dark:text-[#E8E0DE] hover:border-[#6C151E] hover:text-white'
                     }`}
                   >
-                    {item}
+                    {/* Fluid expanding hover circle */}
+                    {!isActive && (
+                      <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-[#6C151E] dark:bg-[#A7192A] rounded-full opacity-0 pointer-events-none transition-all duration-[2400ms] ease-[cubic-bezier(0.25,1,0.35,1)] group-hover:w-[260px] group-hover:h-[260px] group-hover:opacity-100" />
+                    )}
+                    <span className="relative z-[1] transition-transform duration-300 group-hover:scale-105">{item}</span>
                   </button>
                 );
               })}
