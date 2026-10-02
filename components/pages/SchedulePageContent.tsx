@@ -10,16 +10,18 @@ import { SchedulePhase } from '@/data/schedule.types';
 export default function SchedulePageContent() {
   const [currentPhase, setCurrentPhase] = useState<SchedulePhase>('online');
 
-  // Restore phase from URL hash on mount if present
+  // Restore phase from URL hash on mount if present, but ALWAYS keep initial load at top (Hero section)
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
+      if ('scrollRestoration' in window.history) {
+        window.history.scrollRestoration = 'manual';
+      }
       const hash = window.location.hash.toLowerCase().replace('#', '');
       if (hash === 'offline' || hash === 'online') {
         setCurrentPhase(hash as SchedulePhase);
-        setTimeout(() => {
-          scrollToExploreSchedule();
-        }, 200);
       }
+      // Force page to stay at top in Hero section on reload
+      window.scrollTo(0, 0);
     }
   }, []);
 
