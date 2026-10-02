@@ -229,24 +229,6 @@ function LearningDashboardContent() {
               </a>
             )}
 
-            <div className="w-px h-4 bg-slate-300 hidden sm:block mx-1"></div>
-
-            {sessionProgress.quizPassed ? (
-              <Link
-                href={`/learning/session/${sessionId}/quiz`}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:underline"
-              >
-                <CheckCircle2 className="w-4 h-4" /> Quiz Passed ({sessionProgress.quizScore}%)
-              </Link>
-            ) : (
-              <Link
-                href={`/learning/session/${sessionId}/quiz`}
-                className="px-4 py-2 bg-burgundy text-white text-xs font-bold rounded-lg hover:bg-[#5a1118] transition-colors shadow-sm flex items-center gap-1.5"
-              >
-                <Award className="w-4 h-4" />
-                {sessionProgress.videoCompleted ? 'Take Concept Quiz' : 'Concept Quiz'}
-              </Link>
-            )}
           </div>
         </div>
 
