@@ -238,7 +238,7 @@ export function InteractiveCampusMap({
       <div
         ref={containerRef}
         className={`
-          relative w-full overflow-hidden
+          w-full overflow-hidden
           rounded-2xl
           border border-[rgba(22,23,27,0.15)] dark:border-[rgba(108,21,30,0.3)]
           bg-[#F3EFE9] dark:bg-[#140A0D]
@@ -246,7 +246,7 @@ export function InteractiveCampusMap({
           select-none cursor-grab active:cursor-grabbing
           touch-none overscroll-none
           transition-all duration-300
-          ${isFullscreen ? 'fixed inset-0 z-[99980] rounded-none bg-[#F3EFE9] dark:bg-[#140A0D]' : 'h-[440px] sm:h-[540px] lg:h-[620px] xl:h-[660px]'}
+          ${isFullscreen ? 'fixed inset-0 z-[99980] rounded-none bg-[#F3EFE9] dark:bg-[#140A0D]' : 'relative h-[440px] sm:h-[540px] lg:h-[620px] xl:h-[660px]'}
         `}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
