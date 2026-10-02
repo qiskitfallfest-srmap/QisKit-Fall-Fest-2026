@@ -72,12 +72,12 @@ export function QuizModal({ quiz, isOpen, onClose, onPassed }: QuizModalProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs overflow-y-auto">
       <div className="w-full max-w-2xl bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden my-8">
         {/* Header */}
-        <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between font-sans">
           <div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-burgundy">
+            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-burgundy">
               Concept Check Verification
             </span>
-            <h3 className="text-base font-bold text-slate-900">{quiz.title}</h3>
+            <h3 className="font-serif text-lg sm:text-xl font-bold text-slate-900 tracking-tight">{quiz.title}</h3>
           </div>
           <button
             onClick={onClose}

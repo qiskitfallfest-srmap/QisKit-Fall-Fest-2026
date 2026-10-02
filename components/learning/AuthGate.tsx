@@ -279,15 +279,18 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
         </div>
       )}
 
-      <div className="w-full max-w-md bg-white border border-slate-200 rounded-xl shadow-sm p-6 sm:p-8">
+      <div className="w-full max-w-md bg-white border border-slate-200 rounded-xl shadow-sm p-6 sm:p-8 font-sans">
         <div className="text-center mb-6">
           <div className="w-12 h-12 rounded-full bg-burgundy/10 text-burgundy flex items-center justify-center mx-auto mb-3">
             <Lock className="w-6 h-6" />
           </div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+          <div className="font-mono text-[11px] font-semibold text-burgundy uppercase tracking-[0.2em] mb-1">
+            PARTICIPANT GATEWAY
+          </div>
+          <h2 className="font-serif text-2xl font-bold text-slate-900 tracking-tight">
             Qiskit Fall Fest 2026 Portal
           </h2>
-          <p className="text-sm text-slate-600 mt-1">
+          <p className="font-sans text-xs text-slate-600 mt-1">
             Online Phase Learning Platform & Hackathon Workspace
           </p>
         </div>

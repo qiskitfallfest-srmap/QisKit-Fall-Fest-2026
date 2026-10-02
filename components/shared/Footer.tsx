@@ -20,7 +20,8 @@ const FOOTER_LINKS = [
   { label: 'Schedule', href: '/schedule' },
   { label: 'Venues', href: '/venues' },
   { label: 'Team', href: '/team' },
-  { label: 'FAQs', href: '/faqs' }
+  { label: 'FAQs', href: '/faqs' },
+  { label: 'Learning', href: '/learning' }
 ];
 
 export function Footer() {
