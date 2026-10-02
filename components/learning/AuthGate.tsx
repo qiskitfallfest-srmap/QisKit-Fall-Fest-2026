@@ -136,6 +136,7 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
       isMounted = false;
       subscription.unsubscribe();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 2. Google OAuth sign-in handler
