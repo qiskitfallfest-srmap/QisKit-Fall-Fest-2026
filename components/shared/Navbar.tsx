@@ -163,7 +163,7 @@ export function Navbar() {
             </div>
 
             {/* Event Branding */}
-            <div className="flex flex-col justify-center leading-none ">
+            <div className="flex flex-col justify-center leading-none whitespace-nowrap shrink-0">
               <span className="text-[13px] sm:text-[14px] xl:text-[13px] 2xl:text-sm font-semibold tracking-[0.14em] text-[var(--brand-text)]">
                 QISKIT FALL FEST
               </span>
