@@ -611,7 +611,7 @@ export const PROBLEM_STATEMENTS: ProblemStatement[] = [
       'Processor D coupling map and architectural justification report.',
     ],
     evaluationRubric: {
-      componentA: 'Novelty, cryptographic soundess, and experimental execution of the custom PQC proposal (40 Points).',
+      componentA: 'Novelty, cryptographic soundness, and experimental execution of the custom PQC proposal (40 Points).',
       componentB: 'Transpilation analysis across standard hardware processors (30 Points).',
       componentC: 'Quality of custom Processor D design and depth reduction metrics (30 Points).',
     },

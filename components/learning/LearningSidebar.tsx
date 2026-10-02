@@ -20,8 +20,11 @@ export function LearningSidebar() {
   const searchParams = useSearchParams();
   
   const isHackathon = pathname === '/learning/hackathon';
-  const activeSessionId = searchParams?.get('session');
   const activeChallengeDay = searchParams?.get('challenge');
+
+  // Detect active session from pathname (e.g. /learning/session/session-3 or /learning/session/session-3/quiz)
+  const sessionPathMatch = pathname?.match(/^\/learning\/session\/([^/]+)/);
+  const activeSessionId = sessionPathMatch?.[1] || null;
 
   // Determine which day is open in the accordion. If a session or challenge is active, open that day.
   const initialOpenDay = activeSessionId 
@@ -117,14 +120,13 @@ export function LearningSidebar() {
               {isDayOpen && (
                 <div className="mt-1 pl-4 space-y-1">
                   {daySessions.map(session => {
-                    const isActive = activeSessionId === session.id;
-                    const isQuizActive = isActive && searchParams?.get('quiz') === 'true';
-                    const isJustSessionActive = isActive && !isQuizActive;
+                    const isJustSessionActive = pathname === `/learning/session/${session.id}`;
+                    const isQuizActive = pathname === `/learning/session/${session.id}/quiz`;
 
                     return (
                       <div key={session.id} className="flex flex-col mb-1">
                         <Link
-                          href={`/learning?session=${session.id}`}
+                          href={`/learning/session/${session.id}`}
                           className={clsx(
                             'flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors',
                             isJustSessionActive
@@ -137,7 +139,7 @@ export function LearningSidebar() {
                         </Link>
                         
                         <Link
-                          href={`/learning?session=${session.id}&quiz=true`}
+                          href={`/learning/session/${session.id}/quiz`}
                           className={clsx(
                             'flex items-center gap-2.5 px-3 py-1.5 ml-4 mt-0.5 rounded-md text-xs transition-colors',
                             isQuizActive
@@ -209,17 +211,17 @@ export function LearningSidebar() {
               {session.isAdmin && (
                 <Link
                   href="/learning/admin"
-                  className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded bg-burgundy/10 text-burgundy hover:bg-burgundy/20 transition-colors font-mono text-[11px] font-semibold uppercase tracking-wider"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg bg-burgundy/10 text-burgundy hover:bg-burgundy/20 transition-colors font-mono text-[11px] font-semibold uppercase tracking-wider"
                 >
-                  <Shield className="w-3 h-3" />
+                  <Shield className="w-3.5 h-3.5" />
                   Admin
                 </Link>
               )}
               <button
                 onClick={handleSignOut}
-                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded border border-slate-200 text-slate-600 hover:bg-slate-200 transition-colors font-mono text-[11px] font-semibold uppercase tracking-wider cursor-pointer"
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition-colors font-mono text-[11px] font-semibold uppercase tracking-wider cursor-pointer"
               >
-                <LogOut className="w-3 h-3" />
+                <LogOut className="w-3.5 h-3.5" />
                 Sign Out
               </button>
             </div>

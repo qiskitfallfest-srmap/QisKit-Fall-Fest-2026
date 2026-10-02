@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { AuthGate } from '@/components/learning/AuthGate';
-import { QuizModal } from '@/components/learning/QuizModal';
 import { CertificateModal } from '@/components/learning/CertificateModal';
 import { CURRICULUM_SESSIONS } from '@/data/learning/curriculum';
 import { DAILY_COMPETITIONS } from '@/data/learning/competitions';
@@ -23,6 +23,7 @@ function LearningDashboardContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams?.get('session');
   const challengeDay = searchParams?.get('challenge');
+  const quizRequested = searchParams?.get('quiz') === 'true';
 
   const [competitions, setCompetitions] = useState<Record<string, any>>({});
   const [competitionUrls, setCompetitionUrls] = useState<Record<string, string>>({});
@@ -31,7 +32,6 @@ function LearningDashboardContent() {
 
   // Session progress & quiz state
   const [progress, setProgress] = useState<Record<string, any>>({});
-  const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [isMarkingVideo, setIsMarkingVideo] = useState(false);
 
   // Certificate Modal state
@@ -96,7 +96,7 @@ function LearningDashboardContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId: currentSessionId,
-          videoCompleted: true,
+          action: 'mark_video',
         }),
       });
       const data = await res.json();
@@ -182,13 +182,13 @@ function LearningDashboardContent() {
                 <CheckCircle2 className="w-4 h-4" /> Passed ({sessionProgress.quizScore}%)
               </span>
             ) : (
-              <button
-                onClick={() => setIsQuizOpen(true)}
+              <Link
+                href={`/learning/session/${session.id}/quiz`}
                 className="px-4 py-2 bg-burgundy text-white text-xs font-semibold rounded-lg hover:bg-burgundy-deep transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer font-sans"
               >
                 <Award className="w-4 h-4" />
                 {sessionProgress.videoCompleted ? 'Take Concept Quiz' : 'Concept Quiz'}
-              </button>
+              </Link>
             )}
           </div>
         </div>
@@ -245,21 +245,6 @@ function LearningDashboardContent() {
               </a>
             )}
 
-            <div className="w-px h-4 bg-slate-300 hidden sm:block mx-1"></div>
-
-            {sessionProgress.quizPassed ? (
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700">
-                <CheckCircle2 className="w-4 h-4" /> Quiz Passed ({sessionProgress.quizScore}%)
-              </span>
-            ) : (
-              <button
-                onClick={() => setIsQuizOpen(true)}
-                className="px-4 py-2 bg-burgundy text-white text-xs font-bold rounded-lg hover:bg-[#5a1118] transition-colors shadow-sm flex items-center gap-1.5"
-              >
-                <Award className="w-4 h-4" />
-                {sessionProgress.videoCompleted ? 'Take Concept Quiz' : 'Concept Quiz'}
-              </button>
-            )}
           </div>
         </div>
 
@@ -301,18 +286,6 @@ function LearningDashboardContent() {
           </div>
         </div>
 
-        {/* Quiz Modal */}
-        {sessionQuiz && (
-          <QuizModal
-            isOpen={isQuizOpen}
-            onClose={() => {
-              setIsQuizOpen(false);
-              fetchProgress();
-            }}
-            quiz={sessionQuiz}
-            onPassed={() => fetchProgress()}
-          />
-        )}
       </div>
     );
   }

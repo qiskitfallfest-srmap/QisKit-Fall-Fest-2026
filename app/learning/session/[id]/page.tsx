@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { AuthGate } from '@/components/learning/AuthGate';
-import { QuizModal } from '@/components/learning/QuizModal';
 import { CURRICULUM_SESSIONS } from '@/data/learning/curriculum';
 import { SESSION_QUIZZES } from '@/data/learning/quizzes';
 import {
@@ -29,7 +28,6 @@ export default function SessionPlayerPage() {
   const session = CURRICULUM_SESSIONS.find((s) => s.id === sessionId);
   const quiz = SESSION_QUIZZES[sessionId];
 
-  const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [videoCompleted, setVideoCompleted] = useState(false);
   const [quizPassed, setQuizPassed] = useState(false);
   const [quizScore, setQuizScore] = useState(0);
@@ -39,14 +37,6 @@ export default function SessionPlayerPage() {
   useEffect(() => {
     fetchSessionProgress();
   }, [sessionId]);
-
-  useEffect(() => {
-    if (searchParams.get('quiz') === 'true' && quiz) {
-      setIsQuizOpen(true);
-    } else {
-      setIsQuizOpen(false);
-    }
-  }, [searchParams, quiz]);
 
   async function fetchSessionProgress() {
     try {
@@ -86,13 +76,6 @@ export default function SessionPlayerPage() {
     } finally {
       setIsMarkingVideo(false);
     }
-  }
-
-  function handleQuizPassed(score: number) {
-    setQuizPassed(true);
-    setQuizScore(score);
-    // Also mark video as attended
-    handleMarkVideoCompleted();
   }
 
   if (!session) {
@@ -137,10 +120,10 @@ export default function SessionPlayerPage() {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left 2 Cols: Video Player & Session Details */}
-            <div className="lg:col-span-2 space-y-6">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+          <div className="space-y-8">
+            {/* Main Video & Details */}
+            <div className="space-y-6">
               {/* YouTube Video Player Embed */}
               <div className="bg-black rounded-xl overflow-hidden shadow-sm aspect-video relative">
                 <iframe
@@ -222,67 +205,8 @@ export default function SessionPlayerPage() {
               </div>
             </div>
 
-            {/* Right 1 Col: Lecturer Profile, Resources, & Quiz Action */}
-            <div className="space-y-6">
-              {/* Concept Check Quiz Action Card */}
-              <div className="p-5 bg-white border border-slate-200 rounded-xl shadow-xs space-y-4">
-                <div className="flex items-center gap-2 text-burgundy">
-                  <Award className="w-5 h-5" />
-                  <h2 className="font-mono text-xs font-bold uppercase tracking-[0.18em] text-burgundy">
-                    Concept Check Verification
-                  </h2>
-                </div>
-
-                <p className="text-xs text-slate-600 leading-relaxed font-sans">
-                  To complete this session and unlock subsequent lectures, you must achieve a passing
-                  score of <span className="font-mono font-bold text-slate-900">{quiz?.passingScore || 75}%</span>.
-                </p>
-
-                {quizPassed ? (
-                  <div className="p-3.5 rounded-lg bg-emerald-50 border border-emerald-200 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-emerald-900">Passed Concept Check</span>
-                      <span className="text-xs font-mono font-bold text-emerald-800">{quizScore}%</span>
-                    </div>
-                    <button
-                      onClick={() => setIsQuizOpen(true)}
-                      className="text-xs font-semibold text-emerald-800 underline block"
-                    >
-                      Review Answers or Retake Quiz
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setIsQuizOpen(true)}
-                    className="w-full px-4 py-2.5 bg-burgundy text-white text-xs font-bold rounded-lg hover:bg-burgundy-deep transition-colors shadow-xs flex items-center justify-center gap-2 cursor-pointer font-sans"
-                  >
-                    <Award className="w-4 h-4" />
-                    Take Session Concept Check
-                  </button>
-                )}
-
-                {/* Next session progression pointer */}
-                {isSessionFullyDone && nextSession && (
-                  <div className="pt-3 border-t border-slate-100">
-                    <span className="font-mono text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Up Next in Sequence:</span>
-                    <Link
-                      href={`/learning/session/${nextSession.id}`}
-                      className="p-3 rounded-lg border border-slate-200 hover:border-burgundy/40 bg-slate-50 hover:bg-white transition-all flex items-center justify-between group"
-                    >
-                      <div className="truncate pr-2">
-                        <span className="font-mono text-[10px] uppercase font-bold text-burgundy block">
-                          Session {nextSession.sessionNumber}
-                        </span>
-                        <span className="font-serif text-sm font-semibold text-slate-800 group-hover:text-burgundy truncate block">
-                          {nextSession.title}
-                        </span>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-burgundy shrink-0" />
-                    </Link>
-                  </div>
-                )}
-              </div>
-
+            {/* Resources and Lecturer Profile Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Lecturer Profile Card */}
               <div className="p-5 bg-white border border-slate-200 rounded-xl shadow-xs space-y-4">
                 <span className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-burgundy block">
@@ -329,7 +253,7 @@ export default function SessionPlayerPage() {
 
               {/* Lecture Notes & Resources */}
               <div className="p-5 bg-white border border-slate-200 rounded-xl shadow-xs space-y-3">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-900 block">
+                <span className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-burgundy block">
                   Lecture Notes & Notebooks
                 </span>
 
@@ -339,13 +263,13 @@ export default function SessionPlayerPage() {
                       href={session.lectureNotesUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-2.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 flex items-center justify-between text-slate-800 font-medium transition-colors"
+                      className="p-3 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 flex items-center justify-between text-slate-800 font-medium transition-colors"
                     >
                       <span className="flex items-center gap-2">
-                        <FileText className="w-3.5 h-3.5 text-burgundy" />
-                        Lecture Guide & Documentation
+                         <FileText className="w-4 h-4 text-burgundy" />
+                         Lecture Guide & Documentation
                       </span>
-                      <ExternalLink className="w-3 h-3 text-slate-400" />
+                      <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
                     </a>
                   )}
 
@@ -354,30 +278,41 @@ export default function SessionPlayerPage() {
                       href={session.slidesUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-2.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 flex items-center justify-between text-slate-800 font-medium transition-colors"
+                      className="p-3 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 flex items-center justify-between text-slate-800 font-medium transition-colors"
                     >
                       <span className="flex items-center gap-2">
-                        <FileText className="w-3.5 h-3.5 text-burgundy" />
+                        <FileText className="w-4 h-4 text-burgundy" />
                         Companion Code & Notebooks
                       </span>
-                      <ExternalLink className="w-3 h-3 text-slate-400" />
+                      <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
                     </a>
                   )}
                 </div>
+                
+                {/* Next session progression pointer */}
+                {isSessionFullyDone && nextSession && (
+                  <div className="pt-4 mt-4 border-t border-slate-100">
+                    <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-slate-900 block mb-2">Up Next in Sequence</span>
+                    <Link
+                      href={`/learning/session/${nextSession.id}`}
+                      className="p-3 rounded-lg border border-slate-200 hover:border-burgundy/40 bg-slate-50 hover:bg-white transition-all flex items-center justify-between group"
+                    >
+                      <div className="truncate pr-2">
+                        <span className="font-mono text-[10px] uppercase font-bold text-burgundy block">
+                          Session {nextSession.sessionNumber}
+                        </span>
+                        <span className="font-serif text-sm font-semibold text-slate-800 group-hover:text-burgundy truncate block">
+                          {nextSession.title}
+                        </span>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-burgundy shrink-0" />
+                    </Link>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
-
-        {/* Concept Check Quiz Modal */}
-        {quiz && (
-          <QuizModal
-            quiz={quiz}
-            isOpen={isQuizOpen}
-            onClose={() => setIsQuizOpen(false)}
-            onPassed={handleQuizPassed}
-          />
-        )}
       </div>
     </AuthGate>
   );
