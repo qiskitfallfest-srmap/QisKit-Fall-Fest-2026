@@ -22,8 +22,8 @@ export function LearningSidebar() {
   const isHackathon = pathname === '/learning/hackathon';
   const activeChallengeDay = searchParams?.get('challenge');
 
-  // Detect active session from pathname (e.g. /learning/session/session-3)
-  const sessionPathMatch = pathname?.match(/^\/learning\/session\/(.+)$/);
+  // Detect active session from pathname (e.g. /learning/session/session-3 or /learning/session/session-3/quiz)
+  const sessionPathMatch = pathname?.match(/^\/learning\/session\/([^/]+)/);
   const activeSessionId = sessionPathMatch?.[1] || null;
 
   // Determine which day is open in the accordion. If a session or challenge is active, open that day.
@@ -109,9 +109,8 @@ export function LearningSidebar() {
               {isDayOpen && (
                 <div className="mt-1 pl-4 space-y-1">
                   {daySessions.map(session => {
-                    const isActive = pathname === `/learning/session/${session.id}`;
-                    const isQuizActive = isActive && searchParams?.get('quiz') === 'true';
-                    const isJustSessionActive = isActive && !isQuizActive;
+                    const isJustSessionActive = pathname === `/learning/session/${session.id}`;
+                    const isQuizActive = pathname === `/learning/session/${session.id}/quiz`;
 
                     return (
                       <div key={session.id} className="flex flex-col mb-1">
@@ -129,7 +128,7 @@ export function LearningSidebar() {
                         </Link>
                         
                         <Link
-                          href={`/learning/session/${session.id}?quiz=true`}
+                          href={`/learning/session/${session.id}/quiz`}
                           className={clsx(
                             'flex items-center gap-2.5 px-3 py-1.5 ml-4 mt-0.5 rounded-md text-xs transition-colors',
                             isQuizActive

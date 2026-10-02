@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { AuthGate } from '@/components/learning/AuthGate';
-import { QuizModal } from '@/components/learning/QuizModal';
 import { CURRICULUM_SESSIONS } from '@/data/learning/curriculum';
 import { SESSION_QUIZZES } from '@/data/learning/quizzes';
 import {
@@ -29,7 +28,6 @@ export default function SessionPlayerPage() {
   const session = CURRICULUM_SESSIONS.find((s) => s.id === sessionId);
   const quiz = SESSION_QUIZZES[sessionId];
 
-  const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [videoCompleted, setVideoCompleted] = useState(false);
   const [quizPassed, setQuizPassed] = useState(false);
   const [quizScore, setQuizScore] = useState(0);
@@ -39,14 +37,6 @@ export default function SessionPlayerPage() {
   useEffect(() => {
     fetchSessionProgress();
   }, [sessionId]);
-
-  useEffect(() => {
-    if (searchParams.get('quiz') === 'true' && quiz) {
-      setIsQuizOpen(true);
-    } else {
-      setIsQuizOpen(false);
-    }
-  }, [searchParams, quiz]);
 
   async function fetchSessionProgress() {
     try {
@@ -86,13 +76,6 @@ export default function SessionPlayerPage() {
     } finally {
       setIsMarkingVideo(false);
     }
-  }
-
-  function handleQuizPassed(score: number) {
-    setQuizPassed(true);
-    setQuizScore(score);
-    // Also mark video as attended
-    handleMarkVideoCompleted();
   }
 
   if (!session) {
@@ -244,21 +227,21 @@ export default function SessionPlayerPage() {
                       <span className="text-xs font-bold text-emerald-900">Passed Concept Check</span>
                       <span className="text-xs font-mono font-bold text-emerald-800">{quizScore}%</span>
                     </div>
-                    <button
-                      onClick={() => setIsQuizOpen(true)}
+                    <Link
+                      href={`/learning/session/${sessionId}/quiz`}
                       className="text-xs font-semibold text-emerald-800 underline block"
                     >
                       Review Answers or Retake Quiz
-                    </button>
+                    </Link>
                   </div>
                 ) : (
-                  <button
-                    onClick={() => setIsQuizOpen(true)}
+                  <Link
+                    href={`/learning/session/${sessionId}/quiz`}
                     className="w-full px-4 py-2.5 bg-burgundy text-white text-xs font-bold rounded-lg hover:bg-burgundy-deep transition-colors shadow-xs flex items-center justify-center gap-2"
                   >
                     <Award className="w-4 h-4" />
                     Take Session Concept Check
-                  </button>
+                  </Link>
                 )}
 
                 {/* Next session progression pointer */}
@@ -342,8 +325,8 @@ export default function SessionPlayerPage() {
                       className="p-2.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 flex items-center justify-between text-slate-800 font-medium transition-colors"
                     >
                       <span className="flex items-center gap-2">
-                        <FileText className="w-3.5 h-3.5 text-burgundy" />
-                        Lecture Guide & Documentation
+                         <FileText className="w-3.5 h-3.5 text-burgundy" />
+                         Lecture Guide & Documentation
                       </span>
                       <ExternalLink className="w-3 h-3 text-slate-400" />
                     </a>
@@ -368,16 +351,6 @@ export default function SessionPlayerPage() {
             </div>
           </div>
         </div>
-
-        {/* Concept Check Quiz Modal */}
-        {quiz && (
-          <QuizModal
-            quiz={quiz}
-            isOpen={isQuizOpen}
-            onClose={() => setIsQuizOpen(false)}
-            onPassed={handleQuizPassed}
-          />
-        )}
       </div>
     </AuthGate>
   );

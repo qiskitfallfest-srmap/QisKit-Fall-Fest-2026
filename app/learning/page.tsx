@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { AuthGate } from '@/components/learning/AuthGate';
-import { QuizModal } from '@/components/learning/QuizModal';
 import { CertificateModal } from '@/components/learning/CertificateModal';
 import { CURRICULUM_SESSIONS } from '@/data/learning/curriculum';
 import { DAILY_COMPETITIONS } from '@/data/learning/competitions';
@@ -32,7 +32,6 @@ function LearningDashboardContent() {
 
   // Session progress & quiz state
   const [progress, setProgress] = useState<Record<string, any>>({});
-  const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [isMarkingVideo, setIsMarkingVideo] = useState(false);
 
   // Certificate Modal state
@@ -44,18 +43,6 @@ function LearningDashboardContent() {
     fetchProgress();
     fetchSessionUser();
   }, []);
-
-  // Auto-open quiz modal when ?quiz=true is in the URL
-  useEffect(() => {
-    if (quizRequested && sessionId) {
-      const sessionQuiz = SESSION_QUIZZES[sessionId];
-      if (sessionQuiz) {
-        setIsQuizOpen(true);
-      }
-    } else {
-      setIsQuizOpen(false);
-    }
-  }, [quizRequested, sessionId]);
 
   async function fetchSessionUser() {
     try {
@@ -245,17 +232,20 @@ function LearningDashboardContent() {
             <div className="w-px h-4 bg-slate-300 hidden sm:block mx-1"></div>
 
             {sessionProgress.quizPassed ? (
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700">
+              <Link
+                href={`/learning/session/${sessionId}/quiz`}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:underline"
+              >
                 <CheckCircle2 className="w-4 h-4" /> Quiz Passed ({sessionProgress.quizScore}%)
-              </span>
+              </Link>
             ) : (
-              <button
-                onClick={() => setIsQuizOpen(true)}
+              <Link
+                href={`/learning/session/${sessionId}/quiz`}
                 className="px-4 py-2 bg-burgundy text-white text-xs font-bold rounded-lg hover:bg-[#5a1118] transition-colors shadow-sm flex items-center gap-1.5"
               >
                 <Award className="w-4 h-4" />
                 {sessionProgress.videoCompleted ? 'Take Concept Quiz' : 'Concept Quiz'}
-              </button>
+              </Link>
             )}
           </div>
         </div>
@@ -298,18 +288,6 @@ function LearningDashboardContent() {
           </div>
         </div>
 
-        {/* Quiz Modal */}
-        {sessionQuiz && (
-          <QuizModal
-            isOpen={isQuizOpen}
-            onClose={() => {
-              setIsQuizOpen(false);
-              fetchProgress();
-            }}
-            quiz={sessionQuiz}
-            onPassed={(_score: number) => fetchProgress()}
-          />
-        )}
       </div>
     );
   }
