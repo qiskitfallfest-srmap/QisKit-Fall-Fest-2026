@@ -160,7 +160,7 @@ export default function SessionPlayerPage() {
                   )}
                 </div>
 
-                <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#181313] dark:text-[#FAF6F3] tracking-tight">
+                <h1 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
                   {session.title}
                 </h1>
 
