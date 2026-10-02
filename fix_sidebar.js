@@ -3,14 +3,14 @@ let content = fs.readFileSync('components/learning/LearningSidebar.tsx', 'utf-8'
 
 const replacement = `
                   {sessions.map((session) => {
-                    const isSessionActive = activeSessionId === session.id;
-                    const isQuizActive = isSessionActive && searchParams?.get('quiz') === 'true';
-                    const isJustSessionActive = isSessionActive && !isQuizActive;
+                    const isActive = activeSessionId === session.id;
+                    const isQuizActive = isActive && searchParams?.get('quiz') === 'true';
+                    const isJustSessionActive = isActive && !isQuizActive;
 
                     return (
                       <div key={session.id} className="flex flex-col mb-1">
                         <Link
-                          href={\`/learning/session/\${session.id}\`}
+                          href={\`/learning?session=\${session.id}\`}
                           className={clsx(
                             'flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors',
                             isJustSessionActive
@@ -23,7 +23,7 @@ const replacement = `
                         </Link>
                         
                         <Link
-                          href={\`/learning/session/\${session.id}?quiz=true\`}
+                          href={\`/learning?session=\${session.id}&quiz=true\`}
                           className={clsx(
                             'flex items-center gap-2.5 px-3 py-1.5 ml-4 mt-0.5 rounded-md text-xs transition-colors',
                             isQuizActive

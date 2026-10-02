@@ -136,7 +136,7 @@ export function Navbar() {
       }}
     >
       <div className={clsx(
-        "mx-auto flex h-[78px] sm:h-[84px] xl:h-[90px] max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8 xl:px-12",
+        "mx-auto flex h-[78px] sm:h-[84px] xl:h-[90px] max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-12",
         pathname?.startsWith('/learning') && "md:pl-[312px] lg:pl-[320px] xl:pl-[336px]"
       )}>
         
