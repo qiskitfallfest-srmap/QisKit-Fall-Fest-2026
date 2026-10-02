@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import useSWR from 'swr';
 import Link from 'next/link';
 import { AuthGate } from '@/components/learning/AuthGate';
 import { TeammateInput } from '@/components/learning/TeammateInput';
@@ -32,9 +33,18 @@ const VERTICALS: VerticalType[] = [
 
 export default function HackathonWorkspacePage() {
   const [sessionUser, setSessionUser] = useState<any>(null);
-  const [team, setTeam] = useState<any>(null);
-  const [pendingInvitations, setPendingInvitations] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const fetcher = (url: string) => fetch(url).then((res) => res.json());
+  const { data: teamDataObj, error: teamError, mutate: mutateTeam } = useSWR('/api/hackathon/team', fetcher);
+  
+  const team = teamDataObj?.team || null;
+  const pendingInvitations: any[] = teamDataObj?.pendingInvitations || [];
+  const isLoading = !teamDataObj && !teamError;
+
+  useEffect(() => {
+    if (team?.github_repo_url) {
+      setGithubUrl(team.github_repo_url);
+    }
+  }, [team]);
 
   // Team creation form state
   const [teamName, setTeamName] = useState('');
@@ -55,7 +65,6 @@ export default function HackathonWorkspacePage() {
   const [isReleased, setIsReleased] = useState(true);
 
   useEffect(() => {
-    fetchTeamData();
     checkReleaseStatus();
   }, []);
 
@@ -79,24 +88,7 @@ export default function HackathonWorkspacePage() {
   }
 
   async function fetchTeamData() {
-    try {
-      setIsLoading(true);
-      const res = await fetch('/api/hackathon/team');
-      const data = await res.json();
-      if (data.team) {
-        setTeam(data.team);
-        if (data.team.github_repo_url) {
-          setGithubUrl(data.team.github_repo_url);
-        }
-      } else {
-        setTeam(null);
-      }
-      setPendingInvitations(data.pendingInvitations || []);
-    } catch (err) {
-      console.error('Error fetching team data:', err);
-    } finally {
-      setIsLoading(false);
-    }
+    await mutateTeam();
   }
 
   // Handle vertical selection change -> auto-select first problem statement in that vertical

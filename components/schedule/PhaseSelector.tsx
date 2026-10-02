@@ -25,7 +25,7 @@ export function PhaseSelector({ currentPhase, onPhaseChange, variant = 'cards' }
         >
           {/* Fluid expanding hover circle for segmented button */}
           {currentPhase !== 'online' && (
-            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-[#6C151E] dark:bg-[#A7192A] rounded-full opacity-0 pointer-events-none transition-all duration-[1200ms] ease-[cubic-bezier(0.25,1,0.35,1)] group-hover:w-[260px] group-hover:h-[260px] group-hover:opacity-100" />
+            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-[#6C151E] dark:bg-[#A7192A] rounded-full opacity-0 pointer-events-none transition-all duration-[2400ms] ease-[cubic-bezier(0.25,1,0.35,1)] group-hover:w-[260px] group-hover:h-[260px] group-hover:opacity-100" />
           )}
           <Monitor size={15} className="relative z-[1]" />
           <span className="relative z-[1] transition-transform duration-300 group-hover:translate-x-0.5">Online Phase</span>
@@ -43,7 +43,7 @@ export function PhaseSelector({ currentPhase, onPhaseChange, variant = 'cards' }
         >
           {/* Fluid expanding hover circle for segmented button */}
           {currentPhase !== 'offline' && (
-            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-[#6C151E] dark:bg-[#A7192A] rounded-full opacity-0 pointer-events-none transition-all duration-[1200ms] ease-[cubic-bezier(0.25,1,0.35,1)] group-hover:w-[260px] group-hover:h-[260px] group-hover:opacity-100" />
+            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-[#6C151E] dark:bg-[#A7192A] rounded-full opacity-0 pointer-events-none transition-all duration-[2400ms] ease-[cubic-bezier(0.25,1,0.35,1)] group-hover:w-[260px] group-hover:h-[260px] group-hover:opacity-100" />
           )}
           <MapPin size={15} className="relative z-[1]" />
           <span className="relative z-[1] transition-transform duration-300 group-hover:translate-x-0.5">Offline Phase</span>
@@ -67,7 +67,7 @@ export function PhaseSelector({ currentPhase, onPhaseChange, variant = 'cards' }
       >
         {/* Fluid Expanding Hover Circle */}
         <span
-          className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full opacity-0 pointer-events-none transition-all duration-[1350ms] ease-[cubic-bezier(0.25,1,0.35,1)] group-hover:w-[750px] group-hover:h-[750px] group-hover:opacity-100 ${
+          className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full opacity-0 pointer-events-none transition-all duration-[2600ms] ease-[cubic-bezier(0.25,1,0.35,1)] group-hover:w-[750px] group-hover:h-[750px] group-hover:opacity-100 ${
             currentPhase === 'online'
               ? 'bg-[#3A0B10]'
               : 'bg-[#6C151E] dark:bg-[#A7192A]'
@@ -151,7 +151,7 @@ export function PhaseSelector({ currentPhase, onPhaseChange, variant = 'cards' }
       >
         {/* Fluid Expanding Hover Circle */}
         <span
-          className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full opacity-0 pointer-events-none transition-all duration-[1350ms] ease-[cubic-bezier(0.25,1,0.35,1)] group-hover:w-[750px] group-hover:h-[750px] group-hover:opacity-100 ${
+          className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full opacity-0 pointer-events-none transition-all duration-[2600ms] ease-[cubic-bezier(0.25,1,0.35,1)] group-hover:w-[750px] group-hover:h-[750px] group-hover:opacity-100 ${
             currentPhase === 'offline'
               ? 'bg-[#3A0B10]'
               : 'bg-[#6C151E] dark:bg-[#A7192A]'

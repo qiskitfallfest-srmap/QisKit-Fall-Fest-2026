@@ -40,6 +40,16 @@ export function SmoothScrollProvider({ children }: SmoothScrollProviderProps) {
   const lenisRef = React.useRef<Lenis | null>(null);
 
   React.useEffect(() => {
+    // Disable native browser scroll restoration so page reloads stay at the hero section
+    if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+
+    // Force initial scroll position to top (0, 0) on page load/refresh
+    if (typeof window !== 'undefined') {
+      window.scrollTo(0, 0);
+    }
+
     // Respect reduced motion preference
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     if (mediaQuery.matches) {
@@ -59,6 +69,9 @@ export function SmoothScrollProvider({ children }: SmoothScrollProviderProps) {
 
     lenisRef.current = lenis;
     setLenisInstance(lenis);
+
+    // Reset lenis scroll position to top immediately on mount
+    lenis.scrollTo(0, { immediate: true });
 
     let rafId: number;
     const raf = (time: number) => {
@@ -101,9 +114,12 @@ export function SmoothScrollProvider({ children }: SmoothScrollProviderProps) {
 
   // Reset scroll to top on route change
   React.useEffect(() => {
+    if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
     if (lenisRef.current) {
       lenisRef.current.scrollTo(0, { immediate: true });
-    } else {
+    } else if (typeof window !== 'undefined') {
       window.scrollTo(0, 0);
     }
   }, [pathname]);

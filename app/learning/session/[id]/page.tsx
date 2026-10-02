@@ -34,11 +34,7 @@ export default function SessionPlayerPage() {
   const [isLoadingProgress, setIsLoadingProgress] = useState(true);
   const [isMarkingVideo, setIsMarkingVideo] = useState(false);
 
-  useEffect(() => {
-    fetchSessionProgress();
-  }, [sessionId]);
-
-  async function fetchSessionProgress() {
+  const fetchSessionProgress = React.useCallback(async () => {
     try {
       setIsLoadingProgress(true);
       const res = await fetch('/api/learning/progress');
@@ -54,7 +50,11 @@ export default function SessionPlayerPage() {
     } finally {
       setIsLoadingProgress(false);
     }
-  }
+  }, [sessionId]);
+
+  useEffect(() => {
+    fetchSessionProgress();
+  }, [fetchSessionProgress]);
 
   async function handleMarkVideoCompleted() {
     try {

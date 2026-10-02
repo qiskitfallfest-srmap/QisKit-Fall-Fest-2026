@@ -46,12 +46,7 @@ export default function AdminConsolePage() {
   const [stats, setStats] = useState<any>({});
   const [isUpdatingConfig, setIsUpdatingConfig] = useState(false);
 
-  useEffect(() => {
-    fetchWhitelist();
-    fetchConfig();
-  }, []);
-
-  async function fetchWhitelist() {
+  const fetchWhitelist = React.useCallback(async () => {
     try {
       setIsLoadingEmails(true);
       const res = await fetch(`/api/admin/emails?search=${encodeURIComponent(searchQuery)}`);
@@ -64,9 +59,9 @@ export default function AdminConsolePage() {
     } finally {
       setIsLoadingEmails(false);
     }
-  }
+  }, [searchQuery]);
 
-  async function fetchConfig() {
+  const fetchConfig = React.useCallback(async () => {
     try {
       const res = await fetch('/api/admin/config');
       const data = await res.json();
@@ -79,7 +74,12 @@ export default function AdminConsolePage() {
     } catch (e) {
       console.error('Error fetching config:', e);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    fetchWhitelist();
+    fetchConfig();
+  }, [fetchWhitelist, fetchConfig]);
 
   // Add single email
   async function handleAddSingle(e: React.FormEvent) {

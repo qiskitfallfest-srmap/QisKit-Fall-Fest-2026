@@ -195,6 +195,7 @@ export default async function VerifyCertificatePage({ params }: PageProps) {
           </div>
 
           <div className="rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shadow-inner">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={cert.certificate_url}
               alt={`Certificate for ${cert.recipient_name}`}

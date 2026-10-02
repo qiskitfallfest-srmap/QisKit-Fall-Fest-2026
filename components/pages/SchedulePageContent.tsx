@@ -10,23 +10,34 @@ import { SchedulePhase } from '@/data/schedule.types';
 export default function SchedulePageContent() {
   const [currentPhase, setCurrentPhase] = useState<SchedulePhase>('online');
 
-  // Restore phase from URL hash on mount or hash change if present
+  // Restore phase from URL hash on mount or hash change.
+  // A valid #online or #offline hash takes precedence and scrolls to Explore Schedule.
+  // Otherwise, preserves official reload behavior (keeping initial load at top in Hero section).
   React.useEffect(() => {
-    const handleHash = () => {
-      if (typeof window !== 'undefined') {
-        const hash = window.location.hash.toLowerCase().replace('#', '');
-        if (hash === 'offline' || hash === 'online') {
-          setCurrentPhase(hash as SchedulePhase);
-          setTimeout(() => {
-            scrollToExploreSchedule();
-          }, 200);
-        }
+    if (typeof window === 'undefined') return;
+
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+
+    const handleHash = (isInitialLoad = false) => {
+      const hash = window.location.hash.toLowerCase().replace('#', '');
+      if (hash === 'offline' || hash === 'online') {
+        setCurrentPhase(hash as SchedulePhase);
+        setTimeout(() => {
+          scrollToExploreSchedule();
+        }, 200);
+      } else if (isInitialLoad) {
+        // Force page to stay at top in Hero section on reload when no phase hash is present
+        window.scrollTo(0, 0);
       }
     };
 
-    handleHash();
-    window.addEventListener('hashchange', handleHash);
-    return () => window.removeEventListener('hashchange', handleHash);
+    handleHash(true);
+
+    const onHashChange = () => handleHash(false);
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
   const scrollToExploreSchedule = () => {

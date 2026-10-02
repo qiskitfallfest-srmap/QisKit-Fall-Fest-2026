@@ -163,6 +163,8 @@ export async function POST(request: NextRequest) {
     const cleanedMembers: Array<{ email: string; fullName: string }> = [];
     const seenEmails = new Set<string>([session.email.toLowerCase()]);
 
+    // First pass: deduplication and basic structure
+    const validMembers: Array<{ email: string; fullName: string }> = [];
     for (const m of rawMembers) {
       const email = m.email?.trim().toLowerCase();
       const fullName = m.fullName?.trim() || email.split('@')[0];
@@ -176,36 +178,42 @@ export async function POST(request: NextRequest) {
         );
       }
       seenEmails.add(email);
+      validMembers.push({ email, fullName });
+    }
 
-      // Verify whitelist
-      const whitelistCheck = await isEmailWhitelisted(email);
-      if (!whitelistCheck.whitelisted) {
-        return NextResponse.json(
-          {
-            error: `Teammate ${email} is not authorized on the platform whitelist.`,
-          },
-          { status: 400 }
-        );
+    // Second pass: Concurrent Supabase/Redis checks using Promise.all
+    const validationResults = await Promise.all(
+      validMembers.map(async (member) => {
+        // Verify whitelist
+        const whitelistCheck = await isEmailWhitelisted(member.email);
+        if (!whitelistCheck.whitelisted) {
+          return { error: `Teammate ${member.email} is not authorized on the platform whitelist.` };
+        }
+
+        // Verify not in another team
+        const { data: activeTeam } = await supabase
+          .from('team_members')
+          .select('team_id')
+          .ilike('email', member.email)
+          .neq('status', 'declined')
+          .maybeSingle();
+
+        if (activeTeam) {
+          return { error: `Teammate ${member.email} is already registered in another team.` };
+        }
+
+        return { success: true, member };
+      })
+    );
+
+    // Return first error if any failed
+    for (const result of validationResults) {
+      if (result.error) {
+        return NextResponse.json({ error: result.error }, { status: 400 });
       }
-
-      // Verify not in another team
-      const { data: activeTeam } = await supabase
-        .from('team_members')
-        .select('team_id')
-        .ilike('email', email)
-        .neq('status', 'declined')
-        .maybeSingle();
-
-      if (activeTeam) {
-        return NextResponse.json(
-          {
-            error: `Teammate ${email} is already registered in another team.`,
-          },
-          { status: 400 }
-        );
+      if (result.member) {
+        cleanedMembers.push(result.member);
       }
-
-      cleanedMembers.push({ email, fullName });
     }
 
     // 4. Create the team in hackathon_teams
