@@ -11,6 +11,7 @@ import {
   generateOrganizationSchema,
   generateEventSeriesSchema,
 } from '@/config/seo';
+import { OAuthRedirectHandler } from '@/components/shared/OAuthRedirectHandler';
 import './globals.css'; // Global styles
 
 export const metadata: Metadata = {
@@ -97,6 +98,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="antialiased selection:bg-burgundy selection:text-ivory" suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <SmoothScrollProvider>
+            <OAuthRedirectHandler />
             <CustomCursor />
             <LoadScreen />
             <Navbar />

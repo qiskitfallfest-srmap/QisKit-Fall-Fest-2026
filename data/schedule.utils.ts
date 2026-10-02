@@ -11,10 +11,10 @@ export function getPhaseInfo(phase: SchedulePhase): SchedulePhaseInfo {
     return {
       id: 'online',
       title: 'Online Phase',
-      dateRange: '5–9 October 2026',
+      dateRange: '8–10 October 2026',
       shortDescription: 'Virtual foundations and advanced quantum computing masterclasses.',
       locationText: 'Online (Virtual)',
-      daysCount: 5,
+      daysCount: 3,
     };
   }
   return {

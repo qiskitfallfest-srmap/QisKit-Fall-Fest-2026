@@ -28,6 +28,7 @@ const NAV_LINKS = [
   { label: 'Schedule', href: '/schedule' },
   { label: 'Venues', href: '/venues' },
   { label: 'Team', href: '/team' },
+  { label: 'Learning', href: '/learning' },
   { label: 'FAQs', href: '/faqs' },
 ];
 
@@ -310,6 +311,13 @@ export function Navbar() {
     }
     return {
       background: 'transparent',
+      backgroundColor: 'transparent',
+      backgroundImage: 'none',
+      border: '0',
+      borderTop: '0',
+      borderBottom: '0',
+      boxShadow: 'none',
+      outline: '0',
       backdropFilter: 'none',
       WebkitBackdropFilter: 'none',
     };
@@ -376,8 +384,10 @@ export function Navbar() {
       ref={headerRef}
       style={headerStyles}
       className={clsx(
-        "sticky top-0 z-50 w-full border-none shadow-none pointer-events-none transition-[padding,background] duration-350 ease-[cubic-bezier(0.22,1,0.36,1)]",
-        isFloating ? "px-2 sm:px-4 lg:px-6 xl:px-8 pt-1 sm:pt-1.5" : "px-0 pt-0"
+        "sticky top-0 z-50 w-full pointer-events-none transition-[padding] duration-350 ease-[cubic-bezier(0.22,1,0.36,1)]",
+        isFloating
+          ? "px-2 sm:px-4 lg:px-6 xl:px-8 pt-1 sm:pt-1.5 !bg-transparent !border-0 !border-none !border-transparent !shadow-none !outline-none before:!hidden after:!hidden before:!content-none after:!content-none"
+          : "px-0 pt-0 !border-0 !shadow-none !outline-none"
       )}
     >
       {/* =========================================================
@@ -415,7 +425,7 @@ export function Navbar() {
             </div>
 
             {/* Event Branding Typography */}
-            <div className="flex flex-col justify-center leading-none mt-0.5 select-none">
+            <div className="flex flex-col justify-center leading-none mt-0.5 select-none whitespace-nowrap shrink-0">
               <span className="text-[13px] sm:text-[14px] xl:text-[13px] 2xl:text-sm font-semibold tracking-[0.14em] text-[var(--brand-text)]">
                 QISKIT FALL FEST
               </span>
@@ -455,7 +465,7 @@ export function Navbar() {
 
         {/* RIGHT BLOCK: Tactile Theme Toggle + Arrow-Fill Join CTA + SRM Logo */}
         <div className="hidden xl:flex items-center gap-4 2xl:gap-6 shrink-0">
-          
+
           {/* Theme Toggle (Preserved dimensions & functionality) */}
           <button
             type="button"
@@ -473,7 +483,7 @@ export function Navbar() {
                   : "translate-x-0 bg-white border border-black/[0.05] shadow-[0_2px_6px_rgba(0,0,0,0.10)]"
               )}
             />
-            
+
             {/* Icon Alignment Track */}
             <div className="relative z-10 flex w-full items-center justify-between px-[6px]">
               <Sun
@@ -511,30 +521,30 @@ export function Navbar() {
               borderColor: isJoinHovered
                 ? 'transparent'
                 : (activeTheme === 'dark' ? 'rgba(239,116,129,0.30)' : 'rgba(108,21,30,0.55)'),
-              transition: 'border-color 180ms cubic-bezier(0.22,1,0.36,1), background-color 200ms cubic-bezier(0.22,1,0.36,1), color 200ms cubic-bezier(0.22,1,0.36,1), box-shadow 200ms cubic-bezier(0.22,1,0.36,1), transform 200ms cubic-bezier(0.22,1,0.36,1)',
+              transition: 'border-color 250ms cubic-bezier(0.22,1,0.36,1), background-color 280ms cubic-bezier(0.22,1,0.36,1), color 280ms cubic-bezier(0.22,1,0.36,1), box-shadow 250ms cubic-bezier(0.22,1,0.36,1), transform 250ms cubic-bezier(0.22,1,0.36,1)',
             }}
             className="group relative flex h-[44px] min-w-[110px] items-center justify-between overflow-hidden rounded-[8px] pl-5 pr-2 text-[14px] font-semibold tracking-[0.01em] outline-none border bg-[#7A111B] text-[#FFF9F6] shadow-[0_4px_14px_rgba(108,21,30,0.12)] active:scale-[0.985] focus-visible:ring-2 focus-visible:ring-burgundy focus-visible:ring-offset-2 dark:bg-[#6C151E] dark:text-[#FFF5F3] dark:shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
           >
-            {/* Expanding Chamber: strictly clipped inside button */}
+            {/* Expanding Chamber: strictly clipped inside button (380ms expansion / 320ms retraction) */}
             <span
               aria-hidden="true"
-              className="pointer-events-none absolute right-[8px] top-1/2 -translate-y-1/2 h-[28px] w-[28px] rounded-full bg-[#FFF7F2] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[6.5] -z-0"
+              className="pointer-events-none absolute right-[8px] top-1/2 -translate-y-1/2 h-[28px] w-[28px] rounded-full bg-[#FFF7F2] transition-transform duration-[320ms] group-hover:duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[6.5] -z-0"
             />
 
-            {/* CTA Label */}
-            <span className="relative z-10 transition-colors duration-250 ease-out group-hover:text-[#7A111B] dark:group-hover:text-[#7A111B]">
+            {/* CTA Label (280ms transition) */}
+            <span className="relative z-10 transition-colors duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:text-[#7A111B] dark:group-hover:text-[#7A111B]">
               Join
             </span>
 
             {/* Circular Arrow Chamber & Icon (seamlessly merges into expanding fill) */}
             <span
               aria-hidden="true"
-              className="relative z-10 flex h-[28px] w-[28px] items-center justify-center rounded-full bg-[#FFF7F2] text-[#7A111B] dark:text-[#7A111B] border-0 border-transparent shadow-none transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]"
+              className="relative z-10 flex h-[28px] w-[28px] items-center justify-center rounded-full bg-[#FFF7F2] text-[#7A111B] dark:text-[#7A111B] border-0 border-transparent shadow-none"
             >
               <ArrowRight
                 size={15}
                 strokeWidth={2.2}
-                className="transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-[2px]"
+                className="transition-transform duration-[300ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-[2px]"
               />
             </span>
           </a>
@@ -564,7 +574,7 @@ export function Navbar() {
             <span className="hidden dark:inline"><Moon size={20} /></span>
             <span className="inline dark:hidden"><Sun size={20} /></span>
           </button>
-          
+
           {/* Mobile Menu / Close Trigger */}
           <button
             type="button"
@@ -635,22 +645,26 @@ export function Navbar() {
                   borderColor: isMobileJoinHovered
                     ? 'transparent'
                     : (activeTheme === 'dark' ? 'rgba(239,116,129,0.30)' : 'rgba(108,21,30,0.55)'),
-                  transition: 'border-color 180ms cubic-bezier(0.22,1,0.36,1), background-color 200ms cubic-bezier(0.22,1,0.36,1), color 200ms cubic-bezier(0.22,1,0.36,1), box-shadow 200ms cubic-bezier(0.22,1,0.36,1), transform 200ms cubic-bezier(0.22,1,0.36,1)',
+                  transition: 'border-color 250ms cubic-bezier(0.22,1,0.36,1), background-color 280ms cubic-bezier(0.22,1,0.36,1), color 280ms cubic-bezier(0.22,1,0.36,1), box-shadow 250ms cubic-bezier(0.22,1,0.36,1), transform 250ms cubic-bezier(0.22,1,0.36,1)',
                 }}
                 className="group relative flex h-12 w-full items-center justify-between overflow-hidden rounded-[8px] pl-6 pr-3 text-[15px] sm:text-base font-semibold tracking-[0.01em] outline-none border bg-[#7A111B] text-[#FFF9F6] shadow-[0_4px_14px_rgba(108,21,30,0.12)] active:scale-[0.985] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-burgundy dark:bg-[#6C151E] dark:text-[#FFF5F3]"
               >
                 <span
                   aria-hidden="true"
-                  className="pointer-events-none absolute right-[10px] top-1/2 -translate-y-1/2 h-[32px] w-[32px] rounded-full bg-[#FFF7F2] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[16] -z-0"
+                  className="pointer-events-none absolute right-[10px] top-1/2 -translate-y-1/2 h-[32px] w-[32px] rounded-full bg-[#FFF7F2] transition-transform duration-[320ms] group-hover:duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[16] -z-0"
                 />
-                <span className="relative z-10 transition-colors duration-250 group-hover:text-[#7A111B] dark:group-hover:text-[#7A111B]">
+                <span className="relative z-10 transition-colors duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:text-[#7A111B] dark:group-hover:text-[#7A111B]">
                   Join Festival
                 </span>
                 <span
                   aria-hidden="true"
                   className="relative z-10 flex h-[32px] w-[32px] items-center justify-center rounded-full bg-[#FFF7F2] text-[#7A111B] dark:text-[#7A111B] border-0 border-transparent shadow-none"
                 >
-                  <ArrowRight size={17} strokeWidth={2.2} className="transition-transform duration-200 group-hover:translate-x-[2px]" />
+                  <ArrowRight
+                    size={17}
+                    strokeWidth={2.2}
+                    className="transition-transform duration-[300ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-[2px]"
+                  />
                 </span>
               </a>
             </div>

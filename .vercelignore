@@ -26,6 +26,7 @@ public/images/venues/drone-overview.png
 public/images/venues/satellite-reference.png
 
 # Development and agent tooling / scratch
+archive/
 scratch/
 tools/
 workflows/

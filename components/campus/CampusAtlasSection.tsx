@@ -41,13 +41,13 @@ export function CampusAtlasSection() {
       id="interactive-atlas"
       aria-label="Campus Atlas & Venues"
       className="
-        relative isolate w-full
+        relative w-full
         bg-[#F7F5F0] dark:bg-[#120709]
         py-8 sm:py-12 lg:py-16
         transition-colors duration-300
       "
     >
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 space-y-6 sm:space-y-8">
+      <div className="w-full max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 space-y-6 sm:space-y-8">
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div className="space-y-2 max-w-2xl">

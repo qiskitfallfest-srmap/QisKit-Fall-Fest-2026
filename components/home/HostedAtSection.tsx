@@ -12,8 +12,6 @@ export function HostedAtSection() {
       className="
         relative isolate w-full overflow-hidden
         bg-[#F5F0EA] dark:bg-[#0D0909]
-        min-h-[calc(100svh-var(--navbar-height,80px))]
-        flex flex-col justify-center
         transition-colors duration-300
       "
     >

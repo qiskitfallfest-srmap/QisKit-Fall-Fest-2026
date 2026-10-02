@@ -95,7 +95,7 @@ All contributors and AI agents working on this platform must follow the guidelin
 2. **Anti-Slop Standards:** Strictly zero decorative emojis in UI, code, or commits. Clean, modern light theme by default (`#ffffff` / `#f8fafc`, subtle `#e2e8f0` borders, `#0f172a` text).
 3. **External Registration CTA:** All registration CTAs point exclusively to the official Unstop portal once live. Internal `/register` or `/join` routes are strictly prohibited.
 4. **Data Centralization:** Event data, schedules, and locations reside in `data/`. Do not hardcode static event data inside UI render components.
-5. **Continuous Logging:** Record all significant updates in the Chronological Agent Log in `PROJECT_LEARNINGS.md`.
+5. **Continuous Logging:** Record all significant updates in the Chronological Agent Log in `PROJECT_LEARNINGS.md`. 
 
 ---
 

@@ -124,7 +124,6 @@ export function HostAndEcosystemSection() {
           w-full max-w-[1920px] mx-auto
           px-5 sm:px-[34px] md:px-[52px] lg:px-[64px] xl:px-[76px] 2xl:px-[96px]
           py-[38px] sm:py-[46px] lg:py-[52px] 2xl:py-[58px]
-          lg:min-h-[calc(100svh-var(--navbar-height))] lg:flex lg:flex-col lg:justify-center
         "
       >
         {/* =========================================================

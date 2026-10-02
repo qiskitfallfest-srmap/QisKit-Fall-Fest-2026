@@ -1,0 +1,275 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from '@/lib/auth';
+import { supabase } from '@/lib/supabase';
+import {
+  isEmailWhitelisted,
+  invalidateEmailCache,
+  getHackathonTeamCached,
+  invalidateHackathonTeamCache,
+} from '@/lib/redis';
+
+export async function GET() {
+  const session = await getServerSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const data = await getHackathonTeamCached(session.email, async () => {
+      // 1. Check if user is a member of an active team (leader or accepted member)
+      const { data: memberEntry } = await supabase
+        .from('team_members')
+        .select('team_id, role, status')
+        .ilike('email', session.email)
+        .neq('status', 'declined')
+        .maybeSingle();
+
+      let team = null;
+      let pendingInvitations: any[] = [];
+
+      if (memberEntry) {
+        // Fetch full team with all members
+        const { data: teamData } = await supabase
+          .from('hackathon_teams')
+          .select('*')
+          .eq('id', memberEntry.team_id)
+          .maybeSingle();
+
+        if (teamData) {
+          const { data: allMembers } = await supabase
+            .from('team_members')
+            .select('*')
+            .eq('team_id', memberEntry.team_id)
+            .order('role', { ascending: true }); // leader first
+
+          team = {
+            ...teamData,
+            currentUserRole: memberEntry.role,
+            currentUserStatus: memberEntry.status,
+            members: allMembers || [],
+          };
+        }
+      }
+
+      // 2. Also check if user has any pending invitations from OTHER teams
+      const { data: invites } = await supabase
+        .from('team_members')
+        .select('id, team_id, invited_at, hackathon_teams(name, vertical, problem_statement_id, lead_name, lead_email)')
+        .ilike('email', session.email)
+        .eq('status', 'invited');
+
+      if (invites && invites.length > 0) {
+        pendingInvitations = invites.map((inv) => ({
+          invitationId: inv.id,
+          teamId: inv.team_id,
+          invitedAt: inv.invited_at,
+          // @ts-expect-error join
+          teamName: inv.hackathon_teams?.name,
+          // @ts-expect-error join
+          vertical: inv.hackathon_teams?.vertical,
+          // @ts-expect-error join
+          problemStatementId: inv.hackathon_teams?.problem_statement_id,
+          // @ts-expect-error join
+          leadName: inv.hackathon_teams?.lead_name,
+          // @ts-expect-error join
+          leadEmail: inv.hackathon_teams?.lead_email,
+        }));
+      }
+
+      return {
+        team,
+        pendingInvitations,
+      };
+    });
+
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error('Error fetching hackathon team:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch team data' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  const session = await getServerSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const body = await request.json();
+    const { teamName, vertical, problemStatementId, teammates } = body;
+
+    const trimmedTeamName = teamName?.trim();
+    if (!trimmedTeamName || trimmedTeamName.length < 3) {
+      return NextResponse.json(
+        { error: 'Team name must be at least 3 characters long.' },
+        { status: 400 }
+      );
+    }
+
+    if (!vertical || !problemStatementId) {
+      return NextResponse.json(
+        { error: 'Vertical and Problem Statement selection are required.' },
+        { status: 400 }
+      );
+    }
+
+    // 1. Check if user is already in a team
+    const { data: existingUserMember } = await supabase
+      .from('team_members')
+      .select('team_id, status')
+      .ilike('email', session.email)
+      .neq('status', 'declined')
+      .maybeSingle();
+
+    if (existingUserMember) {
+      return NextResponse.json(
+        { error: 'You are already registered in a team.' },
+        { status: 400 }
+      );
+    }
+
+    // 2. Check if team name already exists
+    const { data: existingTeam } = await supabase
+      .from('hackathon_teams')
+      .select('id')
+      .ilike('name', trimmedTeamName)
+      .maybeSingle();
+
+    if (existingTeam) {
+      return NextResponse.json(
+        { error: `The team name "${trimmedTeamName}" is already taken. Please pick another name.` },
+        { status: 400 }
+      );
+    }
+
+    // 3. Validate teammates list (1 to 5 additional members, total team size 1 to 6)
+    const rawMembers: Array<{ email: string; fullName: string }> = Array.isArray(
+      teammates
+    )
+      ? teammates
+      : [];
+
+    if (rawMembers.length > 5) {
+      return NextResponse.json(
+        { error: 'A team can have a maximum of 6 members (1 leader + 5 members).' },
+        { status: 400 }
+      );
+    }
+
+    const cleanedMembers: Array<{ email: string; fullName: string }> = [];
+    const seenEmails = new Set<string>([session.email.toLowerCase()]);
+
+    for (const m of rawMembers) {
+      const email = m.email?.trim().toLowerCase();
+      const fullName = m.fullName?.trim() || email.split('@')[0];
+
+      if (!email || !email.includes('@')) continue;
+
+      if (seenEmails.has(email)) {
+        return NextResponse.json(
+          { error: `Duplicate email detected in team roster: ${email}` },
+          { status: 400 }
+        );
+      }
+      seenEmails.add(email);
+
+      // Verify whitelist
+      const whitelistCheck = await isEmailWhitelisted(email);
+      if (!whitelistCheck.whitelisted) {
+        return NextResponse.json(
+          {
+            error: `Teammate ${email} is not authorized on the platform whitelist.`,
+          },
+          { status: 400 }
+        );
+      }
+
+      // Verify not in another team
+      const { data: activeTeam } = await supabase
+        .from('team_members')
+        .select('team_id')
+        .ilike('email', email)
+        .neq('status', 'declined')
+        .maybeSingle();
+
+      if (activeTeam) {
+        return NextResponse.json(
+          {
+            error: `Teammate ${email} is already registered in another team.`,
+          },
+          { status: 400 }
+        );
+      }
+
+      cleanedMembers.push({ email, fullName });
+    }
+
+    // 4. Create the team in hackathon_teams
+    const { data: newTeam, error: teamInsertError } = await supabase
+      .from('hackathon_teams')
+      .insert({
+        name: trimmedTeamName,
+        lead_email: session.email,
+        lead_name: session.fullName,
+        vertical,
+        problem_statement_id: problemStatementId,
+      })
+      .select()
+      .single();
+
+    if (teamInsertError || !newTeam) {
+      throw teamInsertError || new Error('Failed to create team record');
+    }
+
+    // 5. Insert leader into team_members
+    const membersToInsert = [
+      {
+        team_id: newTeam.id,
+        email: session.email,
+        full_name: session.fullName,
+        role: 'leader',
+        status: 'accepted',
+        responded_at: new Date().toISOString(),
+      },
+      ...cleanedMembers.map((m) => ({
+        team_id: newTeam.id,
+        email: m.email,
+        full_name: m.fullName,
+        role: 'member',
+        status: 'invited',
+      })),
+    ];
+
+    const { error: membersError } = await supabase
+      .from('team_members')
+      .insert(membersToInsert);
+
+    if (membersError) {
+      // rollback team
+      await supabase.from('hackathon_teams').delete().eq('id', newTeam.id);
+      throw membersError;
+    }
+
+    // Invalidate caches
+    await invalidateEmailCache(session.email);
+    for (const m of cleanedMembers) {
+      await invalidateEmailCache(m.email);
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Team successfully created and invitations dispatched.',
+      team: newTeam,
+    });
+  } catch (error: any) {
+    console.error('Error creating team:', error);
+    return NextResponse.json(
+      { error: error?.message || 'Failed to create team' },
+      { status: 500 }
+    );
+  }
+}

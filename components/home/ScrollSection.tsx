@@ -17,7 +17,7 @@ export function ScrollSection({
   num,
   children,
   className = '',
-  fitContent = false,
+  fitContent = true,
   ...props
 }: ScrollSectionProps) {
   return (
@@ -32,7 +32,7 @@ export function ScrollSection({
       className={`
         w-full relative
         ${fitContent ? 'min-h-0' : 'min-h-[calc(100svh-var(--navbar-height,80px))]'}
-        flex flex-col justify-center
+        flex flex-col
         overflow-x-hidden
         transition-colors duration-300
         ${className}
