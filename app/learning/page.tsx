@@ -228,6 +228,22 @@ function LearningDashboardContent() {
                 <ExternalLink className="w-4 h-4" /> Slides
               </a>
             )}
+
+            <div className="w-px h-4 bg-slate-300 hidden sm:block mx-1"></div>
+
+            {sessionProgress.quizPassed ? (
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700">
+                <CheckCircle2 className="w-4 h-4" /> Quiz Passed ({sessionProgress.quizScore}%)
+              </span>
+            ) : (
+              <button
+                onClick={() => setIsQuizOpen(true)}
+                className="px-4 py-2 bg-burgundy text-white text-xs font-bold rounded-lg hover:bg-[#5a1118] transition-colors shadow-sm flex items-center gap-1.5"
+              >
+                <Award className="w-4 h-4" />
+                {sessionProgress.videoCompleted ? 'Take Concept Quiz' : 'Concept Quiz'}
+              </button>
+            )}
           </div>
         </div>
 

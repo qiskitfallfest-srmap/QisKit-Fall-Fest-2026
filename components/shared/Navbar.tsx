@@ -136,8 +136,7 @@ export function Navbar() {
       }}
     >
       <div className={clsx(
-        "mx-auto flex h-[78px] sm:h-[84px] xl:h-[90px] max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-12",
-        pathname?.startsWith('/learning') && "md:pl-[312px] lg:pl-[320px] xl:pl-[336px]"
+        "mx-auto flex h-[78px] sm:h-[84px] xl:h-[90px] max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-12"
       )}>
         
         {/* LEFT BLOCK: Qiskit Mark + Event Branding */}
