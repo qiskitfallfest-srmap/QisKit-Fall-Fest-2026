@@ -12,6 +12,9 @@ import {
   generateEventSeriesSchema,
 } from '@/config/seo';
 import { OAuthRedirectHandler } from '@/components/shared/OAuthRedirectHandler';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
+import { AnalyticsProvider } from '@/components/shared/AnalyticsProvider';
 import './globals.css'; // Global styles
 
 export const metadata: Metadata = {
@@ -98,11 +101,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="antialiased selection:bg-burgundy selection:text-ivory" suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <SmoothScrollProvider>
+            <AnalyticsProvider />
             <OAuthRedirectHandler />
             <CustomCursor />
             <LoadScreen />
             <Navbar />
             {children}
+            <Analytics />
+            <SpeedInsights />
           </SmoothScrollProvider>
         </ThemeProvider>
       </body>

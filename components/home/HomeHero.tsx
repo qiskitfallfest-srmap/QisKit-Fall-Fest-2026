@@ -1,8 +1,11 @@
+'use client';
+
 import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, CalendarDays, MapPin, Play } from 'lucide-react';
 import { REGISTRATION_URL } from '@/lib/constants';
+import { trackUnstopClick, trackEvent } from '@/lib/analytics';
 import { ResponsivePicture } from '@/components/shared/ResponsivePicture';
 import styles from './HomeHero.module.css';
 
@@ -214,6 +217,7 @@ export function HomeHero() {
               target="_blank"
               rel="noopener noreferrer"
               data-cursor="cta"
+              onClick={() => trackUnstopClick('home_hero')}
               className={`
                 ${styles.registerBtn}
                 group
@@ -274,6 +278,7 @@ export function HomeHero() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Watch Qiskit Fall Fest video"
+              onClick={() => trackEvent('watch_video_click', { url: 'https://youtu.be/EByii89QzVQ' })}
               className={`
                 ${styles.watchVideoBtn}
                 group

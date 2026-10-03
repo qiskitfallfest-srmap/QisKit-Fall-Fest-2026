@@ -3,6 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { trackUnstopClick } from '@/lib/analytics';
 
 export function PlanVisitCTA() {
   return (
@@ -65,6 +66,7 @@ export function PlanVisitCTA() {
             rel="noopener noreferrer"
             data-cursor="cta"
             aria-label="Register Now on Unstop"
+            onClick={() => trackUnstopClick('plan_visit_cta')}
             className="
               w-full sm:w-auto inline-flex items-center justify-center gap-2
               px-7 py-3 rounded-full font-sans text-xs font-semibold tracking-wide

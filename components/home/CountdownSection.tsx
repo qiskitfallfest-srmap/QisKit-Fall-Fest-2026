@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { REGISTRATION_URL } from '@/lib/constants';
+import { trackUnstopClick } from '@/lib/analytics';
 import { ResponsivePicture } from '@/components/shared/ResponsivePicture';
 
 const ONLINE_PHASE_START = new Date('2026-10-08T00:00:00+05:30').getTime();
@@ -190,6 +191,7 @@ export function CountdownSection() {
               href={REGISTRATION_URL}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackUnstopClick('countdown_live')}
               className="
                 inline-flex items-center gap-3 self-start lg:self-center
                 px-6 py-3.5 rounded-[6px]
