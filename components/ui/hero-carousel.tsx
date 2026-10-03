@@ -1,117 +1,211 @@
 'use client';
 /* eslint-disable @next/next/no-img-element */
 
-// A full-bleed editorial hero driven by a filmstrip.
-//
-// Every card shares one top edge. The focused card unfurls to full height while
-// its neighbours stay clipped to half, so the strip reads as a row of cropped
-// heads with one complete portrait standing in the middle of it. Changing the
-// focus re-grades the whole background to that image.
-//
-// Geometry is measured, never hard-coded: one ResizeObserver reads the stage and
-// every size below is a ratio of it, so the same component is pixel-identical in
-// a 600px preview box and on a 4K display.
 import * as React from 'react';
 import {
   AnimatePresence,
-  animate,
   motion,
-  useMotionValue,
   useReducedMotion,
 } from 'motion/react';
-import { ExternalLink } from 'lucide-react';
-
-import { FlowButton } from '@/components/ui/flow-button';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Calendar,
+  Clock,
+  MapPin,
+  User,
+  ArrowRight,
+  Play,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface HeroCarouselItem {
-  /** Stable key; falls back to the index. @default undefined */
   id?: string | number;
-  /** Headline for the active slide. Newlines become separate reveal lines. */
   title: string;
-  /** Image URL, used both in the card and as the graded background. */
   image: string;
-  /** Byline printed beside the headline, e.g. "BY AURELIA STUDIO." @default undefined */
   credit?: string;
-  /** Right-aligned facts, e.g. ["SAT NOV 15", "5-10 PM", "MIAMI"]. @default undefined */
   meta?: string[];
-  /**
-   * CSS colour the background is graded to. The photo keeps its luminance and
-   * takes this hue, which is what makes the backdrop swing on every change.
-   * @default "#8a8a8a"
-   */
   accent?: string;
-  /** Optional event description */
   description?: string;
-  /** Optional registration link */
   registrationUrl?: string;
-  /** Optional registration label */
   registrationLabel?: string;
-  /** Category if provided */
   category?: string;
 }
 
 export interface HeroCarouselProps {
-  /** Slides, in strip order. */
   items?: HeroCarouselItem[];
-  /** Legacy alias for events */
   events?: any[];
   activeIndex?: number;
   onActiveIndexChange?: (index: number) => void;
-  /** Focused slide when controlled. Leave unset for internal state. @default undefined */
   index?: number;
-  /** Focused slide on mount when uncontrolled. @default 0 */
   defaultIndex?: number;
-  /** Fires on every focus change, from any input. @default undefined */
   onIndexChange?: (index: number) => void;
-  /** Wordmark in the middle of the top bar. @default undefined */
   brand?: React.ReactNode;
-  /** Renders the "Back" control when provided. @default undefined */
+  activeCategory?: 'learn' | 'build' | 'connect';
+  onCategoryChange?: (category: 'learn' | 'build' | 'connect') => void;
   onBack?: () => void;
-  /** Custom label for back button @default "Back" */
   backLabel?: string;
-  /** Renders the "Next" control when provided. @default undefined */
   onNext?: () => void;
-  /** Custom label for next button @default "Next" */
   nextLabel?: string;
-  /** Renders the "Menu" control when provided. @default undefined */
   onMenu?: () => void;
-  /** Callback fired when user attempts to scroll past the boundaries */
   onBoundaryReached?: (direction: 'down' | 'up') => void;
-  /** Advance on a timer. Pauses on hover, drag and focus. @default false */
   autoplay?: boolean;
-  /** Milliseconds between autoplay steps. @default 4000 */
   autoplayDelay?: number;
-  /** Extra classes for the stage. @default undefined */
   className?: string;
-  /** Hide the top bar */
   hideTopBar?: boolean;
-  /** Hide the headline block */
   hideHeadline?: boolean;
-  /** Hide the position rail and bottom CTA */
   hideRail?: boolean;
 }
 
-/* Ratios lifted from the reference layout, calibrated so stage fits cleanly in viewport below navbar */
-const CARD_H = 0.245; // active card height ÷ stage height
-const CARD_AR = 0.75; // active card is 3:4
-const GAP = 0.036; // gap ÷ card width
-const STRIP_TOP = 0.46; // strip's shared top edge, down the stage
-const TITLE = 0.058; // headline cap size ÷ stage height
-const LABEL = 0.0102; // small mono label ÷ stage height
-const PAD = 0.018; // page gutter ÷ stage width
-const RAIL = 0.18; // progress rail width ÷ stage width
-
-/** Wheel distance that commits to a step, and the lockout after one. */
-const WHEEL_THRESHOLD = 60;
-const WHEEL_COOLDOWN = 420;
-
-/* Film grain, as a self-contained SVG so the component carries no assets. */
+/* Subtle editorial film grain */
 const GRAIN =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
 
 const clamp = (n: number, min: number, max: number) =>
   Math.min(max, Math.max(min, n));
+
+/**
+ * Robust extractor for Track, Date, Time, Venue, and Host across all 60 events.
+ */
+function parseEventDetails(item?: HeroCarouselItem) {
+  if (!item) {
+    return {
+      track: 'QUANTUM SESSION',
+      date: '26 – 30 OCT 2026',
+      time: '10:00 AM – 05:00 PM IST',
+      venue: 'Main Auditorium, SRM University-AP',
+      hostedBy: 'IBM Quantum & SRMUAP Faculty',
+    };
+  }
+
+  const meta = item.meta || [];
+  const credit = item.credit || '';
+  const track = credit || meta[0] || 'QUANTUM SESSION';
+
+  // 1. DATE FORMATTING
+  const rawDate = meta[1] || '26–30 Oct 2026';
+  const cleanDate = rawDate
+    .toUpperCase()
+    .replace(/(\d+)(ST|ND|RD|TH)/g, '$1')
+    .replace(/\s*[–-]\s*/g, ' – ')
+    .trim();
+
+  // 2. VENUE & TIME FORMATTING
+  const locTm = meta[2] || '';
+  let venue = 'SRM University-AP Campus';
+  let time = '10:00 AM – 05:00 PM IST';
+
+  if (locTm.includes('·')) {
+    const parts = locTm.split('·').map((p) => p.trim());
+    const vRaw = parts[0];
+    const tRaw = parts.slice(1).join(' · ');
+
+    if (/online/i.test(vRaw)) {
+      venue = 'Online / Virtual Quantum Portal';
+      if (/deadline/i.test(tRaw)) {
+        time = tRaw;
+      } else if (/tracks|simulation|python|modeling|gate|sensor/i.test(tRaw)) {
+        time = 'Online Competition Window';
+      } else {
+        time = tRaw;
+      }
+    } else {
+      venue = vRaw;
+      time = tRaw;
+    }
+  } else if (/online/i.test(locTm)) {
+    venue = 'Online / Virtual Quantum Portal';
+    time = 'Online / Flexible Schedule';
+  } else if (locTm) {
+    venue = locTm;
+    if (rawDate.includes('26') && rawDate.includes('30')) {
+      time = 'Festival Schedule · 26–30 Oct';
+    } else {
+      time = '10:00 AM – 05:00 PM IST';
+    }
+  }
+
+  // Ensure venue mentions SRM University-AP if physical campus venue
+  if (!/online/i.test(venue) && !venue.includes('SRM University-AP')) {
+    venue = `${venue}, SRM University-AP`;
+  }
+
+  // Specific event custom overrides for high-profile events
+  if (item.id === 'build-01-hackathon-phase-1') {
+    venue = 'Online / Virtual Quantum Portal';
+    time = 'Launch: 10 Oct 5:00 PM · Close: 12 Oct 11:59 PM';
+  } else if (item.id === 'build-05-hackathon-phase-2-flagship') {
+    venue = 'Lab Blocks A & B, SRM University-AP';
+    time = '7:30 PM – 7:30 AM IST (24-Hour Overnight)';
+  }
+
+  // 3. HOSTED BY / ORGANIZER
+  let hostedBy = 'IBM Quantum & SRMUAP Faculty';
+  const lowerCredit = credit.toLowerCase();
+  const lowerTitle = item.title.toLowerCase();
+
+  if (lowerCredit.includes('keynote') || lowerTitle.includes('keynote')) {
+    hostedBy = 'Distinguished Keynote Speakers';
+  } else if (lowerCredit.includes('hackathon') || lowerTitle.includes('hackathon')) {
+    hostedBy = 'IBM Mentors & SRMUAP Quantum Club';
+  } else if (
+    lowerCredit.includes('workshop') ||
+    lowerCredit.includes('circuit') ||
+    lowerCredit.includes('transmon') ||
+    lowerCredit.includes('pulse') ||
+    lowerCredit.includes('lab') ||
+    lowerTitle.includes('workshop')
+  ) {
+    hostedBy = 'IBM Quantum Systems Engineers & Faculty';
+  } else if (
+    lowerCredit.includes('conclave') ||
+    lowerCredit.includes('debate') ||
+    lowerCredit.includes('panel') ||
+    lowerTitle.includes('conclave') ||
+    lowerTitle.includes('debate')
+  ) {
+    hostedBy = 'Academic Fellows & Industry Panelists';
+  } else if (
+    lowerCredit.includes('creative') ||
+    lowerCredit.includes('art') ||
+    lowerCredit.includes('drama') ||
+    lowerCredit.includes('theatre') ||
+    lowerCredit.includes('poster') ||
+    lowerCredit.includes('reel') ||
+    lowerCredit.includes('essay') ||
+    lowerTitle.includes('drama') ||
+    lowerTitle.includes('artwork') ||
+    lowerTitle.includes('reels')
+  ) {
+    hostedBy = 'Creative Arts & Quantum Media Guild';
+  } else if (
+    lowerCredit.includes('game') ||
+    lowerCredit.includes('chess') ||
+    lowerCredit.includes('checkers') ||
+    lowerCredit.includes('solitaire') ||
+    lowerCredit.includes('casino') ||
+    lowerCredit.includes('esports') ||
+    lowerCredit.includes('qgames') ||
+    lowerCredit.includes('quiz') ||
+    lowerCredit.includes('puzzles') ||
+    lowerCredit.includes('skribble') ||
+    lowerCredit.includes('charades') ||
+    lowerCredit.includes('race') ||
+    lowerCredit.includes('play') ||
+    lowerTitle.includes('gaming') ||
+    lowerTitle.includes('chess') ||
+    lowerTitle.includes('quiz') ||
+    lowerTitle.includes('puzzles') ||
+    lowerTitle.includes('skribble') ||
+    lowerTitle.includes('casino')
+  ) {
+    hostedBy = 'QGames Initiative & Student Council';
+  } else if (credit) {
+    hostedBy = 'IBM Quantum Advocates & Faculty';
+  }
+
+  return { track, date: cleanDate, time, venue, hostedBy };
+}
 
 export function HeroCarousel({
   items: rawItems,
@@ -122,31 +216,27 @@ export function HeroCarousel({
   defaultIndex = 0,
   onIndexChange: onIndexChangeProp,
   brand,
+  activeCategory,
+  onCategoryChange,
   onBack,
   backLabel,
   onNext,
   nextLabel,
-  onMenu,
   onBoundaryReached,
   autoplay = false,
-  autoplayDelay = 4000,
+  autoplayDelay = 4500,
   className,
-  hideTopBar,
-  hideHeadline,
-  hideRail,
+  hideTopBar = false,
+  hideHeadline = false,
+  hideRail = false,
 }: HeroCarouselProps) {
-  // If legacy events was provided without items, default to hiding headline/rail if not specified
-  const shouldHideTopBar = hideTopBar ?? (Boolean(events) && !rawItems);
-  const shouldHideHeadline = hideHeadline ?? (Boolean(events) && !rawItems);
-  const shouldHideRail = hideRail ?? (Boolean(events) && !rawItems);
-
   // Normalize items whether passed via items or legacy events prop
   const items: HeroCarouselItem[] = React.useMemo(() => {
     if (rawItems && rawItems.length > 0) return rawItems;
     if (events && events.length > 0) {
       return events.map((e) => ({
         id: e.id,
-        title: e.title.includes('\n') ? e.title : e.title.replace(' & ', ' &\n'),
+        title: e.title,
         image: e.image,
         credit: e.credit,
         meta: e.meta,
@@ -163,11 +253,9 @@ export function HeroCarousel({
   const controlled = controlledProp !== undefined ? controlledProp : activeIndex;
   const onIndexChange = onIndexChangeProp || onActiveIndexChange;
 
-  const stageRef = React.useRef<HTMLDivElement>(null);
-  const [box, setBox] = React.useState({ w: 1200, h: 700 });
   const [uncontrolled, setUncontrolled] = React.useState(defaultIndex);
-  const [dragging, setDragging] = React.useState(false);
   const [paused, setPaused] = React.useState(false);
+  const railRef = React.useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
 
   const last = Math.max(0, items.length - 1);
@@ -182,402 +270,429 @@ export function HeroCarousel({
     [controlled, index, last, onIndexChange]
   );
 
-  // One observer feeds every measurement below.
+  // Auto-scroll the active thumbnail into view smoothly WITHOUT shifting the parent window
   React.useEffect(() => {
-    const stage = stageRef.current;
-    if (!stage) return;
-    const read = () => {
-      if (stage.clientWidth > 0 && stage.clientHeight > 0) {
-        setBox({ w: stage.clientWidth, h: stage.clientHeight });
-      }
-    };
-    read();
-    const ro = new ResizeObserver(read);
-    ro.observe(stage);
-    return () => ro.disconnect();
-  }, []);
+    if (!railRef.current) return;
+    const container = railRef.current;
+    const activeThumb = container.children[index] as HTMLElement;
+    if (activeThumb) {
+      const thumbLeft = activeThumb.offsetLeft;
+      const thumbWidth = activeThumb.offsetWidth;
+      const containerWidth = container.offsetWidth;
+      const targetScrollLeft = thumbLeft - containerWidth / 2 + thumbWidth / 2;
+      container.scrollTo({
+        left: Math.max(0, targetScrollLeft),
+        behavior: 'smooth',
+      });
+    }
+  }, [index, activeCategory]);
 
-  const fullH = clamp(box.h * CARD_H, 120, 380);
-  const halfH = fullH / 2;
-  const cardW = fullH * CARD_AR;
-  const gap = Math.max(8, Math.round(cardW * GAP));
-  const step = cardW + gap;
-  const pad = Math.max(16, Math.round(box.w * PAD));
-  const label = Math.max(10, Math.round(box.h * LABEL));
+  // Autoplay handler if enabled
+  React.useEffect(() => {
+    if (!autoplay || paused || items.length <= 1) return;
+    const timer = setInterval(() => {
+      go(index >= last ? 0 : index + 1);
+    }, autoplayDelay);
+    return () => clearInterval(timer);
+  }, [autoplay, paused, index, last, items.length, autoplayDelay, go]);
 
-  // Centre the focused card: the track slides, the card never moves itself.
-  const xFor = React.useCallback(
-    (i: number) => box.w / 2 - (i * step + cardW / 2),
-    [box.w, step, cardW]
+  const active = items[index] || items[0] || {
+    title: 'Quantum Event',
+    image: '/images/events/world-class-workshops-dark.png',
+  };
+
+  const parsed = React.useMemo(() => parseEventDetails(active), [active]);
+  const lines = React.useMemo(
+    () => active.title.split('\n'),
+    [active.title]
   );
-  const x = useMotionValue(0);
-  const target = xFor(index);
 
-  const swing = reduced
-    ? { duration: 0 }
-    : { duration: 0.7, ease: 'easeOut' as const };
-  const spring = reduced
-    ? { duration: 0 }
-    : { type: 'spring' as const, stiffness: 260, damping: 34, mass: 0.9 };
+  // Identify active chapter ('learn', 'build', 'connect')
+  const activeChapter = React.useMemo<'learn' | 'build' | 'connect'>(() => {
+    if (activeCategory) return activeCategory;
+    const brandStr = typeof brand === 'string' ? brand.toLowerCase() : '';
+    if (brandStr.includes('01') || brandStr.includes('learn') || active.category === 'learn') return 'learn';
+    if (brandStr.includes('02') || brandStr.includes('build') || active.category === 'build') return 'build';
+    if (brandStr.includes('03') || brandStr.includes('connect') || active.category === 'connect') return 'connect';
+    return 'learn';
+  }, [activeCategory, brand, active.category]);
 
-  // The track is driven by a motion value rather than an `animate` prop so a
-  // drag that starts mid-spring reads the real position, not where the spring
-  // was headed - otherwise the release snaps a card off.
-  React.useEffect(() => {
-    if (dragging) return;
-    const run = animate(x, target, spring);
-    return () => run.stop();
-  }, [target, dragging, reduced, x]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  React.useEffect(() => {
-    if (!autoplay || paused || dragging || items.length < 2) return;
-    const id = window.setTimeout(
-      () => go(index === last ? 0 : index + 1),
-      autoplayDelay
-    );
-    return () => window.clearTimeout(id);
-  }, [autoplay, autoplayDelay, dragging, go, index, items.length, last, paused]);
-
-  const active = items[index];
-  if (!active) return null;
-
-  const lines = active.title.split('\n');
-  const accent = active.accent ?? '#8a8a8a';
+  const handleCategoryClick = React.useCallback(
+    (targetCategory: 'learn' | 'build' | 'connect') => {
+      if (targetCategory === activeChapter) return;
+      if (onCategoryChange) {
+        onCategoryChange(targetCategory);
+      } else {
+        const map = {
+          learn: 'section-01-learn-container',
+          build: 'section-02-build-container',
+          connect: 'section-03-connect-container',
+        };
+        const el = document.getElementById(map[targetCategory]) || document.getElementById(targetCategory);
+        if (el) {
+          const navbarHeight =
+            window.innerWidth >= 1280 ? 90 : window.innerWidth >= 640 ? 84 : 78;
+          const top = el.getBoundingClientRect().top + window.scrollY - navbarHeight;
+          window.scrollTo({ top, behavior: 'smooth' });
+        }
+      }
+    },
+    [activeChapter, onCategoryChange]
+  );
 
   return (
     <div
-      ref={stageRef}
       tabIndex={0}
-      role="group"
-      aria-roledescription="carousel"
-      aria-label="Featured Quantum Events"
+      role="region"
+      aria-label="Event Experience Carousel"
       onKeyDown={(e) => {
-        const keys: Record<string, number> = {
-          ArrowLeft: index - 1,
-          ArrowRight: index + 1,
-          ArrowUp: index - 1,
-          ArrowDown: index + 1,
-          Home: 0,
-          End: last,
-        };
-        if (e.key in keys) {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
           e.preventDefault();
-          if (e.key === 'ArrowDown' && index === last) {
-            onBoundaryReached?.('down');
-          } else if (e.key === 'ArrowUp' && index === 0) {
-            onBoundaryReached?.('up');
-          } else {
-            go(keys[e.key]!);
-          }
+          go(index + 1);
+        }
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          go(index - 1);
         }
       }}
       onPointerEnter={() => setPaused(true)}
       onPointerLeave={() => setPaused(false)}
-      onFocus={() => setPaused(true)}
-      onBlur={() => setPaused(false)}
       className={cn(
-        'relative h-full min-h-[26rem] w-full overflow-hidden bg-[#16171B] text-[#F5F3F0] select-none',
-        'outline-none focus-visible:ring-1 focus-visible:ring-white/40 focus-visible:ring-inset',
+        'relative h-full w-full overflow-hidden bg-[#0C0D10] text-[#F5F3F0] select-none flex flex-col justify-between',
+        'outline-none focus-visible:ring-1 focus-visible:ring-white/40',
         className
       )}
     >
-      {/* ── Background: the focused photo, blown up and re-hued to its accent ── */}
+      {/* ── Background: Active Event Photography with Cinematic Depth Gradients ── */}
       <AnimatePresence initial={false}>
         <motion.div
           key={index}
-          className="absolute inset-0"
+          className="absolute inset-0 z-0 pointer-events-none"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={swing}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
         >
           <motion.img
             src={active.image}
             alt={active.title.replace(/\n/g, ' ')}
-            aria-hidden
             draggable={false}
             loading="eager"
-            decoding="async"
-            className="absolute inset-0 h-full w-full object-cover"
-            initial={{ scale: reduced ? 1.28 : 1.42 }}
-            animate={{ scale: 1.28 }}
+            className="absolute inset-0 h-full w-full object-cover object-center"
+            initial={{ scale: reduced ? 1.02 : 1.08 }}
+            animate={{ scale: 1.02 }}
             transition={reduced ? { duration: 0 } : { duration: 6, ease: 'linear' }}
-          />
-          {/* Keep the photo's luminance, take the accent's hue. */}
-          <div
-            className="absolute inset-0"
-            style={{ backgroundColor: accent, mixBlendMode: 'color' }}
-          />
-          <div
-            className="absolute inset-0 opacity-55"
-            style={{ backgroundColor: accent, mixBlendMode: 'multiply' }}
           />
         </motion.div>
       </AnimatePresence>
 
-      {/* Legibility wash + grain, above the swap so they never flicker. */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/65" />
+      {/* Cinematic scrims: left shadow for title legibility, bottom shadow for thumbnails */}
+      <div className="absolute inset-0 z-[1] bg-gradient-to-r from-[#0C0D10]/95 via-[#0C0D10]/80 sm:via-[#0C0D10]/70 to-[#0C0D10]/35 pointer-events-none" />
+      <div className="absolute inset-0 z-[1] bg-gradient-to-t from-[#0C0D10] via-[#0C0D10]/65 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 z-[1] bg-gradient-to-b from-[#0C0D10]/70 via-transparent to-transparent pointer-events-none" />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.22] mix-blend-overlay"
+        className="pointer-events-none absolute inset-0 z-[1] opacity-[0.12] mix-blend-overlay"
         style={{ backgroundImage: GRAIN, backgroundSize: '180px 180px' }}
       />
 
-      {/* ── Top bar: a centred cluster, not edge-to-edge ── */}
-      {!shouldHideTopBar && (
-        <div
-          className="absolute inset-x-0 flex items-center justify-center z-20"
-          style={{ top: Math.max(16, box.h * 0.029), gap: `${Math.max(20, box.w * 0.06)}px` }}
-        >
+      {/* ── 1. Top Sub-Navigation Bar: Back & Chapter Switcher (01 Learn, 02 Build, 03 Connect) ── */}
+      {!hideTopBar && (
+        <div className="relative z-20 w-full flex items-center justify-between px-4 sm:px-8 md:px-12 pt-3 sm:pt-4 pb-2 border-b border-white/[0.08]">
+          {/* Back button */}
           {onBack ? (
             <button
               type="button"
               onClick={onBack}
-              className="opacity-80 transition-opacity hover:opacity-100 cursor-pointer font-sans font-medium tracking-wide flex items-center gap-1.5 text-xs sm:text-sm"
-              style={{ fontSize: label * 1.15 }}
+              className="text-[#D1D5DB] hover:text-white transition-colors cursor-pointer font-mono text-xs sm:text-[13px] uppercase tracking-wider flex items-center gap-1.5 shrink-0"
             >
-              <span aria-hidden>↖</span> {backLabel || 'Back'}
+              <ChevronLeft className="w-4 h-4" />
+              <span>{backLabel || 'Back'}</span>
             </button>
-          ) : null}
-          {brand ? (
-            <div
-              className="font-semibold tracking-[0.06em]"
-              style={{ fontSize: label * 1.35 }}
-            >
-              {brand}
-            </div>
-          ) : null}
-          {onNext ? (
-            <button
-              type="button"
-              onClick={onNext}
-              className="opacity-80 transition-opacity hover:opacity-100 cursor-pointer font-sans font-medium tracking-wide flex items-center gap-1.5 text-xs sm:text-sm"
-              style={{ fontSize: label * 1.15 }}
-            >
-              {nextLabel || 'Next'} <span aria-hidden>↘</span>
-            </button>
-          ) : onMenu ? (
-            <button
-              type="button"
-              onClick={onMenu}
-              className="opacity-80 transition-opacity hover:opacity-100 cursor-pointer font-sans font-medium tracking-wide flex items-center gap-1.5 text-xs sm:text-sm"
-              style={{ fontSize: label * 1.15 }}
-            >
-              Schedule <span aria-hidden>☰</span>
-            </button>
-          ) : null}
-        </div>
-      )}
-
-      {/* ── Headline & Event Metadata Block, sitting just above the strip's top edge ── */}
-      {!shouldHideHeadline && (
-        <div
-          className="absolute inset-x-0 top-0 flex flex-col justify-end z-10"
-          style={{
-            height: `${STRIP_TOP * 100}%`,
-            paddingLeft: pad,
-            paddingRight: pad,
-            paddingBottom: Math.max(14, Math.round(box.h * 0.024)),
-          }}
-        >
-          <div className="flex flex-col items-start w-full max-w-4xl text-left">
-            {/* Event Title */}
-            <AnimatePresence mode="popLayout" initial={false}>
-              <motion.h2
-                key={index}
-                className="font-semibold leading-[0.92] tracking-[-0.03em] text-[#FFF4F2] text-left drop-shadow-[0_2px_8px_rgba(0,0,0,0.65)]"
-                style={{ fontSize: Math.max(24, Math.round(box.h * TITLE)) }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0, transition: { duration: 0.18 } }}
-              >
-                {lines.map((line, i) => (
-                  // Each line wipes up from behind its own edge.
-                  <span key={i} className="block overflow-hidden">
-                    <motion.span
-                      className="block"
-                      initial={{ y: '110%' }}
-                      animate={{ y: 0 }}
-                      transition={
-                        reduced
-                          ? { duration: 0 }
-                          : { duration: 0.62, delay: i * 0.07, ease: [0.22, 1, 0.36, 1] }
-                      }
-                    >
-                      {line}
-                    </motion.span>
-                  </span>
-                ))}
-              </motion.h2>
-            </AnimatePresence>
-
-            {/* The Two Metadata Lines: Both start from the exact same place (left-aligned),
-                with enlarged font size and luminous warm beige color (#F5EBE6) */}
-            {(active.credit || active.meta?.length) && (
-              <div className="flex flex-col items-start gap-1.5 sm:gap-2 mt-3 sm:mt-4 text-left w-full">
-                {/* Line 1: Presenter / Leadership / Research Group */}
-                {active.credit && (
-                  <motion.div
-                    key={`credit-${index}`}
-                    className="font-sans font-bold tracking-[0.18em] uppercase text-[#F5EBE6] text-left leading-snug drop-shadow-[0_1px_3px_rgba(0,0,0,0.85)]"
-                    style={{
-                      fontSize: Math.max(13, Math.min(18, Math.round(box.h * 0.021))),
-                    }}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.45, delay: 0.1 }}
-                  >
-                    {active.credit}
-                  </motion.div>
-                )}
-
-                {/* Line 2: Track, Date, Location — Starting at the exact same left alignment as Line 1 */}
-                {active.meta?.length ? (
-                  <motion.div
-                    key={`meta-${index}`}
-                    className="flex flex-wrap items-center gap-x-6 sm:gap-x-10 md:gap-x-14 gap-y-1 font-sans font-semibold tracking-[0.16em] uppercase text-[#F5EBE6] text-left leading-snug drop-shadow-[0_1px_3px_rgba(0,0,0,0.85)]"
-                    style={{
-                      fontSize: Math.max(12, Math.min(17, Math.round(box.h * 0.019))),
-                    }}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.45, delay: 0.16 }}
-                  >
-                    {active.meta.map((fact) => (
-                      <span
-                        key={`${index}-${fact}`}
-                        className="whitespace-nowrap"
-                      >
-                        {fact}
-                      </span>
-                    ))}
-                  </motion.div>
-                ) : null}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── The strip: one shared top edge, the focused card twice as tall ── */}
-      <div
-        className="absolute inset-x-0 z-10"
-        style={{ top: `${STRIP_TOP * 100}%`, height: fullH }}
-      >
-        <motion.div
-          className="flex items-start"
-          style={{ gap, x, cursor: dragging ? 'grabbing' : 'grab' }}
-          drag="x"
-          dragMomentum={false}
-          dragElastic={0.08}
-          dragConstraints={{ left: xFor(last), right: xFor(0) }}
-          onDragStart={() => setDragging(true)}
-          onDragEnd={(_, info) => {
-            setDragging(false);
-            // Land on whatever card the release sits nearest, nudged by throw
-            // velocity so a flick clears more than one card.
-            const thrown = x.get() + info.velocity.x * 0.12;
-            go(Math.round((box.w / 2 - thrown - cardW / 2) / step));
-          }}
-        >
-          {items.map((item, i) => (
-            <motion.button
-              key={item.id ?? i}
-              type="button"
-              aria-label={item.title.replace(/\n/g, ' ')}
-              aria-current={i === index}
-              onClick={() => go(i)}
-              className="relative shrink-0 overflow-hidden rounded-sm bg-white/5 cursor-pointer"
-              style={{ width: cardW }}
-              animate={{ height: i === index ? fullH : halfH }}
-              transition={spring}
-            >
-              {/* The focused card is exactly 3:4, so object-position does
-                  nothing to it - it only picks which band of the portrait the
-                  half-height neighbours keep. Anchored just above centre so a
-                  clipped card still shows a face, not a forehead. */}
-              <img
-                src={item.image}
-                alt={item.title.replace(/\n/g, ' ')}
-                draggable={false}
-                loading={i === index ? 'eager' : 'lazy'}
-                decoding="async"
-                className="h-full w-full object-cover"
-                style={{ objectPosition: '50% 26%' }}
-              />
-              {/* Unfocused cards sit back a touch without going grey. */}
-              <motion.span
-                aria-hidden
-                className="absolute inset-0 bg-black"
-                animate={{ opacity: i === index ? 0 : 0.14 }}
-                transition={spring}
-              />
-              {/* Active gold hairline border accent */}
-              {i === index && (
-                <div
-                  aria-hidden
-                  className="absolute inset-0 border border-[#B08D57]/60 pointer-events-none"
-                />
-              )}
-            </motion.button>
-          ))}
-        </motion.div>
-      </div>
-
-      {/* ── Position rail & Description / CTA ── */}
-      {!shouldHideRail && (
-        <div
-          className="absolute z-20 flex items-center justify-between pointer-events-auto"
-          style={{
-            left: pad,
-            right: pad,
-            bottom: Math.max(16, Math.min(26, box.h * 0.032)),
-          }}
-        >
-          {/* Rail indicator on left */}
-          <div style={{ width: Math.max(120, box.w * RAIL) }}>
-            <div
-              className="flex justify-between font-mono tabular-nums opacity-80"
-              style={{ fontSize: label }}
-            >
-              <span>{String(index + 1).padStart(2, '0')}</span>
-              <span>{String(items.length).padStart(2, '0')}</span>
-            </div>
-            <div className="relative mt-2 h-px w-full bg-white/25">
-              <motion.div
-                className="absolute inset-y-0 bg-[#B08D57]"
-                style={{ width: `${100 / items.length}%` }}
-                animate={{ left: `${(index / items.length) * 100}%` }}
-                transition={spring}
-              />
-            </div>
-          </div>
-
-          {/* Selected event description (visible on desktop) */}
-          {active.description && (
-            <div className="hidden lg:block max-w-md px-6">
-              <p className="text-xs text-[#C7C8CC]/80 leading-relaxed font-sans line-clamp-2">
-                {active.description}
-              </p>
-            </div>
+          ) : (
+            <div className="w-16" />
           )}
 
-          {/* Register CTA on right: Using FlowButton with beige base and burgundy hover animation */}
-          {active.registrationUrl ? (
-            <div className="flex items-center">
-              <FlowButton
-                id={`hero-carousel-register-${active.id || index}`}
-                href={active.registrationUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                text={active.registrationLabel || 'Register Now'}
-                variant="beige-burgundy"
-                className="font-sans font-bold uppercase tracking-wider text-xs sm:text-[13px]"
-              />
-            </div>
-          ) : null}
+          {/* Chapter Tabs: 01 Learn, 02 Build, 03 Connect */}
+          <div className="flex items-center gap-4 sm:gap-8">
+            <button
+              type="button"
+              onClick={() => handleCategoryClick('learn')}
+              className={cn(
+                'font-mono text-xs sm:text-[13px] tracking-wider transition-all pb-1.5 cursor-pointer',
+                activeChapter === 'learn'
+                  ? 'text-white font-bold border-b-2 border-[#E57373]'
+                  : 'text-white/50 hover:text-white/80 font-normal'
+              )}
+            >
+              01 Learn
+            </button>
+            <button
+              type="button"
+              onClick={() => handleCategoryClick('build')}
+              className={cn(
+                'font-mono text-xs sm:text-[13px] tracking-wider transition-all pb-1.5 cursor-pointer',
+                activeChapter === 'build'
+                  ? 'text-white font-bold border-b-2 border-[#E57373]'
+                  : 'text-white/50 hover:text-white/80 font-normal'
+              )}
+            >
+              02 Build
+            </button>
+            <button
+              type="button"
+              onClick={() => handleCategoryClick('connect')}
+              className={cn(
+                'font-mono text-xs sm:text-[13px] tracking-wider transition-all pb-1.5 cursor-pointer',
+                activeChapter === 'connect'
+                  ? 'text-white font-bold border-b-2 border-[#E57373]'
+                  : 'text-white/50 hover:text-white/80 font-normal'
+              )}
+            >
+              03 Connect
+            </button>
+          </div>
+
+          <div className="w-16" />
         </div>
       )}
+
+      {/* ── 2. Middle Hero Stage: Left Details + Right Floating Glassmorphic Card (ALWAYS VISIBLE) ── */}
+      {!hideHeadline && (
+        <div className="relative z-10 w-full flex-1 flex flex-col justify-center px-4 sm:px-6 md:px-10 lg:px-12 py-2 sm:py-3">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-6 lg:gap-8 xl:gap-10">
+            {/* Left Column: Eyebrow, Title, Description, Buttons */}
+            <div className="flex-1 max-w-xl lg:max-w-2xl text-left">
+              {/* Category Eyebrow with Red Dot */}
+              <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                <span className="w-2 h-2 rounded-full bg-[#E57373] shadow-[0_0_8px_#E57373]" />
+                <span className="font-mono text-xs sm:text-[13px] uppercase tracking-[0.2em] text-[#E57373] font-semibold">
+                  {parsed.track}
+                </span>
+              </div>
+
+              {/* Serif Headline */}
+              <AnimatePresence mode="popLayout" initial={false}>
+                <motion.h2
+                  key={index}
+                  className="font-serif font-bold text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-[#F5F3F0] leading-[1.08] tracking-[-0.02em] drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6, transition: { duration: 0.15 } }}
+                  transition={{ duration: 0.35, ease: 'easeOut' }}
+                >
+                  {lines.map((line, i) => (
+                    <span key={i} className="block">
+                      {line}
+                    </span>
+                  ))}
+                </motion.h2>
+              </AnimatePresence>
+
+              {/* Description */}
+              {active.description && (
+                <AnimatePresence mode="popLayout" initial={false}>
+                  <motion.p
+                    key={`desc-${index}`}
+                    className="font-sans text-xs sm:text-sm md:text-base text-[#D1D5DB]/90 leading-relaxed mt-2.5 sm:mt-3 max-w-xl line-clamp-3"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3, delay: 0.08 }}
+                  >
+                    {active.description}
+                  </motion.p>
+                </AnimatePresence>
+              )}
+
+              {/* Action Buttons: Primary + Secondary */}
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-4 sm:mt-5">
+                <a
+                  href={active.registrationUrl || 'https://qiskit.org/fallfest'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full bg-[#F5F3F0] text-[#16171B] font-semibold text-xs sm:text-sm hover:bg-white transition-all shadow-[0_4px_14px_rgba(245,243,240,0.25)] active:scale-95"
+                >
+                  <span>{active.registrationLabel || 'Register for Event'}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </a>
+
+                <a
+                  href="/schedule"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 rounded-full border border-white/20 bg-white/[0.05] hover:bg-white/10 text-white/95 font-medium text-xs sm:text-sm transition-all"
+                >
+                  <div className="w-5 h-5 rounded-full border border-white/60 flex items-center justify-center">
+                    <Play className="w-2.5 h-2.5 fill-white text-white ml-0.5" />
+                  </div>
+                  <span>Watch Overview</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Right Column: Floating Glassmorphic Event Card (Visible Across All Devices & Screen Widths) */}
+            <div className="flex flex-col gap-2.5 sm:gap-3 rounded-2xl border border-white/15 bg-black/55 backdrop-blur-md p-4 sm:p-5 lg:p-6 shadow-2xl w-full sm:w-[280px] md:w-[290px] lg:w-[320px] xl:w-[340px] shrink-0 text-left">
+              {/* DATES */}
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 text-[#E57373] p-1.5 rounded-lg bg-white/5 border border-white/10 shrink-0">
+                  <Calendar className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="font-mono text-[10px] uppercase tracking-widest text-[#A6A8B0]">DATES</div>
+                  <div className="text-xs sm:text-sm font-bold text-white mt-0.5 tracking-wide">{parsed.date}</div>
+                </div>
+              </div>
+
+              <div className="w-full h-px bg-white/10" />
+
+              {/* TIME */}
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 text-[#E57373] p-1.5 rounded-lg bg-white/5 border border-white/10 shrink-0">
+                  <Clock className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="font-mono text-[10px] uppercase tracking-widest text-[#A6A8B0]">TIME</div>
+                  <div className="text-xs sm:text-sm font-semibold text-white/95 mt-0.5">{parsed.time}</div>
+                </div>
+              </div>
+
+              <div className="w-full h-px bg-white/10" />
+
+              {/* VENUE */}
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 text-[#E57373] p-1.5 rounded-lg bg-white/5 border border-white/10 shrink-0">
+                  <MapPin className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="font-mono text-[10px] uppercase tracking-widest text-[#A6A8B0]">VENUE</div>
+                  <div className="text-xs sm:text-sm font-medium text-white/90 mt-0.5 leading-snug">{parsed.venue}</div>
+                </div>
+              </div>
+
+              <div className="w-full h-px bg-white/10" />
+
+              {/* HOSTED BY */}
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 text-[#E57373] p-1.5 rounded-lg bg-white/5 border border-white/10 shrink-0">
+                  <User className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="font-mono text-[10px] uppercase tracking-widest text-[#A6A8B0]">HOSTED BY</div>
+                  <div className="text-xs sm:text-sm font-medium text-white/90 mt-0.5 leading-snug">{parsed.hostedBy}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── 3. Bottom Filmstrip Carousel: Left Arrow, Thumbnails Row, Right Arrow ── */}
+      {!hideRail && (
+        <div className="relative z-20 w-full px-4 sm:px-8 md:px-12 pt-1 pb-2 overflow-hidden">
+          <div className="relative flex items-center">
+            {/* Left Nav Arrow Button */}
+            <button
+              type="button"
+              aria-label="Previous event"
+              onClick={() => go(index - 1)}
+              disabled={index === 0}
+              className={cn(
+                'absolute left-0 sm:left-2 z-20 w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-white/20 bg-black/75 backdrop-blur-md text-white flex items-center justify-center transition-all cursor-pointer shadow-lg',
+                index === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/20 hover:scale-105 active:scale-95'
+              )}
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+
+            {/* Thumbnail Cards Row */}
+            <div
+              ref={railRef}
+              className="flex items-center gap-3 sm:gap-4 overflow-x-auto scrollbar-none py-2 px-8 sm:px-12 w-full scroll-smooth"
+            >
+              {items.map((item, i) => {
+                const isActive = i === index;
+                const itemDetails = parseEventDetails(item);
+                return (
+                  <button
+                    key={item.id || i}
+                    type="button"
+                    onClick={() => go(i)}
+                    className={cn(
+                      'relative shrink-0 rounded-xl overflow-hidden transition-all duration-300 text-left cursor-pointer group',
+                      'w-44 sm:w-52 md:w-56 h-28 sm:h-32',
+                      isActive
+                        ? 'ring-2 ring-[#E57373] shadow-[0_0_20px_rgba(229,115,115,0.4)] scale-[1.02]'
+                        : 'border border-white/10 opacity-70 hover:opacity-100 hover:border-white/30'
+                    )}
+                  >
+                    <img
+                      src={item.image}
+                      alt={item.title.replace(/\n/g, ' ')}
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-black/20" />
+
+                    <div className="relative z-10 h-full flex flex-col justify-between p-2.5 sm:p-3">
+                      {/* Top-Left Date Badge */}
+                      <div className="font-mono font-bold text-[10px] sm:text-[11px] text-white/95 uppercase tracking-wider">
+                        {itemDetails.date}
+                      </div>
+
+                      {/* Bottom Title & Track */}
+                      <div>
+                        <div className="font-serif font-bold text-xs sm:text-[13px] text-white line-clamp-1 leading-snug">
+                          {item.title.replace(/\n/g, ' ')}
+                        </div>
+                        <div className="font-sans text-[10px] sm:text-[11px] text-[#A6A8B0] truncate mt-0.5">
+                          {itemDetails.track}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Right Nav Arrow Button */}
+            <button
+              type="button"
+              aria-label="Next event"
+              onClick={() => go(index + 1)}
+              disabled={index === last}
+              className={cn(
+                'absolute right-0 sm:right-2 z-20 w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-white/20 bg-black/75 backdrop-blur-md text-white flex items-center justify-center transition-all cursor-pointer shadow-lg',
+                index === last ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/20 hover:scale-105 active:scale-95'
+              )}
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── 4. Bottom Status Row: 03 / 18 Counter & Progress Bar (Left), View Full Schedule (Right) ── */}
+      <div className="relative z-20 w-full flex items-center justify-between px-4 sm:px-8 md:px-12 py-2 sm:py-3 border-t border-white/[0.08] bg-black/30 backdrop-blur-[2px]">
+        {/* Left: Numerical Counter & Progress Bar (with left clearance for Next.js dev badge) */}
+        <div className="flex flex-col items-start gap-1 pl-14 sm:pl-16">
+          <div className="font-mono text-xs sm:text-[13px] text-white font-bold tracking-wider">
+            <span>{String(index + 1).padStart(2, '0')}</span>
+            <span className="text-white/40 font-normal"> / {String(items.length).padStart(2, '0')}</span>
+          </div>
+          <div className="w-24 sm:w-32 h-[2px] bg-white/15 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-[#E57373] transition-all duration-300 rounded-full"
+              style={{ width: `${((index + 1) / items.length) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Right: View Full Schedule Link */}
+        <a
+          href="/schedule"
+          className="font-mono text-xs sm:text-[13px] text-white/80 hover:text-white flex items-center gap-1.5 transition-colors group cursor-pointer"
+        >
+          <span>View Full Schedule</span>
+          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+        </a>
+      </div>
     </div>
   );
 }

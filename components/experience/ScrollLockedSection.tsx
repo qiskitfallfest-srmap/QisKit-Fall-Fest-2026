@@ -14,6 +14,10 @@ export interface ScrollLockedSectionProps {
   id: string;
   ariaLabel: string;
   itemCount: number;
+  controlledIndex?: number;
+  onIndexChange?: (index: number) => void;
+  activeCategory?: string;
+  scrollPerItemVh?: number;
   prevSectionId?: string;
   nextSectionId?: string;
   className?: string;
@@ -25,27 +29,36 @@ export interface ScrollLockedSectionProps {
 /**
  * ScrollLockedSection
  *
- * Reusable architectural component responsible exclusively for:
- * 1. Pinned sticky viewport stage management beneath the responsive navbar.
- * 2. Dynamic container height calculation based on item count.
- * 3. Passive scroll observation and index progression computation.
- * 4. Programmatic scroll synchronization for index selection, back, and next events.
+ * Locks the viewport on the Experience Stage while exploring events:
+ * 1. Normal page scroll brings the section to the top beneath the navbar.
+ * 2. Viewpoint stays fixed while scrolling through events (Event 1 -> Event 2 -> ... -> Last Event).
+ * 3. Releases naturally into normal page scroll once reaching the boundary:
+ *    - At Last Event, scrolling DOWN continues naturally to Next Divider & Footer.
+ *    - At Event 1, scrolling UP continues naturally to Hero & Ecosystem.
+ * 4. Category switching (Learn <-> Build <-> Connect) is a 100% in-place view switch
+ *    with zero window scrolling, preserving each category's last selected event.
  */
 export function ScrollLockedSection({
   id,
   ariaLabel,
   itemCount,
+  controlledIndex,
+  onIndexChange,
+  activeCategory,
+  scrollPerItemVh = 42,
   prevSectionId,
   nextSectionId,
   className = '',
   children,
 }: ScrollLockedSectionProps) {
   const containerId = `${id}-container`;
-  const [currentIndex, setCurrentIndex] = React.useState(0);
-  const [progress, setProgress] = React.useState(0);
+  const sectionRef = React.useRef<HTMLElement>(null);
+  const [internalIndex, setInternalIndex] = React.useState(0);
 
-  // Measure top offset dynamically based on responsive Navbar height:
-  // mobile (<640px) = 78px, sm/md/lg (640-1279px) = 84px, xl (>=1280px) = 90px
+  const currentIndex = controlledIndex !== undefined ? controlledIndex : internalIndex;
+  const progress = itemCount > 1 ? currentIndex / (itemCount - 1) : 0;
+
+  // Responsive navbar height offset: mobile 78px, sm/md/lg 84px, xl 90px
   const getNavbarOffset = React.useCallback(() => {
     if (typeof window === 'undefined') return 84;
     if (window.innerWidth >= 1280) return 90;
@@ -53,101 +66,183 @@ export function ScrollLockedSection({
     return 78;
   }, []);
 
-  // Update card index smoothly as user scrolls through the pinned container
+  // Synchronize internal index if itemCount changes and index is out of bounds
   React.useEffect(() => {
-    let rafId: number;
-
-    const handleScroll = () => {
-      const container = document.getElementById(containerId);
-      if (!container || container.getAttribute('data-nav-locking') === 'true') {
-        return;
+    if (currentIndex >= itemCount && itemCount > 0) {
+      const clamped = itemCount - 1;
+      if (controlledIndex === undefined) {
+        setInternalIndex(clamped);
       }
+      onIndexChange?.(clamped);
+    }
+  }, [currentIndex, itemCount, controlledIndex, onIndexChange]);
 
-      const rect = container.getBoundingClientRect();
+  // Keep latest state in refs for stable wheel handling without recreating event listener
+  const currentIndexRef = React.useRef(currentIndex);
+  currentIndexRef.current = currentIndex;
+
+  const itemCountRef = React.useRef(itemCount);
+  itemCountRef.current = itemCount;
+
+  const onIndexChangeRef = React.useRef(onIndexChange);
+  onIndexChangeRef.current = onIndexChange;
+
+  const controlledIndexRef = React.useRef(controlledIndex);
+  controlledIndexRef.current = controlledIndex;
+
+  const cooldownUntilRef = React.useRef(0);
+  const wheelAccumulatorYRef = React.useRef(0);
+  const wheelAccumulatorXRef = React.useRef(0);
+  const idleTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // In-stage wheel / trackpad gesture listener:
+  // Viewpoint is fixed while exploring events. Releases cleanly to normal page scroll at boundaries.
+  React.useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      // Allow browser zoom (pinch to zoom)
+      if (e.ctrlKey || e.metaKey) return;
+
+      const currentIdx = currentIndexRef.current;
+      const count = itemCountRef.current;
+      if (count <= 1) return;
+
+      const rect = section.getBoundingClientRect();
       const topOffset = getNavbarOffset();
-      const stickyHeight = window.innerHeight - topOffset;
-      const containerHeight = rect.height;
-      const maxScroll = containerHeight - stickyHeight;
+      const now = Date.now();
+      const inCooldown = now < cooldownUntilRef.current;
 
-      if (maxScroll <= 0) return;
-
-      // Distance the container top has traveled past the navbar pinning line
-      const scrolled = topOffset - rect.top;
-
-      if (scrolled <= 0) {
-        setCurrentIndex(0);
-        setProgress(0);
+      // Zone 1: Section is below the navbar line (Hero / Ecosystem area)
+      // Allow normal page scroll so the user naturally scrolls into the section.
+      if (rect.top > topOffset + 8) {
         return;
       }
 
-      if (scrolled >= maxScroll) {
-        setCurrentIndex(itemCount - 1);
-        setProgress(1);
+      // Zone 2: Section has scrolled past the viewport (Divider / Footer area)
+      // Allow normal page scroll while viewing content below the Experience stage.
+      if (rect.bottom < topOffset + 120) {
         return;
       }
 
-      const currentProgress = scrolled / maxScroll; // strictly 0 to 1
-      setProgress(currentProgress);
+      // If scrolling UP from below (e.g. from Divider section), allow normal page scroll
+      // until the section top comes back down to dock cleanly at the navbar line.
+      if (e.deltaY < 0 && rect.top < topOffset - 15) {
+        return;
+      }
 
-      const targetIndex = Math.min(
-        itemCount - 1,
-        Math.floor(currentProgress * itemCount)
-      );
+      // BOUNDARY CHECK 1: At LAST event and scrolling DOWN -> release to normal page scroll!
+      if (e.deltaY > 0 && currentIdx >= count - 1) {
+        if (inCooldown) {
+          // Absorb residual trackpad inertia from arriving at the last card
+          e.preventDefault();
+          (e as any).lenisStopPropagation = true;
+          return;
+        }
+        // New intentional scroll down at last event: release naturally to divider and footer!
+        wheelAccumulatorYRef.current = 0;
+        wheelAccumulatorXRef.current = 0;
+        return;
+      }
 
-      setCurrentIndex(targetIndex);
+      // BOUNDARY CHECK 2: At FIRST event and scrolling UP -> release to normal page scroll!
+      if (e.deltaY < 0 && currentIdx <= 0) {
+        if (inCooldown) {
+          // Absorb residual trackpad inertia from arriving at the first card
+          e.preventDefault();
+          (e as any).lenisStopPropagation = true;
+          return;
+        }
+        // New intentional scroll up at first event: release naturally to ecosystem and hero!
+        wheelAccumulatorYRef.current = 0;
+        wheelAccumulatorXRef.current = 0;
+        return;
+      }
+
+      // WHILE EXPLORING EVENTS: HOLD VIEWPOINT FIXED
+      // Consume wheel event so neither native document nor Lenis scrolls the page away
+      e.preventDefault();
+      e.stopPropagation();
+      (e as any).lenisStopPropagation = true;
+
+      // If slightly offset from dock line (e.g. within 35px), snap dock position instantly
+      const dockY = Math.round(rect.top + window.scrollY - topOffset);
+      const diff = Math.abs(window.scrollY - dockY);
+      if (diff > 1 && diff <= 35) {
+        window.scrollTo({ top: dockY, behavior: 'instant' });
+      }
+
+      // If in cooldown from a recent card transition, absorb momentum and ignore
+      if (inCooldown) {
+        return;
+      }
+
+      // Reset idle timer for wheel accumulator
+      if (idleTimerRef.current) {
+        clearTimeout(idleTimerRef.current);
+      }
+      idleTimerRef.current = setTimeout(() => {
+        wheelAccumulatorYRef.current = 0;
+        wheelAccumulatorXRef.current = 0;
+      }, 180);
+
+      const isHorizontal = Math.abs(e.deltaX) > Math.abs(e.deltaY) * 1.2;
+      const THRESHOLD = 35;
+
+      if (isHorizontal) {
+        wheelAccumulatorXRef.current += e.deltaX;
+        if (wheelAccumulatorXRef.current >= THRESHOLD && currentIdx < count - 1) {
+          wheelAccumulatorXRef.current = 0;
+          cooldownUntilRef.current = Date.now() + 380;
+          const nextIdx = currentIdx + 1;
+          if (controlledIndexRef.current === undefined) setInternalIndex(nextIdx);
+          onIndexChangeRef.current?.(nextIdx);
+        } else if (wheelAccumulatorXRef.current <= -THRESHOLD && currentIdx > 0) {
+          wheelAccumulatorXRef.current = 0;
+          cooldownUntilRef.current = Date.now() + 380;
+          const prevIdx = currentIdx - 1;
+          if (controlledIndexRef.current === undefined) setInternalIndex(prevIdx);
+          onIndexChangeRef.current?.(prevIdx);
+        }
+      } else {
+        wheelAccumulatorYRef.current += e.deltaY;
+        if (wheelAccumulatorYRef.current >= THRESHOLD && currentIdx < count - 1) {
+          wheelAccumulatorYRef.current = 0;
+          cooldownUntilRef.current = Date.now() + 380;
+          const nextIdx = currentIdx + 1;
+          if (controlledIndexRef.current === undefined) setInternalIndex(nextIdx);
+          onIndexChangeRef.current?.(nextIdx);
+        } else if (wheelAccumulatorYRef.current <= -THRESHOLD && currentIdx > 0) {
+          wheelAccumulatorYRef.current = 0;
+          cooldownUntilRef.current = Date.now() + 380;
+          const prevIdx = currentIdx - 1;
+          if (controlledIndexRef.current === undefined) setInternalIndex(prevIdx);
+          onIndexChangeRef.current?.(prevIdx);
+        }
+      }
     };
 
-    const onScroll = () => {
-      cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(handleScroll);
-    };
-
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll, { passive: true });
-    handleScroll();
+    section.addEventListener('wheel', handleWheel, { passive: false });
 
     return () => {
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
-      cancelAnimationFrame(rafId);
+      section.removeEventListener('wheel', handleWheel);
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
     };
-  }, [containerId, itemCount, getNavbarOffset]);
+  }, [getNavbarOffset]);
 
-  // Navigate directly to a specific card and synchronize scroll position
+  // Navigate directly to a specific card without scrolling the document
   const handleSelectIndex = React.useCallback(
     (targetIdx: number) => {
-      if (typeof window === 'undefined' || targetIdx < 0 || targetIdx >= itemCount) {
+      if (targetIdx < 0 || targetIdx >= itemCount) {
         return;
       }
-      const container = document.getElementById(containerId);
-      if (!container) return;
-
-      container.setAttribute('data-nav-locking', 'true');
-      setCurrentIndex(targetIdx);
-
-      const topOffset = getNavbarOffset();
-      const rect = container.getBoundingClientRect();
-      const containerTopInDoc = window.scrollY + rect.top;
-      const stickyHeight = window.innerHeight - topOffset;
-      const maxScroll = container.offsetHeight - stickyHeight;
-
-      if (maxScroll > 0) {
-        const targetProgress = (targetIdx + 0.5) / itemCount;
-        const targetScrollY =
-          containerTopInDoc - topOffset + targetProgress * maxScroll;
-
-        window.scrollTo({
-          top: targetScrollY,
-          behavior: 'smooth',
-        });
+      if (controlledIndex === undefined) {
+        setInternalIndex(targetIdx);
       }
-
-      window.setTimeout(() => {
-        const c = document.getElementById(containerId);
-        if (c) c.removeAttribute('data-nav-locking');
-      }, 650);
+      onIndexChange?.(targetIdx);
     },
-    [containerId, getNavbarOffset, itemCount]
+    [controlledIndex, itemCount, onIndexChange]
   );
 
   const handleBack = React.useCallback(() => {
@@ -172,20 +267,17 @@ export function ScrollLockedSection({
     }
   }, [currentIndex, handleSelectIndex, itemCount, nextSectionId]);
 
-  // Height formula: 100vh base view + 75vh scroll distance per additional card
-  const scrollContainerHeight = `${100 + (itemCount - 1) * 75}vh`;
-
   return (
     <div
       id={containerId}
       className={`relative z-20 w-full ${className}`}
-      style={{ height: scrollContainerHeight }}
     >
-      {/* Viewport-locked sticky stage: flush edge-to-edge layout with zero corner color gaps */}
+      {/* Pinned viewport stage flush beneath navbar */}
       <section
         id={id}
+        ref={sectionRef}
         aria-label={ariaLabel}
-        className="sticky top-[78px] sm:top-[84px] xl:top-[90px] w-full h-[calc(100vh-78px)] sm:h-[calc(100vh-84px)] xl:h-[calc(100vh-90px)] overflow-hidden bg-[#16171B] border-t border-white/15 border-b border-white/10 shadow-[0_-16px_36px_rgba(0,0,0,0.35)]"
+        className="sticky top-[78px] sm:top-[84px] xl:top-[90px] w-full h-[calc(100vh-78px)] sm:h-[calc(100vh-84px)] xl:h-[calc(100vh-90px)] min-h-[640px] max-h-[960px] overflow-hidden bg-[#16171B] border-t border-white/15 border-b border-white/10 shadow-[0_-16px_36px_rgba(0,0,0,0.35)]"
       >
         {typeof children === 'function'
           ? children({

@@ -9,6 +9,8 @@ export interface ExperienceEventGalleryProps {
   currentIndex: number;
   onIndexChange: (index: number) => void;
   brand: string;
+  activeCategory?: 'learn' | 'build' | 'connect';
+  onCategoryChange?: (category: 'learn' | 'build' | 'connect') => void;
   onBack?: () => void;
   onNext?: () => void;
   backLabel?: string;
@@ -29,6 +31,8 @@ export function ExperienceEventGallery({
   currentIndex,
   onIndexChange,
   brand,
+  activeCategory,
+  onCategoryChange,
   onBack,
   onNext,
   backLabel,
@@ -42,6 +46,8 @@ export function ExperienceEventGallery({
       index={currentIndex}
       onIndexChange={onIndexChange}
       brand={brand}
+      activeCategory={activeCategory}
+      onCategoryChange={onCategoryChange}
       onBack={onBack}
       onNext={onNext}
       backLabel={backLabel}
