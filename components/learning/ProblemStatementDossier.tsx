@@ -37,21 +37,21 @@ export function ProblemStatementDossier({ ps }: ProblemStatementDossierProps) {
 
         {/* Mathematical & Quantum Formulation */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709]">
+          <div className="p-4 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] min-w-0">
             <h4 className="text-xs font-bold text-slate-900 dark:text-[#FAF6F3] mb-2 flex items-center gap-1.5">
               <Layers className="w-3.5 h-3.5 text-burgundy dark:text-[#E89BA5]" />
               Mathematical Formulation
             </h4>
-            <p className="text-xs font-mono text-slate-800 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-[#1C0A0D] p-2.5 rounded border border-slate-200/60 dark:border-[#3D1418]">
+            <p className="text-xs font-mono text-slate-800 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-[#1C0A0D] p-2.5 rounded border border-slate-200/60 dark:border-[#3D1418] overflow-x-auto break-words whitespace-pre-wrap">
               {ps.mathematicalFormulation}
             </p>
           </div>
-          <div className="p-4 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709]">
+          <div className="p-4 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] min-w-0">
             <h4 className="text-xs font-bold text-slate-900 dark:text-[#FAF6F3] mb-2 flex items-center gap-1.5">
               <Cpu className="w-3.5 h-3.5 text-burgundy dark:text-[#E89BA5]" />
               Quantum Algorithm & Primitives
             </h4>
-            <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-[#1C0A0D] p-2.5 rounded border border-slate-200/60 dark:border-[#3D1418]">
+            <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-[#1C0A0D] p-2.5 rounded border border-slate-200/60 dark:border-[#3D1418] overflow-x-auto break-words whitespace-pre-wrap">
               {ps.quantumFormulation}
             </p>
           </div>

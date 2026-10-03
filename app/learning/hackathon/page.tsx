@@ -226,7 +226,7 @@ export default function HackathonWorkspacePage() {
 
   return (
     <AuthGate onSessionChange={setSessionUser}>
-      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 animate-in fade-in slide-in-from-bottom-4 duration-500 font-sans">
 
           {/* Loading state */}
           {isLoading ? (

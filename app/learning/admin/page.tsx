@@ -253,11 +253,11 @@ export default function AdminConsolePage() {
           </div>
 
           {/* Navigation Tabs */}
-          <div className="flex border-b border-slate-200 dark:border-[#3D1418] gap-2">
+          <div className="flex border-b border-slate-200 dark:border-[#3D1418] gap-2 overflow-x-auto no-scrollbar pb-px">
             <button
               type="button"
               onClick={() => setActiveTab('analytics')}
-              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
+              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
                 activeTab === 'analytics'
                   ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
                   : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
@@ -270,7 +270,7 @@ export default function AdminConsolePage() {
             <button
               type="button"
               onClick={() => setActiveTab('whitelist')}
-              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
+              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
                 activeTab === 'whitelist'
                   ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
                   : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
@@ -283,7 +283,7 @@ export default function AdminConsolePage() {
             <button
               type="button"
               onClick={() => setActiveTab('overrides')}
-              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
+              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
                 activeTab === 'overrides'
                   ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
                   : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'

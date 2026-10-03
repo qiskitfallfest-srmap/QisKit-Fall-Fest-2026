@@ -278,7 +278,7 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
         </div>
       )}
 
-      <div className="w-full max-w-md bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl shadow-sm p-6 sm:p-8 font-sans">
+      <div className="w-full max-w-md bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-2xl shadow-lg p-5 sm:p-8 font-sans">
         <div className="text-center mb-6">
           <div className="w-12 h-12 rounded-full bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] flex items-center justify-center mx-auto mb-3">
             <Lock className="w-6 h-6" />
@@ -362,7 +362,7 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
               onChange={(e) => setInputEmail(e.target.value)}
               placeholder="e.g. participant@gmail.com"
               required
-              className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] rounded-lg focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy dark:placeholder-slate-500"
+              className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] rounded-lg focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy dark:placeholder-slate-500"
             />
           </div>
 
@@ -375,7 +375,7 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
               value={inputName}
               onChange={(e) => setInputName(e.target.value)}
               placeholder="e.g. A. Sharma"
-              className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] rounded-lg focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy dark:placeholder-slate-500"
+              className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] rounded-lg focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy dark:placeholder-slate-500"
             />
           </div>
 

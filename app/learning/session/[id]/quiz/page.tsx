@@ -95,7 +95,7 @@ export default function DedicatedQuizPage() {
       <div className="min-h-screen bg-slate-50/60 dark:bg-[#100405] pb-16 font-sans">
         {/* Navigation Breadcrumb Bar */}
         <div className="bg-white dark:bg-[#150709] border-b border-slate-200 dark:border-[#3D1418]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-2">
             <Link
               href={`/learning/session/${sessionId}`}
               className="font-mono text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-burgundy dark:hover:text-[#E89BA5] flex items-center gap-1.5 transition-colors uppercase tracking-wider"
@@ -112,21 +112,23 @@ export default function DedicatedQuizPage() {
           </div>
         </div>
 
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 font-sans">
+        <div className="max-w-3xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-8 font-sans">
           <div className="bg-white dark:bg-[#150709] rounded-xl shadow-xs border border-slate-200 dark:border-[#3D1418] overflow-hidden">
             {/* Header */}
-            <div className="px-6 py-5 bg-slate-50 dark:bg-[#1C0A0D] border-b border-slate-200 dark:border-[#3D1418] flex items-center justify-between font-sans">
-              <div>
-                <span className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-burgundy dark:text-[#E89BA5]">
+            <div className="px-4 py-4 sm:px-6 sm:py-5 bg-slate-50 dark:bg-[#1C0A0D] border-b border-slate-200 dark:border-[#3D1418] flex items-center justify-between font-sans">
+              <div className="min-w-0 pr-2">
+                <span className="font-mono text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.2em] text-burgundy dark:text-[#E89BA5] block">
                   Concept Check Verification
                 </span>
-                <h1 className="font-serif text-xl sm:text-2xl font-bold text-slate-900 dark:text-[#FAF6F3] mt-1">{quiz.title}</h1>
+                <h1 className="font-serif text-lg sm:text-2xl font-bold text-slate-900 dark:text-[#FAF6F3] mt-1 leading-snug truncate sm:whitespace-normal">
+                  {quiz.title}
+                </h1>
               </div>
-              <Award className="w-8 h-8 text-burgundy/20 dark:text-[#E89BA5]/30" />
+              <Award className="w-7 h-7 sm:w-8 sm:h-8 text-burgundy/30 dark:text-[#E89BA5]/30 shrink-0" />
             </div>
 
             {/* Content */}
-            <div className="p-6 sm:p-8">
+            <div className="p-4 sm:p-8">
               {results ? (
                 <div className="space-y-8">
                   {/* Result banner */}

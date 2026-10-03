@@ -10,7 +10,7 @@ export default function LearningLayout({ children }: { children: React.ReactNode
         {/* Sidebar - flows normally on mobile, sticky under navbar on desktop */}
         <aside 
           data-lenis-prevent="true"
-          className="w-full md:w-72 bg-white dark:bg-[#150709] border-r border-slate-200 dark:border-[#3D1418] shrink-0 md:sticky md:top-[78px] sm:md:top-[84px] xl:md:top-[90px] md:h-[calc(100vh-78px)] sm:md:h-[calc(100vh-84px)] xl:md:h-[calc(100vh-90px)] md:flex md:flex-col md:overflow-hidden z-30 overscroll-contain"
+          className="w-full md:w-72 bg-white dark:bg-[#150709] border-b md:border-b-0 md:border-r border-slate-200 dark:border-[#3D1418] shrink-0 md:sticky md:top-[78px] sm:md:top-[84px] xl:md:top-[90px] md:h-[calc(100vh-78px)] sm:md:h-[calc(100vh-84px)] xl:md:h-[calc(100vh-90px)] md:flex md:flex-col md:overflow-hidden z-30 overscroll-contain"
           style={{ overscrollBehavior: 'contain' }}
         >
           <Suspense fallback={<div className="p-4 font-mono text-xs text-slate-400 uppercase tracking-wider">Loading curriculum...</div>}>

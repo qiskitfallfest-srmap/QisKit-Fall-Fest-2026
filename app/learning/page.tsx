@@ -158,11 +158,11 @@ function LearningDashboardContent() {
     const sessionQuiz = SESSION_QUIZZES[sessionId];
 
     return (
-      <div className="max-w-5xl mx-auto px-6 py-8 animate-in fade-in duration-500">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-8 animate-in fade-in duration-500 font-sans">
         {/* Session Header */}
-        <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="mb-4 sm:mb-6 flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
               <span className="font-mono px-2.5 py-0.5 rounded-full bg-burgundy/10 text-burgundy font-semibold text-[11px] uppercase tracking-[0.2em]">
                 Session {session.sessionNumber} · Day {session.day}
               </span>
@@ -171,7 +171,7 @@ function LearningDashboardContent() {
                 {session.duration}
               </span>
             </div>
-            <h1 className="font-serif text-2xl md:text-3xl lg:text-4xl font-bold text-[#181313] dark:text-[#FAF6F3] tracking-tight">
+            <h1 className="font-serif text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-[#181313] dark:text-[#FAF6F3] tracking-tight">
               {session.title}
             </h1>
           </div>
@@ -184,7 +184,7 @@ function LearningDashboardContent() {
             ) : (
               <Link
                 href={`/learning/session/${session.id}/quiz`}
-                className="px-4 py-2 bg-burgundy text-white text-xs font-semibold rounded-lg hover:bg-burgundy-deep transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer font-sans"
+                className="w-full sm:w-auto px-4 py-2 bg-burgundy text-white text-xs font-semibold rounded-lg hover:bg-burgundy-deep transition-colors shadow-xs flex items-center justify-center gap-1.5 cursor-pointer font-sans"
               >
                 <Award className="w-4 h-4" />
                 {sessionProgress.videoCompleted ? 'Take Concept Quiz' : 'Concept Quiz'}
@@ -300,29 +300,29 @@ function LearningDashboardContent() {
     }
 
     return (
-      <div className="max-w-4xl mx-auto px-6 py-8 animate-in fade-in duration-500 font-sans">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-8 animate-in fade-in duration-500 font-sans">
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-burgundy/10 rounded-xl">
-            <Award className="w-8 h-8 text-burgundy" />
+          <div className="p-2.5 sm:p-3 bg-burgundy/10 rounded-xl shrink-0">
+            <Award className="w-7 h-7 sm:w-8 sm:h-8 text-burgundy" />
           </div>
-          <div>
-            <div className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-burgundy dark:text-[#E89BA5] mb-1">
+          <div className="min-w-0">
+            <div className="font-mono text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.2em] text-burgundy dark:text-[#E89BA5] mb-0.5">
               QISKIT FALL FEST COMPETITION
             </div>
-            <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-[#181313] dark:text-[#FAF6F3] tracking-tight">
+            <h1 className="font-serif text-xl sm:text-2xl md:text-3xl font-bold text-[#181313] dark:text-[#FAF6F3] tracking-tight">
               Daily Challenge: Day {day}
             </h1>
-            <p className="font-sans text-slate-500 text-xs sm:text-sm mt-1">{challenge.subtitle}</p>
+            <p className="font-sans text-slate-500 text-xs sm:text-sm mt-0.5">{challenge.subtitle}</p>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-2xl shadow-xs p-6 sm:p-8 space-y-6">
+        <div className="bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-2xl shadow-xs p-4 sm:p-8 space-y-6">
           <div>
-            <h2 className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-[#181313] dark:text-[#FAF6F3] mb-2">{challenge.title}</h2>
+            <h2 className="font-serif text-lg sm:text-2xl font-bold tracking-tight text-[#181313] dark:text-[#FAF6F3] mb-2">{challenge.title}</h2>
             <p className="font-sans text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">{challenge.description}</p>
           </div>
 
-          <div className="bg-[#FAF7F4] dark:bg-[#1C0A0D] rounded-xl p-5 border border-slate-100 dark:border-[#3D1418]">
+          <div className="bg-[#FAF7F4] dark:bg-[#1C0A0D] rounded-xl p-4 sm:p-5 border border-slate-100 dark:border-[#3D1418]">
             <h3 className="font-mono font-bold text-burgundy dark:text-[#E89BA5] text-xs uppercase tracking-[0.18em] mb-2.5">
               Submission Guidelines
             </h3>
@@ -360,12 +360,12 @@ function LearningDashboardContent() {
                     }
                     placeholder={challenge.urlPlaceholder}
                     required
-                    className="flex-1 px-3.5 py-2.5 text-xs font-mono border border-slate-300 dark:border-[#3D1418] rounded-xl focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy dark:bg-[#1C0A0D]"
+                    className="flex-1 px-3.5 py-2.5 text-base sm:text-xs font-mono border border-slate-300 dark:border-[#3D1418] rounded-xl focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy dark:bg-[#1C0A0D]"
                   />
                   <button
                     type="submit"
                     disabled={isSubmittingComp[challenge.type]}
-                    className="px-5 py-2.5 bg-burgundy hover:bg-burgundy-deep text-white text-xs font-semibold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5 shrink-0 cursor-pointer font-sans"
+                    className="w-full sm:w-auto px-5 py-2.5 bg-burgundy hover:bg-burgundy-deep text-white text-xs font-semibold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5 shrink-0 cursor-pointer font-sans"
                   >
                     <Send className="w-3.5 h-3.5" />
                     {competitions[challenge.type] ? 'Update Submission' : 'Submit Now'}
