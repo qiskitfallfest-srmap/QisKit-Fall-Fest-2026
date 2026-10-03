@@ -8,6 +8,7 @@ import { TeammateInput } from '@/components/learning/TeammateInput';
 import { ProblemStatementDossier } from '@/components/learning/ProblemStatementDossier';
 import { PROBLEM_STATEMENTS } from '@/data/learning/problem-statements';
 import { VerticalType, ProblemStatement } from '@/data/learning/types';
+import { trackTeamCreated } from '@/lib/analytics';
 import {
   Users,
   Shield,
@@ -159,6 +160,7 @@ export default function HackathonWorkspacePage() {
         return;
       }
 
+      trackTeamCreated(teamName.trim(), 1 + teammates.length);
       await fetchTeamData();
     } catch (err: any) {
       setTeamFormError(err?.message || 'Error creating team.');

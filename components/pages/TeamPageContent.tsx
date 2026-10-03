@@ -10,6 +10,8 @@ import { BlurReveal } from '@/components/ui/blur-reveal';
 import { TextBlockAnimation } from '@/components/ui/text-block-animation';
 import { MagicText } from '@/components/ui/magic-text';
 import { OrganizationalTreeChart } from '@/components/team/OrganizationalTreeChart';
+import { REGISTRATION_URL } from '@/lib/constants';
+import { trackUnstopClick } from '@/lib/analytics';
 
 interface StatItem {
   id: string;
@@ -137,31 +139,6 @@ function AnimatedCountStat({
 }
 
 export default function TeamPage() {
-  // Deep-link hash handling for #organizing-structure and #section-04-organizational-structure
-  React.useEffect(() => {
-    const handleHash = () => {
-      const hash = window.location.hash;
-      if (
-        hash === '#organizing-structure' ||
-        hash === '#section-04-organizational-structure' ||
-        hash === '#section-05-organizational-structure'
-      ) {
-        setTimeout(() => {
-          const el =
-            document.getElementById('organizing-structure') ||
-            document.getElementById('section-04-organizational-structure') ||
-            document.getElementById('section-05-organizational-structure');
-          if (el) {
-            el.scrollIntoView({ behavior: 'smooth' });
-          }
-        }, 150);
-      }
-    };
-    handleHash();
-    window.addEventListener('hashchange', handleHash);
-    return () => window.removeEventListener('hashchange', handleHash);
-  }, []);
-
   return (
     <div className="w-full flex flex-col min-h-screen bg-[var(--background)] text-[var(--foreground)] selection:bg-[#6C151E] selection:text-[#F5F3F0]">
 
@@ -372,9 +349,6 @@ export default function TeamPage() {
         aria-label="Organizational Structure & Hierarchy"
         className="w-full py-20 sm:py-24 lg:py-28 bg-[#F5F3F0] dark:bg-[#1A0507] border-b border-[#3A0B10]/15 dark:border-[#F5F3F0]/10 transition-colors duration-300 relative overflow-hidden"
       >
-        {/* Deep-link target anchor for Event Highlights & Navbar links */}
-        <div id="organizing-structure" aria-hidden="true" className="absolute -top-24 pointer-events-none" />
-
         <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-12 space-y-16">
 
           {/* Section Header */}
@@ -456,9 +430,10 @@ export default function TeamPage() {
           {/* Action CTAs */}
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 pt-4">
             <a
-              href="https://unstop.com"
+              href={REGISTRATION_URL}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackUnstopClick('team_page')}
               className="group inline-flex items-center gap-3 px-8 py-4 rounded-xl text-base font-semibold bg-[#F5F3F0] text-[#3A0B10] hover:bg-white hover:shadow-2xl transition-all duration-300"
             >
               <span>Register on Unstop</span>

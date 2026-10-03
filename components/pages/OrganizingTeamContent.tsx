@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { Footer } from '@/components/shared/Footer';
 import { REGISTRATION_URL } from '@/lib/constants';
+import { trackUnstopClick } from '@/lib/analytics';
 
 // ─────────────────────────────────────────────────────────────
 // TYPES & DATA STRUCTURES
@@ -1610,6 +1611,7 @@ export default function OrganizingTeamPage() {
               href={REGISTRATION_URL}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackUnstopClick('organizing_team_page')}
               className="group inline-flex items-center gap-3 px-8 py-4 rounded-xl text-base font-semibold bg-[#F5F3F0] text-[#3A0B10] hover:bg-white hover:shadow-2xl transition-all duration-300"
             >
               <span>Register on Unstop</span>

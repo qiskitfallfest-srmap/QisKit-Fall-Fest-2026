@@ -17,6 +17,7 @@ import {
 } from 'motion/react';
 import clsx from 'clsx';
 import { REGISTRATION_URL } from '@/lib/constants';
+import { trackUnstopClick } from '@/lib/analytics';
 
 export const NAVBAR_JOIN_HREF = REGISTRATION_URL;
 export { REGISTRATION_URL };
@@ -515,6 +516,7 @@ export function Navbar() {
             target="_blank"
             rel="noopener noreferrer"
             data-cursor="cta"
+            onClick={() => trackUnstopClick('navbar_desktop')}
             onMouseEnter={() => setIsJoinHovered(true)}
             onMouseLeave={() => setIsJoinHovered(false)}
             style={{
@@ -639,6 +641,10 @@ export function Navbar() {
                 target="_blank"
                 rel="noopener noreferrer"
                 data-cursor="cta"
+                onClick={() => {
+                  trackUnstopClick('navbar_mobile');
+                  setMobileMenuOpen(false);
+                }}
                 onMouseEnter={() => setIsMobileJoinHovered(true)}
                 onMouseLeave={() => setIsMobileJoinHovered(false)}
                 style={{
