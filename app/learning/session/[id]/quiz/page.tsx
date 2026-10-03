@@ -94,29 +94,29 @@ export default function DedicatedQuizPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
             <Link
               href={`/learning/session/${sessionId}`}
-              className="text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-1.5 transition-colors"
+              className="font-mono text-xs font-semibold text-slate-600 hover:text-burgundy flex items-center gap-1.5 transition-colors uppercase tracking-wider"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               Back to Session {session.sessionNumber}
             </Link>
 
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500 font-medium">Day 0{session.day}</span>
+            <div className="flex items-center gap-2 font-mono text-xs">
+              <span className="text-slate-500 font-medium">Day 0{session.day}</span>
               <span className="text-slate-300">/</span>
-              <span className="text-xs font-bold text-slate-900">Concept Quiz</span>
+              <span className="font-bold text-slate-900">Concept Quiz</span>
             </div>
           </div>
         </div>
 
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 font-sans">
           <div className="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
             {/* Header */}
-            <div className="px-6 py-5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+            <div className="px-6 py-5 bg-slate-50 border-b border-slate-200 flex items-center justify-between font-sans">
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-burgundy">
+                <span className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-burgundy">
                   Concept Check Verification
                 </span>
-                <h1 className="text-xl font-bold text-slate-900 mt-1">{quiz.title}</h1>
+                <h1 className="font-serif text-xl sm:text-2xl font-bold text-slate-900 mt-1">{quiz.title}</h1>
               </div>
               <Award className="w-8 h-8 text-burgundy/20" />
             </div>

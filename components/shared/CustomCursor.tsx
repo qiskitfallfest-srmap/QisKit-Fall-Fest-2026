@@ -113,8 +113,20 @@ export function CustomCursor() {
     };
 
     const onPointerMove = (e: PointerEvent) => {
+      // Disregard mobile touch events to avoid unwanted tap artifacts
+      if (e.pointerType === 'touch') {
+        if (isVisible) {
+          isVisible = false;
+          updateHoverStyles();
+        }
+        return;
+      }
+
       targetX = e.clientX;
       targetY = e.clientY;
+
+      const wasVisible = isVisible;
+      const wasMoved = hasMoved;
 
       if (!hasMoved) {
         hasMoved = true;
@@ -130,15 +142,24 @@ export function CustomCursor() {
 
       // Check hover targets
       const target = e.target as HTMLElement | null;
-      if (!target) return;
+      let nextHover: HoverState = 'default';
 
-      // When hovering over inputs or text areas, hide custom cursor to keep native text cursor
-      if (target.closest('input, textarea, [contenteditable="true"], select')) {
-        if (currentHover !== 'hidden') {
-          currentHover = 'hidden';
-          updateHoverStyles();
+      if (target) {
+        // When hovering over inputs or text areas, hide custom cursor to keep native text cursor
+        if (target.closest('input, textarea, [contenteditable="true"], select')) {
+          nextHover = 'hidden';
+        } else if (
+          target.closest("[data-cursor='cta']") ||
+          target.closest("a[href*='unstop'], button[data-cta='true']")
+        ) {
+          nextHover = 'cta';
+        } else if (
+          target.closest("a, button, [role='button'], [data-cursor='interactive'], summary")
+        ) {
+          nextHover = 'interactive';
+        } else {
+          nextHover = 'default';
         }
-        return;
       }
 
       // Check for CTA targets
@@ -146,7 +167,7 @@ export function CustomCursor() {
         target.closest("[data-cursor='cta']") ||
         target.closest("a[href*='unstop'], button[data-cta='true']")
       ) {
-        if (currentHover !== 'cta') {
+        if (currentHover !== 'cta' || !wasVisible || !wasMoved) {
           currentHover = 'cta';
           updateHoverStyles();
         }
@@ -159,7 +180,7 @@ export function CustomCursor() {
           "a, button, [role='button'], [data-cursor='interactive'], summary, .cursor-pointer, .cursor-grab, [role='group'][aria-roledescription='slide'], [role='tab'], [role='switch'], [role='checkbox'], [role='radio']"
         )
       ) {
-        if (currentHover !== 'interactive') {
+        if (currentHover !== 'interactive' || !wasVisible || !wasMoved) {
           currentHover = 'interactive';
           updateHoverStyles();
         }
@@ -167,18 +188,36 @@ export function CustomCursor() {
       }
 
       // Default state
-      if (currentHover !== 'default') {
+      if (currentHover !== 'default' || !wasVisible || !wasMoved) {
         currentHover = 'default';
+        updateHoverStyles();
+      }
         updateHoverStyles();
       }
     };
 
-    const onPointerDown = () => {
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') {
+        isVisible = false;
+        updateHoverStyles();
+        return;
+      }
       isDown = true;
+      if (!isVisible) {
+        isVisible = true;
+        targetX = e.clientX;
+        targetY = e.clientY;
+        dotX = targetX;
+        dotY = targetY;
+        ringX = targetX;
+        ringY = targetY;
+        hasMoved = true;
+      }
       updateHoverStyles();
     };
 
-    const onPointerUp = () => {
+    const onPointerUp = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') return;
       isDown = false;
       updateHoverStyles();
     };
@@ -188,11 +227,19 @@ export function CustomCursor() {
       updateHoverStyles();
     };
 
-    const onPointerEnter = () => {
-      if (hasMoved) {
-        isVisible = true;
-        updateHoverStyles();
+    const onPointerEnter = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') return;
+      isVisible = true;
+      targetX = e.clientX;
+      targetY = e.clientY;
+      if (!hasMoved) {
+        hasMoved = true;
+        dotX = targetX;
+        dotY = targetY;
+        ringX = targetX;
+        ringY = targetY;
       }
+      updateHoverStyles();
     };
 
     // Animation render loop
@@ -221,7 +268,7 @@ export function CustomCursor() {
     window.addEventListener('pointerdown', onPointerDown, { passive: true });
     window.addEventListener('pointerup', onPointerUp, { passive: true });
     document.addEventListener('mouseleave', onPointerLeave, { passive: true });
-    document.addEventListener('mouseenter', onPointerEnter, { passive: true });
+    document.addEventListener('pointerenter', onPointerEnter, { passive: true });
 
     animationFrameId = requestAnimationFrame(renderLoop);
 
@@ -231,7 +278,7 @@ export function CustomCursor() {
       window.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('pointerup', onPointerUp);
       document.removeEventListener('mouseleave', onPointerLeave);
-      document.removeEventListener('mouseenter', onPointerEnter);
+      document.removeEventListener('pointerenter', onPointerEnter);
       cancelAnimationFrame(animationFrameId);
     };
   }, [isSupported]);

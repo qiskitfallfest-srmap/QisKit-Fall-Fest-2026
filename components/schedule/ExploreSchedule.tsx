@@ -11,7 +11,6 @@ import {
   ChevronRight,
   Clock3,
   Filter,
-  Heart,
   MapPin,
   Play,
   Search,
@@ -24,12 +23,11 @@ import { Day, SchedulePhase, Session, Track } from '@/data/schedule.types';
 import { getPhaseDays, getPhaseInfo, filterSessions } from '@/data/schedule.utils';
 import { REGISTRATION_URL } from '@/lib/constants';
 import { PhaseSelector } from './PhaseSelector';
+import { StaggeredTextReveal } from '@/components/ui/StaggeredTextReveal';
 
 const posterImage = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="300" viewBox="0 0 600 300"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%233A0B10"/><stop offset="50%" stop-color="%236C151E"/><stop offset="100%" stop-color="%23120506"/></linearGradient></defs><rect width="600" height="300" fill="url(%23g)"/><g opacity="0.3" stroke="%23F5DABF" stroke-width="1.5" fill="none"><polygon points="300,40 420,95 420,205 300,260 180,205 180,95"/><line x1="300" y1="40" x2="300" y2="150"/><line x1="420" y1="95" x2="300" y2="150"/><line x1="180" y1="95" x2="300" y2="150"/><line x1="300" y1="150" x2="300" y2="260"/><line x1="420" y1="205" x2="300" y2="150"/><line x1="180" y1="205" x2="300" y2="150"/></g></svg>';
 
 const tracks = ['All', 'Workshop', 'Talk', 'Hackathon', 'Networking', 'Community'] as const;
-
-type ToastState = { message: string } | null;
 
 interface ExploreScheduleProps {
   currentPhase: SchedulePhase;
@@ -40,34 +38,7 @@ export function ExploreSchedule({ currentPhase, onPhaseChange }: ExploreSchedule
   const [dayIndex, setDayIndex] = useState(0);
   const [activeTrack, setActiveTrack] = useState<(typeof tracks)[number]>('All');
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [savedIds, setSavedIds] = useState<string[]>([]);
   const [search, setSearch] = useState('');
-  const [showSavedOnly, setShowSavedOnly] = useState(false);
-  const [toast, setToast] = useState<ToastState>(null);
-
-  // Load saved sessions from localStorage on client render
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('qff_saved_sessions_2026');
-      if (stored) {
-        setSavedIds(JSON.parse(stored));
-      } else {
-        setSavedIds(['on-d1-s1-qiskit']);
-      }
-    } catch {
-      setSavedIds(['on-d1-s1-qiskit']);
-    }
-  }, []);
-
-  // Save sessions to localStorage when updated
-  const updateSavedIds = (newSaved: string[]) => {
-    setSavedIds(newSaved);
-    try {
-      localStorage.setItem('qff_saved_sessions_2026', JSON.stringify(newSaved));
-    } catch {
-      // ignore
-    }
-  };
 
   const phaseInfo = getPhaseInfo(currentPhase);
   const currentDays = getPhaseDays(currentPhase);
@@ -78,24 +49,14 @@ export function ExploreSchedule({ currentPhase, onPhaseChange }: ExploreSchedule
     setSelectedId(null);
     setSearch('');
     setActiveTrack('All');
-    setShowSavedOnly(false);
   }, [currentPhase]);
 
   const activeDay: Day = currentDays[dayIndex] || currentDays[0];
 
   const visibleSessions = useMemo(() => {
     let list = activeDay ? activeDay.sessions : [];
-    
-    // Filter by track and search query
-    list = filterSessions(list, activeTrack, search);
-
-    // If My Schedule / Wishlist filter active
-    if (showSavedOnly) {
-      list = list.filter((s) => savedIds.includes(s.id));
-    }
-
-    return list;
-  }, [activeDay, activeTrack, search, showSavedOnly, savedIds]);
+    return filterSessions(list, activeTrack, search);
+  }, [activeDay, activeTrack, search]);
 
   // Return null when no session is clicked so timeline expands full width
   const selectedSession = useMemo(() => {
@@ -106,34 +67,10 @@ export function ExploreSchedule({ currentPhase, onPhaseChange }: ExploreSchedule
     return null;
   }, [selectedId, activeDay]);
 
-  useEffect(() => {
-    if (!toast) return;
-    const timer = window.setTimeout(() => setToast(null), 2800);
-    return () => window.clearTimeout(timer);
-  }, [toast]);
-
   const selectDay = (index: number) => {
     setDayIndex(index);
     setSelectedId(null);
-    setShowSavedOnly(false);
   };
-
-  const toggleSaveSession = (session: Session, e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    const isSaved = savedIds.includes(session.id);
-    const updated = isSaved
-      ? savedIds.filter((id) => id !== session.id)
-      : [...savedIds, session.id];
-    updateSavedIds(updated);
-
-    setToast({
-      message: isSaved
-        ? `Removed "${session.title}" from your schedule`
-        : `Added "${session.title}" to your schedule`,
-    });
-  };
-
-  const savedCount = savedIds.length;
 
   const renderDetailContent = (session: Session) => (
     <aside className="rounded-3xl border border-[#D9D0CB] dark:border-[rgba(108,21,30,0.4)] bg-white dark:bg-[#1C0709] p-5 sm:p-6 shadow-2xl space-y-5 transition-colors">
@@ -253,37 +190,24 @@ export function ExploreSchedule({ currentPhase, onPhaseChange }: ExploreSchedule
       )}
 
       {/* Action Buttons */}
-      <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <button
-          type="button"
-          onClick={(e) => toggleSaveSession(session, e)}
-          className={`flex items-center justify-center gap-2 rounded-xl py-3 px-4 text-xs font-bold transition-all shadow-md ${
-            savedIds.includes(session.id)
-              ? 'bg-emerald-700 text-white hover:bg-emerald-800'
-              : 'bg-[#6C151E] text-white hover:bg-[#4A0D14]'
-          }`}
-        >
-          {savedIds.includes(session.id) ? (
-            <>
-              <Check size={15} />
-              <span>Saved to Schedule</span>
-            </>
-          ) : (
-            <>
-              <Heart size={15} />
-              <span>Add to Schedule</span>
-            </>
-          )}
-        </button>
-
+      <div className="pt-2">
         <a
           href={session.registrationUrl || REGISTRATION_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 rounded-xl border border-[#D9D0CB] dark:border-white/20 bg-white/60 dark:bg-white/5 py-3 px-4 text-xs font-bold text-[#13090A] dark:text-white hover:bg-white transition-colors"
+          className="group relative flex w-full items-center justify-between overflow-hidden rounded-xl border border-[rgba(193,46,63,0.85)] bg-[#6C151E] text-white py-3.5 px-6 text-xs font-bold transition-all duration-300 shadow-md active:scale-[0.98]"
         >
-          <span>Register Now</span>
-          <ArrowRight size={14} />
+          {/* Expanding Circle Background Fill */}
+          <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-[#3A0B10] rounded-full opacity-0 pointer-events-none group-hover:w-[600px] group-hover:h-[600px] group-hover:opacity-100 transition-all duration-[1200ms] ease-[cubic-bezier(0.25,1,0.35,1)]" />
+
+          {/* Text */}
+          <span className="relative z-[1] tracking-wide">Register Now</span>
+
+          {/* Arrow */}
+          <ArrowRight
+            size={16}
+            className="relative z-[1] transition-transform duration-300 ease-out group-hover:translate-x-1.5"
+          />
         </a>
       </div>
 
@@ -305,51 +229,24 @@ export function ExploreSchedule({ currentPhase, onPhaseChange }: ExploreSchedule
           
           <header className="mb-4 sm:mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 pb-4 sm:pb-6 border-b border-[#D9D0CB]/70 dark:border-white/10">
             <div>
-              <div className="font-mono inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#6C151E] dark:text-[#E45464]">
-                <span className="block h-px w-5 bg-[#6C151E] dark:bg-[#E45464]" />
+              <div className="font-bold uppercase tracking-[0.28em] text-xs text-[#A7192A] dark:text-[#EF7885] inline-flex items-center gap-2">
+                <span className="block h-px w-5 bg-[#A7192A] dark:bg-[#EF7885]" />
                 {phaseInfo.title} &middot; {phaseInfo.dateRange}
               </div>
 
-              <h2 className="mt-2 font-serif text-[clamp(2rem,3.5vw,3.5rem)] font-bold leading-[0.96] tracking-tight text-[#13090A] dark:text-[#F6F2F1]">
-                Explore the <em className="font-semibold italic text-[#6C151E] dark:text-[#E45464]">schedule.</em>
+              <h2 className="mt-2 font-serif text-[clamp(2rem,3.5vw,3.5rem)] font-bold leading-[0.96] tracking-[-0.04em] text-[#A7192A] dark:text-[#EA8793]">
+                <StaggeredTextReveal text="Explore the" delay={0.1} stagger={0.02} letterClassName="text-[#A7192A] dark:text-[#EA8793]" />{' '}
+                <StaggeredTextReveal text="schedule." delay={0.25} stagger={0.025} letterClassName="font-serif italic font-semibold text-[#6C151E] dark:text-[#F5DABF]" />
               </h2>
 
-              <p className="mt-3 max-w-[720px] font-sans font-normal text-sm sm:text-base leading-relaxed text-[#665B57] dark:text-[#BEB5B4]">
+              <p className="mt-3 max-w-[720px] font-sans font-normal text-sm sm:text-base leading-relaxed text-[#4E4441] dark:text-[#D6CDCA]">
                 Browse sessions, filter by track, and plan your Fall Fest experience across Online and Offline phases.
               </p>
             </div>
 
-            {/* View Mode & My Schedule Counter Button */}
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center rounded-full border border-[#D9D0CB] dark:border-white/15 bg-white/40 dark:bg-white/5 p-1">
-                <button
-                  type="button"
-                  onClick={() => setShowSavedOnly(false)}
-                  className={`rounded-full px-4 py-2 text-xs font-bold transition-all ${
-                    !showSavedOnly
-                      ? 'bg-[#6C151E] text-white shadow-sm'
-                      : 'text-[#665B57] dark:text-[#BEB5B4] hover:text-[#6C151E]'
-                  }`}
-                >
-                  All Events &amp; Sessions ({activeDay?.sessions.length || 0})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowSavedOnly(true)}
-                  className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition-all ${
-                    showSavedOnly
-                      ? 'bg-[#6C151E] text-white shadow-sm'
-                      : 'text-[#665B57] dark:text-[#BEB5B4] hover:text-[#6C151E]'
-                  }`}
-                >
-                  <Heart size={13} fill={savedCount > 0 ? 'currentColor' : 'none'} />
-                  <span>My Wishlist ({savedCount})</span>
-                </button>
-              </div>
-
-              <div className="flex items-center">
-                <PhaseSelector currentPhase={currentPhase} onPhaseChange={onPhaseChange} variant="segmented" />
-              </div>
+            {/* Phase Selector */}
+            <div className="flex items-center">
+              <PhaseSelector currentPhase={currentPhase} onPhaseChange={onPhaseChange} variant="segmented" />
             </div>
           </header>
 
@@ -366,17 +263,21 @@ export function ExploreSchedule({ currentPhase, onPhaseChange }: ExploreSchedule
                     role="tab"
                     aria-selected={isActive}
                     onClick={() => selectDay(index)}
-                    className={`flex min-w-[100px] sm:min-w-[120px] flex-col items-center justify-center rounded-[16px] px-4 py-2.5 text-center transition-all duration-200 ${
+                    className={`group relative flex min-w-[100px] sm:min-w-[120px] flex-col items-center justify-center overflow-hidden rounded-[16px] px-4 py-2.5 text-center transition-all duration-[600ms] ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.96] cursor-pointer ${
                       isActive
-                        ? 'bg-gradient-to-b from-[#6C151E] to-[#4A0D14] text-white shadow-md'
-                        : 'text-[#665B57] dark:text-[#BEB5B4] hover:bg-white/40 dark:hover:bg-white/10'
+                        ? 'bg-gradient-to-b from-[#6C151E] to-[#4A0D14] text-white shadow-md scale-[1.02]'
+                        : 'text-[#665B57] dark:text-[#BEB5B4] hover:text-white'
                     }`}
                   >
-                    <span className="text-[10px] font-extrabold uppercase tracking-[0.14em] opacity-90">
+                    {/* Fluid expanding hover circle */}
+                    {!isActive && (
+                      <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-[#6C151E] dark:bg-[#A7192A] rounded-full opacity-0 pointer-events-none transition-all duration-[2400ms] ease-[cubic-bezier(0.25,1,0.35,1)] group-hover:w-[300px] group-hover:h-[300px] group-hover:opacity-100" />
+                    )}
+                    <span className="relative z-[1] text-[10px] font-extrabold uppercase tracking-[0.14em] opacity-90 transition-transform duration-300 group-hover:scale-105">
                       {item.label}
                     </span>
-                    <span className="text-xs sm:text-sm font-bold mt-0.5">{item.date}</span>
-                    <span className="text-[10px] opacity-75">{item.weekday}</span>
+                    <span className="relative z-[1] text-xs sm:text-sm font-bold mt-0.5">{item.date}</span>
+                    <span className="relative z-[1] text-[10px] opacity-75">{item.weekday}</span>
                   </button>
                 );
               })}
@@ -396,13 +297,17 @@ export function ExploreSchedule({ currentPhase, onPhaseChange }: ExploreSchedule
                     key={item}
                     type="button"
                     onClick={() => setActiveTrack(item)}
-                    className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                    className={`group relative overflow-hidden rounded-full border px-4 py-1.5 text-xs font-semibold transition-all duration-[600ms] ease-[cubic-bezier(0.23,1,0.32,1)] cursor-pointer active:scale-[0.95] ${
                       isActive
-                        ? 'border-[#6C151E] bg-[#6C151E] text-white shadow-sm'
-                        : 'border-[#D9D0CB] dark:border-white/15 bg-white/40 dark:bg-white/5 text-[#261F1D] dark:text-[#E8E0DE] hover:bg-white'
+                        ? 'border-[#6C151E] bg-[#6C151E] text-white shadow-md'
+                        : 'border-[#D9D0CB] dark:border-white/15 bg-white/40 dark:bg-white/5 text-[#261F1D] dark:text-[#E8E0DE] hover:border-[#6C151E] hover:text-white'
                     }`}
                   >
-                    {item}
+                    {/* Fluid expanding hover circle */}
+                    {!isActive && (
+                      <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-[#6C151E] dark:bg-[#A7192A] rounded-full opacity-0 pointer-events-none transition-all duration-[2400ms] ease-[cubic-bezier(0.25,1,0.35,1)] group-hover:w-[260px] group-hover:h-[260px] group-hover:opacity-100" />
+                    )}
+                    <span className="relative z-[1] transition-transform duration-300 group-hover:scale-105">{item}</span>
                   </button>
                 );
               })}
@@ -468,7 +373,6 @@ export function ExploreSchedule({ currentPhase, onPhaseChange }: ExploreSchedule
               <div className="space-y-3">
                 {visibleSessions.map((session) => {
                   const isSelected = selectedSession?.id === session.id;
-                  const isSaved = savedIds.includes(session.id);
 
                   return (
                     <React.Fragment key={session.id}>
@@ -526,19 +430,6 @@ export function ExploreSchedule({ currentPhase, onPhaseChange }: ExploreSchedule
                             </span>
                           )}
 
-                          <button
-                            type="button"
-                            onClick={(e) => toggleSaveSession(session, e)}
-                            title={isSaved ? 'Remove from schedule' : 'Add to schedule'}
-                            className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
-                              isSaved
-                                ? 'bg-[#6C151E] text-white'
-                                : 'border border-[#D9D0CB] dark:border-white/20 text-[#665B57] dark:text-[#BEB5B4] hover:bg-[#6C151E]/10'
-                            }`}
-                          >
-                            <Heart size={15} fill={isSaved ? 'currentColor' : 'none'} />
-                          </button>
-
                           <div className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
                             isSelected
                               ? 'bg-[#6C151E] text-white'
@@ -573,9 +464,7 @@ export function ExploreSchedule({ currentPhase, onPhaseChange }: ExploreSchedule
                 <CalendarDays size={36} className="mx-auto mb-3 text-[#6C151E] opacity-50" />
                 <h4 className="font-serif text-lg font-bold text-[#13090A] dark:text-white">No sessions found</h4>
                 <p className="mt-1 text-sm">
-                  {showSavedOnly
-                    ? 'Your schedule is currently empty for this day. Click the heart icon on any session to add it.'
-                    : 'Try adjusting your search query or track filters.'}
+                  Try adjusting your search query or track filters.
                 </p>
               </div>
             )}
@@ -602,14 +491,6 @@ export function ExploreSchedule({ currentPhase, onPhaseChange }: ExploreSchedule
         </div>
 
       </div>
-
-      {/* TOAST NOTIFICATION POPUP */}
-      {toast && (
-        <div className="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2.5 rounded-2xl bg-[#13090A] text-white px-4 py-3 text-xs font-semibold shadow-2xl border border-[#6C151E]/40 animate-bounce">
-          <Check size={16} className="text-[#F5DABF]" />
-          <span>{toast.message}</span>
-        </div>
-      )}
     </section>
   );
 }

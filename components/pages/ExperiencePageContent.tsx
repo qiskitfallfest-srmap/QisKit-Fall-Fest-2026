@@ -28,6 +28,42 @@ import { Footer } from '@/components/shared/Footer';
  * 8. Shared Footer
  */
 export default function ExperiencePageContent() {
+  React.useEffect(() => {
+    const handleHash = () => {
+      if (typeof window === 'undefined') return;
+      const hash = window.location.hash.toLowerCase().replace('#', '');
+      if (!hash) return;
+
+      const targetMap: Record<string, string> = {
+        learn: 'section-01-learn-container',
+        build: 'section-02-build-container',
+        connect: 'section-03-connect-container',
+        impact: 'gap-build-to-connect',
+      };
+
+      const targetId = targetMap[hash] || hash;
+      const element = document.getElementById(targetId) || document.getElementById(hash);
+      if (!element) return;
+
+      const lenis = (window as any).__lenis;
+      const navbarHeight =
+        window.innerWidth >= 1280 ? 90 : window.innerWidth >= 640 ? 84 : 78;
+
+      if (lenis && typeof lenis.scrollTo === 'function') {
+        lenis.scrollTo(element, { offset: -navbarHeight, duration: 1.0 });
+      } else {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    };
+
+    const timer = setTimeout(handleHash, 250);
+    window.addEventListener('hashchange', handleHash);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('hashchange', handleHash);
+    };
+  }, []);
+
   return (
     <main className="relative w-full flex flex-col min-h-screen bg-[#F5F3F0] dark:bg-[#16171B] transition-colors duration-300">
       {/* Primary Hero Section of Experience Page */}
@@ -37,6 +73,7 @@ export default function ExperiencePageContent() {
       <EcosystemStrip />
 
       {/* 01 — LEARN Section (Scroll-Locked Chapter) */}
+      <div id="learn" />
       <ExperienceSection
         id="section-01-learn"
         sectionNumber="01"
@@ -61,6 +98,7 @@ export default function ExperiencePageContent() {
       />
 
       {/* 02 — BUILD Section (Scroll-Locked Chapter: Card Sheet sliding over the middle divider) */}
+      <div id="build" />
       <ExperienceSection
         id="section-02-build"
         sectionNumber="02"
@@ -85,6 +123,7 @@ export default function ExperiencePageContent() {
       />
 
       {/* 03 — CONNECT Section (Scroll-Locked Chapter: Card Sheet sliding over the middle divider) */}
+      <div id="connect" />
       <ExperienceSection
         id="section-03-connect"
         sectionNumber="03"
@@ -96,6 +135,7 @@ export default function ExperiencePageContent() {
       />
 
       {/* Clean boundary reserved for future Ready to Take Part / Extended content */}
+      <div id="impact" />
       <div
         id="experience-future-content"
         className="w-full border-t border-[#6C151E]/10 dark:border-white/10"
