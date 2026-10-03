@@ -605,7 +605,7 @@ export function HeroCarousel({
             {/* Thumbnail Cards Row */}
             <div
               ref={railRef}
-              className="flex items-center gap-3 sm:gap-4 overflow-x-auto scrollbar-none py-2 px-8 sm:px-12 w-full scroll-smooth"
+              className="flex items-center gap-3 sm:gap-4 overflow-x-auto scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden py-2 px-8 sm:px-12 w-full scroll-smooth"
             >
               {items.map((item, i) => {
                 const isActive = i === index;
