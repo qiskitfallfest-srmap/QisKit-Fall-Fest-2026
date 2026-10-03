@@ -154,7 +154,9 @@ export function CustomCursor() {
         ) {
           nextHover = 'cta';
         } else if (
-          target.closest("a, button, [role='button'], [data-cursor='interactive'], summary")
+          target.closest(
+            "a, button, [role='button'], [data-cursor='interactive'], summary, .cursor-pointer, .cursor-grab, [role='group'][aria-roledescription='slide'], [role='tab'], [role='switch'], [role='checkbox'], [role='radio']"
+          )
         ) {
           nextHover = 'interactive';
         } else {
@@ -162,36 +164,8 @@ export function CustomCursor() {
         }
       }
 
-      // Check for CTA targets
-      if (
-        target.closest("[data-cursor='cta']") ||
-        target.closest("a[href*='unstop'], button[data-cta='true']")
-      ) {
-        if (currentHover !== 'cta' || !wasVisible || !wasMoved) {
-          currentHover = 'cta';
-          updateHoverStyles();
-        }
-        return;
-      }
-
-      // Check for standard interactive elements (buttons, links, clickable cards, grab areas, etc.)
-      if (
-        target.closest(
-          "a, button, [role='button'], [data-cursor='interactive'], summary, .cursor-pointer, .cursor-grab, [role='group'][aria-roledescription='slide'], [role='tab'], [role='switch'], [role='checkbox'], [role='radio']"
-        )
-      ) {
-        if (currentHover !== 'interactive' || !wasVisible || !wasMoved) {
-          currentHover = 'interactive';
-          updateHoverStyles();
-        }
-        return;
-      }
-
-      // Default state
-      if (currentHover !== 'default' || !wasVisible || !wasMoved) {
-        currentHover = 'default';
-        updateHoverStyles();
-      }
+      if (currentHover !== nextHover || !wasVisible || !wasMoved) {
+        currentHover = nextHover;
         updateHoverStyles();
       }
     };
