@@ -73,57 +73,19 @@ const memoryStore: {
     properties?: Record<string, any>;
   }>;
 } = {
-  totalViews: 428,
-  totalVisitors: 194,
-  todayViews: 73,
-  todayVisitors: 38,
-  topPages: {
-    '/': 184,
-    '/schedule': 92,
-    '/experience': 67,
-    '/learning': 45,
-    '/team': 28,
-    '/venues': 12,
-  },
-  events: {
-    unstop_registration_click: 64,
-    lecture_view: 32,
-    quiz_submission: 19,
-    hackathon_team_created: 8,
-    certificate_verification_search: 14,
-  },
+  totalViews: 0,
+  totalVisitors: 0,
+  todayViews: 0,
+  todayVisitors: 0,
+  topPages: {},
+  events: {},
   devices: {
-    desktop: 68,
-    mobile: 29,
-    tablet: 3,
+    desktop: 0,
+    mobile: 0,
+    tablet: 0,
     other: 0,
   },
-  recentEvents: [
-    {
-      event: 'page_view',
-      path: '/schedule',
-      device: 'desktop',
-      timestamp: new Date(Date.now() - 1000 * 60 * 3).toISOString(),
-    },
-    {
-      event: 'unstop_registration_click',
-      path: '/',
-      device: 'mobile',
-      timestamp: new Date(Date.now() - 1000 * 60 * 8).toISOString(),
-    },
-    {
-      event: 'lecture_view',
-      path: '/learning',
-      device: 'desktop',
-      timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-    },
-    {
-      event: 'page_view',
-      path: '/experience',
-      device: 'desktop',
-      timestamp: new Date(Date.now() - 1000 * 60 * 22).toISOString(),
-    },
-  ],
+  recentEvents: [],
 };
 
 function parseDeviceType(userAgent?: string): 'desktop' | 'mobile' | 'tablet' | 'other' {
@@ -238,7 +200,7 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
     const now = new Date();
     const today = now.toISOString().slice(0, 10);
 
-    // Fetch database conversions from Supabase
+    // Fetch database conversions from Supabase (100% genuine database counts)
     let whitelistedUsers = 0;
     let teamsFormed = 0;
     let competitionSubmissions = 0;
@@ -260,7 +222,7 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
     }
 
     if (!redis) {
-      // Build 7-day fallback history
+      // Build 7-day fallback history (Strict zero baseline)
       const history7Days: DayTrafficStats[] = [];
       for (let i = 6; i >= 0; i--) {
         const d = new Date();
@@ -271,8 +233,8 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
         history7Days.push({
           date: dateStr,
           dayLabel,
-          views: isToday ? memoryStore.todayViews : Math.floor(40 + Math.random() * 35),
-          visitors: isToday ? memoryStore.todayVisitors : Math.floor(20 + Math.random() * 20),
+          views: isToday ? memoryStore.todayViews : 0,
+          visitors: isToday ? memoryStore.todayVisitors : 0,
         });
       }
 
@@ -316,13 +278,12 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
         redis.pfcount(`analytics:visitors:daily:${today}`),
       ]);
 
-      const totalPageViews = Number(rawTotalViews) || memoryStore.totalViews;
-      const totalUniqueVisitors = Number(rawTotalVisitors) || memoryStore.totalVisitors;
-      const todayPageViews = Number(rawTodayViews) || memoryStore.todayViews;
-      const todayUniqueVisitors = Number(rawTodayVisitors) || memoryStore.todayVisitors;
+      const totalPageViews = rawTotalViews !== null && rawTotalViews !== undefined ? Number(rawTotalViews) : memoryStore.totalViews;
+      const totalUniqueVisitors = rawTotalVisitors !== null && rawTotalVisitors !== undefined ? Number(rawTotalVisitors) : memoryStore.totalVisitors;
+      const todayPageViews = rawTodayViews !== null && rawTodayViews !== undefined ? Number(rawTodayViews) : memoryStore.todayViews;
+      const todayUniqueVisitors = rawTodayVisitors !== null && rawTodayVisitors !== undefined ? Number(rawTodayVisitors) : memoryStore.todayVisitors;
 
       // 2. Build 7-day trend
-      const history7Days: DayTrafficStats[] = [];
       const pastDaysPromises = [];
       for (let i = 6; i >= 0; i--) {
         const d = new Date();
@@ -335,13 +296,12 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
           ]).then(([views, visitors]) => ({
             date: dateStr,
             dayLabel: d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
-            views: Number(views) || (i === 0 ? todayPageViews : Math.max(1, Math.floor(todayPageViews * 0.75))),
-            visitors: Number(visitors) || (i === 0 ? todayUniqueVisitors : Math.max(1, Math.floor(todayUniqueVisitors * 0.65))),
+            views: views !== null && views !== undefined ? Number(views) : (i === 0 ? todayPageViews : 0),
+            visitors: visitors !== null && visitors !== undefined ? Number(visitors) : (i === 0 ? todayUniqueVisitors : 0),
           }))
         );
       }
-      const historyResults = await Promise.all(pastDaysPromises);
-      history7Days.push(...historyResults);
+      const history7Days = await Promise.all(pastDaysPromises);
 
       // 3. Top Pages
       let topPagesArray: TopPageStats[] = [];
@@ -352,10 +312,9 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
         });
 
         if (Array.isArray(rawTop) && rawTop.length > 0) {
-          // Upstash returns alternating [member, score] or objects depending on driver config
           for (let i = 0; i < rawTop.length; i += 2) {
             const path = typeof rawTop[i] === 'string' ? rawTop[i] : (rawTop[i] as any)?.member;
-            const views = typeof rawTop[i + 1] === 'number' ? rawTop[i + 1] : Number((rawTop[i] as any)?.score || 1);
+            const views = typeof rawTop[i + 1] === 'number' ? rawTop[i + 1] : Number((rawTop[i] as any)?.score || 0);
             if (path) {
               topPagesArray.push({
                 path,
