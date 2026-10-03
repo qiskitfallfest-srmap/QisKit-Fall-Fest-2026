@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { AuthGate } from '@/components/learning/AuthGate';
 import { CURRICULUM_SESSIONS } from '@/data/learning/curriculum';
 import { SESSION_QUIZZES } from '@/data/learning/quizzes';
+import { trackLectureView } from '@/lib/analytics';
 import {
   ArrowLeft,
   CheckCircle2,
@@ -54,7 +55,10 @@ export default function SessionPlayerPage() {
 
   useEffect(() => {
     fetchSessionProgress();
-  }, [fetchSessionProgress]);
+    if (session) {
+      trackLectureView(sessionId, session.title);
+    }
+  }, [fetchSessionProgress, session, sessionId]);
 
   async function handleMarkVideoCompleted() {
     try {

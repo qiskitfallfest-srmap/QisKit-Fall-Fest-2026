@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { AuthGate } from '@/components/learning/AuthGate';
 import { CURRICULUM_SESSIONS } from '@/data/learning/curriculum';
 import { SESSION_QUIZZES } from '@/data/learning/quizzes';
+import { trackQuizAttempt } from '@/lib/analytics';
 import { CheckCircle2, XCircle, AlertCircle, Award, RotateCcw, ArrowLeft, PlayCircle } from 'lucide-react';
 
 export default function DedicatedQuizPage() {
@@ -64,6 +65,9 @@ export default function DedicatedQuizPage() {
           totalQuestions: data.totalQuestions,
           questionResults: data.questionResults,
         });
+
+        // Track quiz telemetry in Vercel Analytics & internal metrics
+        trackQuizAttempt(sessionId, data.scorePercent || 0, !!data.passed);
 
         // Also mark video as attended automatically if passed
         if (data.passed) {
