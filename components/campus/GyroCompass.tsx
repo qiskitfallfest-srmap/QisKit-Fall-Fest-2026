@@ -36,6 +36,72 @@ function shortestAngleDiff(target: number, current: number): number {
   return diff;
 }
 
+/** Convert device orientation event into absolute compass heading across iOS and Android */
+function computeCompassHeading(e: DeviceOrientationEvent): number | null {
+  // 1. iOS Safari webkitCompassHeading (Direct hardware magnetic heading)
+  if (typeof (e as unknown as { webkitCompassHeading?: number }).webkitCompassHeading === 'number') {
+    const heading = (e as unknown as { webkitCompassHeading: number }).webkitCompassHeading;
+    if (!isNaN(heading)) {
+      return (heading + 360) % 360;
+    }
+  }
+
+  // 2. Android & standard browsers with alpha, beta, gamma
+  if (e.alpha !== null && typeof e.alpha === 'number') {
+    const alpha = e.alpha;
+    const beta = e.beta ?? 0;
+    const gamma = e.gamma ?? 0;
+
+    let heading: number;
+
+    // If device is roughly flat, use direct alpha
+    if (Math.abs(beta) < 8 && Math.abs(gamma) < 8) {
+      heading = (360 - alpha) % 360;
+    } else {
+      // 3D Euler trigonometry for tilted handheld phones
+      const degToRad = Math.PI / 180;
+      const radToDeg = 180 / Math.PI;
+
+      const x = beta * degToRad; // Pitch
+      const y = gamma * degToRad; // Roll
+      const z = alpha * degToRad; // Yaw
+
+      const cX = Math.cos(x);
+      const cY = Math.cos(y);
+      const cZ = Math.cos(z);
+      const sX = Math.sin(x);
+      const sY = Math.sin(y);
+      const sZ = Math.sin(z);
+
+      const Vx = -cZ * sY - sZ * sX * cY;
+      const Vy = -sZ * sY + cZ * sX * cY;
+
+      if (Vx !== 0 || Vy !== 0) {
+        heading = Math.atan2(Vx, Vy) * radToDeg;
+        if (heading < 0) heading += 360;
+      } else {
+        heading = (360 - alpha) % 360;
+      }
+    }
+
+    // Adjust for screen orientation (Portrait 0°, Landscape 90°/-90°)
+    if (typeof window !== 'undefined') {
+      const screenAngle =
+        (typeof window.screen !== 'undefined' &&
+          window.screen.orientation &&
+          typeof window.screen.orientation.angle === 'number'
+            ? window.screen.orientation.angle
+            : (window as unknown as { orientation?: number }).orientation) || 0;
+
+      heading = (heading + screenAngle + 360) % 360;
+    }
+
+    return heading;
+  }
+
+  return null;
+}
+
 export function GyroCompass({
   onReset,
   size = 'md',
@@ -75,20 +141,7 @@ export function GyroCompass({
     const handleOrientation = (e: DeviceOrientationEvent) => {
       if (!active) return;
 
-      let compassHeading: number | null = null;
-
-      // 1. iOS Safari webkitCompassHeading (0 = North, clockwise)
-      if (typeof (e as unknown as { webkitCompassHeading?: number }).webkitCompassHeading === 'number') {
-        compassHeading = (e as unknown as { webkitCompassHeading: number }).webkitCompassHeading;
-      }
-      // 2. Android Chrome deviceorientationabsolute with absolute=true
-      else if (e.absolute && e.alpha !== null && typeof e.alpha === 'number') {
-        compassHeading = (360 - e.alpha) % 360;
-      }
-      // 3. Fallback alpha
-      else if (e.alpha !== null && typeof e.alpha === 'number') {
-        compassHeading = (360 - e.alpha) % 360;
-      }
+      const compassHeading = computeCompassHeading(e);
 
       if (compassHeading !== null && !isNaN(compassHeading)) {
         setIsGyroActive(true);
@@ -101,7 +154,7 @@ export function GyroCompass({
       }
     };
 
-    // Try absolute first (Android), then standard orientation (iOS & standard)
+    // Try absolute first (Android Chrome with absolute true north), then standard orientation (iOS & standard)
     if (typeof window !== 'undefined') {
       window.addEventListener('deviceorientationabsolute', handleOrientation as EventListener, true);
       window.addEventListener('deviceorientation', handleOrientation as EventListener, true);
@@ -422,12 +475,7 @@ export function LiveDirectionNeedleIcon({
     let active = true;
     const handleOrientation = (e: DeviceOrientationEvent) => {
       if (!active) return;
-      let heading: number | null = null;
-      if (typeof (e as unknown as { webkitCompassHeading?: number }).webkitCompassHeading === 'number') {
-        heading = (e as unknown as { webkitCompassHeading: number }).webkitCompassHeading;
-      } else if (e.alpha !== null && typeof e.alpha === 'number') {
-        heading = (360 - e.alpha) % 360;
-      }
+      const heading = computeCompassHeading(e);
 
       if (heading !== null && !isNaN(heading)) {
         setNeedleRotation(-heading + headingOffset);
