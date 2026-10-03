@@ -3,10 +3,21 @@ import { recordAnalyticsEvent } from '@/lib/analytics-server';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { event, path, properties, visitorId, timestamp } = body || {};
+    let body: any = null;
+    const contentType = request.headers.get('content-type') || '';
 
-    if (!event) {
+    if (contentType.includes('application/json')) {
+      body = await request.json().catch(() => null);
+    } else {
+      const rawText = await request.text().catch(() => '');
+      try {
+        body = JSON.parse(rawText);
+      } catch {
+        body = null;
+      }
+    }
+
+    if (!body?.event) {
       return NextResponse.json({ error: 'event is required' }, { status: 400 });
     }
 
@@ -16,20 +27,19 @@ export async function POST(request: NextRequest) {
       request.headers.get('x-real-ip') ||
       undefined;
 
-    // Record non-blocking
     await recordAnalyticsEvent({
-      event,
-      path: path || '/',
-      properties,
-      visitorId,
+      event: body.event,
+      path: body.path || '/',
+      properties: body.properties,
+      visitorId: body.visitorId,
       userAgent,
       ip,
-      timestamp,
+      timestamp: body.timestamp || new Date().toISOString(),
     });
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
-    // Analytics ingestion should fail open and never crash clients
+    console.warn('[Analytics Track Route] Ingestion warning:', err);
     return NextResponse.json(
       { success: false, error: err?.message || 'Failed to record event' },
       { status: 200 }

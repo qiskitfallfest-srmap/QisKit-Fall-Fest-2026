@@ -1,7 +1,10 @@
+'use client';
+
 import * as React from 'react';
 import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
 import { REGISTRATION_URL } from '@/lib/constants';
+import { trackUnstopClick } from '@/lib/analytics';
 import { ResponsivePicture } from '@/components/shared/ResponsivePicture';
 
 const SIDE_WORDS = [
@@ -134,6 +137,7 @@ export function ReadyToTakePartSection() {
               rel="noopener noreferrer"
               data-cursor="cta"
               aria-label="Register Now on Unstop (opens in a new tab)"
+              onClick={() => trackUnstopClick('ready_to_take_part')}
               className="
                 group inline-flex items-center justify-center gap-2.5
                 h-[50px]

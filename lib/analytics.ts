@@ -3,9 +3,8 @@ import { track as vercelTrack } from '@vercel/analytics';
 /**
  * Client-Side Analytics Event Tracker
  *
- * Integrates directly with @vercel/analytics custom event ingestion,
- * and securely dispatches internal telemetry to the Redis-cached
- * analytics pipeline for the organizer admin dashboard.
+ * Dispatches custom events to @vercel/analytics and persists
+ * genuine telemetry data into the server database and cache.
  */
 
 // Helper to get or create an anonymous client visitor ID for unique daily stats
@@ -26,7 +25,7 @@ function getOrCreateVisitorId(): string {
 
 /**
  * Universal Event Tracker
- * Logs to Vercel Analytics and internal edge Redis cache
+ * Logs to Vercel Analytics and persistent API endpoint
  */
 export function trackEvent(
   eventName: string,
@@ -38,32 +37,29 @@ export function trackEvent(
   try {
     vercelTrack(eventName, properties || {});
   } catch (err) {
-    console.debug('[Vercel Analytics] Track warning:', err);
+    console.debug('[Vercel Analytics] Track error:', err);
   }
 
-  // 2. Ingest into Internal Cached Analytics API (non-blocking)
+  // 2. Ingest into Persistent Database / Cache API
   try {
     const payload = {
       event: eventName,
-      path: window.location.pathname,
+      path: window.location.pathname || '/',
       properties: properties || {},
       visitorId: getOrCreateVisitorId(),
       timestamp: new Date().toISOString(),
     };
 
-    if (navigator.sendBeacon) {
-      const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-      navigator.sendBeacon('/api/analytics/track', blob);
-    } else {
-      fetch('/api/analytics/track', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        keepalive: true,
-      }).catch(() => {});
-    }
+    fetch('/api/analytics/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      keepalive: true,
+    }).catch((err) => {
+      console.debug('[Internal Analytics] Dispatch error:', err);
+    });
   } catch (err) {
-    console.debug('[Internal Analytics] Dispatch error:', err);
+    console.debug('[Internal Analytics] Exception:', err);
   }
 }
 
