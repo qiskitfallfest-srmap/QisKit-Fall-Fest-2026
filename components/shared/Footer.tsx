@@ -8,9 +8,9 @@ import { REGISTRATION_URL } from '@/lib/constants';
 import SingularityHorizon from '@/components/ui/singularity-horizon';
 
 const LEGAL_DOCUMENTS = {
-  privacy: { path: '/documents/privacy-policy.pdf', available: false },
-  terms: { path: '/documents/terms-of-use.pdf', available: false },
-  accessibility: { path: '/documents/accessibility-statement.pdf', available: false }
+  privacy: { path: '/docs/Privacy_Policy.pdf', available: true },
+  terms: { path: '/docs/Terms_of_Use.pdf', available: true },
+  accessibility: { path: '/docs/Accessibility_Statement.pdf', available: true }
 };
 
 const FOOTER_LINKS = [
