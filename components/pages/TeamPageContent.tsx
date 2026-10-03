@@ -1,248 +1,166 @@
 'use client';
 
 import * as React from 'react';
-import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import {
-  ArrowRight,
-  ArrowUpRight,
-  ArrowDown,
-  Users,
-  Code,
-  Layers,
-  Compass,
-  CheckCircle2,
-  Cpu,
-  ShieldCheck,
-  UserCheck
-} from 'lucide-react';
+import { ArrowRight, ArrowDown } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Footer } from '@/components/shared/Footer';
 import { HeroAnimatedGradient } from '@/components/shared/HeroAnimatedGradient';
-import { LayeredText } from '@/components/ui/layered-text';
 import { BlurReveal } from '@/components/ui/blur-reveal';
 import { TextBlockAnimation } from '@/components/ui/text-block-animation';
-import { TeamBranchCard } from '@/components/ui/card-17';
-import { CoverflowCarousel, CoverflowSlide } from '@/components/ui/coverflow-carousel';
 import { MagicText } from '@/components/ui/magic-text';
 import { OrganizationalTreeChart } from '@/components/team/OrganizationalTreeChart';
-import { cn } from '@/lib/utils';
 
-const IMPACT_STATS = [
+interface StatItem {
+  id: string;
+  targetNumber: number;
+  prefix?: string;
+  suffix?: string;
+  padZero?: boolean;
+  metric: string;
+  subtext: string;
+}
+
+const IMPACT_STATS: StatItem[] = [
   {
-    value: '500+',
+    id: 'participants',
+    targetNumber: 5000,
+    suffix: '+',
     metric: 'Expected Participants',
     subtext: 'Students, researchers, and quantum developers congregating across India.',
   },
   {
-    value: '24',
+    id: 'hackathon',
+    targetNumber: 24,
     metric: 'Hours of Quantum Hackathon',
     subtext: 'Intensive challenge solving with Qiskit 1.x algorithms and error mitigation.',
   },
   {
-    value: '100%',
+    id: 'access',
+    targetNumber: 100,
+    suffix: '%',
     metric: 'Open Access Platform',
     subtext: 'SRM University-AP × IBM joint curriculum accessible to all accepted cohorts.',
   },
   {
-    value: '05',
+    id: 'days',
+    targetNumber: 3,
+    padZero: true,
     metric: 'Conference Days',
     subtext: 'Keynotes, hands-on lab sessions, circuit synthesis workshops, and finals.',
   },
 ];
 
-// ─────────────────────────────────────────────────────────────
-// COHORT 01: WEBSITE DEVELOPMENT TEAM ROSTER SLIDES
-// ─────────────────────────────────────────────────────────────
-const WEBSITE_TEAM_SLIDES: CoverflowSlide[] = [
-  {
-    src: '/images/team/srihaas-pigilam.jpg',
-    alt: 'Srihaas Pigilam',
-    title: 'Srihaas Pigilam',
-    subtitle: 'Team Leader',
-    meta: [
-      { label: 'Branch', value: 'Website Team' },
-      { label: 'Role', value: 'Team Leader' },
-      { label: 'Track', value: 'Full-Stack Engineering & Architecture' },
-    ],
-  },
-  {
-    src: '/images/team/pradnish-chintada.jpg',
-    alt: 'Pradnish Chintada',
-    title: 'Pradnish Chintada',
-    subtitle: 'Lead UI/UX and Frontend',
-    meta: [
-      { label: 'Branch', value: 'Website Team' },
-      { label: 'Role', value: 'Lead UI/UX and Frontend' },
-      { label: 'Track', value: 'UI/UX Design & Component Systems' },
-    ],
-  },
-  {
-    src: '/images/team/shaik-subhani.jpg',
-    alt: 'Shaik Mahaboob Subhani',
-    title: 'Shaik Mahaboob Subhani',
-    subtitle: 'Co-lead UI/UX and Components',
-    meta: [
-      { label: 'Branch', value: 'Website Team' },
-      { label: 'Role', value: 'Co-lead UI/UX and Components' },
-      { label: 'Track', value: 'UI/UX Architecture & Primitives' },
-    ],
-  },
-  {
-    src: '/images/team/robert-bandaru.jpg',
-    alt: 'Robert Bandaru',
-    title: 'Robert Bandaru',
-    subtitle: 'UI/UX and documentation',
-    meta: [
-      { label: 'Branch', value: 'Website Team' },
-      { label: 'Role', value: 'UI/UX and documentation' },
-      { label: 'Track', value: 'Design Flow & Technical Docs' },
-    ],
-  },
-  {
-    src: '/images/team/sandeep-nambi.jpg',
-    alt: 'Sandeep Nambi',
-    title: 'Sandeep Nambi',
-    subtitle: 'UI/UX Technical and Documentation',
-    meta: [
-      { label: 'Branch', value: 'Website Team' },
-      { label: 'Role', value: 'UI/UX Technical and Documentation' },
-      { label: 'Track', value: 'Technical UI/UX & Interface Docs' },
-    ],
-  },
-];
+/**
+ * Animated arrival count-up component with energetic speed easing
+ */
+function AnimatedCountStat({
+  targetNumber,
+  prefix = '',
+  suffix = '',
+  padZero = false,
+  duration = 1.35,
+}: {
+  targetNumber: number;
+  prefix?: string;
+  suffix?: string;
+  padZero?: boolean;
+  duration?: number;
+}) {
+  const [count, setCount] = React.useState(0);
+  const [hasStarted, setHasStarted] = React.useState(false);
+  const elementRef = React.useRef<HTMLSpanElement>(null);
 
-// ─────────────────────────────────────────────────────────────
-// COHORT 02: ORGANISING TEAM LEADERSHIP ROSTER SLIDES
-// ─────────────────────────────────────────────────────────────
-const ORGANISING_TEAM_SLIDES: CoverflowSlide[] = [
-  {
-    src: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=800&q=80',
-    alt: 'Dr. K. S. Ramanujan',
-    title: 'Dr. K. S. Ramanujan',
-    subtitle: 'Faculty Co-Lead • Quantum Algorithms',
-    meta: [
-      { label: 'Track', value: 'Technical & Innovation (TI-01)' },
-      { label: 'Focus', value: '127-Qubit Eagle Benchmarks' },
-      { label: 'Affiliation', value: 'Dept. of CSE, SRM AP' },
-    ],
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=800&q=80',
-    alt: 'Prof. Meera Sundaram',
-    title: 'Prof. Meera Sundaram',
-    subtitle: 'Curriculum Chair & Associate Professor',
-    meta: [
-      { label: 'Track', value: 'Curriculum & Workshops (TI-02)' },
-      { label: 'Focus', value: 'Qiskit 1.x Algorithmic Pedagogy' },
-      { label: 'Affiliation', value: 'Physics & Computational Sciences' },
-    ],
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1580894732444-8ecded7900cd?auto=format&fit=crop&w=800&q=80',
-    alt: 'Dr. Vasudha Rao',
-    title: 'Dr. Vasudha Rao',
-    subtitle: 'IBM University Liaison Chair',
-    meta: [
-      { label: 'Track', value: 'Industry Partnerships (IPGR-01)' },
-      { label: 'Focus', value: 'IBM Quantum Fall Fest Charter' },
-      { label: 'Affiliation', value: 'Dean of International Alliances' },
-    ],
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80',
-    alt: 'Prof. S. R. Mukhopadhyay',
-    title: 'Prof. S. R. Mukhopadhyay',
-    subtitle: 'Speaker Protocol Dean & Plenary Liaison',
-    meta: [
-      { label: 'Track', value: 'Guest Relations (IPGR-02)' },
-      { label: 'Focus', value: 'Visiting Plenary Scientists & VIPs' },
-      { label: 'Affiliation', value: 'Senior Advisory Council' },
-    ],
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&w=800&q=80',
-    alt: 'Pallavi Nambiar',
-    title: 'Pallavi Nambiar',
-    subtitle: 'Creative Director • Brand & Visual Media',
-    meta: [
-      { label: 'Track', value: 'Marketing & Brand (MBM-01)' },
-      { label: 'Focus', value: 'Editorial Print & Stage Identity' },
-      { label: 'Affiliation', value: 'Design & Visual Arts Cell' },
-    ],
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=800&q=80',
-    alt: 'Col. V. R. Patnaik',
-    title: 'Col. V. R. Patnaik',
-    subtitle: 'Venue Operations & Logistics Director',
-    meta: [
-      { label: 'Track', value: 'Operations & Admin (OA-01)' },
-      { label: 'Focus', value: '600-Capacity Auditorium & HPC Labs' },
-      { label: 'Affiliation', value: 'Estate & Infrastructure Office' },
-    ],
-  },
-];
-
-export default function TeamPage() {
-  const [selectedTeam, setSelectedTeam] = useState<'website' | 'organizing'>('website');
-
-  // Deep-link hash handling for #organizing-structure and #section-05-organizational-structure
   React.useEffect(() => {
-    if (typeof window === 'undefined') return;
+    const el = elementRef.current;
+    if (!el) return;
 
-    const handleTeamHash = () => {
-      const hash = window.location.hash.toLowerCase();
-      if (hash === '#organizing-structure' || hash === '#section-05-organizational-structure') {
-        setTimeout(() => {
-          const el =
-            document.getElementById('organizing-structure') ||
-            document.getElementById('section-05-organizational-structure');
-          if (!el) return;
-
-          const lenis = (window as any).__lenis;
-          const navbarHeight =
-            window.innerWidth >= 1280 ? 90 : window.innerWidth >= 640 ? 84 : 78;
-
-          if (lenis && typeof lenis.scrollTo === 'function') {
-            lenis.scrollTo(el, { offset: -navbarHeight, duration: 1.0 });
-          } else {
-            const rect = el.getBoundingClientRect();
-            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-            window.scrollTo({ top: rect.top + scrollTop - navbarHeight, behavior: 'smooth' });
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !hasStarted) {
+            setHasStarted(true);
+            observer.disconnect();
           }
-        }, 200);
+        });
+      },
+      { threshold: 0.15 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasStarted]);
+
+  React.useEffect(() => {
+    if (!hasStarted) return;
+
+    let startTimestamp: number | null = null;
+    let animId: number;
+    const durMs = duration * 1000;
+
+    const step = (now: number) => {
+      if (!startTimestamp) startTimestamp = now;
+      const elapsed = now - startTimestamp;
+      const progress = Math.min(elapsed / durMs, 1);
+
+      // Fast-start exponential ease-out for energetic arrival
+      const easeProgress = 1 - Math.pow(1 - progress, 3.5);
+      const currentVal = Math.round(easeProgress * targetNumber);
+
+      setCount(currentVal);
+
+      if (progress < 1) {
+        animId = requestAnimationFrame(step);
+      } else {
+        setCount(targetNumber);
       }
     };
 
-    handleTeamHash();
-    window.addEventListener('hashchange', handleTeamHash);
-    return () => window.removeEventListener('hashchange', handleTeamHash);
-  }, []);
+    animId = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(animId);
+  }, [hasStarted, targetNumber, duration]);
 
-  const handleSelectTeam = (team: 'website' | 'organizing') => {
-    setSelectedTeam(team);
-    // On desktop, scroll to the dedicated showcase section below the cards
-    // On mobile & tablets (< 1024px), scroll smoothly to the selected card's inline showcase
-    setTimeout(() => {
-      if (typeof window !== 'undefined') {
-        const isDesktop = window.innerWidth >= 1024;
-        if (isDesktop) {
-          const targetElement = document.getElementById('section-roster-showcase');
-          if (targetElement) {
-            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const formattedValue = React.useMemo(() => {
+    if (padZero && count < 10) {
+      return `0${count}`;
+    }
+    return `${count}`;
+  }, [count, padZero]);
+
+  return (
+    <span ref={elementRef} className="tabular-nums">
+      {prefix}
+      {formattedValue}
+      {suffix}
+    </span>
+  );
+}
+
+export default function TeamPage() {
+  // Deep-link hash handling for #organizing-structure and #section-04-organizational-structure
+  React.useEffect(() => {
+    const handleHash = () => {
+      const hash = window.location.hash;
+      if (
+        hash === '#organizing-structure' ||
+        hash === '#section-04-organizational-structure' ||
+        hash === '#section-05-organizational-structure'
+      ) {
+        setTimeout(() => {
+          const el =
+            document.getElementById('organizing-structure') ||
+            document.getElementById('section-04-organizational-structure') ||
+            document.getElementById('section-05-organizational-structure');
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth' });
           }
-        } else {
-          const mobileTarget = document.getElementById(
-            team === 'website' ? 'mobile-card-website' : 'mobile-card-organizing'
-          );
-          if (mobileTarget) {
-            mobileTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        }
+        }, 150);
       }
-    }, 50);
-  };
+    };
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
 
   return (
     <div className="w-full flex flex-col min-h-screen bg-[var(--background)] text-[var(--foreground)] selection:bg-[#6C151E] selection:text-[#F5F3F0]">
@@ -325,7 +243,7 @@ export default function TeamPage() {
           
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-semibold uppercase tracking-[0.2em] bg-white/10 text-white border border-white/20">
-            <span>01.5 • The Narrative</span>
+            <span>02 • The Narrative</span>
           </div>
 
           {/* Heading: A Decade of Quantum on Cloud */}
@@ -366,296 +284,25 @@ export default function TeamPage() {
       </section>
 
       {/* ─────────────────────────────────────────────────────────────
-          SECTION 03: EXPLORE OUR TEAMS
-          Two interactive branch cards:
-          - Desktop (lg+): 2-column grid, clicking card switches cohort in Section 03.5 below
-          - Mobile / Tablet (< lg): Clicking card displays that cohort's carousel directly underneath it!
-          ───────────────────────────────────────────────────────────── */}
-      <section
-        id="section-03-explore-our-teams"
-        aria-label="Explore Our Teams"
-        className="w-full py-16 sm:py-20 lg:py-24 bg-[#F5F3F0] dark:bg-[#1A0507] border-b border-[#3A0B10]/15 dark:border-[#F5F3F0]/10 transition-colors duration-300"
-      >
-        <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-12 space-y-12">
-
-          {/* Header */}
-          <div className="text-center max-w-3xl mx-auto space-y-3">
-            <span className="text-xs font-mono font-semibold tracking-[0.2em] uppercase text-[#6C151E] dark:text-[#B08D57]">
-              03 • Team Structure
-            </span>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-[#3A0B10] dark:text-[#F5F3F0]">
-              Explore Our Teams<span className="text-[#6C151E] dark:text-[#B08D57]">.</span>
-            </h2>
-            <p className="text-base font-sans text-[#16171B]/75 dark:text-[#C7C8CC] leading-relaxed">
-              Click either branch below to preview their interactive roster showcase, or use the top-right arrow to open the dedicated full hierarchy.
-            </p>
-          </div>
-
-          {/* Responsive grid for the branch cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10">
-
-            {/* Column 01: Website Team Card + Mobile/Tablet Inline Showcase */}
-            <div id="mobile-card-website" className="flex flex-col space-y-4">
-              <TeamBranchCard
-                branch="Branch 01"
-                category="Digital Architecture & Interactive UI"
-                title="Website Team"
-                description="Explore the complete roster of designers, software engineers, and technical writers who engineered the official Qiskit Fall Fest 2026 digital portal."
-                highlights={[
-                  "Full Member Profiles & Contributions",
-                  "Interactive System Architecture",
-                ]}
-                imageUrl="/images/team/website-team.png"
-                href="/team/website"
-                badgeColor="bg-[#6C151E]/20 dark:bg-[#6C151E]/40 text-[#B08D57] border-[#6C151E]/30"
-                icon={<Code size={14} className="text-[#B08D57]" />}
-                onSelect={() => handleSelectTeam('website')}
-                isSelected={selectedTeam === 'website'}
-                actionLabel="Show Website Cohort"
-              />
-
-              {/* Mobile & Tablet Only: Inline Carousel below Website Team card */}
-              {selectedTeam === 'website' && (
-                <div
-                  id="mobile-roster-website"
-                  className="block lg:hidden w-full pt-4 pb-2 transition-all duration-500 animate-in fade-in slide-in-from-top-4"
-                >
-                  <div className="p-4 sm:p-6 rounded-2xl bg-white dark:bg-[#150406] border-2 border-[#3A0B10]/15 dark:border-white/10 shadow-lg space-y-5">
-                    <div className="space-y-1.5">
-                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-mono font-semibold uppercase tracking-[0.2em] bg-[#6C151E]/10 dark:bg-[#6C151E]/30 text-[#6C151E] dark:text-[#B08D57] border border-[#6C151E]/20">
-                        <span>Website Team Roster</span>
-                      </div>
-                      <h3 className="text-xl sm:text-2xl font-serif font-bold text-[#3A0B10] dark:text-[#F5F3F0]">
-                        Website Development Cohort<span className="text-[#6C151E] dark:text-[#B08D57]">.</span>
-                      </h3>
-                      <p className="text-xs sm:text-sm font-sans text-[#16171B]/75 dark:text-[#C7C8CC]">
-                        Swipe cards or tap arrows to browse engineers and UI architects.
-                      </p>
-                    </div>
-
-                    <div className="relative w-full pt-1">
-                      <CoverflowCarousel
-                        key="mobile-roster-website"
-                        slides={WEBSITE_TEAM_SLIDES}
-                        rotate={36}
-                        depth={0.5}
-                        perspective={2.5}
-                        fade={0}
-                        cardWidth="clamp(210px, 62vw, 290px)"
-                        showCaption={true}
-                        showNavigation={true}
-                        showPagination={true}
-                        label="Website Team Roster"
-                      />
-                    </div>
-
-                    <div className="pt-3 border-t border-[#3A0B10]/10 dark:border-white/10 flex items-center justify-between text-xs font-mono">
-                      <span className="text-[#16171B]/60 dark:text-[#C7C8CC]/60">
-                        {WEBSITE_TEAM_SLIDES.length} Active Members
-                      </span>
-                      <Link
-                        href="/team/website"
-                        className="inline-flex items-center gap-1 text-[#6C151E] dark:text-[#B08D57] font-semibold hover:underline"
-                      >
-                        <span>Full specifications</span>
-                        <ArrowUpRight size={13} />
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Column 02: Organising Team Card + Mobile/Tablet Inline Showcase */}
-            <div id="mobile-card-organizing" className="flex flex-col space-y-4">
-              <TeamBranchCard
-                branch="Branch 02"
-                category="Leadership, Logistics & Academic Direction"
-                title="Organising Team"
-                description="View the institutional hierarchy, faculty advisors, student leads, and hospitality coordinators overseeing the five-day quantum celebration at SRM AP."
-                highlights={[
-                  "Organisational Hierarchy Flowchart",
-                  "Faculty Patronage & Committee Leads",
-                ]}
-                imageUrl="/images/team/organising-team.png"
-                href="/team/organizing"
-                badgeColor="bg-[#B08D57]/20 text-[#B08D57] border-[#B08D57]/30"
-                icon={<Users size={14} className="text-[#B08D57]" />}
-                onSelect={() => handleSelectTeam('organizing')}
-                isSelected={selectedTeam === 'organizing'}
-                actionLabel="Show Organising Cohort"
-              />
-
-              {/* Mobile & Tablet Only: Inline Carousel below Organising Team card */}
-              {selectedTeam === 'organizing' && (
-                <div
-                  id="mobile-roster-organizing"
-                  className="block lg:hidden w-full pt-4 pb-2 transition-all duration-500 animate-in fade-in slide-in-from-top-4"
-                >
-                  <div className="p-4 sm:p-6 rounded-2xl bg-white dark:bg-[#150406] border-2 border-[#3A0B10]/15 dark:border-white/10 shadow-lg space-y-5">
-                    <div className="space-y-1.5">
-                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-mono font-semibold uppercase tracking-[0.2em] bg-[#B08D57]/10 text-[#B08D57] border border-[#B08D57]/20">
-                        <span>Organising Team Roster</span>
-                      </div>
-                      <h3 className="text-xl sm:text-2xl font-serif font-bold text-[#3A0B10] dark:text-[#F5F3F0]">
-                        Organising Leadership Cohort<span className="text-[#6C151E] dark:text-[#B08D57]">.</span>
-                      </h3>
-                      <p className="text-xs sm:text-sm font-sans text-[#16171B]/75 dark:text-[#C7C8CC]">
-                        Swipe cards or tap arrows to browse faculty coordinators and track chairs.
-                      </p>
-                    </div>
-
-                    <div className="relative w-full pt-1">
-                      <CoverflowCarousel
-                        key="mobile-roster-organizing"
-                        slides={ORGANISING_TEAM_SLIDES}
-                        rotate={36}
-                        depth={0.5}
-                        perspective={2.5}
-                        fade={0}
-                        cardWidth="clamp(210px, 62vw, 290px)"
-                        showCaption={true}
-                        showNavigation={true}
-                        showPagination={true}
-                        label="Organising Team Roster"
-                      />
-                    </div>
-
-                    <div className="pt-3 border-t border-[#3A0B10]/10 dark:border-white/10 flex items-center justify-between text-xs font-mono">
-                      <span className="text-[#16171B]/60 dark:text-[#C7C8CC]/60">
-                        6 Leadership Leads
-                      </span>
-                      <Link
-                        href="/team/organizing"
-                        className="inline-flex items-center gap-1 text-[#6C151E] dark:text-[#B08D57] font-semibold hover:underline"
-                      >
-                        <span>Full specifications</span>
-                        <ArrowUpRight size={13} />
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* ─────────────────────────────────────────────────────────────
-          SECTION 03.5: MEMBER ROSTER SHOWCASE (3D COVERFLOW - DESKTOP)
-          Full-width showcase carousel displayed on large screens (lg+)
-          ───────────────────────────────────────────────────────────── */}
-      <section
-        id="section-roster-showcase"
-        aria-label="Member Roster Showcase"
-        className="hidden lg:block w-full py-16 sm:py-24 bg-[#F5F3F0] dark:bg-[#1A0507] border-b border-[#3A0B10]/15 dark:border-[#F5F3F0]/10 transition-colors duration-300 overflow-hidden relative"
-      >
-        <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-12 space-y-10">
-          
-          {/* Header & Cohort Switcher */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-[#3A0B10]/15 dark:border-[#F5F3F0]/15">
-            <div className="space-y-3 max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-semibold uppercase tracking-[0.2em] bg-[#6C151E]/10 dark:bg-[#6C151E]/30 text-[#6C151E] dark:text-[#B08D57] border border-[#6C151E]/20">
-                <span>03.5 • Member Roster Showcase</span>
-              </div>
-              
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-[#3A0B10] dark:text-[#F5F3F0] transition-all">
-                {selectedTeam === 'website' ? (
-                  <>Website Development Cohort<span className="text-[#6C151E] dark:text-[#B08D57]">.</span></>
-                ) : (
-                  <>Organising Leadership Cohort<span className="text-[#6C151E] dark:text-[#B08D57]">.</span></>
-                )}
-              </h2>
-
-              <p className="text-base font-sans text-[#16171B]/75 dark:text-[#C7C8CC] leading-relaxed">
-                {selectedTeam === 'website'
-                  ? "Explore the engineers, UI architects, and creative technologists responsible for the official Qiskit Fall Fest 2026 digital portal."
-                  : "Discover the track chairs, committee heads, and faculty coordinators orchestrating all five days of South Asia’s premier quantum festival."}
-              </p>
-            </div>
-
-            {/* Direct Switcher Tabs */}
-            <div className="flex items-center gap-2 p-1.5 rounded-xl bg-black/5 dark:bg-white/5 border border-[#3A0B10]/15 dark:border-white/10 self-start md:self-end">
-              <button
-                type="button"
-                onClick={() => setSelectedTeam('website')}
-                className={cn(
-                  "px-4 py-2 rounded-lg text-xs font-mono font-semibold uppercase tracking-wider transition-all duration-300 flex items-center gap-2",
-                  selectedTeam === 'website'
-                    ? "bg-[#3A0B10] text-white shadow-md"
-                    : "text-[#3A0B10]/70 dark:text-[#F5F3F0]/70 hover:text-[#3A0B10] dark:hover:text-white"
-                )}
-              >
-                <Code size={13} />
-                <span>Website Team</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSelectedTeam('organizing')}
-                className={cn(
-                  "px-4 py-2 rounded-lg text-xs font-mono font-semibold uppercase tracking-wider transition-all duration-300 flex items-center gap-2",
-                  selectedTeam === 'organizing'
-                    ? "bg-[#3A0B10] text-white shadow-md"
-                    : "text-[#3A0B10]/70 dark:text-[#F5F3F0]/70 hover:text-[#3A0B10] dark:hover:text-white"
-                )}
-              >
-                <Users size={13} />
-                <span>Organising Team</span>
-              </button>
-            </div>
-          </div>
-
-          {/* 3D Coverflow Carousel */}
-          <div className="relative w-full pt-4">
-            <CoverflowCarousel
-              key={selectedTeam}
-              slides={selectedTeam === 'website' ? WEBSITE_TEAM_SLIDES : ORGANISING_TEAM_SLIDES}
-              rotate={44}
-              depth={0.65}
-              perspective={3}
-              fade={0}
-              cardWidth="clamp(220px, 22vw, 320px)"
-              showCaption={true}
-              showNavigation={true}
-              showPagination={true}
-              label={selectedTeam === 'website' ? "Website Team Roster" : "Organising Team Roster"}
-            />
-          </div>
-
-          {/* Sub-note link to full branch pages */}
-          <div className="pt-6 border-t border-[#3A0B10]/10 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-[#16171B]/60 dark:text-[#C7C8CC]/60">
-            <span>
-              Drag cards or use keyboard arrows (← / →) to browse team members
-            </span>
-            <Link
-              href={selectedTeam === 'website' ? '/team/website' : '/team/organizing'}
-              className="inline-flex items-center gap-1.5 text-[#6C151E] dark:text-[#B08D57] font-semibold hover:underline"
-            >
-              <span>View full {selectedTeam === 'website' ? 'Website Team' : 'Organising Team'} specifications</span>
-              <ArrowUpRight size={14} />
-            </Link>
-          </div>
-
-        </div>
-      </section>
-
-      {/* ─────────────────────────────────────────────────────────────
-          SECTION 04: OUR COLLECTIVE IMPACT
+          SECTION 03: OUR COLLECTIVE IMPACT
           Key statistics / impact strip from design reference
           ───────────────────────────────────────────────────────────── */}
       <section
-        id="section-04-our-collective-impact"
+        id="section-03-our-collective-impact"
         aria-label="Our Collective Impact"
-        className="w-full py-16 sm:py-20 bg-[#3A0B10] text-[#F5F3F0] border-b border-black/30 selection:bg-[#6C151E] selection:text-white"
+        className="relative w-full py-20 sm:py-24 bg-[#3A0B10] text-[#F5F3F0] border-b border-black/30 selection:bg-[#6C151E] selection:text-white overflow-hidden"
       >
-        <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-12">
+        {/* Atmospheric Quantum Ambient Lighting for Rich Frosted Glass Refraction */}
+        <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#800020]/45 rounded-full blur-[130px] pointer-events-none" />
+        <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[460px] h-[460px] bg-[#B08D57]/20 rounded-full blur-[150px] pointer-events-none" />
+        <div className="absolute -bottom-32 left-1/3 w-80 h-80 bg-[#6C151E]/35 rounded-full blur-[120px] pointer-events-none" />
+
+        <div className="relative z-10 mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-12">
 
           <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/10 pb-6">
             <div className="space-y-2">
               <span className="text-xs font-mono font-semibold tracking-[0.2em] uppercase text-[#B08D57]">
-                04 • Reach & Momentum
+                03 • Reach & Momentum
               </span>
               <h2 className="text-3xl sm:text-4xl font-serif font-bold text-white">
                 Our Collective Impact<span className="text-[#B08D57]">.</span>
@@ -666,28 +313,49 @@ export default function TeamPage() {
             </p>
           </div>
 
-          {/* Statistics 4-column Strip */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+          {/* Statistics 4-column Strip with High-Performance Glassmorphism */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
             {IMPACT_STATS.map((stat, idx) => (
-              <div
-                key={stat.metric}
-                className="space-y-3 p-6 rounded-xl bg-black/25 border border-white/10"
+              <motion.div
+                key={stat.id}
+                initial={{ opacity: 0, y: 25 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.55, delay: idx * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                className="group relative flex flex-col justify-between p-7 sm:p-8 rounded-2xl bg-gradient-to-br from-white/[0.09] via-white/[0.04] to-white/[0.015] backdrop-blur-2xl border border-white/20 hover:border-[#B08D57]/70 shadow-[inset_0_1px_1px_rgba(255,255,255,0.45),0_12px_40px_rgba(0,0,0,0.45)] hover:shadow-[0_22px_55px_rgba(0,0,0,0.65),inset_0_1px_2px_rgba(255,255,255,0.55),0_0_35px_rgba(176,141,87,0.22)] hover:-translate-y-1.5 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden cursor-pointer"
               >
-                <div className="flex items-baseline justify-between">
-                  <span className="text-4xl sm:text-5xl font-serif font-bold tracking-tight text-white">
-                    {stat.value}
+                {/* Specular top-edge glass sheen highlight */}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-white/[0.12] via-white/[0.02] to-transparent pointer-events-none" />
+
+                {/* Ambient corner refractive gold glow */}
+                <div className="absolute -top-16 -right-16 w-36 h-36 rounded-full bg-[#B08D57]/15 blur-2xl group-hover:bg-[#B08D57]/30 transition-all duration-500 pointer-events-none" />
+
+                {/* Top Row: Animated Number & Order Pill */}
+                <div className="relative z-10 flex items-baseline justify-between mb-5">
+                  <span className="text-4xl sm:text-5xl lg:text-[3.25rem] font-serif font-bold tracking-tight bg-gradient-to-b from-white via-white/95 to-white/70 bg-clip-text text-transparent drop-shadow-sm leading-none">
+                    <AnimatedCountStat
+                      targetNumber={stat.targetNumber}
+                      prefix={stat.prefix}
+                      suffix={stat.suffix}
+                      padZero={stat.padZero}
+                    />
                   </span>
-                  <span className="text-xs font-mono text-[#B08D57]">
+                  <span className="px-2.5 py-1 rounded-full text-xs font-mono font-bold tracking-wider text-[#B08D57] bg-white/10 backdrop-blur-md border border-white/20 shadow-xs group-hover:border-[#B08D57]/50 group-hover:bg-[#B08D57]/15 transition-all duration-300">
                     0{idx + 1}
                   </span>
                 </div>
-                <div className="text-sm font-bold font-sans tracking-wide text-[#E5E5E7] uppercase">
-                  {stat.metric}
+
+                {/* Middle Row: Metric Label with Gold Dot */}
+                <div className="relative z-10 text-xs sm:text-sm font-mono font-bold tracking-wider text-[#F5F3F0] uppercase flex items-center gap-2 mb-2.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#B08D57] group-hover:scale-125 transition-transform duration-300 shrink-0" />
+                  <span>{stat.metric}</span>
                 </div>
-                <p className="text-xs font-sans text-[#C7C8CC]/85 leading-relaxed">
+
+                {/* Bottom Row: Detailed Subtext */}
+                <p className="relative z-10 text-xs sm:text-sm font-sans text-[#C7C8CC]/80 leading-relaxed font-normal group-hover:text-white/95 transition-colors duration-300">
                   {stat.subtext}
                 </p>
-              </div>
+              </motion.div>
             ))}
           </div>
 
@@ -695,22 +363,24 @@ export default function TeamPage() {
       </section>
 
       {/* ─────────────────────────────────────────────────────────────
-          SECTION 05: ORGANIZATIONAL STRUCTURE & HIERARCHICAL FLOW
+          SECTION 04: ORGANIZATIONAL STRUCTURE & HIERARCHICAL FLOW
           Interactive Tree Chart faithfully rendering the 16 operational cells
           across 5 tracks, followed by the philosophical epigraph
           ───────────────────────────────────────────────────────────── */}
       <section
-        id="organizing-structure"
+        id="section-04-organizational-structure"
         aria-label="Organizational Structure & Hierarchy"
-        className="w-full py-20 sm:py-24 lg:py-28 bg-[#F5F3F0] dark:bg-[#1A0507] border-b border-[#3A0B10]/15 dark:border-[#F5F3F0]/10 transition-colors duration-300 relative overflow-hidden scroll-mt-24 sm:scroll-mt-28"
+        className="w-full py-20 sm:py-24 lg:py-28 bg-[#F5F3F0] dark:bg-[#1A0507] border-b border-[#3A0B10]/15 dark:border-[#F5F3F0]/10 transition-colors duration-300 relative overflow-hidden"
       >
-        <span id="section-05-organizational-structure" className="sr-only" />
+        {/* Deep-link target anchor for Event Highlights & Navbar links */}
+        <div id="organizing-structure" aria-hidden="true" className="absolute -top-24 pointer-events-none" />
+
         <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-12 space-y-16">
 
           {/* Section Header */}
           <div className="text-center max-w-3xl mx-auto space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-semibold uppercase tracking-[0.2em] bg-[#6C151E]/10 dark:bg-[#6C151E]/30 text-[#6C151E] dark:text-[#B08D57] border border-[#6C151E]/20">
-              <span>05 • Organizational Structure</span>
+              <span>04 • Organizational Structure</span>
             </div>
 
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-[#3A0B10] dark:text-[#F5F3F0]">
@@ -755,11 +425,11 @@ export default function TeamPage() {
       </section>
 
       {/* ─────────────────────────────────────────────────────────────
-          SECTION 06: BE PART OF OUR JOURNEY / CTA
+          SECTION 05: BE PART OF OUR JOURNEY / CTA
           Burgundy CTA section with external Unstop registration redirect
           ───────────────────────────────────────────────────────────── */}
       <section
-        id="section-06-be-part-of-our-journey"
+        id="section-05-be-part-of-our-journey"
         aria-label="Be Part of Our Journey"
         className="relative w-full py-20 sm:py-24 lg:py-28 bg-gradient-to-br from-[#521018] via-[#3A0B10] to-[#16171B] text-[#F5F3F0] overflow-hidden"
       >
@@ -773,7 +443,7 @@ export default function TeamPage() {
 
           <div className="space-y-4 max-w-3xl mx-auto">
             <span className="text-xs font-mono font-semibold tracking-[0.25em] uppercase text-[#B08D57]">
-              06 • Registration Portal
+              05 • Registration Portal
             </span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-white leading-tight">
               Be Part of Our Journey<span className="text-[#B08D57]">.</span>
@@ -812,7 +482,7 @@ export default function TeamPage() {
       </section>
 
       {/* ─────────────────────────────────────────────────────────────
-          SECTION 07: FOOTER
+          SECTION 06: FOOTER
           Reusing the global shared Footer component
           ───────────────────────────────────────────────────────────── */}
       <Footer />

@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import {
   ArrowDown,
@@ -18,203 +19,27 @@ import {
   RotateCcw,
   Info,
   X,
-  Workflow
+  Workflow,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
+import { CoverflowCarousel } from '@/components/ui/coverflow-carousel';
+import { FLOWCHART_ROSTER_DATA, FlowchartModalData } from './flowchart-roster-data';
 
 // ─────────────────────────────────────────────────────────────
 // DATA SPECIFICATION — 100% VERBATIM MATCH TO DIAGRAM
 // ─────────────────────────────────────────────────────────────
 
-export interface CellItem {
-  id: string;
-  number: number;
-  label: string; // Exact text, e.g. "1. Technical Program Cell"
-  description: string;
-  focusArea: string;
-}
+import {
+  TRACKS_DATA,
+  CellItem,
+  TrackItem,
+  TreeDiagramNodes,
+} from './TreeDiagramNodes';
 
-export interface TrackItem {
-  id: string;
-  number: number;
-  headerLine1: string; // "TRACK 1:"
-  headerLine2: string; // "TECHNICAL & INNOVATION"
-  fullTitle: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
-  accentColor: string;
-  cells: CellItem[];
-}
-
-const TRACKS_DATA: TrackItem[] = [
-  {
-    id: 'track-1',
-    number: 1,
-    headerLine1: 'TRACK 1:',
-    headerLine2: 'TECHNICAL & INNOVATION',
-    fullTitle: 'TRACK 1: TECHNICAL & INNOVATION',
-    icon: Cpu,
-    accentColor: '#800020',
-    cells: [
-      {
-        id: 'cell-1',
-        number: 1,
-        label: '1. Technical Program Cell',
-        description: 'Curating the academic agenda, quantum algorithm keynotes, faculty lectures, and speaker session timing.',
-        focusArea: 'Quantum Pedagogy & Circuit Theory',
-      },
-      {
-        id: 'cell-2',
-        number: 2,
-        label: '2. Hackathon & Competitions Cell',
-        description: 'Crafting problem statements on 127-qubit IBM hardware, automated test harnesses, and evaluation rubrics.',
-        focusArea: 'Competitive Quantum Programming',
-      },
-      {
-        id: 'cell-3',
-        number: 3,
-        label: '3. Expo & Exhibition Cell',
-        description: 'Demonstrating hardware prototypes, scientific poster sessions, and quantum research booth installations.',
-        focusArea: 'Academic Showcases & Posters',
-      },
-    ],
-  },
-  {
-    id: 'track-2',
-    number: 2,
-    headerLine1: 'TRACK 2:',
-    headerLine2: 'INDUSTRY, PARTNERSHIPS & GUEST RELATIONS',
-    fullTitle: 'TRACK 2: INDUSTRY, PARTNERSHIPS & GUEST RELATIONS',
-    icon: Handshake,
-    accentColor: '#B08D57',
-    cells: [
-      {
-        id: 'cell-4',
-        number: 4,
-        label: '4. Industry & Partnerships Cell',
-        description: 'Direct institutional liaison with IBM Quantum executives, enterprise sponsors, and research consortia.',
-        focusArea: 'IBM Alliances & Industry Grants',
-      },
-      {
-        id: 'cell-5',
-        number: 5,
-        label: '5. Hospitality & Guest Relations Cell',
-        description: 'Managing protocol, guest itineraries, executive lodging, and VIP dignitary facilitation across 5 days.',
-        focusArea: 'Speaker Itineraries & Protocol',
-      },
-    ],
-  },
-  {
-    id: 'track-3',
-    number: 3,
-    headerLine1: 'TRACK 3:',
-    headerLine2: 'MARKETING, BRAND & MEDIA',
-    fullTitle: 'TRACK 3: MARKETING, BRAND & MEDIA',
-    icon: Megaphone,
-    accentColor: '#6C151E',
-    cells: [
-      {
-        id: 'cell-6',
-        number: 6,
-        label: '6. Marketing & Outreach Cell',
-        description: 'Promoting national participation, student chapter activations, and outreach across 60+ Indian universities.',
-        focusArea: 'Inter-University Outreach',
-      },
-      {
-        id: 'cell-7',
-        number: 7,
-        label: '7. Public Relations & Documentation Cell',
-        description: 'Press briefings, print media coverage, institutional archiving, and festival recap bulletins.',
-        focusArea: 'Press & Festival Archiving',
-      },
-      {
-        id: 'cell-8',
-        number: 8,
-        label: '8. Branding & Creative Cell',
-        description: 'Visual identity stewardship, badge styling, digital artwork, and festival stage design aesthetics.',
-        focusArea: 'Visual Identity & Swag Assets',
-      },
-      {
-        id: 'cell-9',
-        number: 9,
-        label: '9. Digital Media Cell',
-        description: 'Broadcasting live 4K keynotes, producing daily highlight reels, and managing interactive social campaigns.',
-        focusArea: 'Livestream Broadcasts & Highlights',
-      },
-    ],
-  },
-  {
-    id: 'track-4',
-    number: 4,
-    headerLine1: 'TRACK 4:',
-    headerLine2: 'TECHNOLOGY & PARTICIPANT EXPERIENCE',
-    fullTitle: 'TRACK 4: TECHNOLOGY & PARTICIPANT EXPERIENCE',
-    icon: MonitorCheck,
-    accentColor: '#800020',
-    cells: [
-      {
-        id: 'cell-10',
-        number: 10,
-        label: '10. Website & Technology Cell',
-        description: 'Engineering the Next.js digital experience, real-time schedule synchronizers, and edge infrastructure.',
-        focusArea: 'Digital Platform & Performance',
-      },
-      {
-        id: 'cell-11',
-        number: 11,
-        label: '11. Registration Cell',
-        description: 'Managing the Unstop registration funnel, attendee credential verification, and waitlist allocations.',
-        focusArea: 'Unstop Funnel & Badging Passes',
-      },
-      {
-        id: 'cell-12',
-        number: 12,
-        label: '12. Participant Experience Cell',
-        description: 'On-site helpdesks, welcome merchandise distribution, attendee orientation, and hackathon guidance.',
-        focusArea: 'Attendee Flow & Support Desks',
-      },
-    ],
-  },
-  {
-    id: 'track-5',
-    number: 5,
-    headerLine1: 'TRACK 5:',
-    headerLine2: 'OPERATIONS & ADMINISTRATION',
-    fullTitle: 'TRACK 5: OPERATIONS & ADMINISTRATION',
-    icon: Building2,
-    accentColor: '#B08D57',
-    cells: [
-      {
-        id: 'cell-13',
-        number: 13,
-        label: '13. Operations & Logistics Cell',
-        description: 'Managing auditorium seating, power backup, hardware workstations, and 24-hour campus logistics.',
-        focusArea: 'Auditorium Operations & AL Labs',
-      },
-      {
-        id: 'cell-14',
-        number: 14,
-        label: '14. Finance & Procurement Cell',
-        description: 'Budget auditing, prize disbursements, purchase orders for computing hardware, and vendor clearances.',
-        focusArea: 'Audited Accounts & Hackathon Prizes',
-      },
-      {
-        id: 'cell-15',
-        number: 15,
-        label: '15. Volunteer Management Cell',
-        description: 'Rostering 100+ student volunteers, station coordination, briefing sessions, and shift handovers.',
-        focusArea: 'Student Volunteer Marshals',
-      },
-      {
-        id: 'cell-16',
-        number: 16,
-        label: '16. Food Safety & Discipline Cell',
-        description: 'Buffet meal operations, 24-hour hackathon refreshments, medical triage, and campus safety protocols.',
-        focusArea: 'Catering & Campus Safety',
-      },
-    ],
-  },
-];
+export type { CellItem, TrackItem };
 
 // ─────────────────────────────────────────────────────────────
 // MAIN COMPONENT
@@ -224,15 +49,185 @@ const TREE_WIDTH = 1180;
 
 export function OrganizationalTreeChart() {
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
-  const [activeCell, setActiveCell] = useState<CellItem | null>(null);
+  const [activeModalData, setActiveModalData] = useState<FlowchartModalData | null>(null);
+
+  const selectedTrack = TRACKS_DATA.find((t) => t.id === selectedTrackId);
+  const activeTrack = activeModalData ? TRACKS_DATA.find((t) => t.id === activeModalData.id) : null;
+
+  // Fullscreen Slideshow State (Modeled after InteractiveCampusMap)
+  const [fullscreenZoom, setFullscreenZoom] = useState<number>(0.5);
+  const [isFullscreenFitActive, setIsFullscreenFitActive] = useState<boolean>(true);
+  const [fullscreenPan, setFullscreenPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [isFullscreenDragging, setIsFullscreenDragging] = useState<boolean>(false);
+  const fullscreenDragStartRef = React.useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const fullscreenDragDistanceRef = React.useRef<number>(0);
+
+  const openModalFor = (entityKey: string, fallbackCell?: CellItem) => {
+    // If the user was dragging/panning the flowchart in fullscreen, ignore click
+    if (fullscreenDragDistanceRef.current > 6) {
+      return;
+    }
+    const data = FLOWCHART_ROSTER_DATA[entityKey];
+    if (data) {
+      setActiveModalData(data);
+    } else if (fallbackCell) {
+      setActiveModalData({
+        id: fallbackCell.id,
+        badge: `CELL ${fallbackCell.number < 10 ? '0' : ''}${fallbackCell.number} • OPERATIONAL DOMAIN`,
+        title: fallbackCell.label,
+        subtitle: fallbackCell.focusArea,
+        description: fallbackCell.description,
+        linkHref: fallbackCell.id === 'cell-3' ? '/team/website' : '/team/organizing',
+        linkText: fallbackCell.id === 'cell-3' ? 'Open Website Team Roster' : 'Open Full Organizing Roster',
+        slides: [
+          {
+            src: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=800&q=80',
+            alt: fallbackCell.label,
+            title: fallbackCell.label,
+            subtitle: fallbackCell.focusArea,
+            meta: [
+              { label: 'Domain', value: fallbackCell.focusArea },
+              { label: 'Cell', value: `#${fallbackCell.number}` },
+            ],
+          },
+        ],
+      });
+    }
+  };
+
   const [zoomLevel, setZoomLevel] = useState<number>(1);
   const [activeTab, setActiveTab] = useState<'tree' | 'matrix'>('tree');
   const [treeHeight, setTreeHeight] = useState<number>(1350);
   const [isFitZoomActive, setIsFitZoomActive] = useState<boolean>(true);
   const [isMounted, setIsMounted] = useState<boolean>(false);
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
   const containerRef = React.useRef<HTMLDivElement>(null);
   const treeRef = React.useRef<HTMLDivElement>(null);
+
+  // Slideshow fit: calculates scale so BOTH width and height fit on the screen without scrolling
+  const calculateFullscreenFitZoom = React.useCallback((viewportWidth: number, viewportHeight: number, contentHeight: number) => {
+    if (!viewportWidth || !viewportHeight) return 0.5;
+    // Leave safe room for top controls (80px) and bottom hint (50px), plus horizontal padding
+    const padX = viewportWidth < 640 ? 20 : 64;
+    const padY = viewportHeight < 640 ? 90 : 130;
+    const availW = Math.max(280, viewportWidth - padX);
+    const availH = Math.max(280, viewportHeight - padY);
+    const targetH = contentHeight && contentHeight > 500 ? contentHeight : 1350;
+
+    const scaleW = availW / TREE_WIDTH;
+    const scaleH = availH / targetH;
+
+    // Fit BOTH width AND height so 100% of the entire flowchart fits into the screen at once!
+    const optimal = Number(Math.min(scaleW, scaleH).toFixed(3));
+    return Math.max(0.16, Math.min(2.0, optimal));
+  }, []);
+
+  const enterFullscreen = () => {
+    setIsFullscreen(true);
+    setIsFullscreenFitActive(true);
+    setFullscreenPan({ x: 0, y: 0 });
+    fullscreenDragDistanceRef.current = 0;
+    if (typeof window !== 'undefined') {
+      const optimal = calculateFullscreenFitZoom(window.innerWidth, window.innerHeight, treeHeight);
+      setFullscreenZoom(optimal);
+    }
+  };
+
+  const exitFullscreen = () => {
+    setIsFullscreen(false);
+  };
+
+  const handleFullscreenFitToScreen = () => {
+    setIsFullscreenFitActive(true);
+    setFullscreenPan({ x: 0, y: 0 });
+    if (typeof window !== 'undefined') {
+      const optimal = calculateFullscreenFitZoom(window.innerWidth, window.innerHeight, treeHeight);
+      setFullscreenZoom(optimal);
+    }
+  };
+
+  const handleFullscreenZoom100 = () => {
+    setIsFullscreenFitActive(false);
+    setFullscreenZoom(1);
+    setFullscreenPan({ x: 0, y: 0 });
+  };
+
+  const handleFullscreenZoomIn = () => {
+    setIsFullscreenFitActive(false);
+    setFullscreenZoom((prev) => Math.min(Number((prev + 0.15).toFixed(2)), 2.2));
+  };
+
+  const handleFullscreenZoomOut = () => {
+    setIsFullscreenFitActive(false);
+    setFullscreenZoom((prev) => Math.max(Number((prev - 0.15).toFixed(2)), 0.16));
+  };
+
+  // Drag and pan handlers for fullscreen slideshow
+  const handleFullscreenMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    setIsFullscreenDragging(true);
+    fullscreenDragDistanceRef.current = 0;
+    fullscreenDragStartRef.current = {
+      x: e.clientX - fullscreenPan.x,
+      y: e.clientY - fullscreenPan.y,
+    };
+  };
+
+  const handleFullscreenMouseMove = (e: React.MouseEvent) => {
+    if (!isFullscreenDragging) return;
+    const curX = e.clientX - fullscreenDragStartRef.current.x;
+    const curY = e.clientY - fullscreenDragStartRef.current.y;
+    const dx = curX - fullscreenPan.x;
+    const dy = curY - fullscreenPan.y;
+    fullscreenDragDistanceRef.current += Math.hypot(dx, dy);
+    setFullscreenPan({ x: curX, y: curY });
+  };
+
+  const handleFullscreenMouseUp = () => {
+    setIsFullscreenDragging(false);
+  };
+
+  const handleFullscreenTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      setIsFullscreenDragging(true);
+      fullscreenDragDistanceRef.current = 0;
+      const t = e.touches[0];
+      fullscreenDragStartRef.current = {
+        x: t.clientX - fullscreenPan.x,
+        y: t.clientY - fullscreenPan.y,
+      };
+    }
+  };
+
+  const handleFullscreenTouchMove = (e: React.TouchEvent) => {
+    if (!isFullscreenDragging || e.touches.length !== 1) return;
+    const t = e.touches[0];
+    const curX = t.clientX - fullscreenDragStartRef.current.x;
+    const curY = t.clientY - fullscreenDragStartRef.current.y;
+    const dx = curX - fullscreenPan.x;
+    const dy = curY - fullscreenPan.y;
+    fullscreenDragDistanceRef.current += Math.hypot(dx, dy);
+    setFullscreenPan({ x: curX, y: curY });
+  };
+
+  const handleFullscreenTouchEnd = () => {
+    setIsFullscreenDragging(false);
+  };
+
+  const handleFullscreenWheel = (e: React.WheelEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      setIsFullscreenFitActive(false);
+      const delta = e.deltaY < 0 ? 0.08 : -0.08;
+      setFullscreenZoom((prev) => Math.min(2.2, Math.max(0.16, Number((prev + delta).toFixed(2)))));
+    } else {
+      setFullscreenPan((prev) => ({
+        x: prev.x - e.deltaX * 0.8,
+        y: prev.y - e.deltaY * 0.8,
+      }));
+    }
+  };
 
   // Helper to calculate optimal zoom factor to fit the viewport width
   const calculateFitZoom = React.useCallback((width: number) => {
@@ -288,6 +283,32 @@ export function OrganizationalTreeChart() {
     };
   }, [calculateFitZoom, isFitZoomActive]);
 
+  // Handle fullscreen body scroll locking
+  React.useEffect(() => {
+    if (isFullscreen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isFullscreen]);
+
+  // Slideshow auto-fit resize listener
+  React.useEffect(() => {
+    if (!isFullscreen) return;
+    const handleResize = () => {
+      if (isFullscreenFitActive && typeof window !== 'undefined') {
+        const optimal = calculateFullscreenFitZoom(window.innerWidth, window.innerHeight, treeHeight);
+        setFullscreenZoom(optimal);
+        setFullscreenPan({ x: 0, y: 0 });
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isFullscreen, isFullscreenFitActive, calculateFullscreenFitZoom, treeHeight]);
+
   const handleZoomIn = () => {
     setIsFitZoomActive(false);
     setZoomLevel((prev) => Math.min(Number((prev + 0.15).toFixed(2)), 1.5));
@@ -320,160 +341,232 @@ export function OrganizationalTreeChart() {
     }, 50);
   };
 
-  // Close modal with ESC
+  // Close modal or exit fullscreen with ESC
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setActiveCell(null);
+        if (activeModalData) {
+          setActiveModalData(null);
+        } else if (isFullscreen) {
+          setIsFullscreen(false);
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [activeModalData, isFullscreen]);
 
   return (
-    <div className="w-full space-y-8">
+    <div className="relative w-full space-y-8">
       
       {/* ─────────────────────────────────────────────────────────
           CONTROLS TOOLBAR: TRACK FILTER & VIEW TOGGLES
           ───────────────────────────────────────────────────────── */}
-      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 p-3 sm:p-4 rounded-2xl bg-white/70 dark:bg-[#200508]/70 backdrop-blur-md border border-[#3A0B10]/15 dark:border-white/10 shadow-sm">
+      <div className="flex flex-col gap-3.5 p-3 sm:p-4 rounded-2xl bg-white/80 dark:bg-[#200508]/80 backdrop-blur-md border border-[#3A0B10]/15 dark:border-white/10 shadow-sm transition-all">
         
-        {/* Track Selection Pills */}
-        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-          <span className="text-xs font-mono font-bold tracking-wider uppercase text-[#3A0B10]/60 dark:text-[#F5F3F0]/60 mr-1 hidden sm:inline-block">
-            Focus:
-          </span>
+        {/* Main Controls Row */}
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
           
-          <button
-            type="button"
-            onClick={() => setSelectedTrackId(null)}
-            className={cn(
-              "px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-mono font-semibold tracking-wide transition-all",
-              selectedTrackId === null
-                ? "bg-[#3A0B10] dark:bg-[#6C151E] text-white shadow-sm"
-                : "bg-black/5 dark:bg-white/5 text-[#3A0B10]/80 dark:text-[#F5F3F0]/80 hover:bg-black/10 dark:hover:bg-white/10"
-            )}
-          >
-            All Tracks
-          </button>
-
-          {TRACKS_DATA.map((t) => {
-            const isSelected = selectedTrackId === t.id;
-            return (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setSelectedTrackId(isSelected ? null : t.id)}
-                className={cn(
-                  "px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-mono font-semibold tracking-wide transition-all flex items-center gap-1.5",
-                  isSelected
-                    ? "bg-[#800020] dark:bg-[#B08D57] text-white shadow-sm"
-                    : "bg-black/5 dark:bg-white/5 text-[#3A0B10]/80 dark:text-[#F5F3F0]/80 hover:bg-black/10 dark:hover:bg-white/10"
-                )}
-              >
-                <span className="h-1.5 w-1.5 rounded-full bg-[#B08D57]" />
-                <span>Track {t.number}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* View Mode & Zoom controls */}
-        <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-[#3A0B10]/10 dark:border-white/10">
-          
-          {/* View Mode Switcher (Tree vs Cards Directory on Mobile/Tablet) */}
-          <div className="flex items-center p-1 rounded-lg bg-black/5 dark:bg-white/5 border border-[#3A0B10]/10 dark:border-white/10 lg:hidden">
+          {/* Track Selection Pills */}
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <span className="text-xs font-mono font-bold tracking-wider uppercase text-[#3A0B10]/70 dark:text-[#F5F3F0]/70 mr-1 hidden sm:inline-block">
+              Focus:
+            </span>
+            
             <button
               type="button"
-              onClick={() => setActiveTab('tree')}
+              onClick={() => setSelectedTrackId(null)}
               className={cn(
-                "px-2.5 py-1 rounded text-xs font-mono font-semibold transition-all",
-                activeTab === 'tree' ? "bg-white dark:bg-[#3A0B10] text-[#3A0B10] dark:text-white shadow-xs" : "text-[#3A0B10]/60 dark:text-[#F5F3F0]/60"
+                "px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-mono font-semibold tracking-wide transition-all cursor-pointer",
+                selectedTrackId === null
+                  ? "bg-[#3A0B10] dark:bg-[#6C151E] text-white shadow-sm"
+                  : "bg-black/5 dark:bg-white/5 text-[#3A0B10]/80 dark:text-[#F5F3F0]/80 hover:bg-black/10 dark:hover:bg-white/10"
               )}
             >
-              Tree Chart
+              All Tracks
             </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('matrix')}
-              className={cn(
-                "px-2.5 py-1 rounded text-xs font-mono font-semibold transition-all",
-                activeTab === 'matrix' ? "bg-white dark:bg-[#3A0B10] text-[#3A0B10] dark:text-white shadow-xs" : "text-[#3A0B10]/60 dark:text-[#F5F3F0]/60"
-              )}
-            >
-              Cards
-            </button>
+
+            {TRACKS_DATA.map((t) => {
+              const isSelected = selectedTrackId === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setSelectedTrackId(isSelected ? null : t.id)}
+                  className={cn(
+                    "px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-mono font-semibold tracking-wide transition-all flex items-center gap-1.5 cursor-pointer",
+                    isSelected
+                      ? "bg-[#800020] dark:bg-[#B08D57] text-white shadow-sm ring-2 ring-[#800020]/25 dark:ring-[#B08D57]/30"
+                      : "bg-black/5 dark:bg-white/5 text-[#3A0B10]/80 dark:text-[#F5F3F0]/80 hover:bg-black/10 dark:hover:bg-white/10"
+                  )}
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#B08D57]" />
+                  <span>Track {t.number}</span>
+                  {isSelected && (
+                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-white/20 text-white font-bold">
+                      {t.cells.length}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
-          {/* Universal Zoom Controls (Visible on ALL viewports: mobile, tablet, desktop) */}
-          {activeTab === 'tree' && (
-            <div className="flex items-center gap-1 p-1 rounded-lg bg-black/5 dark:bg-white/5 border border-[#3A0B10]/10 dark:border-white/10">
+          {/* View Mode & Zoom controls */}
+          <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-[#3A0B10]/10 dark:border-white/10">
+            
+            {/* View Mode Switcher (Tree vs Cards Directory on Mobile/Tablet) */}
+            <div className="flex items-center p-1 rounded-lg bg-black/5 dark:bg-white/5 border border-[#3A0B10]/10 dark:border-white/10 lg:hidden">
               <button
                 type="button"
-                onClick={handleZoomOut}
-                aria-label="Zoom Out"
-                className="p-1.5 rounded text-[#3A0B10]/70 dark:text-[#F5F3F0]/70 hover:bg-white/80 dark:hover:bg-white/10 active:scale-95 transition-all"
-                title="Zoom Out"
-              >
-                <ZoomOut size={13} />
-              </button>
-              
-              <span className="text-[11px] font-mono font-bold px-1 text-[#3A0B10] dark:text-[#F5F3F0] min-w-[2.8rem] text-center select-none">
-                {Math.round(zoomLevel * 100)}%
-              </span>
-              
-              <button
-                type="button"
-                onClick={handleZoomIn}
-                aria-label="Zoom In"
-                className="p-1.5 rounded text-[#3A0B10]/70 dark:text-[#F5F3F0]/70 hover:bg-white/80 dark:hover:bg-white/10 active:scale-95 transition-all"
-                title="Zoom In"
-              >
-                <ZoomIn size={13} />
-              </button>
-
-              <div className="h-3.5 w-px bg-[#3A0B10]/15 dark:bg-white/15 mx-0.5" />
-
-              {/* Fit Screen Button */}
-              <button
-                type="button"
-                onClick={handleFitToScreen}
+                onClick={() => setActiveTab('tree')}
                 className={cn(
-                  "px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider transition-all",
-                  isFitZoomActive
-                    ? "bg-[#800020] dark:bg-[#B08D57] text-white shadow-xs"
-                    : "text-[#3A0B10]/70 dark:text-[#F5F3F0]/70 hover:bg-white/80 dark:hover:bg-white/10"
+                  "px-2.5 py-1 rounded text-xs font-mono font-semibold transition-all",
+                  activeTab === 'tree' ? "bg-white dark:bg-[#3A0B10] text-[#3A0B10] dark:text-white shadow-xs" : "text-[#3A0B10]/60 dark:text-[#F5F3F0]/60"
                 )}
-                title="Fit entire chart to viewport"
               >
-                Fit
+                Tree Chart
               </button>
-
-              {/* 100% Detail Button */}
               <button
                 type="button"
-                onClick={handleZoom100}
+                onClick={() => setActiveTab('matrix')}
                 className={cn(
-                  "px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider transition-all",
-                  !isFitZoomActive && Math.abs(zoomLevel - 1) < 0.05
-                    ? "bg-[#800020] dark:bg-[#B08D57] text-white shadow-xs"
-                    : "text-[#3A0B10]/70 dark:text-[#F5F3F0]/70 hover:bg-white/80 dark:hover:bg-white/10"
+                  "px-2.5 py-1 rounded text-xs font-mono font-semibold transition-all",
+                  activeTab === 'matrix' ? "bg-white dark:bg-[#3A0B10] text-[#3A0B10] dark:text-white shadow-xs" : "text-[#3A0B10]/60 dark:text-[#F5F3F0]/60"
                 )}
-                title="100% full scale detail"
               >
-                100%
+                Cards
               </button>
             </div>
-          )}
 
-          {/* Quick Stats Pill */}
-          <div className="hidden sm:flex px-3 py-1.5 rounded-lg bg-[#3A0B10]/5 dark:bg-white/5 text-[11px] font-mono text-[#6C151E] dark:text-[#B08D57] font-semibold items-center gap-1.5">
-            <Layers size={13} />
-            <span>5 Tracks • 16 Cells</span>
+            {/* Universal Zoom Controls (Visible on ALL viewports: mobile, tablet, desktop) */}
+            {activeTab === 'tree' && (
+              <div className="flex items-center gap-1 p-1 rounded-lg bg-black/5 dark:bg-white/5 border border-[#3A0B10]/10 dark:border-white/10">
+                <button
+                  type="button"
+                  onClick={handleZoomOut}
+                  aria-label="Zoom Out"
+                  className="p-1.5 rounded text-[#3A0B10]/70 dark:text-[#F5F3F0]/70 hover:bg-white/80 dark:hover:bg-white/10 active:scale-95 transition-all"
+                  title="Zoom Out"
+                >
+                  <ZoomOut size={13} />
+                </button>
+                
+                <span className="text-[11px] font-mono font-bold px-1 text-[#3A0B10] dark:text-[#F5F3F0] min-w-[2.8rem] text-center select-none">
+                  {Math.round(zoomLevel * 100)}%
+                </span>
+                
+                <button
+                  type="button"
+                  onClick={handleZoomIn}
+                  aria-label="Zoom In"
+                  className="p-1.5 rounded text-[#3A0B10]/70 dark:text-[#F5F3F0]/70 hover:bg-white/80 dark:hover:bg-white/10 active:scale-95 transition-all"
+                  title="Zoom In"
+                >
+                  <ZoomIn size={13} />
+                </button>
+
+                <div className="h-3.5 w-px bg-[#3A0B10]/15 dark:bg-white/15 mx-0.5" />
+
+                {/* Fit Screen Button */}
+                <button
+                  type="button"
+                  onClick={handleFitToScreen}
+                  className={cn(
+                    "px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider transition-all",
+                    isFitZoomActive
+                      ? "bg-[#800020] dark:bg-[#B08D57] text-white shadow-xs"
+                      : "text-[#3A0B10]/70 dark:text-[#F5F3F0]/70 hover:bg-white/80 dark:hover:bg-white/10"
+                  )}
+                  title="Fit entire chart to viewport"
+                >
+                  Fit
+                </button>
+
+                {/* 100% Detail Button */}
+                <button
+                  type="button"
+                  onClick={handleZoom100}
+                  className={cn(
+                    "px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider transition-all",
+                    !isFitZoomActive && Math.abs(zoomLevel - 1) < 0.05
+                      ? "bg-[#800020] dark:bg-[#B08D57] text-white shadow-xs"
+                      : "text-[#3A0B10]/70 dark:text-[#F5F3F0]/70 hover:bg-white/80 dark:hover:bg-white/10"
+                  )}
+                  title="100% full scale detail"
+                >
+                  100%
+                </button>
+              </div>
+            )}
+
+            {/* Quick Stats Pill */}
+            <div className="hidden sm:flex px-3 py-1.5 rounded-lg bg-[#3A0B10]/5 dark:bg-white/5 text-[11px] font-mono text-[#6C151E] dark:text-[#B08D57] font-semibold items-center gap-1.5">
+              <Layers size={13} />
+              <span>5 Tracks • 16 Cells</span>
+            </div>
+
+            {/* Fullscreen Button */}
+            <button
+              type="button"
+              onClick={enterFullscreen}
+              className="px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-mono font-semibold tracking-wide transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 border bg-black/5 dark:bg-white/5 text-[#3A0B10]/80 dark:text-[#F5F3F0]/80 hover:bg-[#800020] hover:text-white dark:hover:bg-[#B08D57] dark:hover:text-[#1A0407] border-[#3A0B10]/10 dark:border-white/10"
+              title="Fullscreen Slideshow (Slide-fitted)"
+              aria-label="Fullscreen Flowchart"
+            >
+              <Maximize2 size={13} className="shrink-0" />
+              <span>Fullscreen</span>
+            </button>
+
           </div>
 
         </div>
+
+        {/* Sub-options for the focused track: appears down below the track buttons */}
+        <AnimatePresence>
+          {selectedTrack && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              className="overflow-hidden border-t border-[#3A0B10]/10 dark:border-white/10 pt-3"
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#800020] dark:text-[#B08D57] flex items-center gap-1.5 mr-1 shrink-0">
+                  <Workflow size={13} className="text-[#800020] dark:text-[#B08D57]" />
+                  <span>Track {selectedTrack.number} Cells ({selectedTrack.cells.length}):</span>
+                </span>
+
+                {selectedTrack.cells.map((cell) => {
+                  const isCellModalOpen = activeModalData?.id === cell.id;
+
+                  return (
+                    <button
+                      key={cell.id}
+                      type="button"
+                      onClick={() => openModalFor(cell.id, cell)}
+                      className={cn(
+                        "group inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono font-semibold transition-all shadow-xs active:scale-95 cursor-pointer border",
+                        isCellModalOpen
+                          ? "bg-[#800020] text-white border-[#B08D57] shadow-sm ring-2 ring-[#B08D57]/30"
+                          : "bg-white dark:bg-[#1E0407] border-[#3A0B10]/15 dark:border-white/15 text-[#3A0B10] dark:text-[#F5F3F0] hover:border-[#800020] dark:hover:border-[#B08D57] hover:bg-[#800020]/5 dark:hover:bg-[#B08D57]/10"
+                      )}
+                    >
+                      <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-[#800020]/10 dark:bg-white/10 text-[#800020] dark:text-[#B08D57] group-hover:bg-[#800020] group-hover:text-white transition-colors">
+                        Cell {cell.number < 10 ? `0${cell.number}` : cell.number}
+                      </span>
+                      <span className="font-sans font-medium text-xs">
+                        {cell.label.replace(/^\d+\.\s*/, '')}
+                      </span>
+                      <ArrowUpRight size={13} className="opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 text-[#800020] dark:text-[#B08D57] transition-all" />
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
       </div>
 
@@ -528,361 +621,12 @@ export function OrganizationalTreeChart() {
               }}
               className="flex flex-col items-center"
             >
-
-          {/* ─────────────────────────────────────────────────────
-              LEVEL 1: ROOT APEX BOX (VERBATIM TEXT)
-              SRM AP PARTNER PLUS
-              QISKIT FALL FEST AMARAVATI 2026
-              ORGANIZATIONAL STRUCTURE
-              ───────────────────────────────────────────────────── */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="group relative z-20 flex flex-col items-center text-center px-8 py-5 rounded-2xl bg-gradient-to-b from-white to-[#F9F7F5] dark:from-[#2A080C] dark:to-[#1E0407] border-2 border-[#800020]/40 dark:border-[#B08D57]/40 shadow-xl hover:shadow-2xl transition-all duration-300 w-[420px] max-w-full"
-          >
-            {/* Top decorative seal pin */}
-            <div className="absolute -top-3.5 px-3 py-0.5 rounded-full bg-[#3A0B10] text-[#B08D57] text-[10px] font-mono uppercase tracking-[0.25em] font-bold border border-[#B08D57]/40 shadow-sm flex items-center gap-1.5">
-              <span>OFFICIAL GOVERNANCE</span>
-            </div>
-
-            <div className="space-y-1">
-              <span className="block text-[11px] font-mono uppercase tracking-[0.25em] font-bold text-[#800020] dark:text-[#B08D57]">
-                SRM AP PARTNER PLUS
-              </span>
-              <h3 className="text-lg sm:text-xl font-serif font-bold text-[#3A0B10] dark:text-[#F5F3F0] tracking-tight">
-                QISKIT FALL FEST AMARAVATI 2026
-              </h3>
-              <div className="pt-1 flex items-center justify-center gap-2">
-                <span className="h-px w-6 bg-[#800020]/30 dark:bg-[#B08D57]/30" />
-                <span className="text-xs font-mono uppercase tracking-[0.22em] font-bold text-[#3A0B10]/80 dark:text-[#F5F3F0]/90">
-                  ORGANIZATIONAL STRUCTURE
-                </span>
-                <span className="h-px w-6 bg-[#800020]/30 dark:bg-[#B08D57]/30" />
-              </div>
-            </div>
-          </motion.div>
-
-          {/* SVG Connector: Level 1 -> Level 2 */}
-          <div className="relative flex flex-col items-center h-12 w-full">
-            <div className="w-[2px] h-full bg-gradient-to-b from-[#800020]/60 to-[#800020]/90 dark:from-[#B08D57]/60 dark:to-[#B08D57]/90 relative">
-              <div className="absolute top-1/2 -left-1 h-2.5 w-2.5 rounded-full bg-[#800020] dark:bg-[#B08D57] animate-ping opacity-30" />
-            </div>
-            <ArrowDown size={14} className="-mt-1 text-[#800020] dark:text-[#B08D57]" />
-          </div>
-
-          {/* ─────────────────────────────────────────────────────
-              LEVEL 2: CORE ORGANIZING TEAM (VERBATIM TEXT)
-              CORE ORGANIZING TEAM
-              (1 Lead + 4 Faculty Co-Organizers + 1 Student Lead)
-              ───────────────────────────────────────────────────── */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="relative z-20 flex flex-col items-center text-center px-7 py-4 rounded-xl bg-white dark:bg-[#25060A] border-2 border-[#3A0B10]/25 dark:border-white/15 shadow-md hover:border-[#800020] dark:hover:border-[#B08D57] transition-all w-[380px] max-w-full"
-          >
-            <h4 className="text-base font-serif font-bold text-[#3A0B10] dark:text-[#F5F3F0] tracking-wide">
-              CORE ORGANIZING TEAM
-            </h4>
-            <p className="text-xs font-mono font-medium text-[#6C151E] dark:text-[#B08D57] mt-0.5">
-              (1 Lead + 4 Faculty Co-Organizers + 1 Student Lead)
-            </p>
-          </motion.div>
-
-          {/* SVG Connector: Level 2 splits into Left & Right (FAB and Student Lead) */}
-          <div className="relative w-[620px] h-14 flex justify-center">
-            <svg
-              className="w-full h-full overflow-visible"
-              viewBox="0 0 620 56"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              {/* Vertical trunk coming down from Level 2 */}
-              <path
-                d="M 310 0 L 310 24"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="text-[#800020]/70 dark:text-[#B08D57]/70"
+              <TreeDiagramNodes
+                openModalFor={openModalFor}
+                selectedTrackId={selectedTrackId}
+                setSelectedTrackId={setSelectedTrackId}
+                activeModalId={activeModalData?.id}
               />
-              {/* Horizontal split bar */}
-              <path
-                d="M 155 24 L 465 24"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="text-[#800020]/70 dark:text-[#B08D57]/70"
-              />
-              {/* Drop to Left Box */}
-              <path
-                d="M 155 24 L 155 52"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="text-[#800020]/70 dark:text-[#B08D57]/70"
-              />
-              {/* Drop to Right Box */}
-              <path
-                d="M 465 24 L 465 52"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="text-[#800020]/70 dark:text-[#B08D57]/70"
-              />
-              {/* Directional arrow markers */}
-              <circle cx="155" cy="52" r="3" fill="#800020" className="dark:fill-[#B08D57]" />
-              <circle cx="465" cy="52" r="3" fill="#800020" className="dark:fill-[#B08D57]" />
-            </svg>
-          </div>
-
-          {/* ─────────────────────────────────────────────────────
-              LEVEL 3: DUAL WINGS (VERBATIM TEXT)
-              Left: FACULTY ADVISORY BOARD (FAB) (Guidance & Portfolios)
-              Right: CO-ORGANIZER & STUDENT LEAD (Operational Execution)
-              ───────────────────────────────────────────────────── */}
-          <div className="relative z-20 flex items-center justify-between w-[640px] gap-8">
-            {/* Left Wing */}
-            <motion.div
-              initial={{ opacity: 0, x: -15 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="flex-1 flex flex-col items-center text-center p-4 rounded-xl bg-white dark:bg-[#25060A] border-2 border-[#3A0B10]/20 dark:border-white/15 shadow-md hover:border-[#800020] dark:hover:border-[#B08D57] transition-all"
-            >
-              <h5 className="text-sm font-serif font-bold text-[#3A0B10] dark:text-[#F5F3F0]">
-                FACULTY ADVISORY BOARD (FAB)
-              </h5>
-              <p className="text-xs font-mono font-medium text-[#6C151E] dark:text-[#B08D57] mt-0.5">
-                (Guidance & Portfolios)
-              </p>
-            </motion.div>
-
-            {/* Right Wing */}
-            <motion.div
-              initial={{ opacity: 0, x: 15 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="flex-1 flex flex-col items-center text-center p-4 rounded-xl bg-white dark:bg-[#25060A] border-2 border-[#3A0B10]/20 dark:border-white/15 shadow-md hover:border-[#800020] dark:hover:border-[#B08D57] transition-all"
-            >
-              <h5 className="text-sm font-serif font-bold text-[#3A0B10] dark:text-[#F5F3F0]">
-                CO-ORGANIZER & STUDENT LEAD
-              </h5>
-              <p className="text-xs font-mono font-medium text-[#6C151E] dark:text-[#B08D57] mt-0.5">
-                (Operational Execution)
-              </p>
-            </motion.div>
-          </div>
-
-          {/* SVG Connector: Dual wings converge down to Level 4 (5 TRACK LEADS) */}
-          <div className="relative w-[640px] h-14 flex justify-center">
-            <svg
-              className="w-full h-full overflow-visible"
-              viewBox="0 0 640 56"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              {/* Left wing down */}
-              <path
-                d="M 160 0 L 160 28"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="text-[#800020]/70 dark:text-[#B08D57]/70"
-              />
-              {/* Right wing down */}
-              <path
-                d="M 480 0 L 480 28"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="text-[#800020]/70 dark:text-[#B08D57]/70"
-              />
-              {/* Converging horizontal bridge */}
-              <path
-                d="M 160 28 L 480 28"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="text-[#800020]/70 dark:text-[#B08D57]/70"
-              />
-              {/* Center drop to Level 4 */}
-              <path
-                d="M 320 28 L 320 52"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="text-[#800020]/70 dark:text-[#B08D57]/70"
-              />
-              <circle cx="320" cy="52" r="3" fill="#800020" className="dark:fill-[#B08D57]" />
-            </svg>
-          </div>
-
-          {/* ─────────────────────────────────────────────────────
-              LEVEL 4: 5 TRACK LEADS (VERBATIM TEXT)
-              ───────────────────────────────────────────────────── */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="relative z-20 flex items-center justify-center px-8 py-3 rounded-xl bg-white dark:bg-[#25060A] border-2 border-[#3A0B10]/25 dark:border-white/15 shadow-sm hover:border-[#800020] dark:hover:border-[#B08D57] transition-all min-w-[240px]"
-          >
-            <span className="text-sm font-serif font-bold text-[#3A0B10] dark:text-[#F5F3F0] tracking-wider uppercase">
-              5 TRACK LEADS
-            </span>
-          </motion.div>
-
-          {/* ─────────────────────────────────────────────────────
-              CONNECTOR BUS: 5 TRACK LEADS DISTRIBUTES DIRECTLY ACROSS 5 TRACKS
-              Orthogonal distributor line spanning 5 columns
-              Column Centers calculated for 5 equal columns:
-              Width ~ 1160px: centers at approx 116, 348, 580, 812, 1044
-              ───────────────────────────────────────────────────── */}
-          <div className="relative w-[1160px] h-16 flex justify-center">
-            <svg
-              className="w-full h-full overflow-visible"
-              viewBox="0 0 1160 64"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              {/* Vertical trunk dropping directly from 5 TRACK LEADS (center at 580) */}
-              <path
-                d="M 580 0 L 580 32"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="text-[#800020]/70 dark:text-[#B08D57]/70"
-              />
-
-              {/* Major horizontal bus line spanning across 5 columns */}
-              <path
-                d="M 116 32 L 1044 32"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="text-[#800020]/70 dark:text-[#B08D57]/70"
-              />
-
-              {/* 5 Vertical drops to each Track Column */}
-              {[116, 348, 580, 812, 1044].map((x, idx) => {
-                const track = TRACKS_DATA[idx];
-                const isHighlighted = selectedTrackId === null || selectedTrackId === track.id;
-                return (
-                  <g key={x}>
-                    <path
-                      d={`M ${x} 32 L ${x} 60`}
-                      stroke="currentColor"
-                      strokeWidth={isHighlighted ? "2.5" : "1.5"}
-                      className={cn(
-                        "transition-all duration-300",
-                        isHighlighted
-                          ? "text-[#800020] dark:text-[#B08D57]"
-                          : "text-[#800020]/30 dark:text-[#B08D57]/30"
-                      )}
-                    />
-                    <circle
-                      cx={x}
-                      cy={60}
-                      r={isHighlighted ? "3.5" : "2"}
-                      fill="currentColor"
-                      className={cn(
-                        "transition-all duration-300",
-                        isHighlighted
-                          ? "text-[#800020] dark:text-[#B08D57]"
-                          : "text-[#800020]/40 dark:text-[#B08D57]/40"
-                      )}
-                    />
-                  </g>
-                );
-              })}
-            </svg>
-          </div>
-
-          {/* ─────────────────────────────────────────────────────
-              LEVEL 7: THE 5 TRACK COLUMNS & 16 CONSTITUENT CELLS
-              Verbatim Track Headers & Box Names
-              ───────────────────────────────────────────────────── */}
-          <div className="relative z-20 grid grid-cols-5 gap-6 w-[1160px]">
-            {TRACKS_DATA.map((track) => {
-              const Icon = track.icon;
-              const isSelected = selectedTrackId === track.id;
-              const isDimmed = selectedTrackId !== null && !isSelected;
-
-              return (
-                <div
-                  key={track.id}
-                  className={cn(
-                    "flex flex-col items-center space-y-4 transition-all duration-300",
-                    isDimmed ? "opacity-35 scale-[0.98]" : "opacity-100 scale-100"
-                  )}
-                >
-                  
-                  {/* Track Header Card (VERBATIM TEXT) */}
-                  <div
-                    onClick={() => setSelectedTrackId(isSelected ? null : track.id)}
-                    className={cn(
-                      "cursor-pointer w-full text-center p-3.5 rounded-xl border-2 transition-all duration-300 shadow-md flex flex-col items-center justify-between min-h-[102px]",
-                      isSelected
-                        ? "bg-[#3A0B10] text-[#F5F3F0] border-[#B08D57] shadow-xl ring-2 ring-[#B08D57]/30"
-                        : "bg-white dark:bg-[#25060A] border-[#3A0B10]/25 dark:border-white/15 text-[#3A0B10] dark:text-[#F5F3F0] hover:border-[#800020] dark:hover:border-[#B08D57]"
-                    )}
-                  >
-                    <div className="flex items-center gap-1.5 pb-1">
-                      <Icon size={14} className={isSelected ? "text-[#B08D57]" : "text-[#800020] dark:text-[#B08D57]"} />
-                      <span className="text-xs font-mono font-bold tracking-wider uppercase">
-                        {track.headerLine1}
-                      </span>
-                    </div>
-
-                    <h6 className="text-xs font-serif font-bold tracking-tight leading-snug">
-                      {track.headerLine2}
-                    </h6>
-
-                    <span className="mt-1 text-[10px] font-mono tracking-widest uppercase opacity-70">
-                      {track.cells.length} Cells
-                    </span>
-                  </div>
-
-                  {/* Vertical Spine linking to the cells */}
-                  <div className="relative w-full flex flex-col items-center space-y-3 pt-1">
-                    
-                    {track.cells.map((cell) => {
-                      const isCellActive = activeCell?.id === cell.id;
-
-                      return (
-                        <React.Fragment key={cell.id}>
-                          {/* Connector line between cells */}
-                          <div className="w-[1.5px] h-3 bg-[#800020]/40 dark:bg-[#B08D57]/40" />
-
-                          {/* Cell Box (VERBATIM TEXT) */}
-                          <motion.div
-                            whileHover={{ y: -2, scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => setActiveCell(cell)}
-                            className={cn(
-                              "cursor-pointer w-full p-3 rounded-lg border-2 text-center transition-all duration-200 shadow-sm relative group",
-                              isCellActive
-                                ? "bg-[#800020] text-white border-[#B08D57] shadow-lg ring-2 ring-[#B08D57]/40"
-                                : "bg-white dark:bg-[#200508] border-[#3A0B10]/20 dark:border-white/10 text-[#3A0B10] dark:text-[#F5F3F0] hover:border-[#800020] dark:hover:border-[#B08D57] hover:shadow-md"
-                            )}
-                          >
-                            <div className="flex items-center justify-between gap-1 mb-1">
-                              <span className="text-[10px] font-mono font-bold text-[#800020] dark:text-[#B08D57] group-hover:underline">
-                                Cell {cell.number < 10 ? `0${cell.number}` : cell.number}
-                              </span>
-                              <Info size={11} className="opacity-40 group-hover:opacity-100 transition-opacity" />
-                            </div>
-
-                            <p className="text-xs font-serif font-bold leading-tight tracking-tight">
-                              {cell.label}
-                            </p>
-
-                            <div className="mt-1.5 flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <span className="text-[9px] font-mono text-[#800020] dark:text-[#B08D57] font-semibold">
-                                View Specs
-                              </span>
-                              <ArrowUpRight size={10} className="text-[#800020] dark:text-[#B08D57]" />
-                            </div>
-                          </motion.div>
-                        </React.Fragment>
-                      );
-                    })}
-
-                  </div>
-
-                </div>
-              );
-            })}
-            </div>
           </div>
         </div>
       </div>
@@ -950,12 +694,20 @@ export function OrganizationalTreeChart() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono px-2 py-0.5 rounded bg-black/5 dark:bg-white/5 text-[#16171B]/70 dark:text-[#C7C8CC]">
-                    {track.cells.length} Cells
-                  </span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openModalFor(track.id);
+                    }}
+                    className="px-2 py-1 rounded bg-[#800020]/10 dark:bg-[#B08D57]/20 text-[#800020] dark:text-[#B08D57] text-[11px] font-mono font-bold flex items-center gap-1 hover:bg-[#800020]/20 transition-colors"
+                  >
+                    <span>{track.cells.length} Cells</span>
+                    <ArrowUpRight size={11} />
+                  </button>
                   <ChevronDown
                     size={16}
-                    className={cn("transition-transform duration-200", isExpanded ? "rotate-180" : "rotate-0")}
+                    className={cn("transition-transform duration-200 text-[#3A0B10]/60 dark:text-white/60", isExpanded ? "rotate-180" : "rotate-0")}
                   />
                 </div>
               </button>
@@ -965,8 +717,11 @@ export function OrganizationalTreeChart() {
                   {track.cells.map((cell) => (
                     <div
                       key={cell.id}
-                      onClick={() => setActiveCell(cell)}
-                      className="p-3 rounded-xl border border-[#3A0B10]/10 dark:border-white/10 bg-[#FAF9F6] dark:bg-black/20 flex items-center justify-between cursor-pointer hover:border-[#800020] transition-all"
+                      onClick={() => openModalFor(cell.id, cell)}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Open ${cell.label} Roster Carousel`}
+                      className="p-3 rounded-xl border border-[#3A0B10]/10 dark:border-white/10 bg-[#FAF9F6] dark:bg-black/20 flex items-center justify-between cursor-pointer hover:border-[#800020] transition-all group"
                     >
                       <div className="space-y-0.5">
                         <span className="text-[10px] font-mono font-bold text-[#800020] dark:text-[#B08D57]">
@@ -979,7 +734,7 @@ export function OrganizationalTreeChart() {
                           {cell.focusArea}
                         </p>
                       </div>
-                      <ArrowUpRight size={14} className="text-[#800020] dark:text-[#B08D57] shrink-0" />
+                      <ArrowUpRight size={14} className="text-[#800020] dark:text-[#B08D57] shrink-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                     </div>
                   ))}
                 </div>
@@ -990,89 +745,299 @@ export function OrganizationalTreeChart() {
       </div>
 
       {/* ─────────────────────────────────────────────────────────
-          INTERACTIVE CELL DETAIL MODAL / DRAWER
-          Opens when user clicks any cell card
+          FULLSCREEN PRESENTATION SLIDESHOW PORTAL (MATCHES VENUES MAP)
+          Pure presentation slide mode: 100% full screen, fitted to
+          both screen width and height with zero clutter, interactive
+          pan/zoom, and floating controls in the top-right corner.
           ───────────────────────────────────────────────────────── */}
-      <AnimatePresence>
-        {activeCell && (
+      {isFullscreen && isMounted && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[99980] bg-[#F3EFE9] dark:bg-[#140A0D] select-none overflow-hidden flex items-center justify-center transition-colors duration-300"
+          onMouseDown={handleFullscreenMouseDown}
+          onMouseMove={handleFullscreenMouseMove}
+          onMouseUp={handleFullscreenMouseUp}
+          onMouseLeave={handleFullscreenMouseUp}
+          onTouchStart={handleFullscreenTouchStart}
+          onTouchMove={handleFullscreenTouchMove}
+          onTouchEnd={handleFullscreenTouchEnd}
+          onWheel={handleFullscreenWheel}
+          style={{
+            cursor: isFullscreenDragging ? 'grabbing' : 'grab',
+          }}
+        >
+          {/* Subtle Decorative Circuit Background Grid */}
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
-            onClick={() => setActiveCell(null)}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              transition={{ duration: 0.2 }}
-              onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-lg rounded-2xl bg-white dark:bg-[#1E0407] border-2 border-[#800020]/30 dark:border-[#B08D57]/30 shadow-2xl overflow-hidden p-6 sm:p-8 space-y-6"
-            >
-              {/* Modal Header */}
-              <div className="flex items-start justify-between gap-4 border-b border-[#3A0B10]/10 dark:border-white/10 pb-4">
-                <div className="space-y-1">
-                  <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-[#800020]/10 dark:bg-[#800020]/30 text-[#800020] dark:text-[#B08D57] text-[11px] font-mono font-bold uppercase tracking-wider">
-                    <Workflow size={11} />
-                    <span>Cell Specification • #{activeCell.number}</span>
-                  </div>
-                  <h4 className="text-xl sm:text-2xl font-serif font-bold text-[#3A0B10] dark:text-[#F5F3F0]">
-                    {activeCell.label}
-                  </h4>
-                </div>
+            className="absolute inset-0 pointer-events-none opacity-[0.035] dark:opacity-[0.055]"
+            style={{
+              backgroundImage: 'radial-gradient(#800020 1px, transparent 1px)',
+              backgroundSize: '24px 24px',
+            }}
+          />
 
-                <button
-                  type="button"
-                  onClick={() => setActiveCell(null)}
-                  className="p-1.5 rounded-lg text-[#3A0B10]/70 dark:text-[#F5F3F0]/70 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-                  aria-label="Close Overview"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-
-              {/* Modal Body */}
-              <div className="space-y-4">
-                <div className="p-3.5 rounded-xl bg-[#FAF9F6] dark:bg-black/30 border border-[#3A0B10]/10 dark:border-white/10 space-y-1">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#800020] dark:text-[#B08D57]">
-                    Operational Domain
-                  </span>
-                  <p className="text-sm font-sans font-medium text-[#3A0B10] dark:text-[#F5F3F0]">
-                    {activeCell.focusArea}
-                  </p>
-                </div>
-
-                <div className="space-y-1.5">
-                  <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#3A0B10]/70 dark:text-[#F5F3F0]/70">
-                    Mandate & Responsibilities
-                  </span>
-                  <p className="text-sm font-sans text-[#16171B]/80 dark:text-[#C7C8CC] leading-relaxed">
-                    {activeCell.description}
-                  </p>
-                </div>
-              </div>
-
-              {/* Modal Footer / Direct Navigation Link */}
-              <div className="pt-4 border-t border-[#3A0B10]/10 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <Link
-                  href="/team/organizing"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#3A0B10] hover:bg-[#6C151E] text-white text-xs font-mono font-bold uppercase tracking-wider transition-all shadow-md"
-                >
-                  <span>Open Full Organizing Roster</span>
-                  <ArrowUpRight size={14} />
-                </Link>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveCell(null)}
-                  className="w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-mono font-semibold text-[#3A0B10]/70 dark:text-[#F5F3F0]/70 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-                >
-                  Close
-                </button>
-              </div>
-
-            </motion.div>
+          {/* Top-Left: Minimal Live Mode Indicator Pill (like InteractiveCampusMap) */}
+          <div className="absolute top-4 left-4 sm:top-5 sm:left-6 z-30 pointer-events-none">
+            <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/95 dark:bg-[#1A0C0F]/95 backdrop-blur-md border border-stone-300/80 dark:border-[#B08D57]/30 shadow-lg text-xs font-medium text-[#16171B] dark:text-[#F5F3F0]">
+              <span className="w-2 h-2 rounded-full bg-[#B08D57] animate-pulse" />
+              <span className="font-mono text-[11px] uppercase tracking-wider text-stone-500 dark:text-stone-400">Slideshow:</span>
+              <span className="font-semibold text-[#6C151E] dark:text-[#B08D57]">
+                {selectedTrack ? `Track ${selectedTrack.number}: ${selectedTrack.headerLine2}` : 'Full Organizational Structure'}
+              </span>
+            </div>
           </div>
-        )}
-      </AnimatePresence>
+
+          {/* Top-Right: Map/Flowchart Controls Bar (Identical to InteractiveCampusMap) */}
+          <div className="absolute top-4 right-4 sm:top-5 sm:right-6 z-30 flex items-center gap-1.5 sm:gap-2 pointer-events-auto">
+            {/* Quick Track Focus Pills on Desktop */}
+            <div className="hidden lg:flex items-center gap-1 p-1 rounded-xl bg-white/95 dark:bg-[#1C0D11]/95 backdrop-blur-md border border-stone-300/80 dark:border-[#B08D57]/30 shadow-lg">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 px-1.5">
+                Focus:
+              </span>
+              <button
+                type="button"
+                onClick={() => setSelectedTrackId(null)}
+                className={cn(
+                  "px-2 py-1 rounded-lg text-xs font-mono font-semibold transition-all cursor-pointer",
+                  selectedTrackId === null
+                    ? "bg-[#3A0B10] dark:bg-[#6C151E] text-white shadow-xs"
+                    : "text-stone-600 dark:text-stone-300 hover:bg-black/5 dark:hover:bg-white/10"
+                )}
+              >
+                All
+              </button>
+              {TRACKS_DATA.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setSelectedTrackId(selectedTrackId === t.id ? null : t.id)}
+                  className={cn(
+                    "px-2 py-1 rounded-lg text-xs font-mono font-semibold transition-all cursor-pointer",
+                    selectedTrackId === t.id
+                      ? "bg-[#800020] dark:bg-[#B08D57] text-white dark:text-[#1A0407] shadow-xs font-bold"
+                      : "text-stone-600 dark:text-stone-300 hover:bg-black/5 dark:hover:bg-white/10"
+                  )}
+                >
+                  T{t.number}
+                </button>
+              ))}
+            </div>
+
+            {/* Zoom, Fit & Exit Controls (Styled like InteractiveCampusMap) */}
+            <div className="flex items-center gap-1 sm:gap-1.5 p-1 rounded-xl bg-white/95 dark:bg-[#1C0D11]/95 backdrop-blur-md border border-stone-300/80 dark:border-[#B08D57]/30 shadow-lg">
+              <button
+                type="button"
+                onClick={handleFullscreenZoomOut}
+                title="Zoom out"
+                aria-label="Zoom out"
+                className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg hover:bg-stone-100 dark:hover:bg-white/10 text-stone-700 dark:text-stone-200 transition-colors cursor-pointer"
+              >
+                <ZoomOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </button>
+
+              <span className="text-[11px] font-mono font-bold px-1 text-stone-800 dark:text-stone-200 min-w-[2.6rem] text-center select-none">
+                {Math.round(fullscreenZoom * 100)}%
+              </span>
+
+              <button
+                type="button"
+                onClick={handleFullscreenZoomIn}
+                title="Zoom in"
+                aria-label="Zoom in"
+                className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg hover:bg-stone-100 dark:hover:bg-white/10 text-stone-700 dark:text-stone-200 transition-colors cursor-pointer"
+              >
+                <ZoomIn className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </button>
+
+              <div className="w-px h-4 bg-stone-300 dark:bg-stone-700 mx-0.5" />
+
+              {/* Fit Slide Button */}
+              <button
+                type="button"
+                onClick={handleFullscreenFitToScreen}
+                className={cn(
+                  "h-7 sm:h-8 px-2.5 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center gap-1 cursor-pointer",
+                  isFullscreenFitActive
+                    ? "bg-[#800020] dark:bg-[#B08D57] text-white dark:text-[#1A0407] shadow-xs"
+                    : "text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-white/10"
+                )}
+                title="Fit entire flowchart slide to screen"
+              >
+                <Maximize2 size={12} className="shrink-0" />
+                <span>Fit</span>
+              </button>
+
+              {/* 100% Detail Button */}
+              <button
+                type="button"
+                onClick={handleFullscreenZoom100}
+                className={cn(
+                  "h-7 sm:h-8 px-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all cursor-pointer",
+                  !isFullscreenFitActive && Math.abs(fullscreenZoom - 1) < 0.05
+                    ? "bg-[#800020] dark:bg-[#B08D57] text-white dark:text-[#1A0407] shadow-xs"
+                    : "text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-white/10"
+                )}
+                title="View 100% full scale detail"
+              >
+                100%
+              </button>
+
+              <div className="w-px h-4 bg-stone-300 dark:bg-stone-700 mx-0.5" />
+
+              {/* Exit Fullscreen Button */}
+              <button
+                type="button"
+                onClick={exitFullscreen}
+                title="Exit Fullscreen (Esc)"
+                aria-label="Exit Fullscreen"
+                className="h-7 sm:h-8 px-2.5 flex items-center gap-1.5 rounded-lg bg-[#800020]/10 dark:bg-[#B08D57]/20 hover:bg-[#800020] hover:text-white dark:hover:bg-[#B08D57] dark:hover:text-[#1A0407] text-[#6C151E] dark:text-[#B08D57] transition-all cursor-pointer font-semibold text-xs active:scale-95"
+              >
+                <Minimize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span>Exit Fullscreen</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Floating Bottom Hint */}
+          <div className="absolute bottom-4 inset-x-0 flex justify-center z-20 pointer-events-none">
+            <div className="inline-flex items-center gap-2 sm:gap-3 px-3.5 py-1.5 rounded-full bg-white/85 dark:bg-[#1A0C0F]/85 backdrop-blur-md border border-stone-300/70 dark:border-white/10 shadow-md text-[11px] font-mono text-stone-600 dark:text-stone-300">
+              <span>Press <kbd className="px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10 font-bold text-stone-900 dark:text-white">Esc</kbd> or click Exit</span>
+              <span className="opacity-40">•</span>
+              <span>Drag to pan</span>
+              <span className="opacity-40">•</span>
+              <span>Click any cell for roster</span>
+            </div>
+          </div>
+
+          {/* The Scaled & Centered Flowchart Canvas */}
+          <div
+            style={{
+              width: `${TREE_WIDTH}px`,
+              height: `${treeHeight}px`,
+              transform: `translate(${fullscreenPan.x}px, ${fullscreenPan.y}px) scale(${fullscreenZoom})`,
+              transformOrigin: 'center center',
+              transition: isFullscreenDragging ? 'none' : 'transform 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+              position: 'relative',
+              flexShrink: 0,
+            }}
+            className="flex flex-col items-center pointer-events-auto"
+          >
+            <TreeDiagramNodes
+              openModalFor={openModalFor}
+              selectedTrackId={selectedTrackId}
+              setSelectedTrackId={setSelectedTrackId}
+              activeModalId={activeModalData?.id}
+            />
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ─────────────────────────────────────────────────────────
+          INTERACTIVE 3D PHOTO COVERFLOW MODAL POPUP
+          Opens when user clicks any node in the hierarchy:
+          - Core Organizing Team (Root / Apex)
+          - Faculty Advisory Board (FAB)
+          - Co-Organizer & Student Lead
+          - 5 Tracks
+          - 16 Operational Cells
+          ───────────────────────────────────────────────────────── */}
+      {isMounted && typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {activeModalData && (
+            <div
+              className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-8 md:p-10 lg:p-12 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+              onClick={() => setActiveModalData(null)}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                onClick={(e) => e.stopPropagation()}
+                className="relative w-[95vw] max-w-5xl flex flex-col rounded-3xl bg-white dark:bg-[#1A0407] border-2 border-[#800020]/30 dark:border-[#B08D57]/40 shadow-2xl overflow-hidden my-auto shrink-0"
+              >
+                {/* Modal Header */}
+                <div className="flex items-center justify-between gap-4 px-6 sm:px-8 py-3.5 sm:py-4 border-b border-[#3A0B10]/10 dark:border-white/10 shrink-0 bg-[#FAF9F6]/95 dark:bg-black/40 backdrop-blur-sm">
+                  <div className="space-y-1 pr-2">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#800020]/10 dark:bg-[#B08D57]/15 text-[#800020] dark:text-[#B08D57] text-[10px] sm:text-[11px] font-mono font-bold uppercase tracking-wider border border-[#800020]/20 dark:border-[#B08D57]/30">
+                      <Workflow size={11} className="text-[#800020] dark:text-[#B08D57] shrink-0" />
+                      <span>{activeModalData.badge}</span>
+                    </div>
+                    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+                      <h4 className="text-xl sm:text-2xl font-serif font-bold text-[#3A0B10] dark:text-[#F5F3F0] tracking-tight">
+                        {activeModalData.title}
+                      </h4>
+                      {activeModalData.subtitle && (
+                        <span className="hidden sm:inline-block text-xs font-mono font-medium text-[#6C151E] dark:text-[#B08D57]">
+                          • {activeModalData.subtitle}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* If this modal is for a track (e.g. Track 1), show its constituent cells right here */}
+                    {activeTrack && (
+                      <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#800020] dark:text-[#B08D57] mr-0.5">
+                          Track Cells:
+                        </span>
+                        {activeTrack.cells.map((cell) => (
+                          <button
+                            key={cell.id}
+                            type="button"
+                            onClick={() => openModalFor(cell.id, cell)}
+                            className="px-2 py-0.5 rounded-md text-[10px] font-mono font-semibold bg-black/5 dark:bg-white/10 hover:bg-[#800020] hover:text-white dark:hover:bg-[#B08D57] dark:hover:text-[#1A0407] transition-colors border border-[#3A0B10]/10 dark:border-white/10 flex items-center gap-1 cursor-pointer"
+                          >
+                            <span>#{cell.number < 10 ? `0${cell.number}` : cell.number}</span>
+                            <span className="hidden md:inline">{cell.label.replace(/^\d+\.\s*/, '')}</span>
+                            <ArrowUpRight size={10} className="opacity-60" />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Header Actions: optional Roster link + Close Cross Button */}
+                  <div className="flex items-center gap-3 shrink-0">
+                    {activeModalData.linkHref && (
+                      <Link
+                        href={activeModalData.linkHref}
+                        onClick={() => setActiveModalData(null)}
+                        className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#3A0B10]/10 dark:bg-white/10 hover:bg-[#800020] hover:text-white dark:hover:bg-[#B08D57] dark:hover:text-[#1A0407] text-[#3A0B10] dark:text-[#F5F3F0] text-xs font-mono font-bold uppercase tracking-wider transition-all border border-[#3A0B10]/15 dark:border-white/15 active:scale-95"
+                      >
+                        <span>{activeModalData.linkText || 'Full Roster'}</span>
+                        <ArrowUpRight size={13} />
+                      </Link>
+                    )}
+
+                    {/* Prominent High-Visibility Close Cross Button */}
+                    <button
+                      type="button"
+                      onClick={() => setActiveModalData(null)}
+                      className="h-10 w-10 rounded-full bg-black/5 dark:bg-white/10 hover:bg-[#800020] hover:text-white dark:hover:bg-[#B08D57] dark:hover:text-[#1A0407] text-[#3A0B10]/80 dark:text-[#F5F3F0]/90 transition-all flex items-center justify-center shadow-xs hover:shadow-md border border-[#3A0B10]/10 dark:border-white/10 active:scale-95 shrink-0"
+                      aria-label="Close dialog"
+                      title="Close (Esc)"
+                    >
+                      <X size={20} strokeWidth={2.4} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Modal Body: ONLY THE CAROUSEL COMPONENT - NO EXTRA TEXT - NO VERTICAL SCROLL */}
+                <div className="w-full overflow-hidden px-4 sm:px-8 py-4 sm:py-5 flex flex-col items-center justify-center bg-gradient-to-b from-transparent via-[#800020]/[0.02] to-[#800020]/[0.04] dark:via-white/[0.01] dark:to-white/[0.02]">
+                  <CoverflowCarousel
+                    slides={activeModalData.slides}
+                    cardWidth="clamp(160px, 18vw, 220px)"
+                    rotate={34}
+                    depth={0.5}
+                    perspective={3}
+                    loop={activeModalData.slides.length > 1}
+                  />
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
     </div>
   );

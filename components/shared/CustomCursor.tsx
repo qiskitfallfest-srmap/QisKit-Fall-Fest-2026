@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { createPortal } from 'react-dom';
 
 type HoverState = 'default' | 'interactive' | 'cta' | 'hidden';
 
@@ -24,6 +25,11 @@ export function CustomCursor() {
     getMediaSnapshot,
     getServerSnapshot
   );
+
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // References to DOM elements
   const dotWrapperRef = React.useRef<HTMLDivElement>(null);
@@ -148,7 +154,9 @@ export function CustomCursor() {
         ) {
           nextHover = 'cta';
         } else if (
-          target.closest("a, button, [role='button'], [data-cursor='interactive'], summary")
+          target.closest(
+            "a, button, [role='button'], [data-cursor='interactive'], summary, .cursor-pointer, .cursor-grab, [role='group'][aria-roledescription='slide'], [role='tab'], [role='switch'], [role='checkbox'], [role='radio']"
+          )
         ) {
           nextHover = 'interactive';
         } else {
@@ -156,8 +164,7 @@ export function CustomCursor() {
         }
       }
 
-      // Update hover styles if hover mode changed OR if cursor just became visible/moved for the first time
-      if (nextHover !== currentHover || !wasVisible || !wasMoved) {
+      if (currentHover !== nextHover || !wasVisible || !wasMoved) {
         currentHover = nextHover;
         updateHoverStyles();
       }
@@ -250,17 +257,17 @@ export function CustomCursor() {
     };
   }, [isSupported]);
 
-  if (!isSupported) {
+  if (!isSupported || !mounted || typeof document === 'undefined') {
     return null;
   }
 
-  return (
+  const cursorNodes = (
     <div aria-hidden="true" className="pointer-events-none select-none">
-      {/* Outer Ring Wrapper */}
+      {/* Outer Ring Wrapper - sits above all popups and modals */}
       <div
         ref={ringWrapperRef}
-        className="fixed top-0 left-0 z-[99997] pointer-events-none will-change-transform"
-        style={{ transform: 'translate3d(-100px, -100px, 0)' }}
+        className="fixed top-0 left-0 pointer-events-none will-change-transform z-[99999998]"
+        style={{ transform: 'translate3d(-100px, -100px, 0)', zIndex: 99999998 }}
       >
         <div
           ref={ringInnerRef}
@@ -283,11 +290,11 @@ export function CustomCursor() {
         />
       </div>
 
-      {/* Inner Dot Wrapper */}
+      {/* Inner Dot Wrapper - sits above all popups and modals */}
       <div
         ref={dotWrapperRef}
-        className="fixed top-0 left-0 z-[99998] pointer-events-none will-change-transform"
-        style={{ transform: 'translate3d(-100px, -100px, 0)' }}
+        className="fixed top-0 left-0 pointer-events-none will-change-transform z-[99999999]"
+        style={{ transform: 'translate3d(-100px, -100px, 0)', zIndex: 99999999 }}
       >
         <div
           ref={dotInnerRef}
@@ -307,4 +314,6 @@ export function CustomCursor() {
       </div>
     </div>
   );
+
+  return createPortal(cursorNodes, document.body);
 }

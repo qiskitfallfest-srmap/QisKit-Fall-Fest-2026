@@ -269,7 +269,7 @@ export function CoverflowCarousel({
               nudge(1);
             }
           }}
-          className="cursor-grab overflow-hidden py-10 outline-none ring-ring focus-visible:ring-2 active:cursor-grabbing"
+          className="cursor-grab overflow-hidden py-3 sm:py-4 outline-none ring-ring focus-visible:ring-2 active:cursor-grabbing"
           style={{
             perspective: `calc(var(--cf-card) * ${perspective})`,
             touchAction: "pan-y",
@@ -337,25 +337,25 @@ export function CoverflowCarousel({
       {showCaption && active?.title && (
         <div
           key={selected}
-          className="mt-4 flex flex-col items-center px-6 duration-300 animate-in fade-in"
+          className="mt-3 flex flex-col items-center px-4 duration-300 animate-in fade-in"
         >
-          <div className="text-center space-y-1">
-            <p className="text-2xl sm:text-3xl font-serif font-bold text-[#3A0B10] dark:text-[#F5F3F0] tracking-tight">
+          <div className="text-center space-y-0.5">
+            <p className="text-xl sm:text-2xl font-serif font-bold text-[#3A0B10] dark:text-[#F5F3F0] tracking-tight">
               {active.title}
             </p>
             {active.subtitle && (
-              <p className="text-sm sm:text-base font-mono font-medium text-[#800020] dark:text-[#B08D57]">
+              <p className="text-xs sm:text-sm font-mono font-medium text-[#800020] dark:text-[#B08D57]">
                 {active.subtitle}
               </p>
             )}
           </div>
 
           {active.meta && active.meta.length > 0 && (
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-2 max-w-xl">
+            <div className="mt-2.5 flex flex-wrap items-center justify-center gap-2 max-w-2xl">
               {active.meta.map((row) => (
                 <div
                   key={row.label}
-                  className="px-3.5 py-1.5 rounded-full border border-[#3A0B10]/15 dark:border-white/15 bg-black/5 dark:bg-white/5 text-xs font-mono flex items-center gap-1.5"
+                  className="px-3 py-1 rounded-full border border-[#3A0B10]/15 dark:border-white/15 bg-black/5 dark:bg-white/5 text-[11px] font-mono flex items-center gap-1.5"
                 >
                   <span className="text-[#16171B]/60 dark:text-[#C7C8CC]/60">{row.label}:</span>
                   <span className="font-semibold text-[#3A0B10] dark:text-[#F5F3F0]">{row.value}</span>
@@ -367,7 +367,7 @@ export function CoverflowCarousel({
       )}
 
       {showPagination && (
-        <div className="mt-8 flex items-center justify-center gap-2.5">
+        <div className="mt-3 sm:mt-4 flex items-center justify-center gap-2">
           {slides.map((_, index) => (
             <button
               key={index}
