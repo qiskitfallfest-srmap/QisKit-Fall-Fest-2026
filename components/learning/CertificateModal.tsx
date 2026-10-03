@@ -226,26 +226,26 @@ export function CertificateModal({
   const progressPercent = Math.round((completedTasks / totalTasks) * 100);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs font-sans">
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/70 backdrop-blur-xs font-sans">
+      <div className="bg-white dark:bg-[#150709] rounded-2xl border border-slate-200 dark:border-[#3D1418] shadow-xl max-w-xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+        <div className="p-6 border-b border-slate-100 dark:border-[#3D1418] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg bg-burgundy/10 text-burgundy flex items-center justify-center font-bold">
+            <div className="w-9 h-9 rounded-lg bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] flex items-center justify-center font-bold">
               <Award className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="font-serif text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
+              <h2 className="font-serif text-lg sm:text-xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight">
                 Official Masterclass Credential
               </h2>
-              <p className="font-mono text-[11px] text-slate-500 uppercase tracking-wider">
+              <p className="font-mono text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 IBM Quantum × SRM University-AP Certification
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1C0A0D] transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -256,41 +256,41 @@ export function CertificateModal({
           {loading ? (
             <div className="py-12 flex flex-col items-center justify-center gap-3">
               <div className="w-8 h-8 border-2 border-burgundy border-t-transparent rounded-full animate-spin" />
-              <p className="text-xs font-medium text-slate-500">
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                 Verifying academic completion status...
               </p>
             </div>
           ) : issuedCert ? (
             /* ISSUED STATE */
             <div className="space-y-5 text-center py-2">
-              <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto border border-emerald-200">
+              <div className="w-14 h-14 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto border border-emerald-200 dark:border-emerald-800">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
               <div>
-                <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-[11px] font-bold border border-emerald-200 inline-block mb-1.5">
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold border border-emerald-200 dark:border-emerald-800 inline-block mb-1.5">
                   ★ Official Certificate Minted
                 </span>
-                <h3 className="text-xl font-bold text-slate-900">
+                <h3 className="text-xl font-bold text-slate-900 dark:text-[#FAF6F3]">
                   Congratulations, {userName}!
                 </h3>
-                <p className="text-xs text-slate-600 mt-1 max-w-md mx-auto leading-relaxed">
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 max-w-md mx-auto leading-relaxed">
                   Your academic completion has been verified and permanently recorded on the
                   blockchain-grade registry.
                 </p>
               </div>
 
               {/* Serial & Preview Card */}
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-left space-y-2.5">
+              <div className="p-4 bg-slate-50 dark:bg-[#1C0A0D] rounded-xl border border-slate-200 dark:border-[#3D1418] text-left space-y-2.5">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500 font-medium">Serial Number:</span>
-                  <code className="font-mono font-bold text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200">
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">Serial Number:</span>
+                  <code className="font-mono font-bold text-slate-900 dark:text-[#FAF6F3] bg-white dark:bg-[#150709] px-2 py-0.5 rounded border border-slate-200 dark:border-[#3D1418]">
                     {issuedCert.serialNumber || issuedCert.serial_number}
                   </code>
                 </div>
                 {issuedCert.averageQuizScore && (
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-500 font-medium">Distinction:</span>
-                    <span className="font-bold text-emerald-700">
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Distinction:</span>
+                    <span className="font-bold text-emerald-700 dark:text-emerald-400">
                       Score: {issuedCert.averageQuizScore}%
                     </span>
                   </div>
@@ -303,7 +303,7 @@ export function CertificateModal({
                   href={`/verify-certificate/${issuedCert.serialNumber || issuedCert.serial_number}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 py-2.5 px-4 bg-slate-100 text-slate-800 text-xs font-semibold rounded-lg hover:bg-slate-200 transition-colors flex items-center justify-center gap-1.5"
+                  className="flex-1 py-2.5 px-4 bg-slate-100 dark:bg-[#1C0A0D] hover:bg-slate-200 dark:hover:bg-[#250D11] text-slate-800 dark:text-[#FAF6F3] border border-slate-200 dark:border-[#3D1418] text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                   View Public Verification
@@ -326,12 +326,12 @@ export function CertificateModal({
               {/* Progress Bar */}
               <div>
                 <div className="flex items-center justify-between text-xs mb-1.5">
-                  <span className="font-bold text-slate-800">
+                  <span className="font-bold text-slate-800 dark:text-slate-200">
                     Certification Progress: {completedTasks} / {totalTasks} Tasks
                   </span>
-                  <span className="font-bold text-burgundy">{progressPercent}%</span>
+                  <span className="font-bold text-burgundy dark:text-[#E89BA5]">{progressPercent}%</span>
                 </div>
-                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div className="w-full h-2 bg-slate-100 dark:bg-[#250D11] rounded-full overflow-hidden">
                   <div
                     className="h-full bg-burgundy rounded-full transition-all duration-500"
                     style={{ width: `${progressPercent}%` }}
@@ -341,11 +341,11 @@ export function CertificateModal({
 
               {/* Checklist Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200/80 space-y-1">
-                  <span className="font-bold text-slate-700 block">6 Masterclass Lectures:</span>
-                  <div className="flex items-center gap-1.5 text-slate-600">
+                <div className="p-3 bg-slate-50 dark:bg-[#1C0A0D] rounded-lg border border-slate-200/80 dark:border-[#3D1418] space-y-1">
+                  <span className="font-bold text-slate-700 dark:text-slate-300 block">6 Masterclass Lectures:</span>
+                  <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
                     {data?.sessionsCompleted === 6 ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     ) : (
                       <Clock className="w-4 h-4 text-amber-500" />
                     )}
@@ -353,11 +353,11 @@ export function CertificateModal({
                   </div>
                 </div>
 
-                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200/80 space-y-1">
-                  <span className="font-bold text-slate-700 block">6 Concept Quizzes:</span>
-                  <div className="flex items-center gap-1.5 text-slate-600">
+                <div className="p-3 bg-slate-50 dark:bg-[#1C0A0D] rounded-lg border border-slate-200/80 dark:border-[#3D1418] space-y-1">
+                  <span className="font-bold text-slate-700 dark:text-slate-300 block">6 Concept Quizzes:</span>
+                  <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
                     {data?.quizzesPassed === 6 ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     ) : (
                       <Clock className="w-4 h-4 text-amber-500" />
                     )}
@@ -365,11 +365,11 @@ export function CertificateModal({
                   </div>
                 </div>
 
-                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200/80 space-y-1 sm:col-span-2">
-                  <span className="font-bold text-slate-700 block">3 Daily Creative Competitions:</span>
-                  <div className="flex items-center gap-1.5 text-slate-600">
+                <div className="p-3 bg-slate-50 dark:bg-[#1C0A0D] rounded-lg border border-slate-200/80 dark:border-[#3D1418] space-y-1 sm:col-span-2">
+                  <span className="font-bold text-slate-700 dark:text-slate-300 block">3 Daily Creative Competitions:</span>
+                  <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
                     {data?.competitionsSubmitted === 3 ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     ) : (
                       <Clock className="w-4 h-4 text-amber-500" />
                     )}
@@ -382,12 +382,12 @@ export function CertificateModal({
 
               {/* Missing Tasks Notice if not eligible */}
               {!data?.eligible && data?.missingTasks && data.missingTasks.length > 0 && (
-                <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 space-y-1.5">
+                <div className="p-3.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg text-xs text-amber-900 dark:text-amber-200 space-y-1.5">
                   <span className="font-bold flex items-center gap-1.5">
-                    <AlertCircle className="w-3.5 h-3.5 text-amber-700" />
+                    <AlertCircle className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
                     Pending Academic Requirements:
                   </span>
-                  <ul className="list-disc list-inside space-y-0.5 text-amber-800 text-[11px] pl-1">
+                  <ul className="list-disc list-inside space-y-0.5 text-amber-800 dark:text-amber-300 text-[11px] pl-1">
                     {data.missingTasks.slice(0, 4).map((task, idx) => (
                       <li key={idx}>{task}</li>
                     ))}
@@ -400,24 +400,24 @@ export function CertificateModal({
 
               {/* Eligibility Unlocked & Payment Box */}
               {data?.eligible ? (
-                <div className="p-4 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-3">
-                  <div className="flex items-center gap-2 text-emerald-800 font-bold text-xs">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                <div className="p-4 bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl space-y-3">
+                  <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-bold text-xs">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     Academic Eligibility Verified!
                   </div>
-                  <p className="text-xs text-slate-600 leading-relaxed">
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                     You have passed all 6 masterclass sessions and completed every daily challenge.
                     Proceed below to claim your official co-certified digital credential.
                   </p>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-emerald-200/60">
+                  <div className="flex items-center justify-between pt-2 border-t border-emerald-200/60 dark:border-emerald-800/60">
                     <div>
-                      <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 block">
                         Certification Fee
                       </span>
-                      <span className="text-lg font-bold text-slate-900">
+                      <span className="text-lg font-bold text-slate-900 dark:text-[#FAF6F3]">
                         ₹{data.priceInr || 499}{' '}
-                        <span className="text-xs font-normal text-slate-500">INR</span>
+                        <span className="text-xs font-normal text-slate-500 dark:text-slate-400">INR</span>
                       </span>
                     </div>
 
@@ -441,16 +441,16 @@ export function CertificateModal({
                   </div>
                 </div>
               ) : (
-                <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-4">
+                <div className="p-4 bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] rounded-xl flex items-center justify-between gap-4">
                   <div className="flex items-center gap-2.5">
-                    <Lock className="w-4 h-4 text-slate-400 shrink-0" />
-                    <span className="text-xs text-slate-600 font-medium">
+                    <Lock className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+                    <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">
                       Complete all 9 requirements above to unlock certificate issuance.
                     </span>
                   </div>
                   <button
                     disabled
-                    className="px-4 py-2 bg-slate-200 text-slate-400 text-xs font-semibold rounded-lg cursor-not-allowed shrink-0"
+                    className="px-4 py-2 bg-slate-200 dark:bg-[#250D11] text-slate-400 dark:text-slate-500 text-xs font-semibold rounded-lg cursor-not-allowed shrink-0"
                   >
                     Locked
                   </button>
@@ -458,7 +458,7 @@ export function CertificateModal({
               )}
 
               {errorMessage && (
-                <p className="text-xs text-red-600 font-medium bg-red-50 p-2.5 rounded border border-red-200">
+                <p className="text-xs text-rose-600 dark:text-rose-400 font-medium bg-rose-50 dark:bg-rose-950/40 p-2.5 rounded border border-rose-200 dark:border-rose-900">
                   {errorMessage}
                 </p>
               )}

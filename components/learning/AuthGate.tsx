@@ -37,6 +37,14 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
   const [errorMessage, setErrorMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
 
+  function notifyAuthChange(newSession: AuthSession | null) {
+    setSession(newSession);
+    onSessionChange?.(newSession);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('qff_auth_change', { detail: newSession }));
+    }
+  }
+
   async function syncSessionWithBackend(email: string, fullName: string) {
     try {
       const verifyRes = await fetch('/api/auth/session', {
@@ -49,14 +57,12 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
       });
       const verifyData = await verifyRes.json();
       if (verifyRes.ok && verifyData.success) {
-        setSession(verifyData.session);
-        onSessionChange?.(verifyData.session);
+        notifyAuthChange(verifyData.session);
         return true;
       } else if (verifyRes.status === 403) {
         // User is not whitelisted / not eligible
         await supabase.auth.signOut();
-        setSession(null);
-        onSessionChange?.(null);
+        notifyAuthChange(null);
         setShowToast(true);
         setErrorMessage(
           verifyData.error ||
@@ -83,8 +89,7 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
 
         if (data.authenticated && data.session) {
           if (isMounted) {
-            setSession(data.session);
-            onSessionChange?.(data.session);
+            notifyAuthChange(data.session);
             setIsLoading(false);
           }
           return;
@@ -126,8 +131,7 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
         );
       } else if (event === 'SIGNED_OUT') {
         if (isMounted) {
-          setSession(null);
-          onSessionChange?.(null);
+          notifyAuthChange(null);
         }
       }
     });
@@ -145,8 +149,6 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
     setShowToast(false);
     try {
       setIsSubmitting(true);
-      // Prefer current origin dynamically so dev on localhost stays on localhost,
-      // and production stays on whichever host the visitor accessed.
       const siteUrl =
         typeof window !== 'undefined'
           ? window.location.origin
@@ -157,8 +159,6 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
         provider: 'google',
         options: {
           redirectTo: redirectUrl,
-          // Omitting prompt: 'consent' and access_type: 'offline' so Google
-          // reuses prior consent and avoids repeated 2FA challenges.
         },
       });
 
@@ -208,8 +208,7 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
         return;
       }
 
-      setSession(data.session);
-      onSessionChange?.(data.session);
+      notifyAuthChange(data.session);
     } catch (err: any) {
       setErrorMessage(err?.message || 'Failed to authenticate email.');
       setShowToast(true);
@@ -222,8 +221,7 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
   async function handleSignOut() {
     await fetch('/api/auth/session', { method: 'DELETE' });
     await supabase.auth.signOut();
-    setSession(null);
-    onSessionChange?.(null);
+    notifyAuthChange(null);
   }
 
   if (isLoading) {
@@ -231,7 +229,7 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
       <div className="min-h-[50vh] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-burgundy border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm font-medium text-slate-600">Verifying authorized access...</p>
+          <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Verifying authorized access...</p>
         </div>
       </div>
     );
@@ -243,32 +241,32 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
 
   // If not authenticated, render login gate + Toast
   return (
-    <div className="min-h-[70vh] flex items-center justify-center p-4 relative">
+    <div className="min-h-[70vh] flex items-center justify-center p-4 relative font-sans">
       {/* Toast Notification for Ineligible Participants */}
       {showToast && (
-        <div className="fixed top-5 right-5 sm:right-6 z-50 max-w-md w-[calc(100%-2.5rem)] bg-white border-2 border-rose-300 rounded-xl shadow-xl p-4 transition-all">
+        <div className="fixed top-5 right-5 sm:right-6 z-50 max-w-md w-[calc(100%-2.5rem)] bg-white dark:bg-[#18080B] border-2 border-rose-300 dark:border-rose-800 rounded-xl shadow-xl p-4 transition-all">
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 mt-0.5">
+            <div className="w-8 h-8 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 mt-0.5">
               <AlertCircle className="w-5 h-5" />
             </div>
             <div className="flex-1 text-xs">
               <div className="flex items-center justify-between gap-2">
-                <h4 className="font-bold text-slate-900 text-sm">Access Restricted</h4>
+                <h4 className="font-bold text-slate-900 dark:text-[#FAF6F3] text-sm">Access Restricted</h4>
                 <button
                   onClick={() => setShowToast(false)}
-                  className="text-slate-400 hover:text-slate-700 p-1 rounded-md"
+                  className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1 rounded-md cursor-pointer"
                   aria-label="Dismiss toast"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
-              <p className="text-slate-700 mt-1 leading-relaxed">
+              <p className="text-slate-700 dark:text-slate-300 mt-1 leading-relaxed">
                 You are not eligible participant. Please register in{' '}
                 <a
                   href={UNSTOP_REGISTRATION_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-bold text-burgundy underline inline-flex items-center gap-1 hover:text-burgundy-deep"
+                  className="font-bold text-burgundy dark:text-[#E89BA5] underline inline-flex items-center gap-1 hover:text-burgundy-deep"
                 >
                   Unstop
                   <ExternalLink className="w-3 h-3 inline" />
@@ -280,32 +278,32 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
         </div>
       )}
 
-      <div className="w-full max-w-md bg-white border border-slate-200 rounded-xl shadow-sm p-6 sm:p-8 font-sans">
+      <div className="w-full max-w-md bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl shadow-sm p-6 sm:p-8 font-sans">
         <div className="text-center mb-6">
-          <div className="w-12 h-12 rounded-full bg-burgundy/10 text-burgundy flex items-center justify-center mx-auto mb-3">
+          <div className="w-12 h-12 rounded-full bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] flex items-center justify-center mx-auto mb-3">
             <Lock className="w-6 h-6" />
           </div>
-          <div className="font-mono text-[11px] font-semibold text-burgundy uppercase tracking-[0.2em] mb-1">
+          <div className="font-mono text-[11px] font-semibold text-burgundy dark:text-[#E89BA5] uppercase tracking-[0.2em] mb-1">
             PARTICIPANT GATEWAY
           </div>
-          <h2 className="font-serif text-2xl font-bold text-slate-900 tracking-tight">
+          <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight">
             Qiskit Fall Fest 2026 Portal
           </h2>
-          <p className="font-sans text-xs text-slate-600 mt-1">
+          <p className="font-sans text-xs text-slate-600 dark:text-slate-400 mt-1">
             Online Phase Learning Platform & Hackathon Workspace
           </p>
         </div>
 
         {errorMessage && (
-          <div className="mb-5 p-3.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-2.5">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
+          <div className="mb-5 p-3.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-900 dark:text-rose-200 text-xs flex items-start gap-2.5">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" />
             <div className="leading-relaxed">
               <span>You are not eligible participant. Please register in </span>
               <a
                 href={UNSTOP_REGISTRATION_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-bold text-burgundy underline inline-flex items-center gap-1 hover:text-burgundy-deep"
+                className="font-bold text-burgundy dark:text-[#E89BA5] underline inline-flex items-center gap-1 hover:text-burgundy-deep"
               >
                 Unstop
                 <ExternalLink className="w-3 h-3 inline" />
@@ -320,7 +318,7 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
           type="button"
           onClick={handleGoogleSignIn}
           disabled={isSubmitting}
-          className="w-full flex items-center justify-center gap-3 px-4 py-2.5 border border-slate-300 rounded-lg text-sm font-medium text-slate-800 hover:bg-slate-50 transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
+          className="w-full flex items-center justify-center gap-3 px-4 py-2.5 border border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#1C0A0D] rounded-lg text-sm font-medium text-slate-800 dark:text-[#FAF6F3] hover:bg-slate-50 dark:hover:bg-[#250D11] transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24">
             <path
@@ -345,17 +343,17 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
 
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-200" />
+            <div className="w-full border-t border-slate-200 dark:border-[#3D1418]" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white px-2 text-slate-500 font-medium">Or enter registered Gmail</span>
+            <span className="bg-white dark:bg-[#150709] px-2 text-slate-500 dark:text-slate-400 font-medium">Or enter registered Gmail</span>
           </div>
         </div>
 
         {/* Direct Email Validation Entry */}
         <form onSubmit={handleDirectEmailSignIn} className="space-y-3">
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">
+            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
               Registered Gmail Address
             </label>
             <input
@@ -364,12 +362,12 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
               onChange={(e) => setInputEmail(e.target.value)}
               placeholder="e.g. participant@gmail.com"
               required
-              className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy"
+              className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] rounded-lg focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy dark:placeholder-slate-500"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">
+            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
               Your Full Name (Optional)
             </label>
             <input
@@ -377,7 +375,7 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
               value={inputName}
               onChange={(e) => setInputName(e.target.value)}
               placeholder="e.g. A. Sharma"
-              className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy"
+              className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] rounded-lg focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy dark:placeholder-slate-500"
             />
           </div>
 
@@ -400,8 +398,8 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
           </button>
         </form>
 
-        <div className="mt-6 pt-5 border-t border-slate-100 text-center">
-          <p className="text-xs text-slate-500 leading-relaxed">
+        <div className="mt-6 pt-5 border-t border-slate-100 dark:border-[#3D1418] text-center">
+          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
             Access during testing is limited to whitelisted test Gmail accounts and organizing leads.
             Registered Unstop participants will be granted full access upon registration closure.
           </p>

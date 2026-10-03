@@ -209,19 +209,19 @@ export default function AdminConsolePage() {
 
   return (
     <AuthGate onSessionChange={setSession}>
-      <div className="min-h-screen bg-slate-50/60 pb-16">
+      <div className="min-h-screen bg-slate-50/60 dark:bg-[#100405] pb-16 font-sans">
         {/* Navigation Breadcrumb Bar */}
-        <div className="bg-white border-b border-slate-200 sticky top-0 z-20 backdrop-blur-md bg-white/90">
+        <div className="bg-white/90 dark:bg-[#150709]/90 border-b border-slate-200 dark:border-[#3D1418] sticky top-0 z-20 backdrop-blur-md">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
             <Link
               href="/learning"
-              className="text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-1.5 transition-colors"
+              className="text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-[#FAF6F3] flex items-center gap-1.5 transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               Back to Learning Hub
             </Link>
 
-            <span className="px-2.5 py-0.5 rounded bg-burgundy/10 text-burgundy font-bold text-xs uppercase tracking-wider flex items-center gap-1">
+            <span className="px-2.5 py-0.5 rounded bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] font-bold text-xs uppercase tracking-wider flex items-center gap-1">
               <Shield className="w-3.5 h-3.5" />
               Organizer Administration Console
             </span>
@@ -232,10 +232,10 @@ export default function AdminConsolePage() {
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight">
                 Festival Administration & Analytics
               </h1>
-              <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl leading-relaxed">
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1 max-w-2xl leading-relaxed">
                 Monitor live traffic with Vercel Analytics & Redis cache, manage participant access
                 control, and configure real-time testing overrides.
               </p>
@@ -243,24 +243,24 @@ export default function AdminConsolePage() {
 
             {/* Quick stats badge */}
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-slate-500 bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-2xs">
-                Whitelisted: <strong className="text-slate-900">{stats.whitelistedUsers || emails.length || 0}</strong>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] px-3 py-1.5 rounded-lg shadow-2xs">
+                Whitelisted: <strong className="text-slate-900 dark:text-[#FAF6F3]">{stats.whitelistedUsers || emails.length || 0}</strong>
               </span>
-              <span className="text-xs font-semibold text-slate-500 bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-2xs">
-                Teams: <strong className="text-slate-900">{stats.teamsFormed || 0}</strong>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] px-3 py-1.5 rounded-lg shadow-2xs">
+                Teams: <strong className="text-slate-900 dark:text-[#FAF6F3]">{stats.teamsFormed || 0}</strong>
               </span>
             </div>
           </div>
 
           {/* Navigation Tabs */}
-          <div className="flex border-b border-slate-200 gap-2">
+          <div className="flex border-b border-slate-200 dark:border-[#3D1418] gap-2">
             <button
               type="button"
               onClick={() => setActiveTab('analytics')}
               className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
                 activeTab === 'analytics'
-                  ? 'border-burgundy text-burgundy'
-                  : 'border-transparent text-slate-500 hover:text-slate-900'
+                  ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
+                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
               }`}
             >
               <BarChart3 className="w-4 h-4" />
@@ -272,8 +272,8 @@ export default function AdminConsolePage() {
               onClick={() => setActiveTab('whitelist')}
               className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
                 activeTab === 'whitelist'
-                  ? 'border-burgundy text-burgundy'
-                  : 'border-transparent text-slate-500 hover:text-slate-900'
+                  ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
+                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
               }`}
             >
               <Users className="w-4 h-4" />
@@ -285,8 +285,8 @@ export default function AdminConsolePage() {
               onClick={() => setActiveTab('overrides')}
               className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
                 activeTab === 'overrides'
-                  ? 'border-burgundy text-burgundy'
-                  : 'border-transparent text-slate-500 hover:text-slate-900'
+                  ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
+                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
               }`}
             >
               <SlidersHorizontal className="w-4 h-4" />
@@ -303,9 +303,9 @@ export default function AdminConsolePage() {
               {/* Add Emails Section (Single & Bulk) */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Single Email Form */}
-                <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-xs space-y-4">
-                  <div className="flex items-center gap-2 text-slate-900">
-                    <UserPlus className="w-5 h-5 text-burgundy" />
+                <div className="p-6 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl shadow-xs space-y-4">
+                  <div className="flex items-center gap-2 text-slate-900 dark:text-[#FAF6F3]">
+                    <UserPlus className="w-5 h-5 text-burgundy dark:text-[#E89BA5]" />
                     <h2 className="text-base font-bold">Add Individual Authorized Email</h2>
                   </div>
 
@@ -313,14 +313,14 @@ export default function AdminConsolePage() {
                     <div
                       className={`p-3 rounded-lg text-xs flex items-center gap-2 ${
                         singleMsgIsError
-                          ? 'bg-rose-50 border border-rose-200 text-rose-800'
-                          : 'bg-emerald-50 border border-emerald-200 text-emerald-800'
+                          ? 'bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-300'
+                          : 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
                       }`}
                     >
                       {singleMsgIsError ? (
-                        <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                        <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
                       ) : (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                       )}
                       <span>{singleMsg}</span>
                     </div>
@@ -328,7 +328,7 @@ export default function AdminConsolePage() {
 
                   <form onSubmit={handleAddSingle} className="space-y-3">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-800 mb-1">
+                      <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
                         Gmail Address:
                       </label>
                       <input
@@ -337,12 +337,12 @@ export default function AdminConsolePage() {
                         onChange={(e) => setNewEmail(e.target.value)}
                         placeholder="tester@gmail.com"
                         required
-                        className="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy"
+                        className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] rounded focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy dark:placeholder-slate-500"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-slate-800 mb-1">
+                      <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
                         Participant Full Name (Optional):
                       </label>
                       <input
@@ -350,16 +350,16 @@ export default function AdminConsolePage() {
                         value={newName}
                         onChange={(e) => setNewName(e.target.value)}
                         placeholder="Full Name"
-                        className="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy"
+                        className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] rounded focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy dark:placeholder-slate-500"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-slate-800 mb-1">Role:</label>
+                      <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">Role:</label>
                       <select
                         value={newRole}
                         onChange={(e) => setNewRole(e.target.value)}
-                        className="w-full px-3 py-2 text-xs border border-slate-300 rounded bg-white text-slate-900 focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy"
+                        className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-[#3D1418] rounded bg-white dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy"
                       >
                         <option value="participant">Participant</option>
                         <option value="tester">Tester</option>
@@ -371,7 +371,7 @@ export default function AdminConsolePage() {
                     <button
                       type="submit"
                       disabled={isAddingEmail}
-                      className="w-full px-4 py-2 bg-burgundy text-white text-xs font-semibold rounded hover:bg-burgundy-deep transition-colors shadow-xs disabled:opacity-50"
+                      className="w-full px-4 py-2 bg-burgundy text-white text-xs font-semibold rounded hover:bg-burgundy-deep transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
                     >
                       {isAddingEmail ? 'Saving to Database & Cache...' : 'Add Authorized Email'}
                     </button>
@@ -379,9 +379,9 @@ export default function AdminConsolePage() {
                 </div>
 
                 {/* Bulk Import Form */}
-                <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-xs space-y-4">
-                  <div className="flex items-center gap-2 text-slate-900">
-                    <FileSpreadsheet className="w-5 h-5 text-burgundy" />
+                <div className="p-6 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl shadow-xs space-y-4">
+                  <div className="flex items-center gap-2 text-slate-900 dark:text-[#FAF6F3]">
+                    <FileSpreadsheet className="w-5 h-5 text-burgundy dark:text-[#E89BA5]" />
                     <h2 className="text-base font-bold">Bulk Paste Authorized Emails</h2>
                   </div>
 
@@ -389,14 +389,14 @@ export default function AdminConsolePage() {
                     <div
                       className={`p-3 rounded-lg text-xs flex items-center gap-2 ${
                         bulkMsgIsError
-                          ? 'bg-rose-50 border border-rose-200 text-rose-800'
-                          : 'bg-emerald-50 border border-emerald-200 text-emerald-800'
+                          ? 'bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-300'
+                          : 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
                       }`}
                     >
                       {bulkMsgIsError ? (
-                        <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                        <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
                       ) : (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                       )}
                       <span>{bulkMsg}</span>
                     </div>
@@ -404,7 +404,7 @@ export default function AdminConsolePage() {
 
                   <form onSubmit={handleAddBulk} className="space-y-3">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-800 mb-1">
+                      <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
                         Paste Emails (Separated by newlines or commas):
                       </label>
                       <textarea
@@ -413,18 +413,18 @@ export default function AdminConsolePage() {
                         onChange={(e) => setBulkText(e.target.value)}
                         placeholder="student1@gmail.com&#10;student2@gmail.com&#10;student3@gmail.com"
                         required
-                        className="w-full px-3 py-2 text-xs border border-slate-300 rounded font-mono focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy"
+                        className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] rounded font-mono focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy dark:placeholder-slate-500"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-slate-800 mb-1">
+                      <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
                         Default Role for Batch:
                       </label>
                       <select
                         value={bulkRole}
                         onChange={(e) => setBulkRole(e.target.value)}
-                        className="w-full px-3 py-2 text-xs border border-slate-300 rounded bg-white text-slate-900 focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy"
+                        className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-[#3D1418] rounded bg-white dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy"
                       >
                         <option value="participant">Participant</option>
                         <option value="tester">Tester</option>
@@ -434,7 +434,7 @@ export default function AdminConsolePage() {
                     <button
                       type="submit"
                       disabled={isAddingBulk}
-                      className="w-full px-4 py-2 bg-slate-900 text-white text-xs font-semibold rounded hover:bg-slate-800 transition-colors shadow-xs disabled:opacity-50"
+                      className="w-full px-4 py-2 bg-slate-900 dark:bg-burgundy text-white text-xs font-semibold rounded hover:bg-slate-800 dark:hover:bg-burgundy-deep transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
                     >
                       {isAddingBulk ? 'Processing Bulk Import...' : 'Import Batch into Whitelist'}
                     </button>
@@ -443,13 +443,13 @@ export default function AdminConsolePage() {
               </div>
 
               {/* Whitelist Roster Table */}
-              <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-                <div className="p-6 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl shadow-xs overflow-hidden">
+                <div className="p-6 border-b border-slate-200 dark:border-[#3D1418] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <h2 className="text-base font-bold text-slate-900">
+                    <h2 className="text-base font-bold text-slate-900 dark:text-[#FAF6F3]">
                       Authorized Whitelist Directory ({emails.length})
                     </h2>
-                    <p className="text-xs text-slate-500 mt-0.5">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                       Synchronized in real-time with Upstash Redis cache.
                     </p>
                   </div>
@@ -463,14 +463,14 @@ export default function AdminConsolePage() {
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && fetchWhitelist()}
                       placeholder="Search emails..."
-                      className="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy"
+                      className="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] rounded focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy dark:placeholder-slate-500"
                     />
                   </div>
                 </div>
 
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-semibold uppercase tracking-wider text-[11px]">
+                    <thead className="bg-slate-50 dark:bg-[#1C0A0D] border-b border-slate-200 dark:border-[#3D1418] text-slate-700 dark:text-slate-300 font-semibold uppercase tracking-wider text-[11px]">
                       <tr>
                         <th className="py-3 px-4">Email Address</th>
                         <th className="py-3 px-4">Full Name</th>
@@ -479,24 +479,24 @@ export default function AdminConsolePage() {
                         <th className="py-3 px-4 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-slate-100 dark:divide-[#3D1418]">
                       {emails.map((row) => (
-                        <tr key={row.id} className="hover:bg-slate-50/60 transition-colors">
-                          <td className="py-3 px-4 font-mono font-medium text-slate-900">
+                        <tr key={row.id} className="hover:bg-slate-50/60 dark:hover:bg-[#1C0A0D]/60 transition-colors">
+                          <td className="py-3 px-4 font-mono font-medium text-slate-900 dark:text-[#FAF6F3]">
                             {row.email}
                           </td>
-                          <td className="py-3 px-4 text-slate-700">
+                          <td className="py-3 px-4 text-slate-700 dark:text-slate-300">
                             {row.full_name || '—'}
                           </td>
                           <td className="py-3 px-4">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-[#250D11] text-slate-700 dark:text-slate-300">
                               {row.role}
                             </span>
                           </td>
                           <td className="py-3 px-4">
                             {row.is_active ? (
-                              <span className="text-emerald-700 font-medium inline-flex items-center gap-1">
-                                <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Active
+                              <span className="text-emerald-700 dark:text-emerald-400 font-medium inline-flex items-center gap-1">
+                                <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> Active
                               </span>
                             ) : (
                               <span className="text-slate-400 font-medium">Inactive</span>
@@ -506,14 +506,14 @@ export default function AdminConsolePage() {
                             <button
                               type="button"
                               onClick={() => handleToggleActive(row.email, row.is_active)}
-                              className="text-[11px] font-semibold text-slate-600 hover:text-slate-900 underline"
+                              className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-[#FAF6F3] underline cursor-pointer"
                             >
                               {row.is_active ? 'Deactivate' : 'Activate'}
                             </button>
                             <button
                               type="button"
                               onClick={() => handleDeleteEmail(row.email)}
-                              className="text-slate-400 hover:text-rose-600 p-1"
+                              className="text-slate-400 hover:text-rose-600 transition-colors p-1 cursor-pointer"
                               title="Remove from whitelist"
                             >
                               <Trash2 className="w-3.5 h-3.5 inline" />
@@ -523,7 +523,7 @@ export default function AdminConsolePage() {
                       ))}
                       {emails.length === 0 && !isLoadingEmails && (
                         <tr>
-                          <td colSpan={5} className="py-8 text-center text-slate-500">
+                          <td colSpan={5} className="py-8 text-center text-slate-500 dark:text-slate-400">
                             No authorized emails found matching your query.
                           </td>
                         </tr>
@@ -537,24 +537,24 @@ export default function AdminConsolePage() {
 
           {/* TAB 3: SYSTEM OVERRIDES */}
           {activeTab === 'overrides' && (
-            <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-xs space-y-4">
-              <div className="flex items-center gap-2 text-slate-900">
-                <Settings className="w-5 h-5 text-burgundy" />
+            <div className="p-6 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl shadow-xs space-y-4">
+              <div className="flex items-center gap-2 text-slate-900 dark:text-[#FAF6F3]">
+                <Settings className="w-5 h-5 text-burgundy dark:text-[#E89BA5]" />
                 <h2 className="text-base font-bold">Testing & System Release Overrides</h2>
               </div>
-              <p className="text-xs text-slate-600 leading-relaxed">
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                 Enable these switches to test the entire participant journey immediately without
                 waiting for real-world festival calendar dates.
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                 {/* Lecture Lock Override */}
-                <div className="p-4 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-between">
+                <div className="p-4 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-slate-50 dark:bg-[#1C0A0D] flex items-center justify-between">
                   <div>
-                    <span className="text-xs font-bold text-slate-900 block">
+                    <span className="text-xs font-bold text-slate-900 dark:text-[#FAF6F3] block">
                       Bypass Sequential Lecture Locks
                     </span>
-                    <span className="text-[11px] text-slate-500 block mt-0.5">
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
                       Unlock all 6 sessions immediately for review and testing.
                     </span>
                   </div>
@@ -567,10 +567,10 @@ export default function AdminConsolePage() {
                       )
                     }
                     disabled={isUpdatingConfig}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                       config.lecture_lock_override?.enabled === true
                         ? 'bg-emerald-600 text-white'
-                        : 'bg-slate-300 text-slate-700'
+                        : 'bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
                     }`}
                   >
                     {config.lecture_lock_override?.enabled === true ? 'Enabled' : 'Disabled'}
@@ -578,12 +578,12 @@ export default function AdminConsolePage() {
                 </div>
 
                 {/* Hackathon Release Override */}
-                <div className="p-4 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-between">
+                <div className="p-4 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-slate-50 dark:bg-[#1C0A0D] flex items-center justify-between">
                   <div>
-                    <span className="text-xs font-bold text-slate-900 block">
+                    <span className="text-xs font-bold text-slate-900 dark:text-[#FAF6F3] block">
                       Unlock Hackathon Workspace Early
                     </span>
-                    <span className="text-[11px] text-slate-500 block mt-0.5">
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
                       Allow participants to form teams and view problem statements prior to Oct 10th.
                     </span>
                   </div>
@@ -596,10 +596,10 @@ export default function AdminConsolePage() {
                       )
                     }
                     disabled={isUpdatingConfig}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                       config.hackathon_release_override?.enabled === true
                         ? 'bg-emerald-600 text-white'
-                        : 'bg-slate-300 text-slate-700'
+                        : 'bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
                     }`}
                   >
                     {config.hackathon_release_override?.enabled === true ? 'Enabled' : 'Disabled'}

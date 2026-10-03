@@ -194,7 +194,7 @@ function LearningDashboardContent() {
         </div>
 
         {/* Video Player */}
-        <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black shadow-lg mb-8 relative border border-slate-200">
+        <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black shadow-lg mb-8 relative border border-slate-200 dark:border-[#3D1418]">
           <iframe
             src={`https://www.youtube-nocookie.com/embed/${session.youtubeId}?rel=0`}
             title={session.title}
@@ -205,17 +205,17 @@ function LearningDashboardContent() {
         </div>
 
         {/* Action bar under video */}
-        <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-white border border-slate-200 rounded-xl mb-8">
+        <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl mb-8">
           <div className="flex items-center gap-2">
             {sessionProgress.videoCompleted ? (
-              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200">
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded border border-emerald-200 dark:border-emerald-800">
                 <CheckCircle2 className="w-4 h-4" /> Video Marked Complete
               </span>
             ) : (
               <button
                 onClick={() => handleMarkVideoCompleted(session.id)}
                 disabled={isMarkingVideo}
-                className="px-3.5 py-1.5 bg-slate-900 text-white text-xs font-semibold rounded-lg hover:bg-slate-800 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                className="px-3.5 py-1.5 bg-slate-900 dark:bg-burgundy text-white text-xs font-semibold rounded-lg hover:bg-slate-800 dark:hover:bg-burgundy-deep transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 {isMarkingVideo ? 'Saving...' : 'Mark Video as Watched'}
@@ -229,7 +229,7 @@ function LearningDashboardContent() {
                 href={session.lectureNotesUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs font-semibold text-slate-700 hover:text-burgundy flex items-center gap-1 transition-colors"
+                className="text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-burgundy dark:hover:text-[#E89BA5] flex items-center gap-1 transition-colors"
               >
                 <FileText className="w-4 h-4" /> Notes & Tutorials
               </a>
@@ -239,7 +239,7 @@ function LearningDashboardContent() {
                 href={session.slidesUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs font-semibold text-slate-700 hover:text-burgundy flex items-center gap-1 transition-colors"
+                className="text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-burgundy dark:hover:text-[#E89BA5] flex items-center gap-1 transition-colors"
               >
                 <ExternalLink className="w-4 h-4" /> Slides
               </a>

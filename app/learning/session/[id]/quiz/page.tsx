@@ -92,37 +92,37 @@ export default function DedicatedQuizPage() {
 
   return (
     <AuthGate>
-      <div className="min-h-screen bg-slate-50/60 pb-16">
+      <div className="min-h-screen bg-slate-50/60 dark:bg-[#100405] pb-16 font-sans">
         {/* Navigation Breadcrumb Bar */}
-        <div className="bg-white border-b border-slate-200">
+        <div className="bg-white dark:bg-[#150709] border-b border-slate-200 dark:border-[#3D1418]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
             <Link
               href={`/learning/session/${sessionId}`}
-              className="font-mono text-xs font-semibold text-slate-600 hover:text-burgundy flex items-center gap-1.5 transition-colors uppercase tracking-wider"
+              className="font-mono text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-burgundy dark:hover:text-[#E89BA5] flex items-center gap-1.5 transition-colors uppercase tracking-wider"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               Back to Session {session.sessionNumber}
             </Link>
 
             <div className="flex items-center gap-2 font-mono text-xs">
-              <span className="text-slate-500 font-medium">Day 0{session.day}</span>
-              <span className="text-slate-300">/</span>
-              <span className="font-bold text-slate-900">Concept Quiz</span>
+              <span className="text-slate-500 dark:text-slate-400 font-medium">Day 0{session.day}</span>
+              <span className="text-slate-300 dark:text-slate-600">/</span>
+              <span className="font-bold text-slate-900 dark:text-[#FAF6F3]">Concept Quiz</span>
             </div>
           </div>
         </div>
 
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 font-sans">
-          <div className="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
+          <div className="bg-white dark:bg-[#150709] rounded-xl shadow-xs border border-slate-200 dark:border-[#3D1418] overflow-hidden">
             {/* Header */}
-            <div className="px-6 py-5 bg-slate-50 border-b border-slate-200 flex items-center justify-between font-sans">
+            <div className="px-6 py-5 bg-slate-50 dark:bg-[#1C0A0D] border-b border-slate-200 dark:border-[#3D1418] flex items-center justify-between font-sans">
               <div>
-                <span className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-burgundy">
+                <span className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-burgundy dark:text-[#E89BA5]">
                   Concept Check Verification
                 </span>
-                <h1 className="font-serif text-xl sm:text-2xl font-bold text-slate-900 mt-1">{quiz.title}</h1>
+                <h1 className="font-serif text-xl sm:text-2xl font-bold text-slate-900 dark:text-[#FAF6F3] mt-1">{quiz.title}</h1>
               </div>
-              <Award className="w-8 h-8 text-burgundy/20" />
+              <Award className="w-8 h-8 text-burgundy/20 dark:text-[#E89BA5]/30" />
             </div>
 
             {/* Content */}
@@ -133,14 +133,14 @@ export default function DedicatedQuizPage() {
                   <div
                     className={`p-5 rounded-xl border flex items-start gap-4 ${
                       results.passed
-                        ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
-                        : 'bg-rose-50 border-rose-200 text-rose-900'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
+                        : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900 text-rose-900 dark:text-rose-200'
                     }`}
                   >
                     {results.passed ? (
-                      <Award className="w-8 h-8 text-emerald-600 shrink-0 mt-0.5" />
+                      <Award className="w-8 h-8 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                     ) : (
-                      <AlertCircle className="w-8 h-8 text-rose-600 shrink-0 mt-0.5" />
+                      <AlertCircle className="w-8 h-8 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
                     )}
                     <div>
                       <h2 className="font-bold text-lg">
@@ -148,8 +148,8 @@ export default function DedicatedQuizPage() {
                           ? 'Congratulations! You passed the concept check.'
                           : 'Passing threshold not met.'}
                       </h2>
-                      <p className="text-sm mt-1.5 leading-relaxed text-slate-700">
-                        Your score: <span className="font-bold text-slate-900">{results.scorePercent}%</span> (
+                      <p className="text-sm mt-1.5 leading-relaxed text-slate-700 dark:text-slate-300">
+                        Your score: <span className="font-bold text-slate-900 dark:text-[#FAF6F3]">{results.scorePercent}%</span> (
                         {results.correctCount}/{results.totalQuestions} correct). Required:{' '}
                         {quiz.passingScore}%.
                         <br/>
@@ -162,46 +162,46 @@ export default function DedicatedQuizPage() {
 
                   {/* Question feedback */}
                   <div className="space-y-5">
-                    <h3 className="text-base font-bold text-slate-900">Detailed Feedback</h3>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-[#FAF6F3]">Detailed Feedback</h3>
                     {quiz.questions.map((q, idx) => {
                       const isCorrect = results.questionResults[q.id];
                       const userChoice = selectedAnswers[q.id];
                       return (
                         <div
                           key={q.id}
-                          className="p-5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3"
+                          className="p-5 rounded-xl border border-slate-200 dark:border-[#3D1418] bg-slate-50/50 dark:bg-[#1C0A0D]/60 space-y-3"
                         >
                           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                            <span className="text-sm font-semibold text-slate-800 leading-snug">
-                              <span className="text-slate-500 mr-1.5">{idx + 1}.</span>
+                            <span className="text-sm font-semibold text-slate-800 dark:text-[#FAF6F3] leading-snug">
+                              <span className="text-slate-500 dark:text-slate-400 mr-1.5">{idx + 1}.</span>
                               {q.question}
                             </span>
                             {isCorrect ? (
-                              <span className="inline-flex items-center gap-1.5 text-xs text-emerald-700 font-bold bg-emerald-100 px-2.5 py-1 rounded shrink-0">
+                              <span className="inline-flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-300 font-bold bg-emerald-100 dark:bg-emerald-950/60 px-2.5 py-1 rounded shrink-0">
                                 <CheckCircle2 className="w-3.5 h-3.5" /> Correct
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 text-xs text-rose-700 font-bold bg-rose-100 px-2.5 py-1 rounded shrink-0">
+                              <span className="inline-flex items-center gap-1.5 text-xs text-rose-700 dark:text-rose-300 font-bold bg-rose-100 dark:bg-rose-950/60 px-2.5 py-1 rounded shrink-0">
                                 <XCircle className="w-3.5 h-3.5" /> Incorrect
                               </span>
                             )}
                           </div>
 
-                          <div className="text-sm text-slate-600 space-y-1.5 bg-white p-3 rounded-lg border border-slate-200">
+                          <div className="text-sm text-slate-600 dark:text-slate-300 space-y-1.5 bg-white dark:bg-[#150709] p-3 rounded-lg border border-slate-200 dark:border-[#3D1418]">
                             <p>
-                              <span className="font-semibold text-slate-700">Your Answer:</span>{' '}
+                              <span className="font-semibold text-slate-700 dark:text-slate-300">Your Answer:</span>{' '}
                               {q.options[userChoice] || 'None selected'}
                             </p>
                             {!isCorrect && (
                               <p>
-                                <span className="font-semibold text-emerald-700">Correct Answer:</span>{' '}
+                                <span className="font-semibold text-emerald-700 dark:text-emerald-400">Correct Answer:</span>{' '}
                                 {q.options[q.correctIndex]}
                               </p>
                             )}
                           </div>
 
-                          <div className="mt-2 text-sm bg-slate-100/80 p-3 rounded-lg text-slate-700">
-                            <span className="font-semibold text-slate-900">Explanation:</span>{' '}
+                          <div className="mt-2 text-sm bg-slate-100/80 dark:bg-[#1C0A0D] p-3 rounded-lg text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-[#3D1418]">
+                            <span className="font-semibold text-slate-900 dark:text-[#FAF6F3]">Explanation:</span>{' '}
                             {q.explanation}
                           </div>
                         </div>
@@ -209,11 +209,11 @@ export default function DedicatedQuizPage() {
                     })}
                   </div>
 
-                  <div className="pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="pt-6 border-t border-slate-200 dark:border-[#3D1418] flex flex-col sm:flex-row items-center justify-between gap-4">
                     {!results.passed ? (
                       <button
                         onClick={handleReset}
-                        className="w-full sm:w-auto px-6 py-2.5 bg-burgundy text-white text-sm font-bold rounded-lg hover:bg-burgundy-deep transition-colors shadow-sm flex items-center justify-center gap-2"
+                        className="w-full sm:w-auto px-6 py-2.5 bg-burgundy text-white text-sm font-bold rounded-lg hover:bg-burgundy-deep transition-colors shadow-sm flex items-center justify-center gap-2 cursor-pointer"
                       >
                         <RotateCcw className="w-4 h-4" />
                         Retry Concept Check
@@ -221,7 +221,7 @@ export default function DedicatedQuizPage() {
                     ) : (
                       <Link
                         href={`/learning/session/${sessionId}`}
-                        className="w-full sm:w-auto px-6 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-lg hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2"
+                        className="w-full sm:w-auto px-6 py-2.5 bg-slate-900 dark:bg-burgundy text-white text-sm font-bold rounded-lg hover:bg-slate-800 dark:hover:bg-burgundy-deep transition-colors shadow-sm flex items-center justify-center gap-2"
                       >
                         <PlayCircle className="w-4 h-4" />
                         Return to Session
@@ -235,10 +235,10 @@ export default function DedicatedQuizPage() {
                     {quiz.questions.map((q, idx) => (
                       <div
                         key={q.id}
-                        className="p-5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-4"
+                        className="p-5 rounded-xl border border-slate-200 dark:border-[#3D1418] bg-slate-50/50 dark:bg-[#1C0A0D]/60 space-y-4"
                       >
-                        <p className="text-sm font-semibold text-slate-900 leading-snug">
-                          <span className="text-burgundy mr-1.5 font-bold">Q{idx + 1}.</span>
+                        <p className="text-sm font-semibold text-slate-900 dark:text-[#FAF6F3] leading-snug">
+                          <span className="text-burgundy dark:text-[#E89BA5] mr-1.5 font-bold">Q{idx + 1}.</span>
                           {q.question}
                         </p>
                         <div className="space-y-2.5">
@@ -249,8 +249,8 @@ export default function DedicatedQuizPage() {
                                 key={optIdx}
                                 className={`flex items-start gap-3 p-3 rounded-lg border text-sm cursor-pointer transition-all ${
                                   isChecked
-                                    ? 'bg-burgundy/5 border-burgundy text-slate-900 font-semibold ring-1 ring-burgundy'
-                                    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100/80 hover:border-slate-300'
+                                    ? 'bg-burgundy/5 dark:bg-burgundy/25 border-burgundy dark:border-[#E89BA5] text-slate-900 dark:text-[#FAF6F3] font-semibold ring-1 ring-burgundy dark:ring-[#E89BA5]'
+                                    : 'bg-white dark:bg-[#150709] border-slate-200 dark:border-[#3D1418] text-slate-700 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-[#250D11] hover:border-slate-300 dark:hover:border-[#4A181E]'
                                 }`}
                               >
                                 <input
@@ -274,14 +274,14 @@ export default function DedicatedQuizPage() {
                     ))}
                   </div>
 
-                  <div className="flex flex-col sm:flex-row items-center justify-between pt-6 border-t border-slate-200 gap-4">
-                    <span className="text-sm text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg font-medium">
-                      Passing requirement: <span className="font-bold text-slate-700">{quiz.passingScore}%</span>
+                  <div className="flex flex-col sm:flex-row items-center justify-between pt-6 border-t border-slate-200 dark:border-[#3D1418] gap-4">
+                    <span className="text-sm text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] px-3 py-1.5 rounded-lg font-medium">
+                      Passing requirement: <span className="font-bold text-slate-700 dark:text-[#FAF6F3]">{quiz.passingScore}%</span>
                     </span>
                     <button
                       type="submit"
                       disabled={!allAnswered || isSubmitting}
-                      className="w-full sm:w-auto px-8 py-3 bg-burgundy text-white text-sm font-bold rounded-lg hover:bg-burgundy-deep transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-2"
+                      className="w-full sm:w-auto px-8 py-3 bg-burgundy text-white text-sm font-bold rounded-lg hover:bg-burgundy-deep transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer font-sans"
                     >
                       {isSubmitting ? 'Verifying Answers...' : 'Submit Answers'}
                     </button>
