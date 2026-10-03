@@ -1,5 +1,6 @@
 import * as React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { ArrowRight, CalendarDays, MapPin, Play } from 'lucide-react';
 import { REGISTRATION_URL } from '@/lib/constants';
 import { ResponsivePicture } from '@/components/shared/ResponsivePicture';
@@ -7,7 +8,7 @@ import styles from './HomeHero.module.css';
 
 const HERO_ASSETS = {
   backgroundLight: '/hero/HOME-01-HERO-BACKGROUND-LIGHT.png',
-  backgroundDark: '/hero/HOME-01-HERO-BACKGROUND-DAR.png',
+  backgroundDark: '/hero/HOME-01-HERO-BACKGROUND-DARK.png',
 
   // Single cryostat asset for both light and dark themes (actual dimensions: 1024 × 1535)
   cryostat: '/hero/HOME-01-HERO-CRYOSTAT-ORBITAL-LIGHT-02.png',
@@ -19,6 +20,36 @@ const HERO_ASSETS = {
   decadeLight: '/hero/HOME-01-HERO-DECADE-10-LIGHT.png',
   decadeDark: '/hero/HOME-01-HERO-DECADE-10-DARK.png',
 };
+
+interface EventMetaItem {
+  title: string;
+  subtitle: string;
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number | string }>;
+  href?: string;
+  ariaLabel?: string;
+}
+
+const EVENT_META: EventMetaItem[] = [
+  {
+    title: '8 – 10 OCT 2026',
+    subtitle: 'Online Phase',
+    icon: CalendarDays,
+    href: '/schedule#online',
+    ariaLabel: 'Online Phase Schedule: 8 to 10 October 2026',
+  },
+  {
+    title: '26 – 30 OCT 2026',
+    subtitle: 'On-Campus Phase',
+    icon: CalendarDays,
+    href: '/schedule#offline',
+    ariaLabel: 'On-Campus Phase Schedule: 26 to 30 October 2026',
+  },
+  {
+    title: 'SRM University-AP',
+    subtitle: 'Amaravati, India',
+    icon: MapPin,
+  },
+];
 
 export function HomeHero() {
   return (
@@ -45,7 +76,8 @@ export function HomeHero() {
           z-0 overflow-hidden
         "
       >
-        <picture className="w-full h-full block">
+        {/* Light Theme Background Picture */}
+        <picture className="w-full h-full block dark:hidden">
           <source
             media="(min-width: 1280px)"
             srcSet="/hero/HOME-HERO-BG-DESKTOP.png"
@@ -60,13 +92,17 @@ export function HomeHero() {
             src="/hero/HOME-01-HERO-BACKGROUND-LIGHT.png"
             alt="Qiskit Fall Fest 2026 Background"
             fetchPriority="high"
-            className="w-full h-full object-cover object-center select-none dark:hidden"
+            className="w-full h-full object-cover object-center select-none"
           />
+        </picture>
+
+        {/* Dark Theme Background Picture */}
+        <picture className="w-full h-full hidden dark:block">
           <img
-            src="/hero/HOME-01-HERO-BACKGROUND-DAR.png"
+            src="/hero/HOME-01-HERO-BACKGROUND-DARK.png"
             alt="Qiskit Fall Fest 2026 Background"
             fetchPriority="high"
-            className="w-full h-full object-cover object-center select-none hidden dark:block"
+            className="w-full h-full object-cover object-center select-none"
           />
         </picture>
       </div>
@@ -86,16 +122,20 @@ export function HomeHero() {
           <p
             className={`
               ${styles.eyebrow}
-              ${styles.animEyebrow}
               font-bold
               uppercase
-              tracking-[0.28em]
+              tracking-[0.24em]
               leading-none
               text-[#A7192A]
-              dark:text-[#EF7885]
+              dark:text-[#F07B88]
             `}
           >
-            GLOBAL. OPEN. TOGETHER.
+            <span className={styles.typewriterWrapper}>
+              <span className={styles.typewriterText}>
+                GLOBAL. OPEN. TOGETHER.
+              </span>
+              <span className={styles.typewriterCaret} aria-hidden="true" />
+            </span>
           </p>
 
           {/* Headline with typography entrance and subtle luminous shimmer */}
@@ -111,7 +151,7 @@ export function HomeHero() {
               text-transparent
               bg-clip-text
               bg-[linear-gradient(90deg,#A7192A_0%,#851722_38%,#241617_85%)]
-              dark:bg-[linear-gradient(90deg,#EA8793_0%,#EFB0B5_45%,#FFF1EE_100%)]
+              dark:bg-[linear-gradient(90deg,#F07B88_0%,#F5A3AC_42%,#FDF5F2_100%)]
             `}
           >
             <span className={styles.animTitleLine1}>QISKIT</span>
@@ -119,18 +159,26 @@ export function HomeHero() {
             <span className={styles.animTitleLine3}>2026</span>
           </h1>
 
-          {/* Host */}
+          {/* Host with continuous typewriter loop */}
           <div
             className={`
               ${styles.host}
-              ${styles.animHost}
               font-bold
-              tracking-[-0.01em]
+              tracking-[0.01em]
+              whitespace-nowrap
               text-[#211818]
-              dark:text-[#F8F2F0]
+              dark:text-[#F5E9E7]
             `}
           >
-            SRM UNIVERSITY-AP × IBM
+            {/* Accessible stable text for screen readers */}
+            <span className="sr-only">SRM UNIVERSITY-AP × IBM</span>
+
+            {/* Visual animated continuous typewriter */}
+            <span className={styles.hostTypewriterContainer} aria-hidden="true">
+              <span className={styles.hostGhost}>SRM UNIVERSITY-AP × IBM</span>
+              <span className={styles.hostTypewriterText}>SRM UNIVERSITY-AP × IBM</span>
+              <span className={styles.hostTypewriterCaret} />
+            </span>
           </div>
 
           {/* Description */}
@@ -140,7 +188,7 @@ export function HomeHero() {
               ${styles.animDescription}
               font-normal
               text-[#4E4441]
-              dark:text-[#D6CDCA]
+              dark:text-[#D8CBC8]
             `}
           >
             Join a global celebration of quantum computing with workshops,
@@ -160,45 +208,64 @@ export function HomeHero() {
               min-[360px]:flex-nowrap
             `}
           >
-            {/* Primary Register Button */}
+            {/* Primary Register Button with Navbar Join Interaction Language */}
             <a
               href={REGISTRATION_URL}
               target="_blank"
               rel="noopener noreferrer"
+              data-cursor="cta"
               className={`
                 ${styles.registerBtn}
                 group
+                relative
+                overflow-hidden
                 inline-flex
                 items-center
                 justify-between
-                rounded-[5px]
+                rounded-[6px]
                 border
                 border-[rgba(193,46,63,0.85)]
                 bg-[#A61629]
                 dark:bg-[#921426]
-                hover:bg-[#B51B30]
-                dark:hover:bg-[#B51B30]
-                font-[650]
-                text-white
+                text-[#FFF9F6]
+                dark:text-[#FFF5F3]
                 shadow-[0_8px_22px_rgba(105,14,27,0.12)]
                 dark:shadow-[0_7px_24px_rgba(0,0,0,0.20)]
-                transition-[transform,background-color,box-shadow,border-color]
-                duration-200
+                transition-[border-color,transform,box-shadow]
+                duration-[250ms]
+                ease-[cubic-bezier(0.22,1,0.36,1)]
                 hover:-translate-y-[1px]
                 outline-none
                 focus-visible:ring-2
                 focus-visible:ring-[#A7192A]/40
                 focus-visible:ring-offset-2
-                focus-visible:rounded-[5px]
+                focus-visible:rounded-[6px]
                 dark:focus-visible:ring-offset-[#100405]
                 shrink-0
               `}
             >
-              <span>Register Now</span>
-              <ArrowRight
-                size={16}
-                className="transition-transform duration-200 group-hover:translate-x-1"
+              {/* Expanding Chamber: strictly clipped inside button (380ms expansion / 320ms retraction) */}
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute right-[9px] top-1/2 -translate-y-1/2 h-[32px] w-[32px] rounded-full bg-[#FFF7F2] transition-transform duration-[320ms] group-hover:duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[12] -z-0"
               />
+
+              {/* CTA Label (280ms text transition) */}
+              <span className="relative z-10 font-[650] transition-colors duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:text-[#A61629] dark:group-hover:text-[#921426]">
+                Register Now
+              </span>
+
+              {/* Circular Arrow Chamber & Icon (300ms translation) */}
+              <span
+                aria-hidden="true"
+                className="relative z-10 flex h-[32px] w-[32px] items-center justify-center rounded-full bg-[#FFF7F2] text-[#A61629] dark:text-[#921426] border-0 border-transparent shadow-none"
+              >
+                <ArrowRight
+                  size={16}
+                  strokeWidth={2.2}
+                  className="transition-transform duration-[300ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-[2px]"
+                />
+              </span>
             </a>
 
             {/* Watch Video Link */}
@@ -298,34 +365,45 @@ export function HomeHero() {
             dark:border-white/12
             grid
             grid-cols-2
-            gap-x-[12px]
+            gap-x-[14px]
+            min-[360px]:gap-x-[18px]
             gap-y-[14px]
             md:hidden
           "
         >
-          <HeroMeta
-            icon={<CalendarDays className="h-[18px] w-[18px]" strokeWidth={1.85} />}
-            title="5 – 9 OCT 2026"
-            subtitle="Online Phase"
-            titleClassName="text-[10px]"
-            subtitleClassName="text-[9px]"
-          />
-          <HeroMeta
-            icon={<CalendarDays className="h-[18px] w-[18px]" strokeWidth={1.85} />}
-            title="26 – 30 OCT 2026"
-            subtitle="On-Campus Phase"
-            titleClassName="text-[10px]"
-            subtitleClassName="text-[9px]"
-          />
-          <HeroMeta
-            icon={<MapPin className="h-[18px] w-[18px]" strokeWidth={1.85} />}
-            title="SRM University-AP"
-            subtitle="Amaravati, India"
-            titleClassName="text-[10px]"
-            subtitleClassName="text-[9px]"
-          />
-          <div className="flex items-center justify-start gap-[6px] translate-y-[1px]">
-            <div className="shrink-0 w-[52px]">
+          {EVENT_META.map((item) => {
+            const IconComponent = item.icon;
+            const metaContent = (
+              <HeroMeta
+                icon={<IconComponent className="h-[19px] w-[19px]" strokeWidth={1.85} />}
+                title={item.title}
+                subtitle={item.subtitle}
+                titleClassName="text-[11.5px] leading-tight"
+                subtitleClassName="text-[10px] leading-tight"
+              />
+            );
+
+            if (item.href) {
+              return (
+                <Link
+                  key={item.title}
+                  href={item.href}
+                  aria-label={item.ariaLabel}
+                  className={styles.metaLink}
+                >
+                  {metaContent}
+                </Link>
+              );
+            }
+
+            return (
+              <div key={item.title}>
+                {metaContent}
+              </div>
+            );
+          })}
+          <div className="flex items-center justify-start gap-[8px] translate-y-[1px]">
+            <div className="shrink-0 w-[54px]">
               <Image
                 src={HERO_ASSETS.decadeLight}
                 alt="10"
@@ -341,7 +419,7 @@ export function HomeHero() {
                 className="hidden h-auto w-full object-contain dark:block"
               />
             </div>
-            <div className="font-sans font-bold uppercase text-[7px] leading-[1.35] tracking-[0.075em] text-[#342A28] dark:text-[#F6ECEA] whitespace-nowrap">
+            <div className="font-sans font-bold uppercase text-[7.5px] leading-[1.35] tracking-[0.075em] text-[#342A28] dark:text-[#F6ECEA] whitespace-nowrap">
               <div>A DECADE OF</div>
               <div>QUANTUM ON CLOUD</div>
             </div>
@@ -359,60 +437,45 @@ export function HomeHero() {
 
             {/* 3 Information Blocks */}
             <div className={styles.metadataCols}>
-              {/* Item 1: Online Phase */}
-              <div className="relative h-full flex items-center pr-3 lg:pr-5">
-                <HeroMeta
-                  icon={<CalendarDays className={styles.metaItemIcon} strokeWidth={1.85} />}
-                  title="5 – 9 OCT 2026"
-                  subtitle="Online Phase"
-                  titleClassName={styles.metaItemTitle}
-                  subtitleClassName={styles.metaItemSubtitle}
-                />
-                <div
-                  aria-hidden="true"
-                  className={`
-                    ${styles.separator}
-                    absolute right-0 top-1/2 -translate-y-1/2 w-[1px]
-                    bg-[rgba(124,23,33,0.18)] dark:bg-[rgba(255,238,235,0.18)]
-                    pointer-events-none
-                  `}
-                />
-              </div>
+              {EVENT_META.map((item, index) => {
+                const IconComponent = item.icon;
+                const isLast = index === EVENT_META.length - 1;
+                const metaContent = (
+                  <HeroMeta
+                    icon={<IconComponent className={styles.metaItemIcon} strokeWidth={1.85} />}
+                    title={item.title}
+                    subtitle={item.subtitle}
+                    titleClassName={styles.metaItemTitle}
+                    subtitleClassName={styles.metaItemSubtitle}
+                  />
+                );
 
-              {/* Item 2: On-Campus Phase */}
-              <div className="relative h-full flex items-center px-3 lg:px-5">
-                <HeroMeta
-                  icon={<CalendarDays className={styles.metaItemIcon} strokeWidth={1.85} />}
-                  title="26 – 30 OCT 2026"
-                  subtitle="On-Campus Phase"
-                  titleClassName={styles.metaItemTitle}
-                  subtitleClassName={styles.metaItemSubtitle}
-                />
-                <div
-                  aria-hidden="true"
-                  className={`
-                    ${styles.separator}
-                    absolute right-0 top-1/2 -translate-y-1/2 w-[1px]
-                    bg-[rgba(124,23,33,0.18)] dark:bg-[rgba(255,238,235,0.18)]
-                    pointer-events-none
-                  `}
-                />
-              </div>
-
-              {/* Item 3: SRM University-AP */}
-              <div className="relative h-full flex items-center pl-3 lg:pl-5">
-                <HeroMeta
-                  icon={<MapPin className={styles.metaItemIcon} strokeWidth={1.85} />}
-                  title="SRM University-AP"
-                  subtitle="Amaravati, India"
-                  titleClassName={styles.metaItemTitle}
-                  subtitleClassName={styles.metaItemSubtitle}
-                />
-              </div>
+                return (
+                  <div key={item.title} className={styles.metaItemWrapper}>
+                    {item.href ? (
+                      <Link
+                        href={item.href}
+                        aria-label={item.ariaLabel}
+                        className={styles.metaLink}
+                      >
+                        {metaContent}
+                      </Link>
+                    ) : (
+                      metaContent
+                    )}
+                    {!isLast && (
+                      <div
+                        aria-hidden="true"
+                        className={styles.separator}
+                      />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
-          {/* Fourth Unit: Decade Block aligned to the right edge */}
+          {/* Fourth Unit: Decade Block aligned inward from the right */}
           <div className={styles.decadeBlock}>
             <div className={styles.decadeImg}>
               <Image
@@ -435,9 +498,7 @@ export function HomeHero() {
               className={`
                 ${styles.decadeLabel}
                 font-sans font-bold uppercase
-                tracking-[0.07em]
-                text-white dark:text-[#F6ECEA]
-                [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]
+                tracking-[0.075em]
                 whitespace-nowrap
               `}
             >
@@ -465,10 +526,10 @@ function HeroMeta({
   subtitleClassName?: string;
 }) {
   return (
-    <div className="flex items-center gap-[8px] xl:gap-[9px] 2xl:gap-[10px]">
+    <div className={styles.metaItem}>
       <div
         className="
-          shrink-0
+          shrink-0 flex items-center justify-center
           text-[#A7192A]
           dark:text-[#F07481]
         "
@@ -476,7 +537,7 @@ function HeroMeta({
         {icon}
       </div>
 
-      <div>
+      <div className="flex flex-col justify-center">
         <div
           className={`
             ${titleClassName}
@@ -484,6 +545,7 @@ function HeroMeta({
             tracking-[0.02em]
             text-[#251B1A]
             dark:text-[#F7F1EE]
+            leading-tight
           `}
         >
           {title}
@@ -494,7 +556,9 @@ function HeroMeta({
             ${subtitleClassName}
             font-[450]
             text-[#756966]
-            dark:text-[#BDB2AF]
+            dark:text-[#C8BAB7]
+            leading-tight
+            mt-[2px]
           `}
         >
           {subtitle}

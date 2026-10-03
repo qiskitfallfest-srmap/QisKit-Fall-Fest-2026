@@ -7,7 +7,7 @@ import { ArrowRight } from 'lucide-react';
 import { REGISTRATION_URL } from '@/lib/constants';
 import { ResponsivePicture } from '@/components/shared/ResponsivePicture';
 
-const ONLINE_PHASE_START = new Date('2026-10-05T00:00:00+05:30').getTime();
+const ONLINE_PHASE_START = new Date('2026-10-08T00:00:00+05:30').getTime();
 
 const COUNTDOWN_ASSETS = {
   backgroundLight: '/images/home/countdown/HOME-05-COUNTDOWN-BACKGROUND-LIGHT.png',
@@ -182,7 +182,7 @@ export function CountdownSection() {
                 THE ONLINE PHASE IS LIVE
               </h2>
               <p className="mt-3 text-[12.5px] font-normal leading-[1.45] text-[#FFF1EE]/70">
-                Qiskit Fall Fest 2026 Online Phase · 5 – 9 October 2026
+                Qiskit Fall Fest 2026 Online Phase · 8 – 10 October 2026
               </p>
             </div>
 
@@ -306,7 +306,7 @@ export function CountdownSection() {
                   pt-1
                 "
               >
-                ONLINE PHASE · 5 – 9 OCT 2026
+                ONLINE PHASE · 8 – 10 OCT 2026
               </div>
             </div>
           </div>
