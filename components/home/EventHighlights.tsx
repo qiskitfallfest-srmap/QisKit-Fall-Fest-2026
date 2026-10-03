@@ -117,6 +117,20 @@ export function EventHighlights() {
     return () => observer.disconnect();
   }, []);
 
+  const handleCardPointerMove = (e: React.PointerEvent<HTMLAnchorElement>) => {
+    const el = e.currentTarget;
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    el.style.setProperty('--card-x', `${x.toFixed(1)}px`);
+    el.style.setProperty('--card-y', `${y.toFixed(1)}px`);
+    el.style.setProperty('--card-hover', '1');
+  };
+
+  const handleCardPointerLeave = (e: React.PointerEvent<HTMLAnchorElement>) => {
+    e.currentTarget.style.setProperty('--card-hover', '0');
+  };
+
   return (
     <section
       ref={sectionRef}
@@ -126,6 +140,9 @@ export function EventHighlights() {
     >
       {/* Subtle Pointer-Reactive Ambient Spotlight */}
       <div className={styles.pointerSpotlight} aria-hidden="true" />
+
+      {/* Cross-section seamless atmosphere blend into Host & Ecosystem */}
+      <div className={styles.bottomAtmosphereBlend} aria-hidden="true" />
 
       <div className={styles.sectionContainer}>
         {/* =========================================================
@@ -183,13 +200,12 @@ export function EventHighlights() {
                 <Link
                   href={card.href}
                   className={styles.cardLink}
+                  onPointerMove={handleCardPointerMove}
+                  onPointerLeave={handleCardPointerLeave}
                   aria-label={`${card.title} — Explore Track`}
                 >
-                  {/* Moving Edge-Light Orbit Reflection */}
+                  {/* Single Travelling Edge-Light */}
                   <span className={styles.edgeLight} aria-hidden="true" />
-
-                  {/* Subtle Liquid Glass Internal Refraction Highlight */}
-                  <span aria-hidden="true" className={styles.glassHighlight} />
 
                   {/* Top Media: Image with subtle brand gradient overlay & category badge */}
                   <div className={styles.imageContainer}>

@@ -673,13 +673,13 @@ export default function SingularityHorizon({
       )}
 
       {hud && (
-        <div className="pointer-events-none absolute inset-0 z-20 flex flex-col justify-between p-4 sm:p-5 md:p-6 select-none">
-          <div key={index} className="sg-hud-in text-center">
-            <div className="mb-2 text-[0.75rem] font-semibold uppercase tracking-[0.35em] text-[#171313] dark:text-[#F6F2F1] sm:text-[0.88rem] sm:tracking-[0.45em]">
+        <div className="pointer-events-none absolute inset-0 z-20 flex flex-col justify-between p-4 sm:p-5 md:p-6 pt-[22px] sm:pt-[28px] select-none">
+          <div key={index} className="sg-hud-in text-center mt-1">
+            <div className="text-[14px] sm:text-[15px] xl:text-[16px] font-bold uppercase tracking-[0.32em] text-[#171313] dark:text-[#FFF0EC]">
               {current.title}
             </div>
             <div
-              className="inline-block rounded-full border px-3 py-0.5 text-[0.58rem] font-semibold uppercase tracking-[0.2em]"
+              className="inline-block mt-[15px] rounded-[999px] border px-[14px] py-[5px] text-[10px] sm:text-[10.5px] font-semibold uppercase tracking-[0.20em] transition-shadow duration-300 hover:shadow-[0_0_12px_rgba(239,116,129,0.3)]"
               style={{
                 color: "#800020",
                 borderColor: "rgba(128, 0, 32, 0.4)",
@@ -690,7 +690,7 @@ export default function SingularityHorizon({
             </div>
           </div>
 
-          <div className="flex items-end justify-between gap-3 font-mono text-[0.55rem] sm:text-[0.62rem] uppercase tracking-wider text-[#4D4A48] dark:text-[#D5CDCB]">
+          <div className="flex items-end justify-between gap-3 font-mono text-[9.5px] sm:text-[10.5px] uppercase tracking-[0.04em] opacity-[0.72] text-[#4D4A48] dark:text-[#D5CDCB]">
             <div>
               <div className="mb-0.5">
                 MASS_INDEX: <span className="font-semibold" style={{ color: "#800020" }}>{mass}</span>

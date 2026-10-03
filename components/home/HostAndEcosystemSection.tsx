@@ -205,9 +205,23 @@ export function HostAndEcosystemSection() {
     if (outgoingIndex === null) return;
     const timer = setTimeout(() => {
       setOutgoingIndex(null);
-    }, 750);
+    }, 760);
     return () => clearTimeout(timer);
   }, [outgoingIndex]);
+
+  const handleCardPointerMove = (e: React.PointerEvent<HTMLElement>) => {
+    const el = e.currentTarget;
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    el.style.setProperty('--card-x', `${x.toFixed(1)}px`);
+    el.style.setProperty('--card-y', `${y.toFixed(1)}px`);
+    el.style.setProperty('--card-hover', '1');
+  };
+
+  const handleCardPointerLeave = (e: React.PointerEvent<HTMLElement>) => {
+    e.currentTarget.style.setProperty('--card-hover', '0');
+  };
 
   return (
     <section
@@ -225,7 +239,7 @@ export function HostAndEcosystemSection() {
             Divider completely removed in both light & dark modes
         ========================================================== */}
         <div className={styles.headerRow}>
-          <div className="max-w-[820px]">
+          <div className={styles.headlineCol}>
             {/* Eyebrow */}
             <div className={styles.eyebrowContainer}>
               <span aria-hidden="true" className={styles.eyebrowMarker} />
@@ -267,9 +281,11 @@ export function HostAndEcosystemSection() {
             </div>
           </div>
 
-          {/* Secondary Intro Copy */}
+          {/* Phase 08: Recomposed Secondary Intro Copy with Inline Semantic Highlights */}
           <p className={styles.introCopy}>
-            An academic host, an industry ecosystem, and an open-source quantum platform coming together for Qiskit Fall Fest 2026.
+            An <span className={styles.introHighlight}>academic host</span>, an{' '}
+            <span className={styles.introHighlight}>industry ecosystem</span>, and an{' '}
+            <span className={styles.introHighlight}>open-source quantum platform</span> coming together for Qiskit Fall Fest 2026.
           </p>
         </div>
 
@@ -280,12 +296,13 @@ export function HostAndEcosystemSection() {
         <div className={styles.cardsGrid}>
           {ENTITIES.map((entity) => (
             <div key={entity.id} className={styles.cardWrapper}>
-              <article className={styles.ecosystemCard}>
-                {/* Moving Edge-Light Orbit Reflection */}
+              <article
+                className={styles.ecosystemCard}
+                onPointerMove={handleCardPointerMove}
+                onPointerLeave={handleCardPointerLeave}
+              >
+                {/* Single Travelling Edge-Light */}
                 <span className={styles.edgeLight} aria-hidden="true" />
-
-                {/* Subtle Liquid Glass Internal Refraction Highlight */}
-                <span aria-hidden="true" className={styles.glassHighlight} />
 
                 <div className={styles.cardContent}>
                   {/* Category Role Badge */}
@@ -324,6 +341,9 @@ export function HostAndEcosystemSection() {
           ))}
         </div>
       </div>
+
+      {/* Visual crossfade dissolve into Countdown section (Phase 13) */}
+      <div className={styles.countdownCrossfadeOverlay} aria-hidden="true" />
     </section>
   );
 }

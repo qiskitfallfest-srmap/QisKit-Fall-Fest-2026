@@ -26,18 +26,29 @@
 }
 
 /* -------------------------------------------------------------------------
-   1. Section Spacing & Background Architecture
+   1. Section Spacing & Background Architecture (Phases 2, 3, 5, 15)
    ------------------------------------------------------------------------- */
 .section {
   position: relative;
   width: 100%;
-  overflow: hidden;
-  background: linear-gradient(135deg, #F8F3EE 0%, #F5EEE9 52%, #F9F5F1 100%);
+  overflow-x: clip;
+  overflow-y: visible;
+  height: auto;
+  max-height: none;
+  min-height: clamp(760px, 96svh, 920px);
+  margin-bottom: -1px; /* Eliminates subpixel seam with Host & Ecosystem */
+  background: linear-gradient(180deg, #F8F3EE 0%, #F7F1ED 45%, #F7F0EC 100%);
   transition: background 300ms ease;
 }
 
+@media (max-width: 768px) {
+  .section {
+    min-height: auto;
+  }
+}
+
 :global(.dark) .section {
-  background: linear-gradient(135deg, #090708 0%, #120709 50%, #090708 100%);
+  background: linear-gradient(180deg, #090708 0%, #0B0708 45%, #0D0709 100%);
 }
 
 .pointerSpotlight {
@@ -48,18 +59,41 @@
   opacity: var(--pointer-opacity, 0);
   transition: opacity 400ms ease;
   background: radial-gradient(
-    500px circle at var(--pointer-x, 50%) var(--pointer-y, 50%),
-    rgba(167, 25, 42, 0.075),
-    transparent 68%
+    520px circle at var(--pointer-x, 50%) var(--pointer-y, 50%),
+    rgba(255, 255, 255, 0.05),
+    transparent 70%
   );
 }
 
 :global(.dark) .pointerSpotlight {
   background: radial-gradient(
-    520px circle at var(--pointer-x, 50%) var(--pointer-y, 50%),
-    rgba(232, 184, 93, 0.055),
-    rgba(239, 116, 129, 0.035) 32%,
-    transparent 70%
+    540px circle at var(--pointer-x, 50%) var(--pointer-y, 50%),
+    rgba(255, 255, 255, 0.02),
+    transparent 72%
+  );
+}
+
+/* Zero-layout-height continuous canvas seam blend into Host & Ecosystem (Part 16) */
+.bottomAtmosphereBlend {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: clamp(30px, 3.5vh, 48px);
+  pointer-events: none;
+  z-index: 1;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #F7F0EC 100%
+  );
+}
+
+:global(.dark) .bottomAtmosphereBlend {
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #0D0709 100%
   );
 }
 
@@ -78,8 +112,9 @@
   margin-right: auto;
   padding-left: clamp(20px, 3.5vw, 92px);
   padding-right: clamp(20px, 3.5vw, 92px);
-  padding-top: clamp(44px, 4.8vh, 72px);
-  padding-bottom: clamp(48px, 5.5vh, 78px);
+  padding-top: clamp(46px, 5vh, 70px);
+  padding-bottom: clamp(28px, 3.2vh, 44px);
+  overflow-y: visible;
 }
 
 /* -------------------------------------------------------------------------
@@ -91,7 +126,7 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 14px;
+  margin-bottom: clamp(16px, 2vh, 22px);
 }
 
 .eyebrowMarker {
@@ -235,21 +270,21 @@
 }
 
 /* -------------------------------------------------------------------------
-   3. Two-Line Hero Heading & Rebalanced Layout (Clipping Fix)
+   3. Two-Line Hero Heading & Rebalanced Layout (Phases 4, 18 — Zero Clipping)
    ------------------------------------------------------------------------- */
 .headingRow {
   display: flex;
   flex-direction: column;
   gap: 22px;
-  margin-bottom: clamp(38px, 4.5vh, 58px);
+  margin-bottom: clamp(36px, 4.2vh, 54px);
 }
 
 @media (min-width: 1024px) {
   .headingRow {
     display: grid;
-    grid-template-columns: minmax(0, 1.55fr) minmax(360px, 0.45fr);
+    grid-template-columns: minmax(0, 1.6fr) minmax(400px, 0.4fr);
     align-items: flex-end;
-    gap: clamp(44px, 4vw, 88px);
+    gap: clamp(36px, 3.8vw, 76px);
   }
 }
 
@@ -259,7 +294,7 @@
   letter-spacing: -0.045em;
   line-height: 0.95;
   color: #21070A;
-  max-width: 1180px;
+  max-width: 1220px;
   overflow: visible;
   font-size: clamp(38px, 9vw, 48px);
 }
@@ -272,22 +307,29 @@
 
 @media (min-width: 1024px) {
   .headingBlock {
-    font-size: clamp(50px, 4.1vw, 66px);
+    font-size: clamp(48px, 4.15vw, 62px);
     line-height: 0.95;
   }
 }
 
 @media (min-width: 1280px) {
   .headingBlock {
-    font-size: clamp(62px, 4.0vw, 78px);
+    font-size: clamp(54px, 4.1vw, 68px);
     line-height: 0.95;
   }
 }
 
-@media (min-width: 1536px) {
+@media (min-width: 1440px) {
   .headingBlock {
-    font-size: clamp(68px, 4.0vw, 84px);
-    line-height: 0.95;
+    font-size: clamp(58px, 4.0vw, 72px);
+    line-height: 0.94;
+  }
+}
+
+@media (min-width: 1920px) {
+  .headingBlock {
+    font-size: clamp(66px, 3.85vw, 80px);
+    line-height: 0.93;
   }
 }
 
@@ -297,26 +339,41 @@
 }
 
 .headingLine {
-  display: inline-block;
+  display: block;
+  width: max-content;
+  max-width: none;
   opacity: 0;
   transform: translateY(24px);
   filter: blur(3px);
-  clip-path: inset(0 0 100% 0);
+  clip-path: inset(0 -0.20em 100% -0.08em);
   will-change: transform, opacity, filter, clip-path;
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
-  background-image: linear-gradient(90deg, #6C101A 0%, #3A090E 70%, #181313 100%);
+  background-image: linear-gradient(90deg, #6F0E18 0%, #3A090E 70%, #2A1518 100%);
 }
 
 :global(.dark) .headingLine {
   background-image: linear-gradient(90deg, #F5EDEB 0%, #EFB0B5 50%, #F5EDEB 100%);
 }
 
-/* Force Line 1 to remain exactly on ONE visual line across desktop & laptop */
+/* Guard trailing glyphs with dedicated right padding (Phase 4) */
+.headingLineOne {
+  padding-inline-end: 0.18em;
+}
+
 @media (min-width: 1024px) {
   .headingLineOne {
     white-space: nowrap !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  .headingLine,
+  .headingLineOne {
+    width: auto;
+    max-width: 100%;
+    white-space: normal;
   }
 }
 
@@ -328,19 +385,39 @@
   animation: headingReveal 820ms cubic-bezier(0.16, 1, 0.3, 1) 220ms forwards;
 }
 
+/* Expanded final clipping bounds expose serif overhangs and descenders (Phase 4) */
 @keyframes headingReveal {
   0% {
     opacity: 0;
     transform: translateY(24px);
     filter: blur(3px);
-    clip-path: inset(0 0 100% 0);
+    clip-path: inset(0 -0.20em 100% -0.08em);
   }
   100% {
     opacity: 1;
     transform: translateY(0);
     filter: blur(0);
-    clip-path: inset(0 0 0 0);
+    clip-path: inset(-0.12em -0.20em -0.12em -0.08em);
   }
+}
+
+.headingLine {
+  display: block;
+  width: max-content;
+  max-width: none;
+  opacity: 0;
+  transform: translateY(24px);
+  filter: blur(3px);
+  clip-path: inset(0 -0.20em 100% -0.08em);
+  will-change: transform, opacity, filter, clip-path;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-image: linear-gradient(105deg, #6D111B 0%, #8F1723 48%, #32191C 100%);
+}
+
+:global(.dark) .headingLine {
+  background-image: linear-gradient(105deg, #FFF0EC 0%, #F5DDD9 50%, #F07B88 100%);
 }
 
 .description {
@@ -348,7 +425,8 @@
   font-weight: 400;
   font-size: 14.5px;
   line-height: 1.6;
-  max-width: clamp(440px, 30vw, 510px);
+  width: 100%;
+  max-width: clamp(430px, 27vw, 520px);
   flex-shrink: 0;
   color: #5F5754;
   opacity: 0;
@@ -453,7 +531,7 @@
 }
 
 /* -------------------------------------------------------------------------
-   5. Liquid Glass Track Cards & Interactive Hover Glow
+   5. Phase 01 & 03: Liquid Glass Track Cards & Interactive Hover
    ------------------------------------------------------------------------- */
 .cardLink {
   group: true;
@@ -468,188 +546,149 @@
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 
-  /* Liquid Glass Light Material */
-  background: linear-gradient(145deg, rgba(255, 252, 249, 0.78), rgba(255, 246, 243, 0.58));
-  border: 1px solid rgba(143, 23, 35, 0.14);
-  box-shadow:
-    0 14px 36px rgba(76, 30, 33, 0.08),
-    0 2px 8px rgba(92, 25, 31, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.70);
-
+  /* Phase 01: Shared Liquid Glass Light Surface */
+  background: linear-gradient(145deg, rgba(255,252,249,0.62) 0%, rgba(250,243,239,0.44) 54%, rgba(246,237,232,0.38) 100%);
+  border: 1px solid rgba(91,58,59,0.10);
   backdrop-filter: blur(14px) saturate(1.08);
   -webkit-backdrop-filter: blur(14px) saturate(1.08);
+  box-shadow: 0 14px 36px rgba(49,29,31,0.07), inset 0 1px 0 rgba(255,255,255,0.76);
+  border-radius: 16px;
 
-  /* Precise layered transition (NO transition: all) */
-  transition:
-    transform 380ms cubic-bezier(0.22, 1, 0.36, 1),
-    background 380ms ease,
-    border-color 380ms ease,
-    box-shadow 380ms ease;
+  /* Precise layered transition */
+  transition-property: transform, box-shadow;
+  transition-duration: 320ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 :global(.dark) .cardLink {
-  /* Liquid Glass Dark Wine Material */
-  background: linear-gradient(145deg, rgba(38, 9, 13, 0.76), rgba(23, 5, 8, 0.60));
-  border: 1px solid rgba(239, 116, 129, 0.18);
-  box-shadow:
-    0 16px 40px rgba(0, 0, 0, 0.26),
-    0 3px 12px rgba(0, 0, 0, 0.18),
-    inset 0 1px 0 rgba(255, 215, 220, 0.06);
-
-  backdrop-filter: blur(14px) saturate(1.05);
-  -webkit-backdrop-filter: blur(14px) saturate(1.05);
+  /* Phase 01: Shared Liquid Glass Dark Surface */
+  background: linear-gradient(145deg, rgba(31,17,20,0.72) 0%, rgba(22,11,13,0.60) 54%, rgba(14,8,10,0.52) 100%);
+  border: 1px solid rgba(255,236,233,0.09);
+  backdrop-filter: blur(14px) saturate(1.06);
+  -webkit-backdrop-filter: blur(14px) saturate(1.06);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.045);
 }
 
-/* Hover & Focus-Visible Lift with Diffused Burgundy / Gold Glow */
-.cardLink:hover,
-.cardLink:focus-visible {
-  transform: translateY(-6px) scale(1.01);
-  background: linear-gradient(145deg, rgba(255, 254, 252, 0.88), rgba(255, 249, 246, 0.72));
-  border-color: rgba(181, 31, 51, 0.45);
-  box-shadow:
-    0 24px 62px rgba(143, 23, 35, 0.18),
-    0 0 34px rgba(181, 31, 51, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+/* Phase 03: Hover & Focus-Visible Lift with Exact Physics */
+@media (hover: hover) and (pointer: fine) {
+  .cardLink:hover,
+  .cardLink:focus-visible {
+    transform: translateY(-4px) scale(1.003);
+    box-shadow: 0 20px 44px rgba(42,25,27,0.11), inset 0 1px 0 rgba(255,255,255,0.76);
+  }
+
+  :global(.dark) .cardLink:hover,
+  :global(.dark) .cardLink:focus-visible {
+    box-shadow: 0 22px 48px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.045);
+  }
 }
 
-:global(.dark) .cardLink:hover,
-:global(.dark) .cardLink:focus-visible {
-  background: linear-gradient(145deg, rgba(48, 12, 18, 0.86), rgba(30, 7, 11, 0.72));
-  border-color: rgba(232, 184, 93, 0.45);
-  box-shadow:
-    0 26px 70px rgba(0, 0, 0, 0.40),
-    0 0 36px rgba(232, 184, 93, 0.11),
-    inset 0 1px 0 rgba(255, 215, 220, 0.12);
+@media (hover: none), (pointer: coarse) {
+  .cardLink:active {
+    transform: scale(0.99);
+  }
 }
 
 /* Accessible Keyboard Focus Ring */
 .cardLink:focus-visible {
-  outline: 2px solid #B51F33;
+  outline: 2px solid rgba(91,58,59,0.3);
   outline-offset: 3px;
 }
 
 :global(.dark) .cardLink:focus-visible {
-  outline: 2px solid #E8B85D;
+  outline: 2px solid rgba(255,236,233,0.3);
   outline-offset: 3px;
 }
 
 /* -------------------------------------------------------------------------
-   6. Dedicated Visible Moving Edge-Light Element (Part 3 & 16)
-   - Padding 2px, z-index 6, drop-shadow glow
-   - Light Mode = RED/ROSE (#B51F33, #EF7481, #FFD5DA)
-   - Dark Mode = WARM GOLD (#C89236, #E8B85D, #FFE7A6)
-   - Linear infinite orbit after 450ms delay
+   6. Single Travelling Border-Light Orbit
+   Activation: on hover/focus-within, 1 beam orbits around border after 450ms
+   Light = #B51F33, #EF7481, #FFD5DA
+   Dark = #C89236, #E8B85D, #FFE7A6
    ------------------------------------------------------------------------- */
+@property --edge-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes edgeOrbit {
+  from { --edge-angle: 0deg; }
+  to   { --edge-angle: 360deg; }
+}
+
 .edgeLight {
   position: absolute;
   inset: -1px;
-  border-radius: inherit;
-  padding: 2px;
-  pointer-events: none;
   z-index: 6;
+  padding: 2px;
+  border-radius: inherit;
+  pointer-events: none;
   opacity: 0;
-  transition: opacity 300ms ease;
-  background: conic-gradient(
-    from var(--edge-angle, 0deg),
-    transparent 0deg,
-    transparent 300deg,
-    rgba(181, 31, 51, 0.25) 310deg,
-    #B51F33 324deg,
-    #EF7481 338deg,
-    #FFD5DA 347deg,
-    transparent 360deg
-  );
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+
+  background:
+    conic-gradient(
+      from var(--edge-angle),
+      transparent 0deg 318deg,
+      rgba(181, 31, 51, 0.08) 324deg,
+      #B51F33 333deg,
+      #EF7481 340deg,
+      #FFD5DA 345deg,
+      rgba(239, 116, 129, 0.42) 350deg,
+      transparent 358deg 360deg
+    );
+
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
+
   filter: drop-shadow(0 0 5px rgba(181, 31, 51, 0.36));
+  transition: opacity 190ms ease;
 }
 
 :global(.dark) .edgeLight {
-  background: conic-gradient(
-    from var(--edge-angle, 0deg),
-    transparent 0deg,
-    transparent 300deg,
-    rgba(200, 146, 54, 0.25) 310deg,
-    #C89236 324deg,
-    #E8B85D 338deg,
-    #FFE7A6 347deg,
-    transparent 360deg
-  );
-  filter: drop-shadow(0 0 5px rgba(232, 184, 93, 0.34));
+  background:
+    conic-gradient(
+      from var(--edge-angle),
+      transparent 0deg 318deg,
+      rgba(200, 146, 54, 0.08) 324deg,
+      #C89236 333deg,
+      #E8B85D 340deg,
+      #FFE7A6 345deg,
+      rgba(232, 184, 93, 0.42) 350deg,
+      transparent 358deg 360deg
+    );
+
+  filter: drop-shadow(0 0 6px rgba(232, 184, 93, 0.34));
 }
 
-.cardLink:hover .edgeLight,
-.cardLink:focus-visible .edgeLight {
-  opacity: 1;
-  animation: edgeBorderOrbit 2.8s linear 450ms infinite;
+@media (hover: hover) and (pointer: fine) {
+  .cardLink:hover .edgeLight,
+  .cardLink:focus-visible .edgeLight,
+  .cardLink:focus-within .edgeLight {
+    opacity: 1;
+    animation: edgeOrbit 2.8s linear 450ms infinite;
+  }
 }
 
-/* Internal Refraction Highlight */
-.glassHighlight {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: radial-gradient(
-    80% 60% at 15% 0%,
-    rgba(255, 255, 255, 0.16),
-    transparent 70%
-  );
-  opacity: 0.32;
-  transition: opacity 350ms ease;
-  z-index: 2;
+@media (hover: none), (pointer: coarse) {
+  .cardLink:focus-visible .edgeLight,
+  .cardLink:focus-within .edgeLight {
+    opacity: 0.65;
+  }
 }
 
-:global(.dark) .glassHighlight {
-  background: radial-gradient(
-    80% 60% at 15% 0%,
-    rgba(255, 255, 255, 0.08),
-    transparent 70%
-  );
-  opacity: 0.14;
-}
-
-.cardLink:hover .glassHighlight,
-.cardLink:focus-visible .glassHighlight {
-  opacity: 0.55;
-}
-
-:global(.dark) .cardLink:hover .glassHighlight,
-:global(.dark) .cardLink:focus-visible .glassHighlight {
-  opacity: 0.26;
-}
-
-/* Faint Diagonal Glass Sheen */
-.cardLink::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 16px;
-  background: linear-gradient(
-    115deg,
-    transparent 25%,
-    rgba(255, 255, 255, 0.09) 48%,
-    transparent 70%
-  );
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 400ms ease;
-  z-index: 3;
-}
-
-:global(.dark) .cardLink::after {
-  background: linear-gradient(
-    115deg,
-    transparent 25%,
-    rgba(255, 255, 255, 0.05) 48%,
-    transparent 70%
-  );
-}
-
-.cardLink:hover::after,
-.cardLink:focus-visible::after {
-  opacity: 1;
+@media (prefers-reduced-motion: reduce) {
+  .edgeLight {
+    animation: none !important;
+  }
+  .cardLink:hover .edgeLight,
+  .cardLink:focus-visible .edgeLight,
+  .cardLink:focus-within .edgeLight {
+    opacity: 0.65;
+  }
 }
 
 /* -------------------------------------------------------------------------
@@ -797,16 +836,22 @@
 .cardTitle {
   font-family: inherit;
   font-weight: 700;
-  font-size: 17px;
+  font-size: 17.5px;
   line-height: 1.25;
-  letter-spacing: -0.01em;
-  color: #2B2020;
+  letter-spacing: -0.015em;
+  color: #2A1A1C;
   transition: color 240ms ease;
 }
 
-@media (min-width: 1024px) and (max-width: 1279px) {
+@media (min-width: 1024px) {
   .cardTitle {
-    font-size: 16px;
+    font-size: 18.5px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .cardTitle {
+    font-size: 19.5px;
   }
 }
 
@@ -821,37 +866,43 @@
 
 :global(.dark) .cardLink:hover .cardTitle,
 :global(.dark) .cardLink:focus-visible .cardTitle {
-  color: #F58A96;
+  color: #F07B88;
 }
 
 .cardDescription {
   font-family: inherit;
   font-weight: 400;
   font-size: 14px;
-  line-height: 1.55;
-  color: #655958;
+  line-height: 1.52;
+  color: #6B5957;
   flex: 1;
   transition: color 240ms ease;
 }
 
-@media (min-width: 1440px) {
+@media (min-width: 1024px) {
   .cardDescription {
     font-size: 14.5px;
   }
 }
 
+@media (min-width: 1440px) {
+  .cardDescription {
+    font-size: 15.2px;
+  }
+}
+
 :global(.dark) .cardDescription {
-  color: #CFC0BE;
+  color: #CDBBB8;
 }
 
 .cardLink:hover .cardDescription,
 .cardLink:focus-visible .cardDescription {
-  color: #4B403F;
+  color: #4A3E3D;
 }
 
 :global(.dark) .cardLink:hover .cardDescription,
 :global(.dark) .cardLink:focus-visible .cardDescription {
-  color: #E2D6D4;
+  color: #E2D7D5;
 }
 
 /* -------------------------------------------------------------------------
@@ -886,7 +937,7 @@
 }
 
 :global(.dark) .exploreText {
-  color: #F58A96;
+  color: #F07B88;
 }
 
 .cardLink:hover .exploreText,

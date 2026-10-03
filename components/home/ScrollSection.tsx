@@ -33,10 +33,11 @@ export function ScrollSection({
         w-full relative
         ${fitContent ? 'min-h-0' : 'min-h-[calc(100svh-var(--navbar-height,80px))]'}
         flex flex-col
-        overflow-x-hidden
+        overflow-x-clip overflow-y-visible
         transition-colors duration-300
         ${className}
       `}
+      style={{ overflowX: 'clip', overflowY: 'visible', ...props.style }}
       {...props}
     >
       {children}
