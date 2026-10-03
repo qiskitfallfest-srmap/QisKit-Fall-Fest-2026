@@ -1,0 +1,1000 @@
+/* =========================================================================
+   EventHighlights.module.css
+   Continuous Eyebrow Typewriter + Two-Line Hero Heading +
+   Liquid Glass Track Cards + Delayed Border Orbit Motion
+   ========================================================================= */
+
+/* -------------------------------------------------------------------------
+   0. Custom Properties for Liquid Glass & Border Orbit
+   ------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------
+   0. Custom Properties for Liquid Glass & Border Orbit
+   ------------------------------------------------------------------------- */
+@property --edge-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes edgeBorderOrbit {
+  0% {
+    --edge-angle: 0deg;
+  }
+  100% {
+    --edge-angle: 360deg;
+  }
+}
+
+/* -------------------------------------------------------------------------
+   1. Section Spacing & Background Architecture
+   ------------------------------------------------------------------------- */
+.section {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: linear-gradient(135deg, #F8F3EE 0%, #F5EEE9 52%, #F9F5F1 100%);
+  transition: background 300ms ease;
+}
+
+:global(.dark) .section {
+  background: linear-gradient(135deg, #090708 0%, #120709 50%, #090708 100%);
+}
+
+.pointerSpotlight {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: var(--pointer-opacity, 0);
+  transition: opacity 400ms ease;
+  background: radial-gradient(
+    500px circle at var(--pointer-x, 50%) var(--pointer-y, 50%),
+    rgba(167, 25, 42, 0.075),
+    transparent 68%
+  );
+}
+
+:global(.dark) .pointerSpotlight {
+  background: radial-gradient(
+    520px circle at var(--pointer-x, 50%) var(--pointer-y, 50%),
+    rgba(232, 184, 93, 0.055),
+    rgba(239, 116, 129, 0.035) 32%,
+    transparent 70%
+  );
+}
+
+@media (hover: none), (pointer: coarse) {
+  .pointerSpotlight {
+    display: none !important;
+  }
+}
+
+.sectionContainer {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1920px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: clamp(20px, 3.5vw, 92px);
+  padding-right: clamp(20px, 3.5vw, 92px);
+  padding-top: clamp(44px, 4.8vh, 72px);
+  padding-bottom: clamp(48px, 5.5vh, 78px);
+}
+
+/* -------------------------------------------------------------------------
+   2. Continuous Eyebrow Typewriter (Preserved from V3)
+   Cycle: ~4.4s (Type 1.0s, Hold 1.7s, Delete 0.75s, Empty Pause 0.95s)
+   Delay: 0.4s
+   ------------------------------------------------------------------------- */
+.eyebrowContainer {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.eyebrowMarker {
+  width: 6px;
+  height: 6px;
+  transform: rotate(45deg);
+  flex-shrink: 0;
+  background-color: #8F1723;
+  transition: background-color 300ms ease;
+}
+
+:global(.dark) .eyebrowMarker {
+  background-color: #EC7481;
+}
+
+.typewriterContainer {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+  font-family: inherit;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 13.5px;
+  line-height: 1;
+  color: #8F1723;
+}
+
+:global(.dark) .typewriterContainer {
+  color: #EC7481;
+}
+
+@media (max-width: 1024px) {
+  .typewriterContainer {
+    font-size: 12px;
+    letter-spacing: 0.20em;
+  }
+}
+
+.typewriterGhost {
+  visibility: hidden;
+  user-select: none;
+  pointer-events: none;
+  display: inline-block;
+}
+
+.typewriterText {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  white-space: nowrap;
+  clip-path: inset(0 100% 0 0);
+  animation: eyebrowTypewriterLoop 4.4s 0.4s infinite;
+  will-change: clip-path;
+}
+
+.typewriterCaret {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  left: 0;
+  width: 2px;
+  background-color: #A7192A;
+  pointer-events: none;
+  opacity: 0;
+  animation:
+    eyebrowCaretTravelLoop 4.4s 0.4s infinite both,
+    eyebrowCaretBlinkLoop 4.4s 0.4s infinite both;
+  will-change: left, opacity;
+}
+
+:global(.dark) .typewriterCaret {
+  background-color: #EF7481;
+}
+
+@keyframes eyebrowTypewriterLoop {
+  0% {
+    clip-path: inset(0 100% 0 0);
+    animation-timing-function: steps(16, end);
+  }
+  23% {
+    clip-path: inset(0 0% 0 0);
+    animation-timing-function: linear;
+  }
+  62% {
+    clip-path: inset(0 0% 0 0);
+    animation-timing-function: steps(16, start);
+  }
+  79% {
+    clip-path: inset(0 100% 0 0);
+    animation-timing-function: linear;
+  }
+  100% {
+    clip-path: inset(0 100% 0 0);
+  }
+}
+
+@keyframes eyebrowCaretTravelLoop {
+  0% {
+    left: 0%;
+    animation-timing-function: steps(16, end);
+  }
+  23% {
+    left: 100%;
+    animation-timing-function: linear;
+  }
+  62% {
+    left: 100%;
+    animation-timing-function: steps(16, start);
+  }
+  79% {
+    left: 0%;
+    animation-timing-function: linear;
+  }
+  100% {
+    left: 0%;
+  }
+}
+
+@keyframes eyebrowCaretBlinkLoop {
+  0%, 23% {
+    opacity: 1;
+  }
+  27%, 35%, 43%, 51%, 59% {
+    opacity: 0;
+  }
+  31%, 39%, 47%, 55%, 62% {
+    opacity: 1;
+  }
+  62%, 79% {
+    opacity: 1;
+  }
+  84%, 94% {
+    opacity: 0;
+  }
+  89%, 99%, 100% {
+    opacity: 1;
+  }
+}
+
+/* -------------------------------------------------------------------------
+   3. Two-Line Hero Heading & Rebalanced Layout (Clipping Fix)
+   ------------------------------------------------------------------------- */
+.headingRow {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  margin-bottom: clamp(38px, 4.5vh, 58px);
+}
+
+@media (min-width: 1024px) {
+  .headingRow {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(360px, 0.45fr);
+    align-items: flex-end;
+    gap: clamp(44px, 4vw, 88px);
+  }
+}
+
+.headingBlock {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 0.95;
+  color: #21070A;
+  max-width: 1180px;
+  overflow: visible;
+  font-size: clamp(38px, 9vw, 48px);
+}
+
+@media (min-width: 640px) {
+  .headingBlock {
+    font-size: clamp(46px, 5.8vw, 54px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .headingBlock {
+    font-size: clamp(50px, 4.1vw, 66px);
+    line-height: 0.95;
+  }
+}
+
+@media (min-width: 1280px) {
+  .headingBlock {
+    font-size: clamp(62px, 4.0vw, 78px);
+    line-height: 0.95;
+  }
+}
+
+@media (min-width: 1536px) {
+  .headingBlock {
+    font-size: clamp(68px, 4.0vw, 84px);
+    line-height: 0.95;
+  }
+}
+
+.headingReveal {
+  display: block;
+  overflow: visible;
+}
+
+.headingLine {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(24px);
+  filter: blur(3px);
+  clip-path: inset(0 0 100% 0);
+  will-change: transform, opacity, filter, clip-path;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-image: linear-gradient(90deg, #6C101A 0%, #3A090E 70%, #181313 100%);
+}
+
+:global(.dark) .headingLine {
+  background-image: linear-gradient(90deg, #F5EDEB 0%, #EFB0B5 50%, #F5EDEB 100%);
+}
+
+/* Force Line 1 to remain exactly on ONE visual line across desktop & laptop */
+@media (min-width: 1024px) {
+  .headingLineOne {
+    white-space: nowrap !important;
+  }
+}
+
+.animateIn .headingLineOne {
+  animation: headingReveal 820ms cubic-bezier(0.16, 1, 0.3, 1) 80ms forwards;
+}
+
+.animateIn .headingLineTwo {
+  animation: headingReveal 820ms cubic-bezier(0.16, 1, 0.3, 1) 220ms forwards;
+}
+
+@keyframes headingReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(24px);
+    filter: blur(3px);
+    clip-path: inset(0 0 100% 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.description {
+  font-family: inherit;
+  font-weight: 400;
+  font-size: 14.5px;
+  line-height: 1.6;
+  max-width: clamp(440px, 30vw, 510px);
+  flex-shrink: 0;
+  color: #5F5754;
+  opacity: 0;
+  transform: translateY(12px);
+  will-change: transform, opacity;
+  transition: color 300ms ease;
+}
+
+:global(.dark) .description {
+  color: #CFC2BF;
+}
+
+@media (min-width: 1024px) {
+  .description {
+    font-size: 15.5px;
+    line-height: 1.62;
+  }
+}
+
+@media (min-width: 1440px) {
+  .description {
+    font-size: 16.5px;
+  }
+}
+
+.animateIn .description {
+  animation: descReveal 680ms cubic-bezier(0.16, 1, 0.3, 1) 360ms forwards;
+}
+
+@keyframes descReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* -------------------------------------------------------------------------
+   4. Glass Card Grid & Entrance
+   ------------------------------------------------------------------------- */
+.cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 18px;
+}
+
+@media (min-width: 640px) {
+  .cardsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .cardsGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 22px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .cardsGrid {
+    gap: 26px;
+  }
+}
+
+.cardWrapper {
+  opacity: 0;
+  transform: translateY(24px);
+  will-change: transform, opacity;
+  height: 100%;
+}
+
+.animateIn .cardWrapper:nth-child(1) {
+  animation: cardEntrance 660ms cubic-bezier(0.16, 1, 0.3, 1) 220ms forwards;
+}
+
+.animateIn .cardWrapper:nth-child(2) {
+  animation: cardEntrance 660ms cubic-bezier(0.16, 1, 0.3, 1) 330ms forwards;
+}
+
+.animateIn .cardWrapper:nth-child(3) {
+  animation: cardEntrance 660ms cubic-bezier(0.16, 1, 0.3, 1) 440ms forwards;
+}
+
+.animateIn .cardWrapper:nth-child(4) {
+  animation: cardEntrance 660ms cubic-bezier(0.16, 1, 0.3, 1) 550ms forwards;
+}
+
+@keyframes cardEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* -------------------------------------------------------------------------
+   5. Liquid Glass Track Cards & Interactive Hover Glow
+   ------------------------------------------------------------------------- */
+.cardLink {
+  group: true;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  text-decoration: none;
+  outline: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  /* Liquid Glass Light Material */
+  background: linear-gradient(145deg, rgba(255, 252, 249, 0.78), rgba(255, 246, 243, 0.58));
+  border: 1px solid rgba(143, 23, 35, 0.14);
+  box-shadow:
+    0 14px 36px rgba(76, 30, 33, 0.08),
+    0 2px 8px rgba(92, 25, 31, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.70);
+
+  backdrop-filter: blur(14px) saturate(1.08);
+  -webkit-backdrop-filter: blur(14px) saturate(1.08);
+
+  /* Precise layered transition (NO transition: all) */
+  transition:
+    transform 380ms cubic-bezier(0.22, 1, 0.36, 1),
+    background 380ms ease,
+    border-color 380ms ease,
+    box-shadow 380ms ease;
+}
+
+:global(.dark) .cardLink {
+  /* Liquid Glass Dark Wine Material */
+  background: linear-gradient(145deg, rgba(38, 9, 13, 0.76), rgba(23, 5, 8, 0.60));
+  border: 1px solid rgba(239, 116, 129, 0.18);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.26),
+    0 3px 12px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 215, 220, 0.06);
+
+  backdrop-filter: blur(14px) saturate(1.05);
+  -webkit-backdrop-filter: blur(14px) saturate(1.05);
+}
+
+/* Hover & Focus-Visible Lift with Diffused Burgundy / Gold Glow */
+.cardLink:hover,
+.cardLink:focus-visible {
+  transform: translateY(-6px) scale(1.01);
+  background: linear-gradient(145deg, rgba(255, 254, 252, 0.88), rgba(255, 249, 246, 0.72));
+  border-color: rgba(181, 31, 51, 0.45);
+  box-shadow:
+    0 24px 62px rgba(143, 23, 35, 0.18),
+    0 0 34px rgba(181, 31, 51, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+:global(.dark) .cardLink:hover,
+:global(.dark) .cardLink:focus-visible {
+  background: linear-gradient(145deg, rgba(48, 12, 18, 0.86), rgba(30, 7, 11, 0.72));
+  border-color: rgba(232, 184, 93, 0.45);
+  box-shadow:
+    0 26px 70px rgba(0, 0, 0, 0.40),
+    0 0 36px rgba(232, 184, 93, 0.11),
+    inset 0 1px 0 rgba(255, 215, 220, 0.12);
+}
+
+/* Accessible Keyboard Focus Ring */
+.cardLink:focus-visible {
+  outline: 2px solid #B51F33;
+  outline-offset: 3px;
+}
+
+:global(.dark) .cardLink:focus-visible {
+  outline: 2px solid #E8B85D;
+  outline-offset: 3px;
+}
+
+/* -------------------------------------------------------------------------
+   6. Dedicated Visible Moving Edge-Light Element (Part 3 & 16)
+   - Padding 2px, z-index 6, drop-shadow glow
+   - Light Mode = RED/ROSE (#B51F33, #EF7481, #FFD5DA)
+   - Dark Mode = WARM GOLD (#C89236, #E8B85D, #FFE7A6)
+   - Linear infinite orbit after 450ms delay
+   ------------------------------------------------------------------------- */
+.edgeLight {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 2px;
+  pointer-events: none;
+  z-index: 6;
+  opacity: 0;
+  transition: opacity 300ms ease;
+  background: conic-gradient(
+    from var(--edge-angle, 0deg),
+    transparent 0deg,
+    transparent 300deg,
+    rgba(181, 31, 51, 0.25) 310deg,
+    #B51F33 324deg,
+    #EF7481 338deg,
+    #FFD5DA 347deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  filter: drop-shadow(0 0 5px rgba(181, 31, 51, 0.36));
+}
+
+:global(.dark) .edgeLight {
+  background: conic-gradient(
+    from var(--edge-angle, 0deg),
+    transparent 0deg,
+    transparent 300deg,
+    rgba(200, 146, 54, 0.25) 310deg,
+    #C89236 324deg,
+    #E8B85D 338deg,
+    #FFE7A6 347deg,
+    transparent 360deg
+  );
+  filter: drop-shadow(0 0 5px rgba(232, 184, 93, 0.34));
+}
+
+.cardLink:hover .edgeLight,
+.cardLink:focus-visible .edgeLight {
+  opacity: 1;
+  animation: edgeBorderOrbit 2.8s linear 450ms infinite;
+}
+
+/* Internal Refraction Highlight */
+.glassHighlight {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    80% 60% at 15% 0%,
+    rgba(255, 255, 255, 0.16),
+    transparent 70%
+  );
+  opacity: 0.32;
+  transition: opacity 350ms ease;
+  z-index: 2;
+}
+
+:global(.dark) .glassHighlight {
+  background: radial-gradient(
+    80% 60% at 15% 0%,
+    rgba(255, 255, 255, 0.08),
+    transparent 70%
+  );
+  opacity: 0.14;
+}
+
+.cardLink:hover .glassHighlight,
+.cardLink:focus-visible .glassHighlight {
+  opacity: 0.55;
+}
+
+:global(.dark) .cardLink:hover .glassHighlight,
+:global(.dark) .cardLink:focus-visible .glassHighlight {
+  opacity: 0.26;
+}
+
+/* Faint Diagonal Glass Sheen */
+.cardLink::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  background: linear-gradient(
+    115deg,
+    transparent 25%,
+    rgba(255, 255, 255, 0.09) 48%,
+    transparent 70%
+  );
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 400ms ease;
+  z-index: 3;
+}
+
+:global(.dark) .cardLink::after {
+  background: linear-gradient(
+    115deg,
+    transparent 25%,
+    rgba(255, 255, 255, 0.05) 48%,
+    transparent 70%
+  );
+}
+
+.cardLink:hover::after,
+.cardLink:focus-visible::after {
+  opacity: 1;
+}
+
+/* -------------------------------------------------------------------------
+   7. Card Image & Badge
+   ------------------------------------------------------------------------- */
+.imageContainer {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  height: 172px;
+  background-color: #E7DFD9;
+}
+
+@media (min-width: 640px) {
+  .imageContainer {
+    height: 142px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .imageContainer {
+    height: 154px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .imageContainer {
+    height: 170px;
+  }
+}
+
+:global(.dark) .imageContainer {
+  background-color: #19090C;
+}
+
+.cardImage {
+  object-fit: cover;
+  object-position: center;
+  transition: transform 650ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.cardLink:hover .cardImage,
+.cardLink:focus-visible .cardImage {
+  transform: scale(1.045) translateY(-2px);
+}
+
+.imageOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    rgba(28, 5, 8, 0.65) 0%,
+    rgba(28, 5, 8, 0.15) 50%,
+    transparent 100%
+  );
+  transition: opacity 350ms ease;
+}
+
+.cardLink:hover .imageOverlay,
+.cardLink:focus-visible .imageOverlay {
+  opacity: 0.68;
+}
+
+.badgePill {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background-color: rgba(23, 18, 18, 0.76);
+  color: #FFF8F4;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+:global(.dark) .badgePill {
+  background-color: rgba(10, 7, 8, 0.78);
+  color: #FFF3EF;
+}
+
+/* -------------------------------------------------------------------------
+   8. Card Body, Typography & Alignment
+   ------------------------------------------------------------------------- */
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 18px;
+  position: relative;
+  z-index: 3;
+}
+
+@media (min-width: 1024px) {
+  .cardBody {
+    padding: 20px;
+  }
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.iconBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background-color: rgba(143, 23, 35, 0.10);
+  color: #8F1723;
+  transition: transform 260ms ease, background-color 260ms ease;
+}
+
+:global(.dark) .iconBox {
+  background-color: rgba(236, 116, 129, 0.15);
+  color: #EC7481;
+}
+
+.cardLink:hover .iconBox,
+.cardLink:focus-visible .iconBox {
+  transform: translateY(-1px) scale(1.06);
+  background-color: rgba(143, 23, 35, 0.18);
+}
+
+:global(.dark) .cardLink:hover .iconBox,
+:global(.dark) .cardLink:focus-visible .iconBox {
+  background-color: rgba(236, 116, 129, 0.25);
+}
+
+.cardTitle {
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: #2B2020;
+  transition: color 240ms ease;
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .cardTitle {
+    font-size: 16px;
+  }
+}
+
+:global(.dark) .cardTitle {
+  color: #FFF0EC;
+}
+
+.cardLink:hover .cardTitle,
+.cardLink:focus-visible .cardTitle {
+  color: #8F1723;
+}
+
+:global(.dark) .cardLink:hover .cardTitle,
+:global(.dark) .cardLink:focus-visible .cardTitle {
+  color: #F58A96;
+}
+
+.cardDescription {
+  font-family: inherit;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #655958;
+  flex: 1;
+  transition: color 240ms ease;
+}
+
+@media (min-width: 1440px) {
+  .cardDescription {
+    font-size: 14.5px;
+  }
+}
+
+:global(.dark) .cardDescription {
+  color: #CFC0BE;
+}
+
+.cardLink:hover .cardDescription,
+.cardLink:focus-visible .cardDescription {
+  color: #4B403F;
+}
+
+:global(.dark) .cardLink:hover .cardDescription,
+:global(.dark) .cardLink:focus-visible .cardDescription {
+  color: #E2D6D4;
+}
+
+/* -------------------------------------------------------------------------
+   9. Explore Track Row
+   ------------------------------------------------------------------------- */
+.exploreRow {
+  margin-top: auto;
+  padding-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(143, 23, 35, 0.10);
+  transition: border-color 280ms ease;
+}
+
+:global(.dark) .exploreRow {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.exploreText {
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  color: #A7192A;
+  transition: color 280ms ease;
+}
+
+@media (min-width: 1024px) {
+  .exploreText {
+    font-size: 13.5px;
+  }
+}
+
+:global(.dark) .exploreText {
+  color: #F58A96;
+}
+
+.cardLink:hover .exploreText,
+.cardLink:focus-visible .exploreText {
+  color: #83111F;
+}
+
+:global(.dark) .cardLink:hover .exploreText,
+:global(.dark) .cardLink:focus-visible .exploreText {
+  color: #FFA6B0;
+}
+
+.exploreArrowChamber {
+  width: 29px;
+  height: 29px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background-color: rgba(143, 23, 35, 0.08);
+  border: 1px solid rgba(143, 23, 35, 0.20);
+  color: #8F1723;
+  transition:
+    transform 300ms ease,
+    background-color 300ms ease,
+    color 300ms ease,
+    border-color 300ms ease;
+}
+
+:global(.dark) .exploreArrowChamber {
+  background-color: rgba(239, 116, 129, 0.12);
+  border: 1px solid rgba(239, 116, 129, 0.22);
+  color: #EC7481;
+}
+
+.cardLink:hover .exploreArrowChamber,
+.cardLink:focus-visible .exploreArrowChamber {
+  transform: scale(1.06);
+  background-color: #8F1723;
+  color: #FFFFFF;
+  border-color: #8F1723;
+}
+
+:global(.dark) .cardLink:hover .exploreArrowChamber,
+:global(.dark) .cardLink:focus-visible .exploreArrowChamber {
+  background-color: #EC7481;
+  color: #140507;
+  border-color: #EC7481;
+}
+
+.exploreArrowIcon {
+  transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cardLink:hover .exploreArrowIcon,
+.cardLink:focus-visible .exploreArrowIcon {
+  transform: translateX(5px);
+}
+
+/* -------------------------------------------------------------------------
+   10. Accessibility & Reduced Motion Overrides
+   ------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .typewriterGhost {
+    display: none !important;
+  }
+
+  .typewriterText {
+    position: static !important;
+    clip-path: none !important;
+    animation: none !important;
+    opacity: 1 !important;
+  }
+
+  .typewriterCaret {
+    display: none !important;
+    animation: none !important;
+  }
+
+  .headingLine,
+  .description,
+  .cardWrapper {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    animation: none !important;
+  }
+
+  .cardLink {
+    transition: none !important;
+  }
+
+  .cardLink:hover,
+  .cardLink:focus-visible {
+    transform: none !important;
+  }
+
+  .edgeLight {
+    display: none !important;
+    animation: none !important;
+  }
+
+  .cardImage,
+  .iconBox,
+  .exploreArrowChamber,
+  .exploreArrowIcon {
+    transition: none !important;
+    transform: none !important;
+  }
+}

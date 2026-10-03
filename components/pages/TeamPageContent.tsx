@@ -187,6 +187,39 @@ const ORGANISING_TEAM_SLIDES: CoverflowSlide[] = [
 export default function TeamPage() {
   const [selectedTeam, setSelectedTeam] = useState<'website' | 'organizing'>('website');
 
+  // Deep-link hash handling for #organizing-structure and #section-05-organizational-structure
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleTeamHash = () => {
+      const hash = window.location.hash.toLowerCase();
+      if (hash === '#organizing-structure' || hash === '#section-05-organizational-structure') {
+        setTimeout(() => {
+          const el =
+            document.getElementById('organizing-structure') ||
+            document.getElementById('section-05-organizational-structure');
+          if (!el) return;
+
+          const lenis = (window as any).__lenis;
+          const navbarHeight =
+            window.innerWidth >= 1280 ? 90 : window.innerWidth >= 640 ? 84 : 78;
+
+          if (lenis && typeof lenis.scrollTo === 'function') {
+            lenis.scrollTo(el, { offset: -navbarHeight, duration: 1.0 });
+          } else {
+            const rect = el.getBoundingClientRect();
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            window.scrollTo({ top: rect.top + scrollTop - navbarHeight, behavior: 'smooth' });
+          }
+        }, 200);
+      }
+    };
+
+    handleTeamHash();
+    window.addEventListener('hashchange', handleTeamHash);
+    return () => window.removeEventListener('hashchange', handleTeamHash);
+  }, []);
+
   const handleSelectTeam = (team: 'website' | 'organizing') => {
     setSelectedTeam(team);
     // On desktop, scroll to the dedicated showcase section below the cards
@@ -667,10 +700,11 @@ export default function TeamPage() {
           across 5 tracks, followed by the philosophical epigraph
           ───────────────────────────────────────────────────────────── */}
       <section
-        id="section-05-organizational-structure"
+        id="organizing-structure"
         aria-label="Organizational Structure & Hierarchy"
-        className="w-full py-20 sm:py-24 lg:py-28 bg-[#F5F3F0] dark:bg-[#1A0507] border-b border-[#3A0B10]/15 dark:border-[#F5F3F0]/10 transition-colors duration-300 relative overflow-hidden"
+        className="w-full py-20 sm:py-24 lg:py-28 bg-[#F5F3F0] dark:bg-[#1A0507] border-b border-[#3A0B10]/15 dark:border-[#F5F3F0]/10 transition-colors duration-300 relative overflow-hidden scroll-mt-24 sm:scroll-mt-28"
       >
+        <span id="section-05-organizational-structure" className="sr-only" />
         <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-12 space-y-16">
 
           {/* Section Header */}

@@ -32,9 +32,10 @@ const tracks = ['All', 'Workshop', 'Talk', 'Hackathon', 'Networking', 'Community
 interface ExploreScheduleProps {
   currentPhase: SchedulePhase;
   onPhaseChange: (phase: SchedulePhase) => void;
+  targetDayIndex?: number;
 }
 
-export function ExploreSchedule({ currentPhase, onPhaseChange }: ExploreScheduleProps) {
+export function ExploreSchedule({ currentPhase, onPhaseChange, targetDayIndex }: ExploreScheduleProps) {
   const [dayIndex, setDayIndex] = useState(0);
   const [activeTrack, setActiveTrack] = useState<(typeof tracks)[number]>('All');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -43,13 +44,13 @@ export function ExploreSchedule({ currentPhase, onPhaseChange }: ExploreSchedule
   const phaseInfo = getPhaseInfo(currentPhase);
   const currentDays = getPhaseDays(currentPhase);
 
-  // Reset day index & session selection when phase changes
+  // Reset or sync day index & session selection when phase or external targetDayIndex changes
   useEffect(() => {
-    setDayIndex(0);
+    setDayIndex(typeof targetDayIndex === 'number' && targetDayIndex >= 0 ? targetDayIndex : 0);
     setSelectedId(null);
     setSearch('');
     setActiveTrack('All');
-  }, [currentPhase]);
+  }, [currentPhase, targetDayIndex]);
 
   const activeDay: Day = currentDays[dayIndex] || currentDays[0];
 
@@ -260,6 +261,7 @@ export function ExploreSchedule({ currentPhase, onPhaseChange }: ExploreSchedule
                 return (
                   <button
                     key={item.id}
+                    id={item.id}
                     role="tab"
                     aria-selected={isActive}
                     onClick={() => selectDay(index)}
@@ -350,7 +352,10 @@ export function ExploreSchedule({ currentPhase, onPhaseChange }: ExploreSchedule
           >
             
             <div className="flex items-center justify-between px-2 pb-2 border-b border-[#D9D0CB] dark:border-white/10">
-              <h3 className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-[#13090A] dark:text-[#F6F2F1]">
+              <h3
+                id={activeDay ? `heading-${activeDay.id}` : undefined}
+                className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-[#13090A] dark:text-[#F6F2F1] scroll-mt-24 sm:scroll-mt-28"
+              >
                 {activeDay?.weekday}, {activeDay?.date} 2026
                 <span className="ml-2 text-xs font-sans font-normal text-[#665B57] dark:text-[#BEB5B4]">
                   ({visibleSessions.length} session{visibleSessions.length === 1 ? '' : 's'})
@@ -377,8 +382,9 @@ export function ExploreSchedule({ currentPhase, onPhaseChange }: ExploreSchedule
                   return (
                     <React.Fragment key={session.id}>
                       <div
+                        id={session.id}
                         onClick={() => setSelectedId(isSelected ? null : session.id)}
-                        className={`group relative flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-2xl border p-4 sm:p-5 transition-all duration-200 ease-in-out cursor-pointer ${
+                        className={`group relative flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-2xl border p-4 sm:p-5 transition-all duration-200 ease-in-out cursor-pointer scroll-mt-28 ${
                           isSelected
                             ? 'border-[#6C151E] bg-white dark:bg-white/10 shadow-lg ring-2 ring-[#6C151E]'
                             : 'border-[#D9D0CB] dark:border-white/10 bg-white/50 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 hover:shadow-md'

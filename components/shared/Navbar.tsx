@@ -520,26 +520,26 @@ export function Navbar() {
             style={{
               borderColor: isJoinHovered
                 ? 'transparent'
-                : (activeTheme === 'dark' ? 'rgba(239,116,129,0.30)' : 'rgba(108,21,30,0.55)'),
+                : (activeTheme === 'dark' ? 'rgba(239,116,129,0.26)' : 'rgba(122,17,27,0.22)'),
               transition: 'border-color 250ms cubic-bezier(0.22,1,0.36,1), background-color 280ms cubic-bezier(0.22,1,0.36,1), color 280ms cubic-bezier(0.22,1,0.36,1), box-shadow 250ms cubic-bezier(0.22,1,0.36,1), transform 250ms cubic-bezier(0.22,1,0.36,1)',
             }}
-            className="group relative flex h-[44px] min-w-[110px] items-center justify-between overflow-hidden rounded-[8px] pl-5 pr-2 text-[14px] font-semibold tracking-[0.01em] outline-none border bg-[#7A111B] text-[#FFF9F6] shadow-[0_4px_14px_rgba(108,21,30,0.12)] active:scale-[0.985] focus-visible:ring-2 focus-visible:ring-burgundy focus-visible:ring-offset-2 dark:bg-[#6C151E] dark:text-[#FFF5F3] dark:shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
+            className="group relative flex h-[44px] min-w-[110px] items-center justify-between overflow-hidden rounded-[8px] pl-5 pr-2 text-[14px] font-semibold tracking-[0.01em] outline-none border bg-[#8F1723] text-[#FFF8F4] shadow-[0_4px_14px_rgba(108,21,30,0.12)] active:scale-[0.985] focus-visible:ring-2 focus-visible:ring-burgundy focus-visible:ring-offset-2 dark:bg-[#841521] dark:text-[#FFF3EF] dark:shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
           >
-            {/* Expanding Chamber: strictly clipped inside button (380ms expansion / 320ms retraction) */}
+            {/* Expanding Chamber: strictly clipped inside button (400ms expansion / 320ms retraction) */}
             <span
               aria-hidden="true"
-              className="pointer-events-none absolute right-[8px] top-1/2 -translate-y-1/2 h-[28px] w-[28px] rounded-full bg-[#FFF7F2] transition-transform duration-[320ms] group-hover:duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[6.5] -z-0"
+              className="pointer-events-none absolute right-[8px] top-1/2 -translate-y-1/2 h-[28px] w-[28px] rounded-full bg-[#FFF7F2] transition-transform duration-[320ms] group-hover:duration-[400ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[6.5] -z-0"
             />
 
             {/* CTA Label (280ms transition) */}
-            <span className="relative z-10 transition-colors duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:text-[#7A111B] dark:group-hover:text-[#7A111B]">
+            <span className="relative z-10 transition-colors duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:text-[#851722] dark:group-hover:text-[#851722]">
               Join
             </span>
 
             {/* Circular Arrow Chamber & Icon (seamlessly merges into expanding fill) */}
             <span
               aria-hidden="true"
-              className="relative z-10 flex h-[28px] w-[28px] items-center justify-center rounded-full bg-[#FFF7F2] text-[#7A111B] dark:text-[#7A111B] border-0 border-transparent shadow-none"
+              className="relative z-10 flex h-[28px] w-[28px] items-center justify-center rounded-full bg-[#FFF8F4] dark:bg-[#FFF3EF] text-[#8F1723] dark:text-[#851722] border-0 border-transparent shadow-none"
             >
               <ArrowRight
                 size={15}
@@ -644,21 +644,21 @@ export function Navbar() {
                 style={{
                   borderColor: isMobileJoinHovered
                     ? 'transparent'
-                    : (activeTheme === 'dark' ? 'rgba(239,116,129,0.30)' : 'rgba(108,21,30,0.55)'),
+                    : (activeTheme === 'dark' ? 'rgba(239,116,129,0.26)' : 'rgba(122,17,27,0.22)'),
                   transition: 'border-color 250ms cubic-bezier(0.22,1,0.36,1), background-color 280ms cubic-bezier(0.22,1,0.36,1), color 280ms cubic-bezier(0.22,1,0.36,1), box-shadow 250ms cubic-bezier(0.22,1,0.36,1), transform 250ms cubic-bezier(0.22,1,0.36,1)',
                 }}
-                className="group relative flex h-12 w-full items-center justify-between overflow-hidden rounded-[8px] pl-6 pr-3 text-[15px] sm:text-base font-semibold tracking-[0.01em] outline-none border bg-[#7A111B] text-[#FFF9F6] shadow-[0_4px_14px_rgba(108,21,30,0.12)] active:scale-[0.985] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-burgundy dark:bg-[#6C151E] dark:text-[#FFF5F3]"
+                className="group relative flex h-12 w-full items-center justify-between overflow-hidden rounded-[8px] pl-6 pr-3 text-[15px] sm:text-base font-semibold tracking-[0.01em] outline-none border bg-[#8F1723] text-[#FFF8F4] shadow-[0_4px_14px_rgba(108,21,30,0.12)] active:scale-[0.985] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-burgundy dark:bg-[#841521] dark:text-[#FFF3EF]"
               >
                 <span
                   aria-hidden="true"
-                  className="pointer-events-none absolute right-[10px] top-1/2 -translate-y-1/2 h-[32px] w-[32px] rounded-full bg-[#FFF7F2] transition-transform duration-[320ms] group-hover:duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[16] -z-0"
+                  className="pointer-events-none absolute right-[10px] top-1/2 -translate-y-1/2 h-[32px] w-[32px] rounded-full bg-[#FFF7F2] transition-transform duration-[320ms] group-hover:duration-[400ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[16] -z-0"
                 />
-                <span className="relative z-10 transition-colors duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:text-[#7A111B] dark:group-hover:text-[#7A111B]">
+                <span className="relative z-10 transition-colors duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:text-[#851722] dark:group-hover:text-[#851722]">
                   Join Festival
                 </span>
                 <span
                   aria-hidden="true"
-                  className="relative z-10 flex h-[32px] w-[32px] items-center justify-center rounded-full bg-[#FFF7F2] text-[#7A111B] dark:text-[#7A111B] border-0 border-transparent shadow-none"
+                  className="relative z-10 flex h-[32px] w-[32px] items-center justify-center rounded-full bg-[#FFF8F4] dark:bg-[#FFF3EF] text-[#8F1723] dark:text-[#851722] border-0 border-transparent shadow-none"
                 >
                   <ArrowRight
                     size={17}

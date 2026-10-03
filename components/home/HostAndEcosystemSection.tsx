@@ -1,6 +1,9 @@
+'use client';
+
 import * as React from 'react';
 import Image from 'next/image';
 import { ArrowUpRight } from 'lucide-react';
+import styles from './HostAndEcosystemSection.module.css';
 
 interface EcosystemEntity {
   id: string;
@@ -11,6 +14,12 @@ interface EcosystemEntity {
   actionLabel: string;
   renderLogo: () => React.ReactNode;
 }
+
+const STATEMENTS = [
+  'Building a Stronger Quantum Tomorrow.',
+  'Building an Open Quantum Ecosystem.',
+  'Building a Connected Quantum Future.',
+];
 
 const ENTITIES: EcosystemEntity[] = [
   {
@@ -34,10 +43,10 @@ const ENTITIES: EcosystemEntity[] = [
           />
         </div>
         <div className="flex flex-col">
-          <span className="font-sans font-bold text-[14px] sm:text-[15px] leading-tight tracking-[0.04em] text-[#211718] dark:text-[#FFF4F1]">
+          <span className="font-sans font-bold text-[15px] sm:text-[16px] lg:text-[17px] leading-tight tracking-[0.04em] text-[#281D1E] dark:text-[#FFF1ED]">
             SRM UNIVERSITY-AP
           </span>
-          <span className="font-sans text-[11px] font-medium tracking-[0.14em] uppercase text-[#625754] dark:text-[#D8CCCA] mt-0.5">
+          <span className="font-sans text-[12px] sm:text-[13px] font-semibold tracking-[0.12em] uppercase text-[#625453] dark:text-[#D3C4C2] mt-0.5">
             Amaravati &middot; India
           </span>
         </div>
@@ -100,7 +109,7 @@ const ENTITIES: EcosystemEntity[] = [
             referrerPolicy="no-referrer"
           />
         </div>
-        <span className="font-sans font-bold text-[20px] sm:text-[22px] tracking-[-0.01em] text-[#211718] dark:text-[#FFF4F1]">
+        <span className="font-sans font-bold text-[22px] sm:text-[24px] tracking-[-0.01em] text-[#281D1E] dark:text-[#FFF1ED]">
           Qiskit
         </span>
       </div>
@@ -109,156 +118,209 @@ const ENTITIES: EcosystemEntity[] = [
 ];
 
 export function HostAndEcosystemSection() {
+  const sectionRef = React.useRef<HTMLElement>(null);
+  const [isVisible, setIsVisible] = React.useState(false);
+  const [currentIndex, setCurrentIndex] = React.useState(0);
+  const [outgoingIndex, setOutgoingIndex] = React.useState<number | null>(null);
+  const [prefersReducedMotion, setPrefersReducedMotion] = React.useState(false);
+  const rafIdRef = React.useRef<number | null>(null);
+
+  // Detect prefers-reduced-motion
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPrefersReducedMotion(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  // Section entrance trigger & pointer-reactive ambient atmosphere
+  React.useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.12 }
+    );
+
+    observer.observe(el);
+
+    // Pointer-reactive ambient background lighting for fine pointer devices
+    const isFinePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    if (isFinePointer) {
+      const handlePointerMove = (e: PointerEvent) => {
+        if (rafIdRef.current !== null) {
+          cancelAnimationFrame(rafIdRef.current);
+        }
+        rafIdRef.current = requestAnimationFrame(() => {
+          const rect = el.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          el.style.setProperty('--pointer-x', `${x}px`);
+          el.style.setProperty('--pointer-y', `${y}px`);
+          el.style.setProperty('--pointer-opacity', '1');
+        });
+      };
+
+      const handlePointerLeave = () => {
+        el.style.setProperty('--pointer-opacity', '0');
+      };
+
+      el.addEventListener('pointermove', handlePointerMove, { passive: true });
+      el.addEventListener('pointerleave', handlePointerLeave, { passive: true });
+
+      return () => {
+        observer.disconnect();
+        if (rafIdRef.current !== null) cancelAnimationFrame(rafIdRef.current);
+        el.removeEventListener('pointermove', handlePointerMove);
+        el.removeEventListener('pointerleave', handlePointerLeave);
+      };
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Continuous phrase rotation loop (3.4s hold per statement, 750ms transition)
+  React.useEffect(() => {
+    if (prefersReducedMotion) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => {
+        setOutgoingIndex(prev);
+        return (prev + 1) % STATEMENTS.length;
+      });
+    }, 3400);
+
+    return () => clearInterval(interval);
+  }, [prefersReducedMotion]);
+
+  // Clean up outgoing statement from DOM after 750ms transition
+  React.useEffect(() => {
+    if (outgoingIndex === null) return;
+    const timer = setTimeout(() => {
+      setOutgoingIndex(null);
+    }, 750);
+    return () => clearTimeout(timer);
+  }, [outgoingIndex]);
+
   return (
     <section
+      ref={sectionRef}
       id="section-06-host-and-ecosystem"
       aria-labelledby="host-ecosystem-heading"
-      className="
-        relative w-full overflow-hidden
-        bg-[#F7F2ED] dark:bg-[#0C0A0B]
-        transition-colors duration-300
-      "
+      className={`${styles.section} ${isVisible ? styles.animateIn : ''}`}
     >
-      <div
-        className="
-          w-full max-w-[1920px] mx-auto
-          px-5 sm:px-[34px] md:px-[52px] lg:px-[64px] xl:px-[76px] 2xl:px-[96px]
-          py-[38px] sm:py-[46px] lg:py-[52px] 2xl:py-[58px]
-        "
-      >
+      {/* Subtle Pointer-Reactive Ambient Spotlight */}
+      <div className={styles.pointerSpotlight} aria-hidden="true" />
+
+      <div className={styles.container}>
         {/* =========================================================
-            HEADER ROW: Editorial eyebrow + Headline & Narrative
+            HEADER ROW: Editorial eyebrow + Dynamic Rotating Headline + Narrative
+            Divider completely removed in both light & dark modes
         ========================================================== */}
-        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 sm:gap-6 pb-6 sm:pb-8 lg:pb-10 border-b border-[rgba(108,21,30,0.14)] dark:border-[rgba(255,235,232,0.14)]">
-          <div className="max-w-[620px]">
+        <div className={styles.headerRow}>
+          <div className="max-w-[820px]">
             {/* Eyebrow */}
-            <div className="flex items-center gap-[10px] mb-2.5 sm:mb-3">
-              <span
-                aria-hidden="true"
-                className="w-[5.5px] h-[5.5px] rotate-45 shrink-0 bg-[#8F1723] dark:bg-[#F06B78]"
-              />
-              <h2
-                id="host-ecosystem-heading"
-                className="
-                  font-sans font-bold uppercase
-                  text-[11px] sm:text-[12px] lg:text-[12.5px]
-                  tracking-[0.19em] leading-none
-                  text-[#8F1723] dark:text-[#F06B78]
-                "
-              >
-                HOST & ECOSYSTEM
+            <div className={styles.eyebrowContainer}>
+              <span aria-hidden="true" className={styles.eyebrowMarker} />
+              <h2 id="host-ecosystem-heading" className={styles.eyebrowText}>
+                HOST &amp; ECOSYSTEM
               </h2>
             </div>
 
-            {/* Display Title */}
-            <h3
-              className="
-                font-serif font-bold tracking-[-0.03em] leading-[1.0]
-                text-[26px] sm:text-[32px] lg:text-[38px] 2xl:text-[42px]
-                text-[#211718] dark:text-[#FFF4F1]
-              "
-            >
-              Building a Stronger Quantum Tomorrow.
-            </h3>
+            {/* Stable screen-reader description */}
+            <span className="sr-only">
+              Building a Stronger Quantum Tomorrow. An academic host, an industry ecosystem, and an open-source quantum platform coming together for Qiskit Fall Fest 2026.
+            </span>
+
+            {/* Vertical Phrase Rotator (Zero layout shift with ghost reservation) */}
+            <div className={styles.rotatingHeadlineViewport} aria-hidden="true">
+              {/* Ghost to reserve exact dimensions and prevent any layout shift */}
+              <span className={styles.headlineGhost}>
+                Building a Stronger Quantum Tomorrow.
+              </span>
+
+              {/* Clean single/two item rendering: only render outgoing during transition */}
+              {outgoingIndex !== null && (
+                <span
+                  key={`outgoing-${outgoingIndex}`}
+                  className={`${styles.statementItem} ${styles.statementOutgoing}`}
+                >
+                  {STATEMENTS[outgoingIndex]}
+                </span>
+              )}
+
+              <span
+                key={`current-${currentIndex}`}
+                className={`${styles.statementItem} ${
+                  outgoingIndex !== null ? styles.statementIncoming : styles.statementResting
+                }`}
+              >
+                {STATEMENTS[currentIndex]}
+              </span>
+            </div>
           </div>
 
-          {/* Secondary Copy */}
-          <p
-            className="
-              max-w-[440px]
-              font-sans font-normal
-              text-[12.5px] sm:text-[13px] lg:text-[13.5px]
-              leading-[1.55]
-              text-[#625754] dark:text-[#D8CCCA]
-            "
-          >
-            An academic host, an industry ecosystem, and an open-source quantum
-            platform coming together for Qiskit Fall Fest 2026.
+          {/* Secondary Intro Copy */}
+          <p className={styles.introCopy}>
+            An academic host, an industry ecosystem, and an open-source quantum platform coming together for Qiskit Fall Fest 2026.
           </p>
         </div>
 
         {/* =========================================================
-            3-ENTITY CARDS ROW WITH SEPARATORS
+            3-ENTITY LIQUID-GLASS CARDS ROW
+            Standalone cards with no separating divider lines
         ========================================================== */}
-        <div
-          className="
-            grid grid-cols-1
-            md:grid-cols-3
-            gap-0
-            pt-2 sm:pt-4
-          "
-        >
-          {ENTITIES.map((entity, index) => (
-            <article
-              key={entity.id}
-              className={`
-                group relative flex flex-col justify-between
-                p-5 sm:p-6 lg:p-7 2xl:p-8
-                transition-all duration-200 ease-out
-                hover:bg-[rgba(108,21,30,0.025)] dark:hover:bg-[rgba(255,235,232,0.025)]
-                ${
-                  index !== 0
-                    ? 'border-t md:border-t-0 md:border-l border-[rgba(108,21,30,0.14)] dark:border-[rgba(255,235,232,0.14)]'
-                    : ''
-                }
-              `}
-            >
-              <div>
-                {/* Role Pill */}
-                <div className="flex items-center justify-between mb-5 sm:mb-6">
-                  <span
-                    className="
-                      inline-flex items-center px-2.5 py-1 rounded-[4px]
-                      bg-[rgba(143,23,35,0.07)] dark:bg-[rgba(240,107,120,0.12)]
-                      border border-[rgba(143,23,35,0.18)] dark:border-[rgba(240,107,120,0.24)]
-                      font-sans font-bold text-[10px] sm:text-[10.5px]
-                      tracking-[0.14em] uppercase
-                      text-[#8F1723] dark:text-[#F06B78]
-                    "
-                  >
-                    {entity.role}
-                  </span>
+        <div className={styles.cardsGrid}>
+          {ENTITIES.map((entity) => (
+            <div key={entity.id} className={styles.cardWrapper}>
+              <article className={styles.ecosystemCard}>
+                {/* Moving Edge-Light Orbit Reflection */}
+                <span className={styles.edgeLight} aria-hidden="true" />
+
+                {/* Subtle Liquid Glass Internal Refraction Highlight */}
+                <span aria-hidden="true" className={styles.glassHighlight} />
+
+                <div className={styles.cardContent}>
+                  {/* Category Role Badge */}
+                  <div className={styles.roleBadgeRow}>
+                    <span className={styles.roleBadge}>
+                      {entity.role}
+                    </span>
+                  </div>
+
+                  {/* Logo Viewport (Consistent Baseline Across All Cards) */}
+                  <div className={styles.logoViewport}>
+                    {entity.renderLogo()}
+                  </div>
+
+                  {/* Supporting Description */}
+                  <p className={styles.cardDescription}>
+                    {entity.description}
+                  </p>
+
+                  {/* Action Link Row */}
+                  <div className={styles.ctaRow}>
+                    <a
+                      href={entity.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`${entity.actionLabel} (opens in a new tab)`}
+                      className={styles.ctaLink}
+                    >
+                      <span>{entity.actionLabel}</span>
+                      <ArrowUpRight className={styles.ctaArrow} strokeWidth={2.2} />
+                    </a>
+                  </div>
                 </div>
-
-                {/* Logo Presentation Viewport */}
-                <div className="h-[52px] sm:h-[58px] flex items-center mb-4">
-                  {entity.renderLogo()}
-                </div>
-
-                {/* Description */}
-                <p
-                  className="
-                    font-sans font-normal
-                    text-[12.5px] sm:text-[13px] 2xl:text-[13.5px]
-                    leading-[1.58]
-                    text-[#625754] dark:text-[#D8CCCA]
-                    max-w-[360px]
-                  "
-                >
-                  {entity.description}
-                </p>
-              </div>
-
-              {/* Action Link */}
-              <div className="pt-6 sm:pt-7 mt-auto">
-                <a
-                  href={entity.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={`${entity.actionLabel} (opens in a new tab)`}
-                  className="
-                    inline-flex items-center gap-1.5
-                    font-sans font-semibold text-[12px] sm:text-[12.5px]
-                    text-[#8F1723] dark:text-[#F06B78]
-                    hover:text-[#6C151E] dark:hover:text-[#FFA6B0]
-                    transition-colors duration-180
-                  "
-                >
-                  <span>{entity.actionLabel}</span>
-                  <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-180 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                </a>
-              </div>
-            </article>
+              </article>
+            </div>
           ))}
         </div>
       </div>

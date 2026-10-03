@@ -1,7 +1,10 @@
+'use client';
+
 import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { BriefcaseBusiness, Boxes, Atom, Users, ArrowRight } from 'lucide-react';
+import styles from './EventHighlights.module.css';
 
 interface HighlightItem {
   id: string;
@@ -23,7 +26,7 @@ const HIGHLIGHTS: HighlightItem[] = [
     icon: BriefcaseBusiness,
     imageSrc: '/images/home/highlights/workshops.jpg',
     imageAlt: 'World-Class Quantum Workshops and hands-on laboratory sessions',
-    href: '/experience',
+    href: '/schedule#online-day-1',
   },
   {
     id: 'hackathons',
@@ -33,7 +36,7 @@ const HIGHLIGHTS: HighlightItem[] = [
     icon: Boxes,
     imageSrc: '/images/home/highlights/hackathons.jpg',
     imageAlt: 'Quantum Hackathon collaboration and software builds',
-    href: '/experience',
+    href: '/schedule#offline-day-3',
   },
   {
     id: 'sessions',
@@ -43,7 +46,7 @@ const HIGHLIGHTS: HighlightItem[] = [
     icon: Atom,
     imageSrc: '/images/home/highlights/sessions.jpg',
     imageAlt: 'Keynotes and technical presentations on quantum computing',
-    href: '/schedule',
+    href: '/schedule#online-day-2',
   },
   {
     id: 'community',
@@ -53,216 +56,190 @@ const HIGHLIGHTS: HighlightItem[] = [
     icon: Users,
     imageSrc: '/images/home/highlights/community.jpg',
     imageAlt: 'Global quantum community networking and collaboration',
-    href: '/team',
+    href: '/team#organizing-structure',
   },
 ];
 
 export function EventHighlights() {
+  const sectionRef = React.useRef<HTMLElement>(null);
+  const [isVisible, setIsVisible] = React.useState(false);
+  const rafIdRef = React.useRef<number | null>(null);
+
+  React.useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+
+    // Trigger one-time editorial entrance motion when section enters viewport
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.12 }
+    );
+
+    observer.observe(el);
+
+    // Pointer-reactive ambient lighting for fine pointer devices
+    const isFinePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    if (isFinePointer) {
+      const handlePointerMove = (e: PointerEvent) => {
+        if (rafIdRef.current !== null) {
+          cancelAnimationFrame(rafIdRef.current);
+        }
+        rafIdRef.current = requestAnimationFrame(() => {
+          const rect = el.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          el.style.setProperty('--pointer-x', `${x}px`);
+          el.style.setProperty('--pointer-y', `${y}px`);
+          el.style.setProperty('--pointer-opacity', '1');
+        });
+      };
+
+      const handlePointerLeave = () => {
+        el.style.setProperty('--pointer-opacity', '0');
+      };
+
+      el.addEventListener('pointermove', handlePointerMove, { passive: true });
+      el.addEventListener('pointerleave', handlePointerLeave, { passive: true });
+
+      return () => {
+        observer.disconnect();
+        if (rafIdRef.current !== null) cancelAnimationFrame(rafIdRef.current);
+        el.removeEventListener('pointermove', handlePointerMove);
+        el.removeEventListener('pointerleave', handlePointerLeave);
+      };
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <section
+      ref={sectionRef}
       id="section-04-event-highlights"
       aria-labelledby="highlights-heading"
-      className="
-        relative w-full overflow-hidden
-        bg-[#F7F2ED] dark:bg-[#0A0909]
-        transition-colors duration-300
-      "
+      className={`${styles.section} ${isVisible ? styles.animateIn : ''}`}
     >
-      <div
-        className="
-          w-full max-w-[1920px] mx-auto
-          px-5 sm:px-[34px] md:px-[54px] lg:px-[72px] 2xl:px-[92px]
-          py-8 sm:py-10 lg:py-12 xl:py-14
-        "
-      >
+      {/* Subtle Pointer-Reactive Ambient Spotlight */}
+      <div className={styles.pointerSpotlight} aria-hidden="true" />
+
+      <div className={styles.sectionContainer}>
         {/* =========================================================
-            HEADER SECTION: Primary Title & Description Layout
+            HEADER SECTION: Continuous Typewriter Eyebrow &
+            Staggered Editorial Heading + Description (No Divider)
         ========================================================== */}
-        <div className="mb-8 lg:mb-10 xl:mb-12">
-          {/* Eyebrow Label with Diamond Marker */}
-          <div className="flex items-center gap-[10px] mb-3">
-            <span
-              aria-hidden="true"
-              className="
-                w-[6px] h-[6px] rotate-45 shrink-0
-                bg-[#8F1723] dark:bg-[#EC7481]
-              "
-            />
-            <span
-              className="
-                font-sans font-bold uppercase
-                text-[11px] sm:text-[12px] lg:text-[13px]
-                tracking-[0.2em] leading-none
-                text-[#8F1723] dark:text-[#EC7481]
-              "
-            >
-              EVENT HIGHLIGHTS
+        <div className="mb-2">
+          {/* Eyebrow with diamond marker and continuous typewriter */}
+          <div className={styles.eyebrowContainer}>
+            <span aria-hidden="true" className={styles.eyebrowMarker} />
+
+            {/* Accessible screen reader announcement */}
+            <span className="sr-only">EVENT HIGHLIGHTS</span>
+
+            {/* Visual continuous typing/deleting typewriter loop */}
+            <span className={styles.typewriterContainer} aria-hidden="true">
+              <span className={styles.typewriterGhost}>EVENT HIGHLIGHTS</span>
+              <span className={styles.typewriterText}>EVENT HIGHLIGHTS</span>
+              <span className={styles.typewriterCaret} />
             </span>
           </div>
 
-          {/* Dual Column Section Title & Description */}
-          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 pb-6 border-b border-[#8F1723]/15 dark:border-white/10">
-            <h2
-              id="highlights-heading"
-              className="
-                font-serif font-bold tracking-[-0.035em]
-                text-[32px] sm:text-[40px] md:text-[46px] lg:text-[50px] 2xl:text-[56px]
-                leading-[1.05] max-w-[780px]
-                text-transparent bg-clip-text
-                bg-[linear-gradient(90deg,#6C101A_0%,#3A090E_70%,#181313_100%)]
-                dark:bg-[linear-gradient(90deg,#F5EDEB_0%,#EFB0B5_50%,#F5EDEB_100%)]
-              "
-            >
-              Immersive Quantum Experiences & Tracks.
+          {/* Heading Row: Staggered Two-Line Reveal & Description */}
+          <div className={styles.headingRow}>
+            <h2 id="highlights-heading" className={styles.headingBlock}>
+              <span className={styles.headingReveal}>
+                <span className={`${styles.headingLine} ${styles.headingLineOne}`}>
+                  Immersive Quantum Experiences
+                </span>
+              </span>
+              <span className={styles.headingReveal}>
+                <span className={`${styles.headingLine} ${styles.headingLineTwo}`}>
+                  &amp; Tracks.
+                </span>
+              </span>
             </h2>
 
-            <p
-              className="
-                font-sans font-normal
-                text-[14px] sm:text-[15px] lg:text-[15.5px]
-                leading-[1.6]
-                text-[#5F5754] dark:text-[#BFB5B1]
-                max-w-[440px] shrink-0
-              "
-            >
+            <p className={styles.description}>
               From hands-on Qiskit SDK workshops and competitive hackathons to keynote sessions and global community networking at SRM University-AP.
             </p>
           </div>
         </div>
 
         {/* =========================================================
-            HIGHLIGHT CARDS GRID
-            Desktop: 4 equal columns
-            Tablet: 2x2 grid
-            Mobile: 1 column
+            HIGHLIGHT CARDS GRID: 4 Liquid Glass Track Surfaces
+            - Desktop: 4 equal columns
+            - Tablet: 2x2 grid
+            - Mobile: 1 column
         ========================================================== */}
-        <div
-          className="
-            grid grid-cols-1
-            sm:grid-cols-2
-            lg:grid-cols-4
-            gap-4 sm:gap-5 xl:gap-6
-          "
-        >
+        <div className={styles.cardsGrid}>
           {HIGHLIGHTS.map((card) => {
             const IconComponent = card.icon;
             return (
-              <article
-                key={card.id}
-                className="
-                  group relative flex flex-col
-                  rounded-[10px] overflow-hidden
-                  bg-[#FBF7F3] dark:bg-[#121111]
-                  border border-[rgba(108,21,30,0.14)] dark:border-[rgba(255,235,231,0.13)]
-                  hover:border-[rgba(143,23,35,0.38)] dark:hover:border-[rgba(239,116,129,0.40)]
-                  shadow-[0_8px_26px_rgba(67,30,32,0.05)] dark:shadow-[0_8px_28px_rgba(0,0,0,0.18)]
-                  hover:shadow-[0_14px_36px_rgba(67,30,32,0.12)] dark:hover:shadow-[0_14px_38px_rgba(0,0,0,0.38)]
-                  transition-all duration-300 ease-out
-                  hover:-translate-y-1
-                  min-h-[auto] sm:min-h-[290px] lg:min-h-[310px]
-                "
-              >
-                {/* Image Top Area */}
-                <div
-                  className="
-                    relative w-full overflow-hidden
-                    h-[175px] sm:h-[135px] lg:h-[145px] 2xl:h-[160px]
-                    bg-[#E9E2DC] dark:bg-[#191717]
-                  "
+              <div key={card.id} className={styles.cardWrapper}>
+                <Link
+                  href={card.href}
+                  className={styles.cardLink}
+                  aria-label={`${card.title} — Explore Track`}
                 >
-                  <Image
-                    src={card.imageSrc}
-                    alt={card.imageAlt}
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                    className="
-                      object-cover object-center
-                      transition-transform duration-500 ease-out
-                      group-hover:scale-105
-                    "
-                    referrerPolicy="no-referrer"
-                  />
-                  {/* Subtle tonal wash to integrate seamlessly into dark/light surfaces */}
-                  <div
-                    aria-hidden="true"
-                    className="
-                      absolute inset-0 pointer-events-none
-                      bg-gradient-to-t from-[#240609]/60 via-transparent to-transparent
-                    "
-                  />
+                  {/* Moving Edge-Light Orbit Reflection */}
+                  <span className={styles.edgeLight} aria-hidden="true" />
 
-                  {/* Category Tag Pill */}
-                  <div className="absolute top-3 left-3 z-10">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[9.5px] font-mono font-bold tracking-wider uppercase bg-[#181313]/80 dark:bg-black/80 backdrop-blur-md text-white border border-white/20">
+                  {/* Subtle Liquid Glass Internal Refraction Highlight */}
+                  <span aria-hidden="true" className={styles.glassHighlight} />
+
+                  {/* Top Media: Image with subtle brand gradient overlay & category badge */}
+                  <div className={styles.imageContainer}>
+                    <Image
+                      src={card.imageSrc}
+                      alt={card.imageAlt}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      className={styles.cardImage}
+                      referrerPolicy="no-referrer"
+                    />
+
+                    {/* Subtle tonal wash */}
+                    <div aria-hidden="true" className={styles.imageOverlay} />
+
+                    {/* Category Tag Badge */}
+                    <span className={styles.badgePill}>
                       {card.tag}
                     </span>
                   </div>
-                </div>
 
-                {/* Card Body */}
-                <div
-                  className="
-                    flex flex-col flex-1
-                    p-4 sm:p-5 lg:p-5
-                  "
-                >
-                  {/* Title row with icon */}
-                  <div className="flex items-center gap-2.5 mb-2">
-                    <div className="p-1.5 rounded-md bg-[#8F1723]/10 dark:bg-[#EC7481]/15 text-[#8F1723] dark:text-[#EC7481]">
-                      <IconComponent
-                        aria-hidden="true"
-                        strokeWidth={2}
-                        className="w-4 h-4 shrink-0"
-                      />
+                  {/* Card Body: Title with Icon, Description, and Explore Action */}
+                  <div className={styles.cardBody}>
+                    {/* Title Row with Brand Icon */}
+                    <div className={styles.titleRow}>
+                      <div className={styles.iconBox} aria-hidden="true">
+                        <IconComponent strokeWidth={2} className="w-4 h-4 shrink-0" />
+                      </div>
+                      <h3 className={styles.cardTitle}>
+                        {card.title}
+                      </h3>
                     </div>
-                    <h3
-                      className="
-                        font-sans font-bold
-                        text-[15px] sm:text-[14.5px] xl:text-[15px]
-                        leading-[1.25] tracking-[-0.01em]
-                        text-[#261B1B] dark:text-[#F6F1EF]
-                      "
-                    >
-                      {card.title}
-                    </h3>
-                  </div>
 
-                  {/* Card Description */}
-                  <p
-                    className="
-                      font-sans font-normal
-                      text-[13px] sm:text-[12.5px] xl:text-[13px]
-                      leading-[1.5]
-                      text-[#665E5A] dark:text-[#BDB4B1]
-                    "
-                  >
-                    {card.description}
-                  </p>
+                    {/* Card Description */}
+                    <p className={styles.cardDescription}>
+                      {card.description}
+                    </p>
 
-                  {/* Card Action Link */}
-                  <div className="mt-auto pt-4 flex items-center justify-between border-t border-[#8F1723]/10 dark:border-white/10 mt-3">
-                    <span className="text-[11.5px] font-semibold text-[#8F1723] dark:text-[#EC7481] group-hover:underline">
-                      Explore Track
-                    </span>
-                    <Link
-                      href={card.href}
-                      aria-label={`View ${card.title}`}
-                      className="
-                        w-7 h-7 rounded-full shrink-0
-                        bg-[#8F1723]/10 dark:bg-[#EC7481]/15
-                        border border-[rgba(108,21,30,0.25)] dark:border-[rgba(240,116,129,0.30)]
-                        flex items-center justify-center
-                        text-[#8F1723] dark:text-[#EC7481]
-                        transition-all duration-300
-                        group-hover:translate-x-1 group-hover:bg-[#8F1723] group-hover:text-white
-                        dark:group-hover:bg-[#EC7481] dark:group-hover:text-black
-                      "
-                    >
-                      <ArrowRight className="w-3.5 h-3.5" strokeWidth={2.2} />
-                    </Link>
+                    {/* Explore Track Row */}
+                    <div className={styles.exploreRow}>
+                      <span className={styles.exploreText}>
+                        Explore Track
+                      </span>
+                      <span className={styles.exploreArrowChamber} aria-hidden="true">
+                        <ArrowRight className={`w-3.5 h-3.5 ${styles.exploreArrowIcon}`} strokeWidth={2.2} />
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </article>
+                </Link>
+              </div>
             );
           })}
         </div>
