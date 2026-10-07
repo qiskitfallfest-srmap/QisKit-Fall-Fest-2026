@@ -18,6 +18,7 @@ import {
   Video,
   ChevronRight,
 } from 'lucide-react';
+import clsx from 'clsx';
 
 export default function SessionPlayerPage() {
   const params = useParams();
@@ -28,6 +29,7 @@ export default function SessionPlayerPage() {
   const { session: dynamicSession } = useCurriculumSession(sessionId);
   const session = dynamicSession || CURRICULUM_SESSIONS.find((s) => s.id === sessionId);
   const quiz = SESSION_QUIZZES[sessionId];
+  const hasReferenceMaterial = Boolean(session?.lectureNotesUrl?.trim() || session?.slidesUrl?.trim());
 
   const [videoCompleted, setVideoCompleted] = useState(false);
   const [quizPassed, setQuizPassed] = useState(false);
@@ -243,7 +245,12 @@ export default function SessionPlayerPage() {
             </div>
 
             {/* Resources and Lecturer Profile Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div
+              className={clsx(
+                'grid gap-5',
+                hasReferenceMaterial ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'
+              )}
+            >
               {/* Lecturer Profile Card */}
               <div className="p-5 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl shadow-xs space-y-4">
                 <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-burgundy dark:text-[#E89BA5] block">
@@ -273,66 +280,70 @@ export default function SessionPlayerPage() {
                 </div>
               </div>
 
-              {/* Lecture Notes & Resources */}
-              <div className="p-5 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl shadow-xs space-y-3">
-                <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-burgundy dark:text-[#E89BA5] block">
-                  Reference Material
-                </span>
+              {/* Lecture Notes & Resources - ONLY rendered if actual URLs are provided */}
+              {hasReferenceMaterial && (
+                <div className="p-5 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl shadow-xs space-y-3">
+                  <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-burgundy dark:text-[#E89BA5] block">
+                    Reference Material
+                  </span>
 
-                <div className="space-y-2 text-xs">
-                  {session.lectureNotesUrl && (
-                    <a
-                      href={session.lectureNotesUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-2.5 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-slate-50 dark:bg-[#1C0A0D] hover:bg-slate-100 dark:hover:bg-[#250D11] flex items-center justify-between text-slate-800 dark:text-[#FAF6F3] font-medium transition-colors"
-                    >
-                      <span className="flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
-                        Official Documentation & Guides
-                      </span>
-                      <ExternalLink className="w-3 h-3 text-slate-400" />
-                    </a>
-                  )}
-
-                  {session.slidesUrl && (
-                    <a
-                      href={session.slidesUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-2.5 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-slate-50 dark:bg-[#1C0A0D] hover:bg-slate-100 dark:hover:bg-[#250D11] flex items-center justify-between text-slate-800 dark:text-[#FAF6F3] font-medium transition-colors"
-                    >
-                      <span className="flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
-                        Tutorial Code & Notebooks
-                      </span>
-                      <ExternalLink className="w-3 h-3 text-slate-400" />
-                    </a>
-                  )}
-                </div>
-
-                {/* Next session pointer */}
-                {isSessionFullyDone && nextSession && (
-                  <div className="pt-3 border-t border-slate-100 dark:border-[#3D1418]">
-                    <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5">Up Next</span>
-                    <Link
-                      href={`/learning/session/${nextSession.id}`}
-                      className="p-2.5 rounded-lg border border-slate-200 dark:border-[#3D1418] hover:border-burgundy/40 dark:hover:border-[#E89BA5]/40 bg-slate-50 dark:bg-[#1C0A0D] hover:bg-white dark:hover:bg-[#250D11] transition-all flex items-center justify-between group"
-                    >
-                      <div className="truncate pr-2">
-                        <span className="font-mono text-[10px] uppercase font-bold text-burgundy dark:text-[#E89BA5] block">
-                          Session {nextSession.sessionNumber}
+                  <div className="space-y-2 text-xs">
+                    {session.lectureNotesUrl?.trim() && (
+                      <a
+                        href={session.lectureNotesUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2.5 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-slate-50 dark:bg-[#1C0A0D] hover:bg-slate-100 dark:hover:bg-[#250D11] flex items-center justify-between text-slate-800 dark:text-[#FAF6F3] font-medium transition-colors"
+                      >
+                        <span className="flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
+                          Official Documentation & Guides
                         </span>
-                        <span className="text-xs font-semibold text-slate-800 dark:text-[#FAF6F3] group-hover:text-burgundy dark:group-hover:text-[#E89BA5] truncate block">
-                          {nextSession.title}
+                        <ExternalLink className="w-3 h-3 text-slate-400" />
+                      </a>
+                    )}
+
+                    {session.slidesUrl?.trim() && (
+                      <a
+                        href={session.slidesUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2.5 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-slate-50 dark:bg-[#1C0A0D] hover:bg-slate-100 dark:hover:bg-[#250D11] flex items-center justify-between text-slate-800 dark:text-[#FAF6F3] font-medium transition-colors"
+                      >
+                        <span className="flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
+                          Tutorial Code & Notebooks
                         </span>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-burgundy dark:group-hover:text-[#E89BA5] shrink-0" />
-                    </Link>
+                        <ExternalLink className="w-3 h-3 text-slate-400" />
+                      </a>
+                    )}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
+
+            {/* Next session pointer */}
+            {isSessionFullyDone && nextSession && (
+              <div className="p-4 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl shadow-xs">
+                <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5">
+                  Up Next
+                </span>
+                <Link
+                  href={`/learning/session/${nextSession.id}`}
+                  className="p-3 rounded-lg border border-slate-200 dark:border-[#3D1418] hover:border-burgundy/40 dark:hover:border-[#E89BA5]/40 bg-slate-50 dark:bg-[#1C0A0D] hover:bg-white dark:hover:bg-[#250D11] transition-all flex items-center justify-between group"
+                >
+                  <div className="truncate pr-2">
+                    <span className="font-mono text-[10px] uppercase font-bold text-burgundy dark:text-[#E89BA5] block">
+                      Session {nextSession.sessionNumber}
+                    </span>
+                    <span className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-[#FAF6F3] group-hover:text-burgundy dark:group-hover:text-[#E89BA5] truncate block">
+                      {nextSession.title}
+                    </span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-burgundy dark:group-hover:text-[#E89BA5] shrink-0" />
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>
