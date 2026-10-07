@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useTheme } from 'next-themes';
@@ -23,8 +23,10 @@ import {
   ExternalLink,
   Maximize2,
   Minimize2,
+  Terminal,
 } from 'lucide-react';
-import ParticleDrift from '@/components/schedule/ParticleDrift';
+import { QuantumWaveField } from '@/components/ui/QuantumWaveField';
+import { QuantumBlochSphere } from '@/components/ui/QuantumBlochSphere';
 import { Footer } from '@/components/shared/Footer';
 import { FlowButton } from '@/components/ui/FlowButton';
 import { FAQS_DATA, FAQ_CATEGORIES, FAQ_META, FAQCategory, FAQItem } from '@/data/faqs';
@@ -33,7 +35,6 @@ import { REGISTRATION_URL } from '@/lib/constants';
 export default function FAQsPageContent() {
   const { theme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -50,15 +51,7 @@ export default function FAQsPageContent() {
 
   useEffect(() => {
     setMounted(true);
-    const checkMobile = () => setIsMobile(window.innerWidth < 640);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
-  const isDark = mounted && (theme === 'dark' || resolvedTheme === 'dark');
-  const baseColor = isDark ? '#F5DABF' : '#6C151E';
-  const accentColor = isDark ? '#E45464' : '#8F2632';
 
   // Support direct anchor linking on page mount or hash change
   useEffect(() => {
@@ -145,95 +138,162 @@ export default function FAQsPageContent() {
     return FAQS_DATA.filter((item) => item.isTopQuestion);
   }, []);
 
+  const handleHeroTagClick = (tag: string) => {
+    setSearchQuery(tag);
+    const directory = document.getElementById('faq-directory');
+    if (directory) {
+      directory.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="w-full flex flex-col min-h-screen bg-[var(--background)] text-[var(--foreground)] selection:bg-[#6C151E] selection:text-[#F5F3F0]">
       {/* =========================================================================
-          SECTION 01: HERO WITH PARTICLE DRIFT BACKDROP
+          SECTION 01: HERO WITH BESPOKE QUANTUM BLOCH CORE & SPLIT ORIENTATION
           ========================================================================= */}
       <section
         id="faq-hero"
         aria-label="FAQ Hero"
-        className="relative w-full border-b border-[#3A0B10]/20 bg-gradient-to-b from-[#F9F5F0] via-[#F5DABF]/20 to-[#F4F0EE] dark:from-[#13090A] dark:via-[#1C0709] dark:to-[#120506] text-[#16171B] dark:text-[#F5F3F0] transition-colors duration-300 overflow-hidden"
+        className="relative w-full border-b border-[#3A0B10]/20 bg-gradient-to-b from-[#F9F5F0] via-[#F5DABF]/15 to-[#F4F0EE] dark:from-[#13090A] dark:via-[#1C0709] dark:to-[#120506] text-[#16171B] dark:text-[#F5F3F0] transition-colors duration-300 overflow-hidden"
       >
-        {/* Quantum Particle Engine Backdrop */}
-        <div className="absolute inset-0 z-0 opacity-35 sm:opacity-70 dark:opacity-30 dark:sm:opacity-65 overflow-hidden pointer-events-auto">
-          <ParticleDrift
-            baseColor={baseColor}
-            accentColor={accentColor}
-            density={isMobile ? 40 : 80}
-            dotSize={isMobile ? 6 : 9}
-            hover={isMobile ? 70 : 140}
-          />
-        </div>
+        {/* UNIQUE LIVE COMPONENT BACKDROP: Quantum Wave Probability Manifolds */}
+        <QuantumWaveField className="opacity-40 sm:opacity-75 dark:opacity-50" />
 
-        {/* Ambient glows and orbital geometry */}
+        {/* Ambient radial glows */}
         <div className="absolute inset-0 pointer-events-none opacity-25 dark:opacity-15 z-0">
           <div className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full border border-[#6C151E]/25" />
-          <div className="absolute -top-16 -left-16 w-[450px] h-[450px] rounded-full border border-dashed border-[#6C151E]/20" />
           <div className="absolute top-1/2 right-0 w-[550px] h-[550px] rounded-full bg-gradient-to-bl from-[#B08D57]/20 to-transparent blur-3xl" />
         </div>
 
-        <div className="relative z-10 mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-12 pt-16 sm:pt-20 lg:pt-24 pb-14 sm:pb-16 lg:pb-20">
-          <div className="max-w-4xl space-y-6 sm:space-y-8">
-            {/* Metadata Pills: Host & Location */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="flex flex-wrap items-center gap-2.5 sm:gap-3"
-            >
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] sm:text-xs font-mono font-bold tracking-[0.2em] uppercase bg-[#B08D57]/15 text-[#886937] dark:text-[#B08D57] border border-[#B08D57]/30 shadow-xs">
-                <HelpCircle size={13} className="text-[#886937] dark:text-[#B08D57]" />
-                KNOWLEDGE BASE
-              </span>
+        {/* Main 2-Column Responsive Layout */}
+        <div className="relative z-10 mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-12 pt-12 sm:pt-16 lg:pt-20 pb-12 sm:pb-16 lg:pb-18">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            
+            {/* LEFT COLUMN: Editorial Typography & Instant Search (7 cols) */}
+            <div className="lg:col-span-7 space-y-6 sm:space-y-7">
+              
+              {/* Institutional Host & Location Strip */}
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="flex flex-wrap items-center gap-2 sm:gap-2.5"
+              >
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold tracking-[0.2em] uppercase bg-[#B08D57]/15 text-[#886937] dark:text-[#B08D57] border border-[#B08D57]/30 shadow-xs">
+                  <Sparkles size={12} className="text-[#886937] dark:text-[#B08D57]" />
+                  IBM QUANTUM PARTNERSHIP
+                </span>
 
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] sm:text-xs font-mono font-semibold bg-[#3A0B10]/5 dark:bg-white/10 text-[#3A0B10] dark:text-[#F5F3F0] border border-[#3A0B10]/15 dark:border-white/15">
-                <Building2 size={13} className="text-[#6C151E] dark:text-[#B08D57]" />
-                <span>Host: <strong className="font-bold">{FAQ_META.host}</strong></span>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-semibold bg-[#3A0B10]/5 dark:bg-white/10 text-[#3A0B10] dark:text-[#F5F3F0] border border-[#3A0B10]/15 dark:border-white/15">
+                  <Building2 size={13} className="text-[#6C151E] dark:text-[#B08D57]" />
+                  <span>Host: <strong className="font-bold">{FAQ_META.host}</strong></span>
+                </div>
+
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-semibold bg-[#3A0B10]/5 dark:bg-white/10 text-[#3A0B10] dark:text-[#F5F3F0] border border-[#3A0B10]/15 dark:border-white/15">
+                  <MapPin size={13} className="text-[#6C151E] dark:text-[#B08D57]" />
+                  <span>Location: <strong className="font-bold">{FAQ_META.location}</strong></span>
+                </div>
+              </motion.div>
+
+              {/* Editorial Headline Hierarchy */}
+              <div className="space-y-3">
+                <motion.h1
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.1 }}
+                  className="text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-serif font-bold tracking-tight text-[#3A0B10] dark:text-[#F5F3F0] leading-[1.08]"
+                >
+                  Qiskit Fall Fest 2026
+                  <span className="block text-[#6C151E] dark:text-[#B08D57] font-serif font-normal italic text-2xl sm:text-3xl md:text-4xl xl:text-5xl mt-1.5">
+                    Frequently Asked Questions (FAQ)
+                  </span>
+                </motion.h1>
+
+                <motion.p
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                  className="text-sm sm:text-base md:text-lg font-sans font-medium text-[#16171B]/80 dark:text-[#E5E5E7]/85 max-w-2xl leading-relaxed"
+                >
+                  Your complete guide to schedules, ₹99 registration fee, eligibility, technical activities, prerequisites, and campus logistics at SRM University-AP.
+                </motion.p>
               </div>
 
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] sm:text-xs font-mono font-semibold bg-[#3A0B10]/5 dark:bg-white/10 text-[#3A0B10] dark:text-[#F5F3F0] border border-[#3A0B10]/15 dark:border-white/15">
-                <MapPin size={13} className="text-[#6C151E] dark:text-[#B08D57]" />
-                <span>Location: <strong className="font-bold">{FAQ_META.location}</strong></span>
-              </div>
-            </motion.div>
-
-            {/* Headline */}
-            <div className="space-y-3">
-              <motion.h1
+              {/* Integrated Hero Quick Search Bar */}
+              <motion.div
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-serif font-bold tracking-tight text-[#3A0B10] dark:text-[#F5F3F0] leading-[1.08]"
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="space-y-2.5 max-w-xl"
               >
-                Qiskit Fall Fest 2026 Frequently Asked Questions (FAQ)
-                <span className="text-[#6C151E] dark:text-[#B08D57]">.</span>
-              </motion.h1>
+                <div className="relative w-full">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#16171B]/50 dark:text-[#C7C8CC]/50">
+                    <Search size={16} />
+                  </div>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search any query (e.g. ₹99, October dates, Python, Quiddles)..."
+                    aria-label="Search all FAQs in hero"
+                    className="w-full pl-10 pr-10 py-3 rounded-xl border border-[#3A0B10]/25 dark:border-white/20 bg-white/95 dark:bg-[#25070A]/95 text-xs sm:text-sm font-sans text-[#16171B] dark:text-[#F5F3F0] placeholder-[#16171B]/40 dark:placeholder-[#C7C8CC]/40 focus:outline-none focus:ring-2 focus:ring-[#6C151E] dark:focus:ring-[#B08D57] shadow-sm transition-all"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      aria-label="Clear search text"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#16171B]/50 dark:text-[#C7C8CC]/50 hover:text-[#3A0B10] dark:hover:text-white cursor-pointer"
+                    >
+                      <X size={15} />
+                    </button>
+                  )}
+                </div>
 
-              <motion.p
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-base sm:text-lg md:text-xl font-sans font-medium text-[#6C151E] dark:text-[#B08D57] max-w-3xl"
+                {/* Quick Topic Jump Tags */}
+                <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-mono text-[#16171B]/70 dark:text-[#C7C8CC]/70">
+                  <span className="font-semibold text-[#6C151E] dark:text-[#B08D57]">Popular:</span>
+                  {['₹99 fee', 'October dates', 'Quantum Quiddles', 'Python', 'Certificates'].map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => handleHeroTagClick(tag)}
+                      className="px-2 py-0.5 rounded-md bg-[#3A0B10]/5 dark:bg-white/10 hover:bg-[#6C151E]/10 dark:hover:bg-white/20 text-[#3A0B10] dark:text-[#F5F3F0] border border-[#3A0B10]/10 dark:border-white/10 transition-colors cursor-pointer"
+                    >
+                      #{tag}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Status Metadata Strip */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="pt-1 flex flex-wrap items-center gap-3 text-xs font-mono text-[#16171B]/70 dark:text-[#C7C8CC]/70"
               >
-                Comprehensive answers regarding eligibility, schedules, technical activities, prerequisites, registration fees, and campus logistics.
-              </motion.p>
+                <span className="h-px w-8 bg-[#3A0B10]/20 dark:bg-[#F5F3F0]/20" />
+                <span className="font-semibold">{FAQS_DATA.length} Verified Answers</span>
+                <span className="h-1.5 w-1.5 rounded-full bg-[#6C151E] dark:bg-[#B08D57]" />
+                <span>Online Phase: Oct 5–9</span>
+                <span className="h-1.5 w-1.5 rounded-full bg-[#6C151E] dark:bg-[#B08D57]" />
+                <span>Offline Phase: Oct 26–30</span>
+              </motion.div>
             </div>
 
-            {/* Editorial Status Line */}
+            {/* RIGHT COLUMN: UNIQUE LIVE COMPONENT (Interactive Bloch Sphere Qubit) (5 cols) */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="pt-2 flex flex-wrap items-center gap-3 text-xs font-mono text-[#16171B]/70 dark:text-[#C7C8CC]/70"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+              className="lg:col-span-5 w-full flex justify-center"
             >
-              <span className="h-px w-10 bg-[#3A0B10]/20 dark:bg-[#F5F3F0]/20" />
-              <span className="font-semibold">{FAQS_DATA.length} Official Questions</span>
-              <span className="h-1.5 w-1.5 rounded-full bg-[#6C151E] dark:bg-[#B08D57]" />
-              <span>IBM Quantum Partnership</span>
-              <span className="h-1.5 w-1.5 rounded-full bg-[#6C151E] dark:bg-[#B08D57]" />
-              <span>SRM University-AP Host</span>
+              <div className="w-full max-w-[420px]">
+                <QuantumBlochSphere />
+              </div>
             </motion.div>
+
           </div>
         </div>
       </section>
@@ -467,104 +527,62 @@ export default function FAQsPageContent() {
       </section>
 
       {/* =========================================================================
-          SECTION 04: SEARCH & CATEGORY FILTER CONTROL BAR
+          SECTION 04: CATEGORY FILTER TABS
           ========================================================================= */}
       <section
-        id="faq-search-filter"
-        aria-label="Search and Filter Controls"
-        className="sticky top-[var(--navbar-height,78px)] z-30 w-full py-4 sm:py-5 bg-[#F5F3F0]/95 dark:bg-[#1A0507]/95 backdrop-blur-md border-y border-[#3A0B10]/15 dark:border-[#F5F3F0]/15 shadow-sm transition-colors duration-300"
+        id="faq-categories"
+        aria-label="Category Filters"
+        className="sticky top-[var(--navbar-height,78px)] z-30 w-full py-3.5 sm:py-4 bg-[#F5F3F0]/95 dark:bg-[#1A0507]/95 backdrop-blur-md border-y border-[#3A0B10]/15 dark:border-[#F5F3F0]/15 shadow-sm transition-colors duration-300"
       >
-        <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-12 space-y-3 sm:space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-mono font-semibold tracking-wider uppercase text-[#6C151E] dark:text-[#B08D57] flex items-center gap-1.5">
-                <Filter size={13} />
-                <span>Search & Filter:</span>
-              </span>
-              <span className="text-xs font-mono text-[#16171B]/60 dark:text-[#C7C8CC]/60">
-                ({filteredFaqs.length} of {FAQS_DATA.length} matching)
-              </span>
+        <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-12 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono font-semibold tracking-wider uppercase text-[#6C151E] dark:text-[#B08D57] flex items-center gap-1.5">
+              <Filter size={13} />
+              <span>Category:</span>
+            </span>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {FAQ_CATEGORIES.map((cat) => {
+                const isActive = selectedCategory === cat;
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`px-3 py-1 rounded-lg text-xs font-mono font-semibold transition-all duration-200 cursor-pointer ${
+                      isActive
+                        ? 'bg-[#3A0B10] text-[#F5F3F0] dark:bg-[#B08D57] dark:text-[#1A0507] shadow-sm scale-[1.02]'
+                        : 'bg-white/80 dark:bg-[#28070B] text-[#16171B]/75 dark:text-[#C7C8CC] border border-[#3A0B10]/15 dark:border-[#F5F3F0]/15 hover:border-[#3A0B10]/40 dark:hover:border-white/30'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                );
+              })}
             </div>
+          </div>
 
-            {/* Quick Action: Expand/Collapse All */}
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={toggleAll}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium border border-[#3A0B10]/20 dark:border-[#F5F3F0]/20 bg-white/80 dark:bg-black/30 hover:bg-[#3A0B10]/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
-              >
-                {areAllExpanded ? (
-                  <>
-                    <Minimize2 size={13} />
-                    <span>Collapse All</span>
-                  </>
-                ) : (
-                  <>
-                    <Maximize2 size={13} />
-                    <span>Expand All</span>
-                  </>
-                )}
-              </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-xs font-mono text-[#16171B]/60 dark:text-[#C7C8CC]/60">
+              ({filteredFaqs.length} of {FAQS_DATA.length} matching)
+            </span>
 
-              {(searchQuery || selectedCategory !== 'All') && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchQuery('');
-                    setSelectedCategory('All');
-                  }}
-                  className="px-2.5 py-1.5 text-xs font-mono text-[#6C151E] dark:text-[#B08D57] hover:underline cursor-pointer"
-                >
-                  Clear Filters
-                </button>
+            <button
+              type="button"
+              onClick={toggleAll}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono font-medium border border-[#3A0B10]/20 dark:border-[#F5F3F0]/20 bg-white/80 dark:bg-black/30 hover:bg-[#3A0B10]/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
+            >
+              {areAllExpanded ? (
+                <>
+                  <Minimize2 size={13} />
+                  <span>Collapse All</span>
+                </>
+              ) : (
+                <>
+                  <Maximize2 size={13} />
+                  <span>Expand All</span>
+                </>
               )}
-            </div>
-          </div>
-
-          {/* Search Input Bar */}
-          <div className="relative w-full">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#16171B]/50 dark:text-[#C7C8CC]/50">
-              <Search size={16} />
-            </div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by keywords (e.g. ₹99, October dates, Python, certificate, Quiddles, Amaravati)..."
-              aria-label="Search all FAQs"
-              className="w-full pl-10 pr-10 py-2.5 sm:py-3 rounded-xl border border-[#3A0B10]/20 dark:border-[#F5F3F0]/20 bg-white dark:bg-[#25070A] text-xs sm:text-sm font-sans text-[#16171B] dark:text-[#F5F3F0] placeholder-[#16171B]/40 dark:placeholder-[#C7C8CC]/40 focus:outline-none focus:ring-2 focus:ring-[#6C151E] dark:focus:ring-[#B08D57] transition-all shadow-xs"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                aria-label="Clear search text"
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#16171B]/50 dark:text-[#C7C8CC]/50 hover:text-[#3A0B10] dark:hover:text-white cursor-pointer"
-              >
-                <X size={15} />
-              </button>
-            )}
-          </div>
-
-          {/* Category Filter Buttons */}
-          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-1">
-            {FAQ_CATEGORIES.map((cat) => {
-              const isActive = selectedCategory === cat;
-              return (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-3 py-1 rounded-lg text-xs font-mono font-semibold transition-all duration-200 cursor-pointer ${
-                    isActive
-                      ? 'bg-[#3A0B10] text-[#F5F3F0] dark:bg-[#B08D57] dark:text-[#1A0507] shadow-sm scale-[1.02]'
-                      : 'bg-white/80 dark:bg-[#28070B] text-[#16171B]/75 dark:text-[#C7C8CC] border border-[#3A0B10]/15 dark:border-[#F5F3F0]/15 hover:border-[#3A0B10]/40 dark:hover:border-white/30'
-                  }`}
-                >
-                  {cat}
-                </button>
-              );
-            })}
+            </button>
           </div>
         </div>
       </section>
@@ -583,7 +601,7 @@ export default function FAQsPageContent() {
               04 • Comprehensive Directory ({filteredFaqs.length} of {FAQS_DATA.length} Questions)
             </span>
             <span className="text-xs font-mono text-[#16171B]/50 dark:text-[#C7C8CC]/50">
-              Click any question to expand
+              Click any question to toggle
             </span>
           </div>
 
