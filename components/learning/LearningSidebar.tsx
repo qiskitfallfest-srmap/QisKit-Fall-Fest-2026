@@ -51,10 +51,20 @@ export function LearningSidebar() {
   const [openDay, setOpenDay] = useState<number | null>(initialOpenDay || 1);
   const [session, setSession] = useState<any>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [hoveredItem, setHoveredItem] = useState<{
+    id: string;
+    title: string;
+    badge?: string;
+    subtitle?: string;
+    meta?: string;
+    top: number;
+    left: number;
+  } | null>(null);
 
-  // Auto-close mobile drawer on route change
+  // Auto-close mobile drawer & dismiss hover tooltip on route change
   useEffect(() => {
     setIsMobileMenuOpen(false);
+    setHoveredItem(null);
   }, [pathname, searchParams]);
 
   const fetchSession = React.useCallback(async () => {
@@ -146,6 +156,7 @@ export function LearningSidebar() {
           <div key={day.id} className="mb-2">
             <button
               onClick={() => setOpenDay(isDayOpen ? null : day.id)}
+              title={day.label}
               className={clsx(
                 'w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200 text-sm font-semibold group cursor-pointer',
                 isDayOpen
@@ -153,7 +164,7 @@ export function LearningSidebar() {
                   : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1C0A0D]'
               )}
             >
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2.5 min-w-0 pr-2">
                 <BookOpen
                   className={clsx(
                     'w-4 h-4 shrink-0',
@@ -184,9 +195,26 @@ export function LearningSidebar() {
                     <div key={sessionItem.id} className="flex flex-col mb-1">
                       <Link
                         href={`/learning/session/${sessionItem.id}`}
-                        onClick={() => setIsMobileMenuOpen(false)}
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          setHoveredItem(null);
+                        }}
+                        title={sessionItem.title}
+                        onMouseEnter={(e) => {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          setHoveredItem({
+                            id: sessionItem.id,
+                            title: sessionItem.title,
+                            badge: `Day ${sessionItem.day} · Session ${sessionItem.sessionNumber}`,
+                            subtitle: `${sessionItem.speaker.name} · ${sessionItem.speaker.institution}`,
+                            meta: sessionItem.duration,
+                            top: rect.top + rect.height / 2,
+                            left: rect.right + 10,
+                          });
+                        }}
+                        onMouseLeave={() => setHoveredItem(null)}
                         className={clsx(
-                          'flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors',
+                          'group flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors',
                           isJustSessionActive
                             ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/25 dark:text-[#E89BA5] font-semibold'
                             : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1C0A0D] hover:text-slate-900 dark:hover:text-[#FAF6F3] font-medium'
@@ -194,20 +222,38 @@ export function LearningSidebar() {
                       >
                         <PlayCircle
                           className={clsx(
-                            'w-3.5 h-3.5 shrink-0',
+                            'w-3.5 h-3.5 shrink-0 transition-transform group-hover:scale-110',
                             isJustSessionActive
                               ? 'text-burgundy dark:text-[#E89BA5]'
                               : 'text-slate-400 dark:text-slate-400'
                           )}
                         />
-                        <span className="line-clamp-1">{sessionItem.title}</span>
+                        <span className="line-clamp-1 leading-snug group-hover:text-slate-900 dark:group-hover:text-[#FAF6F3] transition-colors">
+                          {sessionItem.title}
+                        </span>
                       </Link>
 
                       <Link
                         href={`/learning/session/${sessionItem.id}/quiz`}
-                        onClick={() => setIsMobileMenuOpen(false)}
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          setHoveredItem(null);
+                        }}
+                        title={`Concept Quiz · Session ${sessionItem.sessionNumber}: ${sessionItem.title}`}
+                        onMouseEnter={(e) => {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          setHoveredItem({
+                            id: `quiz-${sessionItem.id}`,
+                            title: `Concept Quiz: ${sessionItem.title}`,
+                            badge: `Session ${sessionItem.sessionNumber} Assessment`,
+                            subtitle: 'Pass the quiz to fulfill academic requirements for the certificate.',
+                            top: rect.top + rect.height / 2,
+                            left: rect.right + 10,
+                          });
+                        }}
+                        onMouseLeave={() => setHoveredItem(null)}
                         className={clsx(
-                          'flex items-center gap-2.5 px-3 py-1.5 ml-4 mt-0.5 rounded-md text-xs transition-colors',
+                          'group flex items-center gap-2.5 px-3 py-1.5 ml-4 mt-0.5 rounded-md text-xs transition-colors',
                           isQuizActive
                             ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 font-semibold border border-emerald-100 dark:border-emerald-900'
                             : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1C0A0D] hover:text-slate-800 dark:hover:text-slate-200'
@@ -215,13 +261,13 @@ export function LearningSidebar() {
                       >
                         <Award
                           className={clsx(
-                            'w-3 h-3 shrink-0',
+                            'w-3 h-3 shrink-0 transition-transform group-hover:scale-110',
                             isQuizActive
                               ? 'text-emerald-600 dark:text-emerald-400'
                               : 'text-slate-400 dark:text-slate-400'
                           )}
                         />
-                        <span className="line-clamp-1">Concept Quiz</span>
+                        <span className="line-clamp-1 leading-snug">Concept Quiz</span>
                       </Link>
                     </div>
                   );
@@ -231,9 +277,26 @@ export function LearningSidebar() {
                 {dayChallenge && (
                   <Link
                     href={`/learning?challenge=${day.id}`}
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setHoveredItem(null);
+                    }}
+                    title={`Daily Challenge: ${dayChallenge.title} - ${dayChallenge.subtitle}`}
+                    onMouseEnter={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setHoveredItem({
+                        id: `challenge-${day.id}`,
+                        title: `Daily Challenge: ${dayChallenge.title}`,
+                        badge: `Day ${day.id} Challenge`,
+                        subtitle: dayChallenge.subtitle,
+                        meta: `Due: ${dayChallenge.submissionDeadline}`,
+                        top: rect.top + rect.height / 2,
+                        left: rect.right + 10,
+                      });
+                    }}
+                    onMouseLeave={() => setHoveredItem(null)}
                     className={clsx(
-                      'flex items-center gap-2.5 px-3 py-2 mt-1 rounded-md text-sm transition-colors',
+                      'group flex items-center gap-2.5 px-3 py-2 mt-1 rounded-md text-sm transition-colors',
                       activeChallengeDay === String(day.id)
                         ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/25 dark:text-[#E89BA5] font-semibold'
                         : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1C0A0D] hover:text-slate-900 dark:hover:text-[#FAF6F3] font-medium'
@@ -241,13 +304,15 @@ export function LearningSidebar() {
                   >
                     <Award
                       className={clsx(
-                        'w-3.5 h-3.5 shrink-0',
+                        'w-3.5 h-3.5 shrink-0 transition-transform group-hover:scale-110',
                         activeChallengeDay === String(day.id)
                           ? 'text-burgundy dark:text-[#E89BA5]'
                           : 'text-slate-400 dark:text-slate-400'
                       )}
                     />
-                    <span className="line-clamp-1">Daily Challenge</span>
+                    <span className="line-clamp-1 leading-snug">
+                      Daily Challenge: {dayChallenge.title}
+                    </span>
                   </Link>
                 )}
               </div>
@@ -262,7 +327,23 @@ export function LearningSidebar() {
 
       <Link
         href="/learning/hackathon"
-        onClick={() => setIsMobileMenuOpen(false)}
+        onClick={() => {
+          setIsMobileMenuOpen(false);
+          setHoveredItem(null);
+        }}
+        title="Hackathon Workspace · Team Formation & Project Submissions"
+        onMouseEnter={(e) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          setHoveredItem({
+            id: 'hackathon',
+            title: 'Hackathon Workspace',
+            badge: 'Main Hackathon',
+            subtitle: 'Collaborate with your team, claim problem statements, and submit repositories.',
+            top: rect.top + rect.height / 2,
+            left: rect.right + 10,
+          });
+        }}
+        onMouseLeave={() => setHoveredItem(null)}
         className={clsx(
           'w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200 text-sm font-semibold group',
           isHackathon
@@ -300,10 +381,16 @@ export function LearningSidebar() {
       <div className="p-4 border-t border-slate-100 dark:border-[#3D1418] bg-slate-50 dark:bg-[#1C0A0D] shrink-0 mt-auto">
         <div className="flex flex-col gap-2">
           <div className="flex flex-col min-w-0">
-            <span className="font-semibold text-sm text-slate-800 dark:text-[#FAF6F3] truncate">
+            <span
+              title={session.fullName || session.email}
+              className="font-semibold text-sm text-slate-800 dark:text-[#FAF6F3] truncate"
+            >
               {session.fullName || session.email}
             </span>
-            <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400 truncate">
+            <span
+              title={session.email}
+              className="font-mono text-[11px] text-slate-500 dark:text-slate-400 truncate"
+            >
               {session.email}
             </span>
           </div>
@@ -312,7 +399,10 @@ export function LearningSidebar() {
             {session.isAdmin && (
               <Link
                 href="/learning/admin"
-                onClick={() => setIsMobileMenuOpen(false)}
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setHoveredItem(null);
+                }}
                 className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] hover:bg-burgundy/20 dark:hover:bg-burgundy/30 transition-colors font-mono text-[11px] font-semibold uppercase tracking-wider"
               >
                 <Shield className="w-3.5 h-3.5" />
@@ -403,7 +493,7 @@ export function LearningSidebar() {
           2. DESKTOP VIEW (>= md): Classic Smooth Sticky Left Sidebar
          ───────────────────────────────────────────────────────────── */}
       <div
-        className="hidden md:flex md:flex-col h-full bg-white dark:bg-[#150709] overflow-hidden"
+        className="hidden md:flex md:flex-col h-full bg-white dark:bg-[#150709] overflow-hidden relative"
         data-lenis-prevent="true"
         style={{ overscrollBehavior: 'contain' }}
       >
@@ -428,6 +518,7 @@ export function LearningSidebar() {
           onWheel={(e) => {
             e.stopPropagation();
           }}
+          onScroll={() => setHoveredItem(null)}
           className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-1 focus:outline-none [scrollbar-width:thin] [scrollbar-color:#CBD5E1_transparent] dark:[scrollbar-color:#3D1418_transparent]"
           style={{ overscrollBehavior: 'contain' }}
         >
@@ -437,6 +528,45 @@ export function LearningSidebar() {
         {/* User Profile & Sign Out at the bottom */}
         {renderUserProfile()}
       </div>
+
+      {/* ─────────────────────────────────────────────────────────────
+          3. FLOATING HOVER PREVIEW TOOLTIP (Never clipped by sidebar overflow)
+         ───────────────────────────────────────────────────────────── */}
+      {hoveredItem && typeof window !== 'undefined' && (
+        <div
+          style={{
+            top: `${Math.max(80, Math.min(hoveredItem.top, window.innerHeight - 90))}px`,
+            left: `${Math.min(hoveredItem.left, window.innerWidth - 320)}px`,
+          }}
+          className="hidden md:flex fixed z-50 -translate-y-1/2 flex-col max-w-sm w-76 p-3.5 bg-white/98 dark:bg-[#1C0A0D]/98 backdrop-blur-md border border-slate-200 dark:border-[#3D1418] rounded-xl shadow-2xl pointer-events-none animate-in fade-in zoom-in-95 duration-150 ring-1 ring-black/5 dark:ring-white/5"
+        >
+          {/* Subtle pointer arrowhead */}
+          <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-white dark:bg-[#1C0A0D] border-l border-b border-slate-200 dark:border-[#3D1418] rotate-45" />
+
+          {hoveredItem.badge && (
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <span className="font-mono text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-burgundy/10 text-burgundy dark:bg-burgundy/25 dark:text-[#E89BA5]">
+                {hoveredItem.badge}
+              </span>
+              {hoveredItem.meta && (
+                <span className="font-mono text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                  {hoveredItem.meta}
+                </span>
+              )}
+            </div>
+          )}
+
+          <h4 className="font-sans text-xs sm:text-sm font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">
+            {hoveredItem.title}
+          </h4>
+
+          {hoveredItem.subtitle && (
+            <p className="font-sans text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+              {hoveredItem.subtitle}
+            </p>
+          )}
+        </div>
+      )}
     </>
   );
 }
