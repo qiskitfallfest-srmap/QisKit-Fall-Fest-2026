@@ -89,14 +89,14 @@ export const ROUTE_RELEASE_CONFIG: Record<string, RouteConfig> = {
   privacy: {
     path: '/privacy',
     name: 'Privacy Policy',
-    status: 'coming-soon',
+    status: 'live',
     title: `Privacy Statement | ${SITE_CONFIG.brandName}`,
     description: 'Official privacy statement and data handling principles for Qiskit Fall Fest SRMAP 2026.',
   },
   terms: {
     path: '/terms',
     name: 'Terms of Service',
-    status: 'coming-soon',
+    status: 'live',
     title: `Terms & Participation Rules | ${SITE_CONFIG.brandName}`,
     description: 'Event participation rules, hackathon conduct, and legal terms for Qiskit Fall Fest SRMAP 2026.',
   },

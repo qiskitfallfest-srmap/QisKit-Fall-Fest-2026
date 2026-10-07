@@ -8,9 +8,9 @@ import { REGISTRATION_URL } from '@/lib/constants';
 import SingularityHorizon from '@/components/ui/singularity-horizon';
 
 const LEGAL_DOCUMENTS = {
-  privacy: { path: '/docs/Privacy_Policy.pdf', available: true },
-  terms: { path: '/docs/Terms_of_Use.pdf', available: true },
-  accessibility: { path: '/docs/Accessibility_Statement.pdf', available: true }
+  privacy: { path: '/privacy', available: true },
+  terms: { path: '/terms', available: true },
+  accessibility: { path: '/accessibility', available: true }
 };
 
 const FOOTER_LINKS = [
@@ -117,15 +117,13 @@ export function Footer() {
     const doc = LEGAL_DOCUMENTS[key];
     if (doc.available) {
       return (
-        <a 
+        <Link 
           href={doc.path} 
-          target="_blank" 
-          rel="noopener noreferrer" 
           className="group relative hover:text-[#781421] dark:hover:text-[#EF7481] transition-colors duration-200 py-0.5 outline-none focus-visible:ring-1 focus-visible:ring-burgundy rounded-[2px]"
         >
           <span>{label}</span>
           <span className="absolute bottom-0 left-0 w-full h-[1px] bg-[#781421] dark:bg-[#EF7481] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-200 ease-out" />
-        </a>
+        </Link>
       );
     }
     return (
