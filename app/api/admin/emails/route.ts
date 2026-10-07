@@ -76,7 +76,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const recordsToInsert = emailList.map((item) => ({
+    // Deduplicate within the same batch by email to avoid PostgreSQL error 21000:
+    // "ON CONFLICT DO UPDATE command cannot affect row a second time"
+    const emailMap = new Map<string, { email: string; fullName: string; role: string }>();
+    let intraBatchDuplicates = 0;
+
+    for (const item of emailList) {
+      const existing = emailMap.get(item.email);
+      if (!existing) {
+        emailMap.set(item.email, item);
+      } else {
+        intraBatchDuplicates++;
+        // Merge attributes if duplicate has non-empty values
+        emailMap.set(item.email, {
+          email: item.email,
+          fullName: item.fullName || existing.fullName,
+          role: item.role || existing.role,
+        });
+      }
+    }
+
+    const dedupedEmailList = Array.from(emailMap.values());
+
+    const recordsToInsert = dedupedEmailList.map((item) => ({
       email: item.email,
       full_name: item.fullName || null,
       role: item.role,
@@ -93,7 +115,7 @@ export async function POST(request: NextRequest) {
 
     // Cache in Upstash Redis
     if (redis) {
-      for (const item of emailList) {
+      for (const item of dedupedEmailList) {
         try {
           await redis.set(
             `whitelist:${item.email}`,
@@ -109,10 +131,16 @@ export async function POST(request: NextRequest) {
       } catch {}
     }
 
+    const duplicateNotice =
+      intraBatchDuplicates > 0
+        ? ` (${intraBatchDuplicates} intra-batch duplicate(s) reconciled)`
+        : '';
+
     return NextResponse.json({
       success: true,
-      message: `Successfully processed ${emailList.length} email(s) for access.`,
-      addedCount: emailList.length,
+      message: `Successfully processed ${dedupedEmailList.length} unique email(s) for access${duplicateNotice}.`,
+      addedCount: dedupedEmailList.length,
+      duplicateCount: intraBatchDuplicates,
       data,
     });
   } catch (error: any) {

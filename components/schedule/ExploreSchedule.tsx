@@ -68,6 +68,14 @@ export function ExploreSchedule({ currentPhase, onPhaseChange, targetDayIndex }:
     return null;
   }, [selectedId, activeDay]);
 
+  const [activePanelSession, setActivePanelSession] = useState<Session | null>(null);
+
+  useEffect(() => {
+    if (selectedSession) {
+      setActivePanelSession(selectedSession);
+    }
+  }, [selectedSession]);
+
   const selectDay = (index: number) => {
     setDayIndex(index);
     setSelectedId(null);
@@ -230,9 +238,11 @@ export function ExploreSchedule({ currentPhase, onPhaseChange, targetDayIndex }:
           
           <header className="mb-4 sm:mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 pb-4 sm:pb-6 border-b border-[#D9D0CB]/70 dark:border-white/10">
             <div>
-              <div className="font-bold uppercase tracking-[0.28em] text-xs text-[#A7192A] dark:text-[#EF7885] inline-flex items-center gap-2">
-                <span className="block h-px w-5 bg-[#A7192A] dark:bg-[#EF7885]" />
-                {phaseInfo.title} &middot; {phaseInfo.dateRange}
+              <div className="font-bold uppercase tracking-[0.14em] sm:tracking-[0.28em] text-[11px] sm:text-xs text-[#A7192A] dark:text-[#EF7885] inline-flex items-center gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap">
+                <span className="block h-px w-4 sm:w-5 bg-[#A7192A] dark:bg-[#EF7885] shrink-0" />
+                <span>{phaseInfo.title}</span>
+                <span>&middot;</span>
+                <span className="whitespace-nowrap">{phaseInfo.dateRange}</span>
               </div>
 
               <h2 className="mt-2 font-serif text-[clamp(2rem,3.5vw,3.5rem)] font-bold leading-[0.96] tracking-[-0.04em] text-[#A7192A] dark:text-[#EA8793]">
@@ -347,28 +357,31 @@ export function ExploreSchedule({ currentPhase, onPhaseChange, targetDayIndex }:
           {/* LEFT TIMELINE COLUMN (12 cols when collapsed, 7 cols when session selected on desktop) */}
           <div 
             className={`transition-[grid-column,width,max-width] duration-300 ease-in-out flex flex-col space-y-4 ${
-              selectedSession ? 'lg:col-span-7' : 'lg:col-span-12'
+              activePanelSession ? 'lg:col-span-7' : 'lg:col-span-12'
             }`}
           >
             
-            <div className="flex items-center justify-between px-2 pb-2 border-b border-[#D9D0CB] dark:border-white/10">
-              <h3
-                id={activeDay ? `heading-${activeDay.id}` : undefined}
-                className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-[#13090A] dark:text-[#F6F2F1] scroll-mt-24 sm:scroll-mt-28"
-              >
-                {activeDay?.weekday}, {activeDay?.date} 2026
-                <span className="ml-2 text-xs font-sans font-normal text-[#665B57] dark:text-[#BEB5B4]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1 pb-2 border-b border-[#D9D0CB] dark:border-white/10">
+              <div className="flex flex-wrap items-baseline gap-x-2">
+                <h3
+                  id={activeDay ? `heading-${activeDay.id}` : undefined}
+                  className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-[#13090A] dark:text-[#F6F2F1] scroll-mt-24 sm:scroll-mt-28"
+                >
+                  {activeDay?.weekday}, {activeDay?.date} 2026
+                </h3>
+                <span className="text-xs sm:text-sm font-sans font-normal text-[#665B57] dark:text-[#BEB5B4] whitespace-nowrap">
                   ({visibleSessions.length} session{visibleSessions.length === 1 ? '' : 's'})
                 </span>
-              </h3>
-              <div className="flex items-center gap-3">
+              </div>
+
+              <div className="flex items-center gap-3 shrink-0">
                 {!selectedSession && visibleSessions.length > 0 && (
                   <span className="hidden sm:inline-block text-[11px] font-mono font-medium text-[#6C151E]/80 dark:text-[#E45464]/80">
                     &bull; Click any card to expand full session details
                   </span>
                 )}
-                <span className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-[#6C151E] dark:text-[#E45464]">
-                  All Times IST
+                <span className="font-mono text-[11px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-[#6C151E] dark:text-[#E45464] whitespace-nowrap shrink-0">
+                  ALL TIMES IST
                 </span>
               </div>
             </div>
@@ -480,15 +493,22 @@ export function ExploreSchedule({ currentPhase, onPhaseChange, targetDayIndex }:
           </div>
 
           {/* RIGHT SELECTED SESSION DETAIL PANEL (5 cols desktop, slides in cleanly when session clicked) */}
-          <div className="hidden lg:block lg:col-span-5 sticky top-24">
-            <AnimatePresence mode="wait">
+          <div className={`hidden lg:block transition-all duration-300 ease-in-out ${activePanelSession ? 'lg:col-span-5 sticky top-24' : 'hidden'}`}>
+            <AnimatePresence 
+              mode="wait"
+              onExitComplete={() => {
+                if (!selectedSession) {
+                  setActivePanelSession(null);
+                }
+              }}
+            >
               {selectedSession && (
                 <motion.div 
                   key={selectedSession.id}
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                  transition={{ duration: 0.22, ease: 'easeOut' }}
                 >
                   {renderDetailContent(selectedSession)}
                 </motion.div>

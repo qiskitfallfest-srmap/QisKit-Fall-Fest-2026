@@ -71,15 +71,15 @@ export function HeroSection({ currentPhase, onPhaseChange }: HeroSectionProps) {
             
             {/* Eyebrow */}
             <motion.div 
-              className="inline-flex items-center gap-3"
+              className="inline-flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap"
               initial="hidden"
               animate="visible"
               custom={0.05}
               variants={fadeInUpVariant}
             >
-              <span className="h-px w-8 bg-[#A7192A] dark:bg-[#EF7885]" />
-              <p className="font-bold uppercase tracking-[0.28em] leading-none text-xs sm:text-sm text-[#A7192A] dark:text-[#EF7885]">
-                QUANTUM TIMELINE &middot; ONLINE &amp; ON-CAMPUS
+              <span className="h-px w-6 sm:w-8 bg-[#A7192A] dark:bg-[#EF7885] shrink-0" />
+              <p className="font-bold uppercase tracking-[0.14em] sm:tracking-[0.28em] leading-snug text-[11px] sm:text-xs md:text-sm text-[#A7192A] dark:text-[#EF7885]">
+                <span>QUANTUM TIMELINE</span> &middot; <span className="whitespace-nowrap">ONLINE &amp; ON-CAMPUS</span>
               </p>
             </motion.div>
 

@@ -47,43 +47,52 @@ const TRACKS: Record<ExperienceCategory, TrackConfig> = {
   },
 };
 
+const ALL_EXPERIENCE_ITEMS = [...LEARN_ITEMS, ...BUILD_ITEMS, ...CONNECT_ITEMS];
+
+const CATEGORY_START_INDICES: Record<ExperienceCategory, number> = {
+  learn: 0,
+  build: LEARN_ITEMS.length,
+  connect: LEARN_ITEMS.length + BUILD_ITEMS.length,
+};
+
 /**
  * ExperiencePageContent
  *
  * Implements direct, in-place experience state navigation between 01 Learn, 02 Build,
  * and 03 Connect. Viewport remains perfectly stable without page scrolling, and
- * independent event selection state is preserved across all category switches.
+ * users can slide seamlessly through all events in one continuous gallery section.
  */
 export default function ExperiencePageContent() {
-  const [activeCategory, setActiveCategory] = React.useState<ExperienceCategory>('learn');
-  const [selectedIndices, setSelectedIndices] = React.useState<Record<ExperienceCategory, number>>({
+  const [globalIndex, setGlobalIndex] = React.useState(0);
+  const [lastCategoryIndices, setLastCategoryIndices] = React.useState<Record<ExperienceCategory, number>>({
     learn: 0,
-    build: 0,
-    connect: 0,
+    build: CATEGORY_START_INDICES.build,
+    connect: CATEGORY_START_INDICES.connect,
   });
+
+  const activeItem = ALL_EXPERIENCE_ITEMS[globalIndex] || ALL_EXPERIENCE_ITEMS[0];
+  const activeCategory: ExperienceCategory = (activeItem.category as ExperienceCategory) || 'learn';
+
+  const handleGlobalIndexChange = React.useCallback((newIndex: number) => {
+    const clamped = Math.max(0, Math.min(newIndex, ALL_EXPERIENCE_ITEMS.length - 1));
+    setGlobalIndex(clamped);
+    const item = ALL_EXPERIENCE_ITEMS[clamped];
+    const cat = (item?.category as ExperienceCategory) || 'learn';
+    setLastCategoryIndices((prev) => ({
+      ...prev,
+      [cat]: clamped,
+    }));
+  }, []);
 
   const handleCategoryChange = React.useCallback(
     (newCategory: ExperienceCategory) => {
-      if (newCategory === activeCategory) return;
-      setActiveCategory(newCategory);
+      const targetIndex = lastCategoryIndices[newCategory] ?? CATEGORY_START_INDICES[newCategory];
+      handleGlobalIndexChange(targetIndex);
       if (typeof window !== 'undefined') {
         window.history.replaceState(null, '', `#${newCategory}`);
       }
     },
-    [activeCategory]
-  );
-
-  const handleIndexChange = React.useCallback(
-    (newIndex: number) => {
-      setSelectedIndices((prev) => {
-        if (prev[activeCategory] === newIndex) return prev;
-        return {
-          ...prev,
-          [activeCategory]: newIndex,
-        };
-      });
-    },
-    [activeCategory]
+    [lastCategoryIndices, handleGlobalIndexChange]
   );
 
   // Synchronize hash on initial direct URL visit or external navigation (e.g. from /experience#build)
@@ -94,7 +103,9 @@ export default function ExperiencePageContent() {
       if (!hash) return;
 
       if (hash === 'learn' || hash === 'build' || hash === 'connect') {
-        setActiveCategory(hash as ExperienceCategory);
+        const cat = hash as ExperienceCategory;
+        const targetIndex = CATEGORY_START_INDICES[cat];
+        handleGlobalIndexChange(targetIndex);
         const stage =
           document.getElementById('experience-stage-container') ||
           document.getElementById('experience-stage');
@@ -118,7 +129,7 @@ export default function ExperiencePageContent() {
       clearTimeout(timer);
       window.removeEventListener('hashchange', handleHash);
     };
-  }, []);
+  }, [handleGlobalIndexChange]);
 
   const currentTrack = TRACKS[activeCategory];
 
@@ -139,47 +150,38 @@ export default function ExperiencePageContent() {
       <ScrollLockedSection
         id="experience-stage"
         ariaLabel={`${currentTrack.number} — ${currentTrack.title}`}
-        itemCount={currentTrack.items.length}
-        controlledIndex={selectedIndices[activeCategory]}
-        onIndexChange={handleIndexChange}
+        itemCount={ALL_EXPERIENCE_ITEMS.length}
+        controlledIndex={globalIndex}
+        onIndexChange={handleGlobalIndexChange}
         activeCategory={activeCategory}
         scrollPerItemVh={42}
       >
         {({ currentIndex, onSelectIndex }) => (
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={activeCategory}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.28, ease: 'easeInOut' }}
-              className="w-full h-full"
-            >
-              <ExperienceEventGallery
-                items={currentTrack.items}
-                currentIndex={currentIndex}
-                onIndexChange={onSelectIndex}
-                brand={`${currentTrack.number} ${currentTrack.title}`}
-                activeCategory={activeCategory}
-                onCategoryChange={handleCategoryChange}
-                onBack={() => {
-                  if (activeCategory === 'build') handleCategoryChange('learn');
-                  else if (activeCategory === 'connect') handleCategoryChange('build');
-                  else {
-                    const strip = document.getElementById('experience-ecosystem-strip');
-                    if (strip) strip.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }
-                }}
-                backLabel={
-                  activeCategory === 'build'
-                    ? '01 Learn'
-                    : activeCategory === 'connect'
-                    ? '02 Build'
-                    : 'Ecosystem'
+          <div className="w-full h-full">
+            <ExperienceEventGallery
+              items={ALL_EXPERIENCE_ITEMS}
+              currentIndex={currentIndex}
+              onIndexChange={onSelectIndex}
+              brand={`${currentTrack.number} ${currentTrack.title}`}
+              activeCategory={activeCategory}
+              onCategoryChange={handleCategoryChange}
+              onBack={() => {
+                if (activeCategory === 'build') handleCategoryChange('learn');
+                else if (activeCategory === 'connect') handleCategoryChange('build');
+                else {
+                  const strip = document.getElementById('experience-ecosystem-strip');
+                  if (strip) strip.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
-              />
-            </motion.div>
-          </AnimatePresence>
+              }}
+              backLabel={
+                activeCategory === 'build'
+                  ? '01 Learn'
+                  : activeCategory === 'connect'
+                  ? '02 Build'
+                  : 'Ecosystem'
+              }
+            />
+          </div>
         )}
       </ScrollLockedSection>
 

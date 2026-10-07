@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { ThemeProvider } from '@/components/shared/ThemeProvider';
 import { Navbar } from '@/components/shared/Navbar';
 import { LoadScreen } from '@/components/shared/LoadScreen';
@@ -16,6 +16,12 @@ import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { AnalyticsProvider } from '@/components/shared/AnalyticsProvider';
 import './globals.css'; // Global styles
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_CONFIG.primaryDomain),
@@ -87,6 +93,9 @@ export const metadata: Metadata = {
       'max-image-preview': 'large',
       'max-snippet': -1,
     },
+  },
+  verification: {
+    google: 'ImpHmHcChqS0XzVkf0aleBq0z7bdm9VO274Mj3mMQGY',
   },
 };
 

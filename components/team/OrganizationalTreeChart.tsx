@@ -674,10 +674,17 @@ export function OrganizationalTreeChart() {
               key={track.id}
               className="rounded-2xl border border-[#3A0B10]/15 dark:border-white/10 bg-white dark:bg-[#200508] shadow-sm overflow-hidden"
             >
-              <button
-                type="button"
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => setSelectedTrackId(selectedTrackId === track.id ? null : track.id)}
-                className="w-full p-4 flex items-center justify-between text-left hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSelectedTrackId(selectedTrackId === track.id ? null : track.id);
+                  }
+                }}
+                className="w-full p-4 flex items-center justify-between text-left hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-[#3A0B10]/10 dark:bg-white/10 text-[#800020] dark:text-[#B08D57]">
@@ -710,7 +717,7 @@ export function OrganizationalTreeChart() {
                     className={cn("transition-transform duration-200 text-[#3A0B10]/60 dark:text-white/60", isExpanded ? "rotate-180" : "rotate-0")}
                   />
                 </div>
-              </button>
+              </div>
 
               {isExpanded && (
                 <div className="p-4 pt-0 border-t border-[#3A0B10]/10 dark:border-white/10 space-y-2 mt-2">

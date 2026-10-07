@@ -11,6 +11,7 @@ const nextConfig: NextConfig = {
   },
   // Allow access to remote image placeholder.
   images: {
+    qualities: [75, 88],
     remotePatterns: [
       {
         protocol: 'https',

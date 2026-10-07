@@ -19,11 +19,16 @@ export interface LectureSession {
   youtubeId: string; // Youtube video embed ID
   youtubeUrl: string;
   speaker: Speaker;
+  coSpeakers?: Speaker[];
   description: string;
   prerequisites: string;
   learnPoints: string[];
   lectureNotesUrl?: string;
   slidesUrl?: string;
+  liveMeetingUrl?: string;
+  isLive?: boolean;
+  liveNotice?: string;
+  customEmbedUrl?: string;
 }
 
 export interface QuizQuestion {
