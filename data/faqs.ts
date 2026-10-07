@@ -1,18 +1,28 @@
-export interface FAQItem {
+﻿export interface FAQItem {
   id: string;
+  number: number;
   question: string;
   answer: string;
-  category: string;
+  category: FAQCategory;
   isTopQuestion?: boolean;
 }
 
+export const FAQ_META = {
+  title: 'Qiskit Fall Fest 2026 Frequently Asked Questions (FAQ)',
+  host: 'SRM University-AP',
+  location: 'Amaravati, Andhra Pradesh, India',
+  disclaimer:
+    'Dates, fees, eligibility, activities, and certificate/prize details are based on the information provided and may be updated by the organizing committee. Please refer to official SRM University-AP announcements for the latest information.',
+};
+
 export const FAQ_CATEGORIES = [
   'All',
-  'General & Attendance',
-  'Registration & Verification',
-  'Hackathon & Hardware',
-  'Workshops & Prerequisites',
-  'Campus & Logistics',
+  'General & Overview',
+  'Schedule & Venues',
+  'Events & Competitions',
+  'Prerequisites & Prep',
+  'Registration & Fees',
+  'Certificates & Contact',
 ] as const;
 
 export type FAQCategory = (typeof FAQ_CATEGORIES)[number];
@@ -20,90 +30,126 @@ export type FAQCategory = (typeof FAQ_CATEGORIES)[number];
 export const FAQS_DATA: FAQItem[] = [
   {
     id: 'faq-01',
-    question: 'What is Qiskit Fall Fest 2026 at SRM University-AP?',
+    number: 1,
+    question: 'What is Qiskit Fall Fest 2026?',
     answer:
-      'Qiskit Fall Fest 2026 is an international quantum computing event co-hosted by SRM University-AP and IBM Quantum. Spanning five days, the gathering brings together academic researchers, students, and technology leaders for hands-on Qiskit 1.x workshops, plenary scientific keynotes, and an intensive 24-hour quantum algorithmic hackathon.',
-    category: 'General & Attendance',
+      'Qiskit Fall Fest is a global, student- and community-led quantum computing festival organized in partnership with IBM Quantum. SRM University-AP is participating as a host for the 2026 edition.',
+    category: 'General & Overview',
     isTopQuestion: true,
   },
   {
     id: 'faq-02',
-    question: 'Is there any registration fee or cost to participate?',
+    number: 2,
+    question: 'When will Qiskit Fall Fest 2026 take place?',
     answer:
-      'No. Qiskit Fall Fest 2026 is completely free of cost for all verified student participants and academic cohorts. All keynote sessions, workshop computing resources, lab access, and hackathon participation are provided through institutional patronage by SRM University-AP and IBM Quantum.',
-    category: 'General & Attendance',
+      'Planned schedule:\nOnline Phase: October 5–9, 2026\nOffline Phase: October 26–30, 2026',
+    category: 'Schedule & Venues',
     isTopQuestion: true,
   },
   {
     id: 'faq-03',
-    question: 'How do I register for the festival and hackathon?',
+    number: 3,
+    question: 'Where will the event take place?',
     answer:
-      'Registration is administered exclusively through Unstop. Attendees must submit their verified university credentials and team details on the official Unstop portal. Direct walk-in registrations are not permitted due to computing terminal allocations.',
-    category: 'Registration & Verification',
-    isTopQuestion: true,
+      'The offline phase will be hosted at SRM University-AP, Amaravati, Andhra Pradesh, India.',
+    category: 'Schedule & Venues',
   },
   {
     id: 'faq-04',
-    question: 'Do I need prior quantum computing experience to participate?',
+    number: 4,
+    question: 'Who can participate in the event?',
     answer:
-      'No prior quantum computing experience is required. The curriculum begins with foundational quantum mechanics, qubit representation, and gate logic before progressing to advanced variational algorithms and quantum machine learning. Basic familiarity with Python is recommended.',
-    category: 'Workshops & Prerequisites',
-    isTopQuestion: true,
+      'Students and individuals interested in quantum computing can participate, subject to the eligibility criteria specified by the organizers.',
+    category: 'General & Overview',
   },
   {
     id: 'faq-05',
-    question: 'Will participants receive academic on-duty (OD) attendance letters?',
+    number: 5,
+    question: 'Do I need prior knowledge of quantum computing or Qiskit?',
     answer:
-      'Yes. Registered and verified external and internal attendees will receive formal participation and attendance certificates endorsed by SRM University-AP and IBM Quantum to facilitate on-duty approval from their respective academic institutions.',
-    category: 'Registration & Verification',
+      'Not necessarily. Beginners are welcome in introductory activities. Some advanced workshops, competitions, or hackathon activities may require basic Python, quantum computing, or Qiskit knowledge.',
+    category: 'Prerequisites & Prep',
   },
   {
     id: 'faq-06',
-    question: 'How will the 24-hour quantum hackathon be conducted?',
+    number: 6,
+    question: 'Can I participate in multiple events?',
     answer:
-      'The hackathon takes place in the AL Block Computer Labs starting on Day 03. Teams of 2 to 4 members work on competitive algorithmic challenges spanning quantum optimization, quantum chemistry simulation, and quantum machine learning, with 24/7 technical mentorship.',
-    category: 'Hackathon & Hardware',
+      'You may participate in multiple events, provided that the schedules do not overlap and the event-specific rules permit it.',
+    category: 'Events & Competitions',
   },
   {
     id: 'faq-07',
-    question: 'Do hackathon participants get access to real IBM Quantum processors?',
+    number: 7,
+    question: 'What events are being conducted at SRM University-AP?',
     answer:
-      'Yes. Validated hackathon teams are provisioned with dedicated execution credentials on the IBM Quantum Platform, allowing algorithmic circuits to run directly on 127-qubit IBM Eagle processor backends in addition to local Aer simulation environments.',
-    category: 'Hackathon & Hardware',
+      'The proposed activities include:\n• Quantum Quiddles: An individual quiz-and-riddle competition featuring 20 quantum-themed questions.\n• QTalk: A 2-minute presentation on a quantum concept or project-related topic.\n• Guess the QTech: A team-based game involving the identification of quantum technologies through clues.\n• Technical Activities: Quantum computing challenges and topics such as quantum repeaters and long-distance entanglement.',
+    category: 'Events & Competitions',
+    isTopQuestion: true,
   },
   {
     id: 'faq-08',
-    question: 'What hardware or software should I bring to campus?',
+    number: 8,
+    question: 'What should I prepare before attending the event?',
     answer:
-      'Participants should bring a personal laptop with a working Python 3.10+ installation and a modern web browser. Campus lab terminals with pre-configured Linux environments and Qiskit 1.x environments will also be accessible during lab sessions.',
-    category: 'Workshops & Prerequisites',
+      'For online activities and hands-on sessions, participants are advised to have:\n• A laptop and a stable internet connection.\n• A GitHub account, where required.\n• Basic Python knowledge.\n• Basic knowledge of quantum computing.\n• Familiarity with Qiskit, particularly for advanced technical activities.',
+    category: 'Prerequisites & Prep',
   },
   {
     id: 'faq-09',
-    question: 'Where on the SRM University-AP campus will sessions take place?',
+    number: 9,
+    question: 'Will participants receive certificates or prizes?',
     answer:
-      'Keynote addresses and ceremonial functions will take place in the Main Auditorium (Ground Floor, Academic Block 01). Hands-on workshops and hackathon workstations will be hosted across AL Block Computer Labs 01, 02, and 03.',
-    category: 'Campus & Logistics',
+      'Certificate and prize details will be announced by the organizing committee. Participants should refer to the official event announcements for the latest information.',
+    category: 'Certificates & Contact',
   },
   {
     id: 'faq-10',
-    question: 'Are meals and refreshments provided during the 24-hour hackathon?',
+    number: 10,
+    question: 'How can I register and receive event updates?',
     answer:
-      'Yes. Continuous catering, midnight snacks, tea, coffee, and energy dispensaries are provided for all registered hackathon participants, mentors, and staff throughout the 24-hour sprint.',
-    category: 'Campus & Logistics',
+      'Follow the official SRM University-AP Qiskit Fall Fest 2026 announcements for registration links, schedules, eligibility requirements, and event updates.',
+    category: 'Registration & Fees',
   },
   {
     id: 'faq-11',
-    question: 'Are official IBM certificates and badges provided?',
+    number: 11,
+    question: 'Whom should I contact for further information?',
     answer:
-      'Yes. Attendees who complete workshop assignments and hackathon tracks will be awarded verifiable digital course credentials and IBM Credly badges recognized internationally by academia and industry.',
-    category: 'Registration & Verification',
+      'Contact the SRMAP Qiskit Fall Fest 2026 organizing committee through the official event communication channels.',
+    category: 'Certificates & Contact',
   },
   {
     id: 'faq-12',
-    question: 'Is accommodation available on campus for outstation attendees?',
+    number: 12,
+    question: 'Is there an online phase for Qiskit Fall Fest 2026?',
     answer:
-      'Limited on-campus hostel accommodation is available on a first-come, first-served basis for verified external participants traveling from outside the Vijayawada/Guntur region. Requests must be indicated during Unstop registration.',
-    category: 'Campus & Logistics',
+      'Yes. The planned online phase will take place from October 5–9, 2026. Participants should follow the official announcements for online session links and activity details.',
+    category: 'Schedule & Venues',
+  },
+  {
+    id: 'faq-13',
+    number: 13,
+    question: 'Is there an offline phase at SRM University-AP?',
+    answer:
+      'Yes. The planned offline phase will be held from October 26–30, 2026, at SRM University-AP, Amaravati, Andhra Pradesh.',
+    category: 'Schedule & Venues',
+  },
+  {
+    id: 'faq-14',
+    number: 14,
+    question: 'What is the registration fee for the online course?',
+    answer:
+      'The registration fee for the Qiskit Fall Fest 2026 online course is ₹99 per participant. Participants can register by following the official registration instructions provided by the organizing committee.',
+    category: 'Registration & Fees',
+    isTopQuestion: true,
+  },
+  {
+    id: 'faq-15',
+    number: 15,
+    question: 'What skills can I gain by participating in Qiskit Fall Fest?',
+    answer:
+      'Participants can develop an understanding of quantum computing, explore Qiskit, improve problem-solving and technical communication skills, and gain experience through collaborative activities and competitions.',
+    category: 'General & Overview',
   },
 ];
