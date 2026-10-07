@@ -23,14 +23,28 @@ import {
   ExternalLink,
   Maximize2,
   Minimize2,
-  Terminal,
+  Layers,
+  BookOpen,
 } from 'lucide-react';
-import { QuantumWaveField } from '@/components/ui/QuantumWaveField';
-import { QuantumBlochSphere } from '@/components/ui/QuantumBlochSphere';
+import { InteractiveContourLines } from '@/components/ui/InteractiveContourLines';
 import { Footer } from '@/components/shared/Footer';
 import { FlowButton } from '@/components/ui/FlowButton';
+import { StaggeredTextReveal } from '@/components/ui/StaggeredTextReveal';
 import { FAQS_DATA, FAQ_CATEGORIES, FAQ_META, FAQCategory, FAQItem } from '@/data/faqs';
 import { REGISTRATION_URL } from '@/lib/constants';
+
+const fadeInUpVariant = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (customDelay: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: [0.16, 1, 0.3, 1] as const,
+      delay: customDelay,
+    },
+  }),
+};
 
 export default function FAQsPageContent() {
   const { theme, resolvedTheme } = useTheme();
@@ -138,8 +152,9 @@ export default function FAQsPageContent() {
     return FAQS_DATA.filter((item) => item.isTopQuestion);
   }, []);
 
-  const handleHeroTagClick = (tag: string) => {
-    setSearchQuery(tag);
+  const handleHeroSelectCategory = (category: FAQCategory) => {
+    setSelectedCategory(category);
+    setSearchQuery('');
     const directory = document.getElementById('faq-directory');
     if (directory) {
       directory.scrollIntoView({ behavior: 'smooth' });
@@ -149,148 +164,169 @@ export default function FAQsPageContent() {
   return (
     <div className="w-full flex flex-col min-h-screen bg-[var(--background)] text-[var(--foreground)] selection:bg-[#6C151E] selection:text-[#F5F3F0]">
       {/* =========================================================================
-          SECTION 01: HERO WITH BESPOKE QUANTUM BLOCH CORE & SPLIT ORIENTATION
+          SECTION 01: HERO WITH 21ST.DEV INTERACTIVE CONTOUR LINES SHADER
           ========================================================================= */}
       <section
-        id="faq-hero"
-        aria-label="FAQ Hero"
-        className="relative w-full border-b border-[#3A0B10]/20 bg-gradient-to-b from-[#F9F5F0] via-[#F5DABF]/15 to-[#F4F0EE] dark:from-[#13090A] dark:via-[#1C0709] dark:to-[#120506] text-[#16171B] dark:text-[#F5F3F0] transition-colors duration-300 overflow-hidden"
+        id="hero"
+        data-section="top"
+        className="relative w-full snap-start overflow-hidden bg-gradient-to-b from-[#F9F5F0] via-[#F5DABF]/20 to-[#F4F0EE] dark:from-[#13090A] dark:via-[#1C0709] dark:to-[#120506] border-b border-[rgba(108,21,30,0.14)] dark:border-[rgba(108,21,30,0.3)] transition-colors duration-300"
       >
-        {/* UNIQUE LIVE COMPONENT BACKDROP: Quantum Wave Probability Manifolds */}
-        <QuantumWaveField className="opacity-40 sm:opacity-75 dark:opacity-50" />
+        {/* 21ST.DEV SIGNATURE SHADER: Interactive Contour Lines WebGL2 Background */}
+        <div className="absolute inset-0 z-0 opacity-40 sm:opacity-75 dark:opacity-45 pointer-events-auto overflow-hidden">
+          <InteractiveContourLines />
+        </div>
 
-        {/* Ambient radial glows */}
-        <div className="absolute inset-0 pointer-events-none opacity-25 dark:opacity-15 z-0">
+        {/* Ambient atmospheric lighting */}
+        <div className="absolute inset-0 pointer-events-none opacity-20 dark:opacity-15 z-0">
           <div className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full border border-[#6C151E]/25" />
           <div className="absolute top-1/2 right-0 w-[550px] h-[550px] rounded-full bg-gradient-to-bl from-[#B08D57]/20 to-transparent blur-3xl" />
         </div>
 
-        {/* Main 2-Column Responsive Layout */}
-        <div className="relative z-10 mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-12 pt-12 sm:pt-16 lg:pt-20 pb-12 sm:pb-16 lg:pb-18">
+        <div className="relative z-10 mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-12 py-10 sm:py-16 md:py-20 min-h-0 sm:min-h-[520px] lg:min-h-[580px] flex flex-col justify-center">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             
-            {/* LEFT COLUMN: Editorial Typography & Instant Search (7 cols) */}
-            <div className="lg:col-span-7 space-y-6 sm:space-y-7">
+            {/* LEFT COLUMN: HERO CONTENT (8 cols) */}
+            <div className="lg:col-span-8 flex flex-col justify-center space-y-4 sm:space-y-6 pointer-events-auto">
               
-              {/* Institutional Host & Location Strip */}
+              {/* Eyebrow */}
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="flex flex-wrap items-center gap-2 sm:gap-2.5"
+                className="inline-flex items-center gap-3"
+                initial="hidden"
+                animate="visible"
+                custom={0.05}
+                variants={fadeInUpVariant}
               >
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold tracking-[0.2em] uppercase bg-[#B08D57]/15 text-[#886937] dark:text-[#B08D57] border border-[#B08D57]/30 shadow-xs">
-                  <Sparkles size={12} className="text-[#886937] dark:text-[#B08D57]" />
-                  IBM QUANTUM PARTNERSHIP
-                </span>
-
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-semibold bg-[#3A0B10]/5 dark:bg-white/10 text-[#3A0B10] dark:text-[#F5F3F0] border border-[#3A0B10]/15 dark:border-white/15">
-                  <Building2 size={13} className="text-[#6C151E] dark:text-[#B08D57]" />
-                  <span>Host: <strong className="font-bold">{FAQ_META.host}</strong></span>
-                </div>
-
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-semibold bg-[#3A0B10]/5 dark:bg-white/10 text-[#3A0B10] dark:text-[#F5F3F0] border border-[#3A0B10]/15 dark:border-white/15">
-                  <MapPin size={13} className="text-[#6C151E] dark:text-[#B08D57]" />
-                  <span>Location: <strong className="font-bold">{FAQ_META.location}</strong></span>
-                </div>
+                <span className="h-px w-8 bg-[#A7192A] dark:bg-[#EF7885]" />
+                <p className="font-bold uppercase tracking-[0.28em] leading-none text-xs sm:text-sm text-[#A7192A] dark:text-[#EF7885]">
+                  OFFICIAL KNOWLEDGE BASE &middot; IBM QUANTUM PARTNERSHIP
+                </p>
               </motion.div>
 
-              {/* Editorial Headline Hierarchy */}
-              <div className="space-y-3">
-                <motion.h1
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.1 }}
-                  className="text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-serif font-bold tracking-tight text-[#3A0B10] dark:text-[#F5F3F0] leading-[1.08]"
+              {/* Headline */}
+              <motion.h1
+                className="font-serif text-[clamp(2.5rem,5.2vw,5.0rem)] font-bold leading-[0.96] tracking-[-0.045em] m-0 text-[#A7192A] dark:text-[#EA8793]"
+                initial="hidden"
+                animate="visible"
+                custom={0.15}
+                variants={fadeInUpVariant}
+              >
+                <StaggeredTextReveal text="Frequently Asked" delay={0.1} stagger={0.02} letterClassName="text-[#A7192A] dark:text-[#EA8793]" />{' '}
+                <StaggeredTextReveal text="Questions." delay={0.3} stagger={0.025} letterClassName="font-serif italic font-semibold text-[#6C151E] dark:text-[#F5DABF]" />
+              </motion.h1>
+
+              {/* Subheadline & Description */}
+              <div className="max-w-[700px] space-y-2.5">
+                <motion.div
+                  className="font-bold tracking-[-0.01em] text-sm sm:text-base md:text-lg text-[#211818] dark:text-[#F8F2F0] uppercase flex flex-wrap items-center gap-2"
+                  initial="hidden"
+                  animate="visible"
+                  custom={0.25}
+                  variants={fadeInUpVariant}
                 >
-                  Qiskit Fall Fest 2026
-                  <span className="block text-[#6C151E] dark:text-[#B08D57] font-serif font-normal italic text-2xl sm:text-3xl md:text-4xl xl:text-5xl mt-1.5">
-                    Frequently Asked Questions (FAQ)
-                  </span>
-                </motion.h1>
+                  <span>Host: <strong className="font-bold text-[#A7192A] dark:text-[#F5DABF]">{FAQ_META.host}</strong></span>
+                  <span>&middot;</span>
+                  <span>Location: <strong className="font-bold text-[#A7192A] dark:text-[#F5DABF]">{FAQ_META.location}</strong></span>
+                </motion.div>
 
                 <motion.p
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.2 }}
-                  className="text-sm sm:text-base md:text-lg font-sans font-medium text-[#16171B]/80 dark:text-[#E5E5E7]/85 max-w-2xl leading-relaxed"
+                  className="font-sans font-normal text-[#4E4441] dark:text-[#D6CDCA] text-sm sm:text-base md:text-lg leading-relaxed max-w-[680px]"
+                  initial="hidden"
+                  animate="visible"
+                  custom={0.35}
+                  variants={fadeInUpVariant}
                 >
-                  Your complete guide to schedules, ₹99 registration fee, eligibility, technical activities, prerequisites, and campus logistics at SRM University-AP.
+                  Direct answers on the two-phase schedule, ₹99 registration fee, technical challenges, eligibility criteria, and preparation checklists for Qiskit Fall Fest 2026.
                 </motion.p>
               </div>
 
-              {/* Integrated Hero Quick Search Bar */}
+              {/* Interactive Hero Filter Cards (Aligned with Schedule PhaseSelector Cards) */}
               <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="space-y-2.5 max-w-xl"
+                className="pt-2 space-y-2.5 max-w-[680px]"
+                initial="hidden"
+                animate="visible"
+                custom={0.45}
+                variants={fadeInUpVariant}
               >
-                <div className="relative w-full">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#16171B]/50 dark:text-[#C7C8CC]/50">
-                    <Search size={16} />
-                  </div>
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search any query (e.g. ₹99, October dates, Python, Quiddles)..."
-                    aria-label="Search all FAQs in hero"
-                    className="w-full pl-10 pr-10 py-3 rounded-xl border border-[#3A0B10]/25 dark:border-white/20 bg-white/95 dark:bg-[#25070A]/95 text-xs sm:text-sm font-sans text-[#16171B] dark:text-[#F5F3F0] placeholder-[#16171B]/40 dark:placeholder-[#C7C8CC]/40 focus:outline-none focus:ring-2 focus:ring-[#6C151E] dark:focus:ring-[#B08D57] shadow-sm transition-all"
-                  />
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      onClick={() => setSearchQuery('')}
-                      aria-label="Clear search text"
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#16171B]/50 dark:text-[#C7C8CC]/50 hover:text-[#3A0B10] dark:hover:text-white cursor-pointer"
-                    >
-                      <X size={15} />
-                    </button>
-                  )}
+                <div className="font-bold uppercase tracking-[0.24em] text-[11px] text-[#A7192A] dark:text-[#EF7885]">
+                  EXPLORE BY KEY DOMAIN
                 </div>
 
-                {/* Quick Topic Jump Tags */}
-                <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-mono text-[#16171B]/70 dark:text-[#C7C8CC]/70">
-                  <span className="font-semibold text-[#6C151E] dark:text-[#B08D57]">Popular:</span>
-                  {['₹99 fee', 'October dates', 'Quantum Quiddles', 'Python', 'Certificates'].map((tag) => (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => handleHeroTagClick(tag)}
-                      className="px-2 py-0.5 rounded-md bg-[#3A0B10]/5 dark:bg-white/10 hover:bg-[#6C151E]/10 dark:hover:bg-white/20 text-[#3A0B10] dark:text-[#F5F3F0] border border-[#3A0B10]/10 dark:border-white/10 transition-colors cursor-pointer"
-                    >
-                      #{tag}
-                    </button>
-                  ))}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  {/* Card 1: Schedule & Dates */}
+                  <button
+                    type="button"
+                    onClick={() => handleHeroSelectCategory('Schedule & Venues')}
+                    className="group relative flex items-center justify-between p-4 rounded-2xl border border-[rgba(108,21,30,0.18)] dark:border-white/15 bg-white/75 hover:bg-white dark:bg-white/5 dark:hover:bg-white/10 text-left transition-all duration-300 hover:border-[#6C151E] shadow-sm cursor-pointer overflow-hidden"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 rounded-xl bg-[#6C151E]/10 dark:bg-white/10 text-[#6C151E] dark:text-[#F5DABF] group-hover:bg-[#6C151E] group-hover:text-white transition-colors">
+                        <Calendar size={18} />
+                      </div>
+                      <div>
+                        <div className="font-serif font-bold text-sm sm:text-base text-[#211818] dark:text-[#FAF7F3]">
+                          Schedule & Dates
+                        </div>
+                        <div className="text-[11px] font-mono text-[#665B57] dark:text-[#BEB5B4]">
+                          Oct 5–9 & 26–30
+                        </div>
+                      </div>
+                    </div>
+                    <ArrowRight size={15} className="text-[#6C151E] dark:text-[#F5DABF] opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                  </button>
+
+                  {/* Card 2: Registration & Course Fee */}
+                  <button
+                    type="button"
+                    onClick={() => handleHeroSelectCategory('Registration & Fees')}
+                    className="group relative flex items-center justify-between p-4 rounded-2xl border border-[rgba(108,21,30,0.18)] dark:border-white/15 bg-white/75 hover:bg-white dark:bg-white/5 dark:hover:bg-white/10 text-left transition-all duration-300 hover:border-[#6C151E] shadow-sm cursor-pointer overflow-hidden"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 rounded-xl bg-emerald-600/10 dark:bg-emerald-400/10 text-emerald-800 dark:text-emerald-300 group-hover:bg-emerald-700 group-hover:text-white transition-colors">
+                        <Sparkles size={18} />
+                      </div>
+                      <div>
+                        <div className="font-serif font-bold text-sm sm:text-base text-[#211818] dark:text-[#FAF7F3]">
+                          Registration & Fee
+                        </div>
+                        <div className="text-[11px] font-mono text-[#665B57] dark:text-[#BEB5B4]">
+                          ₹99 Online Course Fee
+                        </div>
+                      </div>
+                    </div>
+                    <ArrowRight size={15} className="text-emerald-700 dark:text-emerald-300 opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                  </button>
                 </div>
               </motion.div>
 
-              {/* Status Metadata Strip */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-                className="pt-1 flex flex-wrap items-center gap-3 text-xs font-mono text-[#16171B]/70 dark:text-[#C7C8CC]/70"
-              >
-                <span className="h-px w-8 bg-[#3A0B10]/20 dark:bg-[#F5F3F0]/20" />
-                <span className="font-semibold">{FAQS_DATA.length} Verified Answers</span>
-                <span className="h-1.5 w-1.5 rounded-full bg-[#6C151E] dark:bg-[#B08D57]" />
-                <span>Online Phase: Oct 5–9</span>
-                <span className="h-1.5 w-1.5 rounded-full bg-[#6C151E] dark:bg-[#B08D57]" />
-                <span>Offline Phase: Oct 26–30</span>
-              </motion.div>
             </div>
 
-            {/* RIGHT COLUMN: UNIQUE LIVE COMPONENT (Interactive Bloch Sphere Qubit) (5 cols) */}
+            {/* RIGHT COLUMN: EDITORIAL VERTICAL TYPOGRAPHY (4 cols) */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
-              className="lg:col-span-5 w-full flex justify-center"
+              className="hidden lg:flex lg:col-span-4 flex-col justify-between items-end h-full pl-6 border-l border-[rgba(108,21,30,0.16)] dark:border-[rgba(108,21,30,0.35)] min-h-[380px] pointer-events-auto"
+              initial="hidden"
+              animate="visible"
+              custom={0.55}
+              variants={fadeInUpVariant}
             >
-              <div className="w-full max-w-[420px]">
-                <QuantumBlochSphere />
+              {/* Editorial Vertical Typography */}
+              <div className="flex flex-col items-end text-right space-y-2.5 font-sans text-xs sm:text-sm font-semibold tracking-[0.22em] uppercase text-[#4E4441] dark:text-[#D6CDCA]">
+                <span className="hover:text-[#A7192A] dark:hover:text-[#F5DABF] transition-colors">ELIGIBILITY</span>
+                <span className="hover:text-[#A7192A] dark:hover:text-[#F5DABF] transition-colors">TIMELINE</span>
+                <span className="hover:text-[#A7192A] dark:hover:text-[#F5DABF] transition-colors">ACTIVITIES</span>
+                <span className="hover:text-[#A7192A] dark:hover:text-[#F5DABF] transition-colors">CERTIFICATION</span>
+                <span className="text-[#A7192A] dark:text-[#EF7885] font-bold">15 DIRECTORY</span>
+                <span className="text-[#A7192A] dark:text-[#EF7885] font-bold">QUESTIONS</span>
+                <div className="mt-3 h-14 w-px bg-gradient-to-b from-[#A7192A] via-[#A7192A]/40 to-transparent dark:from-[#EF7885]" />
+              </div>
+
+              {/* Institutional Credit */}
+              <div className="text-right pt-8">
+                <div className="text-[11px] font-bold tracking-[0.24em] uppercase text-[#A7192A] dark:text-[#EF7885]">
+                  SRM UNIVERSITY-AP &times; IBM
+                </div>
+                <div className="text-xs font-serif italic text-[#211818] dark:text-[#F8F2F0] mt-1">
+                  A Decade of Quantum on Cloud
+                </div>
               </div>
             </motion.div>
 
@@ -527,62 +563,89 @@ export default function FAQsPageContent() {
       </section>
 
       {/* =========================================================================
-          SECTION 04: CATEGORY FILTER TABS
+          SECTION 04: SEARCH & CATEGORY FILTER CONTROL BAR
           ========================================================================= */}
       <section
         id="faq-categories"
-        aria-label="Category Filters"
+        aria-label="Category Filters & Search"
         className="sticky top-[var(--navbar-height,78px)] z-30 w-full py-3.5 sm:py-4 bg-[#F5F3F0]/95 dark:bg-[#1A0507]/95 backdrop-blur-md border-y border-[#3A0B10]/15 dark:border-[#F5F3F0]/15 shadow-sm transition-colors duration-300"
       >
-        <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-12 flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-mono font-semibold tracking-wider uppercase text-[#6C151E] dark:text-[#B08D57] flex items-center gap-1.5">
-              <Filter size={13} />
-              <span>Category:</span>
-            </span>
-            <div className="flex flex-wrap items-center gap-1.5">
-              {FAQ_CATEGORIES.map((cat) => {
-                const isActive = selectedCategory === cat;
-                return (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-3 py-1 rounded-lg text-xs font-mono font-semibold transition-all duration-200 cursor-pointer ${
-                      isActive
-                        ? 'bg-[#3A0B10] text-[#F5F3F0] dark:bg-[#B08D57] dark:text-[#1A0507] shadow-sm scale-[1.02]'
-                        : 'bg-white/80 dark:bg-[#28070B] text-[#16171B]/75 dark:text-[#C7C8CC] border border-[#3A0B10]/15 dark:border-[#F5F3F0]/15 hover:border-[#3A0B10]/40 dark:hover:border-white/30'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                );
-              })}
+        <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 xl:px-12 space-y-3">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono font-semibold tracking-wider uppercase text-[#6C151E] dark:text-[#B08D57] flex items-center gap-1.5">
+                <Filter size={13} />
+                <span>Categories:</span>
+              </span>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {FAQ_CATEGORIES.map((cat) => {
+                  const isActive = selectedCategory === cat;
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`px-3 py-1 rounded-lg text-xs font-mono font-semibold transition-all duration-200 cursor-pointer ${
+                        isActive
+                          ? 'bg-[#3A0B10] text-[#F5F3F0] dark:bg-[#B08D57] dark:text-[#1A0507] shadow-sm scale-[1.02]'
+                          : 'bg-white/80 dark:bg-[#28070B] text-[#16171B]/75 dark:text-[#C7C8CC] border border-[#3A0B10]/15 dark:border-[#F5F3F0]/15 hover:border-[#3A0B10]/40 dark:hover:border-white/30'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-xs font-mono text-[#16171B]/60 dark:text-[#C7C8CC]/60">
+                ({filteredFaqs.length} of {FAQS_DATA.length} matching)
+              </span>
+
+              <button
+                type="button"
+                onClick={toggleAll}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium border border-[#3A0B10]/20 dark:border-[#F5F3F0]/20 bg-white/80 dark:bg-black/30 hover:bg-[#3A0B10]/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                {areAllExpanded ? (
+                  <>
+                    <Minimize2 size={13} />
+                    <span>Collapse All</span>
+                  </>
+                ) : (
+                  <>
+                    <Maximize2 size={13} />
+                    <span>Expand All</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-xs font-mono text-[#16171B]/60 dark:text-[#C7C8CC]/60">
-              ({filteredFaqs.length} of {FAQS_DATA.length} matching)
-            </span>
-
-            <button
-              type="button"
-              onClick={toggleAll}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono font-medium border border-[#3A0B10]/20 dark:border-[#F5F3F0]/20 bg-white/80 dark:bg-black/30 hover:bg-[#3A0B10]/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
-            >
-              {areAllExpanded ? (
-                <>
-                  <Minimize2 size={13} />
-                  <span>Collapse All</span>
-                </>
-              ) : (
-                <>
-                  <Maximize2 size={13} />
-                  <span>Expand All</span>
-                </>
-              )}
-            </button>
+          {/* Search Input Bar */}
+          <div className="relative w-full">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#16171B]/50 dark:text-[#C7C8CC]/50">
+              <Search size={16} />
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by keywords (e.g. ₹99, October dates, Python, Quiddles, certificates)..."
+              aria-label="Search all FAQs"
+              className="w-full pl-10 pr-10 py-2.5 sm:py-3 rounded-xl border border-[#3A0B10]/20 dark:border-[#F5F3F0]/20 bg-white dark:bg-[#25070A] text-xs sm:text-sm font-sans text-[#16171B] dark:text-[#F5F3F0] placeholder-[#16171B]/40 dark:placeholder-[#C7C8CC]/40 focus:outline-none focus:ring-2 focus:ring-[#6C151E] dark:focus:ring-[#B08D57] transition-all shadow-xs"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                aria-label="Clear search text"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#16171B]/50 dark:text-[#C7C8CC]/50 hover:text-[#3A0B10] dark:hover:text-white cursor-pointer"
+              >
+                <X size={15} />
+              </button>
+            )}
           </div>
         </div>
       </section>
