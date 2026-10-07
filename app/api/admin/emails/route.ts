@@ -42,42 +42,85 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const { email, emails, role = 'participant', fullName = '' } = body;
-
-    // Support both single email or bulk text/array
     let emailList: Array<{ email: string; fullName: string; role: string }> = [];
+    const contentType = request.headers.get('content-type') || '';
 
-    if (emails && typeof emails === 'string') {
-      // Parse bulk comma or newline separated string
-      const lines = emails.split(/[\n,;]+/);
-      for (const line of lines) {
-        const trimmed = line.trim().toLowerCase();
-        if (trimmed && trimmed.includes('@')) {
-          emailList.push({ email: trimmed, fullName: '', role });
-        }
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await request.formData();
+      const file = formData.get('file');
+      const defaultRole = (formData.get('role') as string) || 'participant';
+
+      if (file && typeof file === 'object' && 'text' in file) {
+        const text = await (file as Blob).text();
+        const { extractParticipantsFromCSV } = await import('@/lib/csv');
+        const extracted = extractParticipantsFromCSV(text, defaultRole);
+        emailList = extracted.participants;
       }
-    } else if (Array.isArray(emails)) {
-      emailList = emails
-        .filter((e) => typeof e === 'string' && e.includes('@'))
-        .map((e) => ({ email: e.trim().toLowerCase(), fullName: '', role }));
-    } else if (email && typeof email === 'string' && email.includes('@')) {
-      emailList.push({
-        email: email.trim().toLowerCase(),
-        fullName: fullName.trim(),
-        role,
-      });
+    } else {
+      const body = await request.json();
+      const { email, emails, role = 'participant', fullName = '', participants } = body;
+
+      if (Array.isArray(participants) && participants.length > 0) {
+        // Direct list of parsed participant objects from client
+        for (const p of participants) {
+          if (p && typeof p.email === 'string') {
+            const trimmed = p.email.trim().toLowerCase();
+            if (trimmed.includes('@') && trimmed.includes('.')) {
+              emailList.push({
+                email: trimmed,
+                fullName: typeof p.fullName === 'string' ? p.fullName.trim() : '',
+                role: p.role || role || 'participant',
+              });
+            }
+          }
+        }
+      } else if (emails && typeof emails === 'string') {
+        // Check if bulk text looks like CSV with names or simple lines
+        const lines = emails.split(/[\r\n]+/);
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          if (trimmed.includes(',')) {
+            // Comma-separated: check if name,email or email,name
+            const parts = trimmed.split(',').map((s) => s.trim());
+            const emailPart = parts.find((p) => p.includes('@'));
+            const namePart = parts.find((p) => !p.includes('@')) || '';
+            if (emailPart) {
+              emailList.push({
+                email: emailPart.toLowerCase(),
+                fullName: namePart,
+                role,
+              });
+            }
+          } else if (trimmed.includes('@')) {
+            emailList.push({
+              email: trimmed.toLowerCase(),
+              fullName: '',
+              role,
+            });
+          }
+        }
+      } else if (Array.isArray(emails)) {
+        emailList = emails
+          .filter((e) => typeof e === 'string' && e.includes('@'))
+          .map((e) => ({ email: e.trim().toLowerCase(), fullName: '', role }));
+      } else if (email && typeof email === 'string' && email.includes('@')) {
+        emailList.push({
+          email: email.trim().toLowerCase(),
+          fullName: fullName.trim(),
+          role,
+        });
+      }
     }
 
     if (emailList.length === 0) {
       return NextResponse.json(
-        { error: 'No valid email addresses provided' },
+        { error: 'No valid email addresses found in the provided input or file' },
         { status: 400 }
       );
     }
 
-    // Deduplicate within the same batch by email to avoid PostgreSQL error 21000:
-    // "ON CONFLICT DO UPDATE command cannot affect row a second time"
+    // 1. Deduplicate within the incoming batch by email
     const emailMap = new Map<string, { email: string; fullName: string; role: string }>();
     let intraBatchDuplicates = 0;
 
@@ -87,7 +130,6 @@ export async function POST(request: NextRequest) {
         emailMap.set(item.email, item);
       } else {
         intraBatchDuplicates++;
-        // Merge attributes if duplicate has non-empty values
         emailMap.set(item.email, {
           email: item.email,
           fullName: item.fullName || existing.fullName,
@@ -97,29 +139,87 @@ export async function POST(request: NextRequest) {
     }
 
     const dedupedEmailList = Array.from(emailMap.values());
+    const allEmails = dedupedEmailList.map((i) => i.email);
 
-    const recordsToInsert = dedupedEmailList.map((item) => ({
-      email: item.email,
-      full_name: item.fullName || null,
-      role: item.role,
-      is_active: true,
-      added_by: session.email,
-    }));
+    // 2. Fetch existing records to:
+    //    a) Safely preserve elevated roles (NEVER demote admins)
+    //    b) Preserve existing participant records without deletion
+    //    c) Calculate accurate newAdded vs existingPreserved counts
+    const existingRecordsMap = new Map<string, { role: string; full_name: string | null }>();
+    const CHUNK_QUERY_SIZE = 500;
 
-    const { data, error } = await supabase
-      .from('allowed_emails')
-      .upsert(recordsToInsert, { onConflict: 'email' })
-      .select();
+    for (let i = 0; i < allEmails.length; i += CHUNK_QUERY_SIZE) {
+      const emailChunk = allEmails.slice(i, i + CHUNK_QUERY_SIZE);
+      const { data: existingRows, error: queryErr } = await supabase
+        .from('allowed_emails')
+        .select('email, role, full_name')
+        .in('email', emailChunk);
 
-    if (error) throw error;
+      if (queryErr) {
+        console.warn('Warning querying existing allowed_emails:', queryErr);
+      } else if (existingRows) {
+        for (const row of existingRows) {
+          existingRecordsMap.set(row.email.toLowerCase(), {
+            role: row.role,
+            full_name: row.full_name,
+          });
+        }
+      }
+    }
 
-    // Cache in Upstash Redis
+    let newAddedCount = 0;
+    let existingPreservedCount = 0;
+
+    const recordsToInsert = dedupedEmailList.map((item) => {
+      const existing = existingRecordsMap.get(item.email);
+
+      if (existing) {
+        existingPreservedCount++;
+        // PRESERVE admin role if user is already an admin
+        const finalRole = existing.role === 'admin' ? 'admin' : (item.role || existing.role || 'participant');
+        // Update name if new name is provided, else keep existing name
+        const finalName = item.fullName || existing.full_name || null;
+
+        return {
+          email: item.email,
+          full_name: finalName,
+          role: finalRole,
+          is_active: true,
+          added_by: session.email,
+        };
+      } else {
+        newAddedCount++;
+        return {
+          email: item.email,
+          full_name: item.fullName || null,
+          role: item.role || 'participant',
+          is_active: true,
+          added_by: session.email,
+        };
+      }
+    });
+
+    // 3. Batch upsert in chunks of 200 for maximum reliability
+    const UPSERT_CHUNK_SIZE = 200;
+    for (let i = 0; i < recordsToInsert.length; i += UPSERT_CHUNK_SIZE) {
+      const chunk = recordsToInsert.slice(i, i + UPSERT_CHUNK_SIZE);
+      const { error: upsertErr } = await supabase
+        .from('allowed_emails')
+        .upsert(chunk, { onConflict: 'email' });
+
+      if (upsertErr) {
+        console.error('Error upserting batch chunk:', upsertErr);
+        throw upsertErr;
+      }
+    }
+
+    // 4. Update Upstash Redis cache (if configured)
     if (redis) {
-      for (const item of dedupedEmailList) {
+      for (const item of recordsToInsert) {
         try {
           await redis.set(
             `whitelist:${item.email}`,
-            { role: item.role, fullName: item.fullName },
+            { role: item.role, fullName: item.full_name || '' },
             { ex: 3600 }
           );
         } catch (cacheErr) {
@@ -131,17 +231,15 @@ export async function POST(request: NextRequest) {
       } catch {}
     }
 
-    const duplicateNotice =
-      intraBatchDuplicates > 0
-        ? ` (${intraBatchDuplicates} intra-batch duplicate(s) reconciled)`
-        : '';
+    const message = `Successfully processed ${dedupedEmailList.length} unique participant(s): ${newAddedCount} new member(s) added, ${existingPreservedCount} existing member(s) preserved. No previous members were deleted.`;
 
     return NextResponse.json({
       success: true,
-      message: `Successfully processed ${dedupedEmailList.length} unique email(s) for access${duplicateNotice}.`,
-      addedCount: dedupedEmailList.length,
+      message,
+      totalProcessed: dedupedEmailList.length,
+      addedCount: newAddedCount,
+      existingCount: existingPreservedCount,
       duplicateCount: intraBatchDuplicates,
-      data,
     });
   } catch (error: any) {
     console.error('Error adding whitelist emails:', error);
