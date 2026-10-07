@@ -398,28 +398,29 @@ export function HeroCarousel({
 
       {/* ── 1. Top Sub-Navigation Bar: Back & Chapter Switcher (01 Learn, 02 Build, 03 Connect) ── */}
       {!hideTopBar && (
-        <div className="relative z-20 w-full flex items-center justify-between px-4 sm:px-8 md:px-12 pt-3 sm:pt-4 pb-2 border-b border-white/[0.08]">
+        <div className="relative z-20 w-full flex items-center justify-between px-3 sm:px-8 md:px-12 pt-3 sm:pt-4 pb-2 border-b border-white/[0.08] gap-2">
           {/* Back button */}
           {onBack ? (
             <button
               type="button"
               onClick={onBack}
-              className="text-[#D1D5DB] hover:text-white transition-colors cursor-pointer font-mono text-xs sm:text-[13px] uppercase tracking-wider flex items-center gap-1.5 shrink-0"
+              className="text-[#D1D5DB] hover:text-white transition-colors cursor-pointer font-mono text-xs sm:text-[13px] uppercase tracking-wider flex items-center gap-1 shrink-0"
             >
-              <ChevronLeft className="w-4 h-4" />
-              <span>{backLabel || 'Back'}</span>
+              <ChevronLeft className="w-4 h-4 shrink-0" />
+              <span className="hidden min-[420px]:inline">{backLabel || 'Back'}</span>
+              <span className="inline min-[420px]:hidden">Back</span>
             </button>
           ) : (
-            <div className="w-16" />
+            <div className="hidden sm:block w-16" />
           )}
 
           {/* Chapter Tabs: 01 Learn, 02 Build, 03 Connect */}
-          <div className="flex items-center gap-4 sm:gap-8">
+          <div className="flex items-center gap-2.5 sm:gap-8 overflow-x-auto scrollbar-none no-scrollbar py-0.5">
             <button
               type="button"
               onClick={() => handleCategoryClick('learn')}
               className={cn(
-                'font-mono text-xs sm:text-[13px] tracking-wider transition-all pb-1.5 cursor-pointer',
+                'font-mono text-[11px] sm:text-[13px] tracking-tight sm:tracking-wider transition-all pb-1.5 cursor-pointer whitespace-nowrap shrink-0',
                 activeChapter === 'learn'
                   ? 'text-white font-bold border-b-2 border-[#E57373]'
                   : 'text-white/50 hover:text-white/80 font-normal'
@@ -431,7 +432,7 @@ export function HeroCarousel({
               type="button"
               onClick={() => handleCategoryClick('build')}
               className={cn(
-                'font-mono text-xs sm:text-[13px] tracking-wider transition-all pb-1.5 cursor-pointer',
+                'font-mono text-[11px] sm:text-[13px] tracking-tight sm:tracking-wider transition-all pb-1.5 cursor-pointer whitespace-nowrap shrink-0',
                 activeChapter === 'build'
                   ? 'text-white font-bold border-b-2 border-[#E57373]'
                   : 'text-white/50 hover:text-white/80 font-normal'
@@ -443,7 +444,7 @@ export function HeroCarousel({
               type="button"
               onClick={() => handleCategoryClick('connect')}
               className={cn(
-                'font-mono text-xs sm:text-[13px] tracking-wider transition-all pb-1.5 cursor-pointer',
+                'font-mono text-[11px] sm:text-[13px] tracking-tight sm:tracking-wider transition-all pb-1.5 cursor-pointer whitespace-nowrap shrink-0',
                 activeChapter === 'connect'
                   ? 'text-white font-bold border-b-2 border-[#E57373]'
                   : 'text-white/50 hover:text-white/80 font-normal'
@@ -453,18 +454,19 @@ export function HeroCarousel({
             </button>
           </div>
 
-          <div className="w-16" />
+          <div className="hidden sm:block w-16" />
         </div>
       )}
 
-      {/* ── 2. Middle Hero Stage: Left Details + Right Floating Glassmorphic Card (ALWAYS VISIBLE) ── */}
+      {/* ── 2. Middle Hero Stage: Left Details + Right Floating Glassmorphic Card + Filmstrip Cards ── */}
       {!hideHeadline && (
-        <div className="relative z-10 w-full flex-1 flex flex-col justify-center px-4 sm:px-6 md:px-10 lg:px-12 py-2 sm:py-3">
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-6 lg:gap-8 xl:gap-10">
+        <div className="relative z-10 w-full flex-1 min-h-0 overflow-y-auto scrollbar-none flex flex-col justify-start pt-2 sm:pt-3 pb-2 px-3 sm:px-8 md:px-10 lg:px-12">
+          {/* Main Content: Left Eyebrow/Title/Buttons + Right Glass Card */}
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 sm:gap-4 md:gap-6 lg:gap-8 xl:gap-10">
             {/* Left Column: Eyebrow, Title, Description, Buttons */}
             <div className="flex-1 max-w-xl lg:max-w-2xl text-left">
               {/* Category Eyebrow with Red Dot */}
-              <div className="flex items-center gap-2 mb-2 sm:mb-3">
+              <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
                 <span className="w-2 h-2 rounded-full bg-[#E57373] shadow-[0_0_8px_#E57373]" />
                 <span className="font-mono text-xs sm:text-[13px] uppercase tracking-[0.2em] text-[#E57373] font-semibold">
                   {parsed.track}
@@ -494,7 +496,7 @@ export function HeroCarousel({
                 <AnimatePresence mode="popLayout" initial={false}>
                   <motion.p
                     key={`desc-${index}`}
-                    className="font-sans text-xs sm:text-sm md:text-base text-[#D1D5DB]/90 leading-relaxed mt-2.5 sm:mt-3 max-w-xl line-clamp-3"
+                    className="font-sans text-xs sm:text-sm md:text-base text-[#D1D5DB]/90 leading-relaxed mt-2 sm:mt-2.5 max-w-xl line-clamp-2 sm:line-clamp-3"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.3, delay: 0.08 }}
@@ -505,38 +507,38 @@ export function HeroCarousel({
               )}
 
               {/* Action Buttons: Primary + Secondary */}
-              <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-4 sm:mt-5">
+              <div className="flex flex-wrap items-center gap-2.5 sm:gap-3.5 mt-3 sm:mt-3.5">
                 <a
                   href={active.registrationUrl || 'https://qiskit.org/fallfest'}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full bg-[#F5F3F0] text-[#16171B] font-semibold text-xs sm:text-sm hover:bg-white transition-all shadow-[0_4px_14px_rgba(245,243,240,0.25)] active:scale-95"
+                  className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-[#F5F3F0] text-[#16171B] font-semibold text-xs sm:text-sm hover:bg-white transition-all shadow-[0_4px_14px_rgba(245,243,240,0.25)] active:scale-95"
                 >
                   <span>{active.registrationLabel || 'Register for Event'}</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </a>
 
                 <a
                   href="/schedule"
-                  className="inline-flex items-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 rounded-full border border-white/20 bg-white/[0.05] hover:bg-white/10 text-white/95 font-medium text-xs sm:text-sm transition-all"
+                  className="inline-flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-full border border-white/20 bg-white/[0.05] hover:bg-white/10 text-white/95 font-medium text-xs sm:text-sm transition-all"
                 >
-                  <div className="w-5 h-5 rounded-full border border-white/60 flex items-center justify-center">
-                    <Play className="w-2.5 h-2.5 fill-white text-white ml-0.5" />
+                  <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border border-white/60 flex items-center justify-center">
+                    <Play className="w-2 h-2 sm:w-2.5 sm:h-2.5 fill-white text-white ml-0.5" />
                   </div>
                   <span>Watch Overview</span>
                 </a>
               </div>
             </div>
 
-            {/* Right Column: Floating Glassmorphic Event Card (Visible Across All Devices & Screen Widths) */}
-            <div className="flex flex-col gap-2.5 sm:gap-3 rounded-2xl border border-white/15 bg-black/55 backdrop-blur-md p-4 sm:p-5 lg:p-6 shadow-2xl w-full sm:w-[280px] md:w-[290px] lg:w-[320px] xl:w-[340px] shrink-0 text-left">
+            {/* Right Column: Floating Glassmorphic Event Card */}
+            <div className="flex flex-col gap-2 sm:gap-2.5 rounded-2xl border border-white/15 bg-black/55 backdrop-blur-md p-3 sm:p-3.5 lg:p-4 shadow-2xl w-full sm:w-[270px] md:w-[280px] lg:w-[310px] xl:w-[330px] shrink-0 text-left">
               {/* DATES */}
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 text-[#E57373] p-1.5 rounded-lg bg-white/5 border border-white/10 shrink-0">
-                  <Calendar className="w-4 h-4" />
+              <div className="flex items-start gap-2.5 sm:gap-3">
+                <div className="mt-0.5 text-[#E57373] p-1 sm:p-1.5 rounded-lg bg-white/5 border border-white/10 shrink-0">
+                  <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
                 <div>
-                  <div className="font-mono text-[10px] uppercase tracking-widest text-[#A6A8B0]">DATES</div>
+                  <div className="font-mono text-[9.5px] sm:text-[10px] uppercase tracking-widest text-[#A6A8B0]">DATES</div>
                   <div className="text-xs sm:text-sm font-bold text-white mt-0.5 tracking-wide">{parsed.date}</div>
                 </div>
               </div>
@@ -544,12 +546,12 @@ export function HeroCarousel({
               <div className="w-full h-px bg-white/10" />
 
               {/* TIME */}
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 text-[#E57373] p-1.5 rounded-lg bg-white/5 border border-white/10 shrink-0">
-                  <Clock className="w-4 h-4" />
+              <div className="flex items-start gap-2.5 sm:gap-3">
+                <div className="mt-0.5 text-[#E57373] p-1 sm:p-1.5 rounded-lg bg-white/5 border border-white/10 shrink-0">
+                  <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
                 <div>
-                  <div className="font-mono text-[10px] uppercase tracking-widest text-[#A6A8B0]">TIME</div>
+                  <div className="font-mono text-[9.5px] sm:text-[10px] uppercase tracking-widest text-[#A6A8B0]">TIME</div>
                   <div className="text-xs sm:text-sm font-semibold text-white/95 mt-0.5">{parsed.time}</div>
                 </div>
               </div>
@@ -557,12 +559,12 @@ export function HeroCarousel({
               <div className="w-full h-px bg-white/10" />
 
               {/* VENUE */}
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 text-[#E57373] p-1.5 rounded-lg bg-white/5 border border-white/10 shrink-0">
-                  <MapPin className="w-4 h-4" />
+              <div className="flex items-start gap-2.5 sm:gap-3">
+                <div className="mt-0.5 text-[#E57373] p-1 sm:p-1.5 rounded-lg bg-white/5 border border-white/10 shrink-0">
+                  <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
                 <div>
-                  <div className="font-mono text-[10px] uppercase tracking-widest text-[#A6A8B0]">VENUE</div>
+                  <div className="font-mono text-[9.5px] sm:text-[10px] uppercase tracking-widest text-[#A6A8B0]">VENUE</div>
                   <div className="text-xs sm:text-sm font-medium text-white/90 mt-0.5 leading-snug">{parsed.venue}</div>
                 </div>
               </div>
@@ -570,106 +572,106 @@ export function HeroCarousel({
               <div className="w-full h-px bg-white/10" />
 
               {/* HOSTED BY */}
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 text-[#E57373] p-1.5 rounded-lg bg-white/5 border border-white/10 shrink-0">
-                  <User className="w-4 h-4" />
+              <div className="flex items-start gap-2.5 sm:gap-3">
+                <div className="mt-0.5 text-[#E57373] p-1 sm:p-1.5 rounded-lg bg-white/5 border border-white/10 shrink-0">
+                  <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
                 <div>
-                  <div className="font-mono text-[10px] uppercase tracking-widest text-[#A6A8B0]">HOSTED BY</div>
+                  <div className="font-mono text-[9.5px] sm:text-[10px] uppercase tracking-widest text-[#A6A8B0]">HOSTED BY</div>
                   <div className="text-xs sm:text-sm font-medium text-white/90 mt-0.5 leading-snug">{parsed.hostedBy}</div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* ── 3. Bottom Filmstrip Carousel: Left Arrow, Thumbnails Row, Right Arrow ── */}
-      {!hideRail && (
-        <div className="relative z-20 w-full px-4 sm:px-8 md:px-12 pt-1 pb-2 overflow-hidden">
-          <div className="relative flex items-center">
-            {/* Left Nav Arrow Button */}
-            <button
-              type="button"
-              aria-label="Previous event"
-              onClick={() => go(index - 1)}
-              disabled={index === 0}
-              className={cn(
-                'absolute left-0 sm:left-2 z-20 w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-white/20 bg-black/75 backdrop-blur-md text-white flex items-center justify-center transition-all cursor-pointer shadow-lg',
-                index === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/20 hover:scale-105 active:scale-95'
-              )}
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
+          {/* ── 3. Filmstrip Carousel: IMMEDIATELY after HOSTED BY with exact 1-line spacing (mt-4 / 16px) ── */}
+          {!hideRail && (
+            <div className="relative z-20 w-full mt-4 sm:mt-4 py-1 shrink-0 overflow-hidden">
+              <div className="relative flex items-center">
+                {/* Left Nav Arrow Button */}
+                <button
+                  type="button"
+                  aria-label="Previous event"
+                  onClick={() => go(index - 1)}
+                  disabled={index === 0}
+                  className={cn(
+                    'absolute left-0 sm:left-1 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-white/20 bg-black/75 backdrop-blur-md text-white flex items-center justify-center transition-all cursor-pointer shadow-lg',
+                    index === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/20 hover:scale-105 active:scale-95'
+                  )}
+                >
+                  <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
 
-            {/* Thumbnail Cards Row */}
-            <div
-              ref={railRef}
-              className="flex items-center gap-3 sm:gap-4 overflow-x-auto scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden py-2 px-8 sm:px-12 w-full scroll-smooth"
-            >
-              {items.map((item, i) => {
-                const isActive = i === index;
-                const itemDetails = parseEventDetails(item);
-                return (
-                  <button
-                    key={item.id || i}
-                    type="button"
-                    onClick={() => go(i)}
-                    className={cn(
-                      'relative shrink-0 rounded-xl overflow-hidden transition-all duration-300 text-left cursor-pointer group',
-                      'w-44 sm:w-52 md:w-56 h-28 sm:h-32',
-                      isActive
-                        ? 'ring-2 ring-[#E57373] shadow-[0_0_20px_rgba(229,115,115,0.4)] scale-[1.02]'
-                        : 'border border-white/10 opacity-70 hover:opacity-100 hover:border-white/30'
-                    )}
-                  >
-                    <img
-                      src={item.image}
-                      alt={item.title.replace(/\n/g, ' ')}
-                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-black/20" />
+                {/* Thumbnail Cards Row */}
+                <div
+                  ref={railRef}
+                  className="flex items-center gap-2.5 sm:gap-4 overflow-x-auto scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden py-1 px-7 sm:px-11 w-full scroll-smooth"
+                >
+                  {items.map((item, i) => {
+                    const isActive = i === index;
+                    const itemDetails = parseEventDetails(item);
+                    return (
+                      <button
+                        key={item.id || i}
+                        type="button"
+                        onClick={() => go(i)}
+                        className={cn(
+                          'relative shrink-0 rounded-xl overflow-hidden transition-all duration-300 text-left cursor-pointer group',
+                          'w-44 sm:w-56 md:w-64 lg:w-72 h-24 sm:h-28 md:h-32 lg:h-34',
+                          isActive
+                            ? 'ring-2 ring-[#E57373] shadow-[0_0_20px_rgba(229,115,115,0.45)] scale-[1.02]'
+                            : 'border border-white/10 opacity-70 hover:opacity-100 hover:border-white/30'
+                        )}
+                      >
+                        <img
+                          src={item.image}
+                          alt={item.title.replace(/\n/g, ' ')}
+                          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-black/20" />
 
-                    <div className="relative z-10 h-full flex flex-col justify-between p-2.5 sm:p-3">
-                      {/* Top-Left Date Badge */}
-                      <div className="font-mono font-bold text-[10px] sm:text-[11px] text-white/95 uppercase tracking-wider">
-                        {itemDetails.date}
-                      </div>
+                        <div className="relative z-10 h-full flex flex-col justify-between p-2.5 sm:p-3 md:p-3.5">
+                          {/* Top-Left Date Badge */}
+                          <div className="font-mono font-bold text-[10px] sm:text-[11.5px] text-white/95 uppercase tracking-wider">
+                            {itemDetails.date}
+                          </div>
 
-                      {/* Bottom Title & Track */}
-                      <div>
-                        <div className="font-serif font-bold text-xs sm:text-[13px] text-white line-clamp-1 leading-snug">
-                          {item.title.replace(/\n/g, ' ')}
+                          {/* Bottom Title & Track */}
+                          <div>
+                            <div className="font-serif font-bold text-xs sm:text-[14px] md:text-base text-white line-clamp-1 leading-snug">
+                              {item.title.replace(/\n/g, ' ')}
+                            </div>
+                            <div className="font-sans text-[10px] sm:text-[11.5px] text-[#A6A8B0] truncate mt-0.5">
+                              {itemDetails.track}
+                            </div>
+                          </div>
                         </div>
-                        <div className="font-sans text-[10px] sm:text-[11px] text-[#A6A8B0] truncate mt-0.5">
-                          {itemDetails.track}
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Right Nav Arrow Button */}
+                <button
+                  type="button"
+                  aria-label="Next event"
+                  onClick={() => go(index + 1)}
+                  disabled={index === last}
+                  className={cn(
+                    'absolute right-0 sm:right-1 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-white/20 bg-black/75 backdrop-blur-md text-white flex items-center justify-center transition-all cursor-pointer shadow-lg',
+                    index === last ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/20 hover:scale-105 active:scale-95'
+                  )}
+                >
+                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+              </div>
             </div>
-
-            {/* Right Nav Arrow Button */}
-            <button
-              type="button"
-              aria-label="Next event"
-              onClick={() => go(index + 1)}
-              disabled={index === last}
-              className={cn(
-                'absolute right-0 sm:right-2 z-20 w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-white/20 bg-black/75 backdrop-blur-md text-white flex items-center justify-center transition-all cursor-pointer shadow-lg',
-                index === last ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/20 hover:scale-105 active:scale-95'
-              )}
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
+          )}
         </div>
       )}
 
       {/* ── 4. Bottom Status Row: 03 / 18 Counter & Progress Bar (Left), View Full Schedule (Right) ── */}
-      <div className="relative z-20 w-full flex items-center justify-between px-4 sm:px-8 md:px-12 py-2 sm:py-3 border-t border-white/[0.08] bg-black/30 backdrop-blur-[2px]">
+      <div className="relative z-20 w-full flex items-center justify-between px-4 sm:px-8 md:px-12 py-1.5 sm:py-2.5 border-t border-white/[0.08] bg-black/50 backdrop-blur-md shrink-0">
         {/* Left: Numerical Counter & Progress Bar (with left clearance for Next.js dev badge) */}
         <div className="flex flex-col items-start gap-1 pl-14 sm:pl-16">
           <div className="font-mono text-xs sm:text-[13px] text-white font-bold tracking-wider">

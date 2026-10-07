@@ -30,20 +30,7 @@ export const LEARN_ITEMS: ExperienceHeroItem[] = [
     registrationLabel: 'Register for Session',
   },
   {
-    id: 'learn-02-qubit-connectivity-architecture',
-    title: 'Qubit Connectivity\n& Architecture',
-    description:
-      'Explore quantum processor connectivity through coupling maps and compare different architectures, including linear, heavy-hex and experimental graph structures. Understand how physical qubit connectivity affects circuit execution, routing and SWAP overhead.',
-    image: '/images/events/inspiring-sessions-dark.png',
-    accent: '#521018',
-    category: 'learn',
-    credit: 'HARDWARE ARCHITECTURE',
-    meta: ['ONLINE SESSION', '8th Oct 2026', 'Online'],
-    registrationUrl: 'https://qiskit.org/fallfest',
-    registrationLabel: 'Register for Session',
-  },
-  {
-    id: 'learn-03-quantum-material',
+    id: 'learn-02-quantum-material',
     title: 'Quantum Material',
     description:
       'Explore the physical materials and technologies behind quantum processors, including superconducting qubits, Josephson junctions, transmons, semiconductor spin qubits and trapped-ion systems. Understand how material properties, coherence time and fabrication trade-offs influence quantum hardware.',
@@ -51,6 +38,19 @@ export const LEARN_ITEMS: ExperienceHeroItem[] = [
     accent: '#B08D57',
     category: 'learn',
     credit: 'MATERIALS & HARDWARE PHYSICS',
+    meta: ['ONLINE SESSION', '8th Oct 2026', 'Online'],
+    registrationUrl: 'https://qiskit.org/fallfest',
+    registrationLabel: 'Register for Session',
+  },
+  {
+    id: 'learn-03-qubit-connectivity-architecture',
+    title: 'Qubit Connectivity\n& Architecture',
+    description:
+      'Explore quantum processor connectivity through coupling maps and compare different architectures, including linear, heavy-hex and experimental graph structures. Understand how physical qubit connectivity affects circuit execution, routing and SWAP overhead.',
+    image: '/images/events/inspiring-sessions-dark.png',
+    accent: '#521018',
+    category: 'learn',
+    credit: 'HARDWARE ARCHITECTURE',
     meta: ['ONLINE SESSION', '9th Oct 2026', 'Online'],
     registrationUrl: 'https://qiskit.org/fallfest',
     registrationLabel: 'Register for Session',

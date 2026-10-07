@@ -386,7 +386,7 @@ export function QuantumBlochSphere({ className = '', size = 360 }: QuantumBlochS
         </div>
 
         <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#3A0B10]/5 dark:bg-white/10 text-[#3A0B10] dark:text-[#F5F3F0] border border-[#3A0B10]/15 dark:border-white/15">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="h-1.5 w-1.5 rounded-full bg-[#B08D57] dark:bg-[#EF7885] animate-pulse" />
           <span>{activeGate}</span>
         </div>
       </div>

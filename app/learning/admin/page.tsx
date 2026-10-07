@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { AuthGate } from '@/components/learning/AuthGate';
 import { AdminAnalyticsView } from '@/components/learning/AdminAnalyticsView';
+import { AdminSessionsManager } from '@/components/learning/AdminSessionsManager';
 import {
   Shield,
   UserPlus,
@@ -17,11 +18,12 @@ import {
   AlertCircle,
   BarChart3,
   SlidersHorizontal,
+  Video,
 } from 'lucide-react';
 
 export default function AdminConsolePage() {
   const [session, setSession] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'analytics' | 'whitelist' | 'overrides'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'whitelist' | 'overrides' | 'sessions'>('analytics');
 
   const [emails, setEmails] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -140,7 +142,7 @@ export default function AdminConsolePage() {
 
       const data = await res.json();
       if (data.success) {
-        setBulkMsg(`Successfully whitelisted ${data.addedCount} email(s)!`);
+        setBulkMsg(data.message || `Successfully whitelisted ${data.addedCount} email(s)!`);
         setBulkMsgIsError(false);
         setBulkText('');
         await fetchWhitelist();
@@ -278,6 +280,19 @@ export default function AdminConsolePage() {
             >
               <Users className="w-4 h-4" />
               <span>Access Control & Whitelist ({emails.length})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('sessions')}
+              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+                activeTab === 'sessions'
+                  ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
+                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
+              }`}
+            >
+              <Video className="w-4 h-4" />
+              <span>Session Videos & Live Links</span>
             </button>
 
             <button
@@ -608,6 +623,8 @@ export default function AdminConsolePage() {
               </div>
             </div>
           )}
+          {/* TAB 4: SESSION VIDEOS & LIVE MEDIA */}
+          {activeTab === 'sessions' && <AdminSessionsManager />}
         </div>
       </div>
     </AuthGate>
