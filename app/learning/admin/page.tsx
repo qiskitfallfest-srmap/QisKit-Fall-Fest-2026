@@ -140,7 +140,7 @@ export default function AdminConsolePage() {
 
       const data = await res.json();
       if (data.success) {
-        setBulkMsg(`Successfully whitelisted ${data.addedCount} email(s)!`);
+        setBulkMsg(data.message || `Successfully whitelisted ${data.addedCount} email(s)!`);
         setBulkMsgIsError(false);
         setBulkText('');
         await fetchWhitelist();
