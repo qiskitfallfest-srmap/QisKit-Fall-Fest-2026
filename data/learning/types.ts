@@ -24,6 +24,10 @@ export interface LectureSession {
   learnPoints: string[];
   lectureNotesUrl?: string;
   slidesUrl?: string;
+  liveMeetingUrl?: string;
+  isLive?: boolean;
+  liveNotice?: string;
+  customEmbedUrl?: string;
 }
 
 export interface QuizQuestion {
