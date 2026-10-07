@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { AuthGate } from '@/components/learning/AuthGate';
 import { CURRICULUM_SESSIONS } from '@/data/learning/curriculum';
 import { SESSION_QUIZZES } from '@/data/learning/quizzes';
+import { useCurriculumSession } from '@/hooks/use-curriculum-sessions';
 import { trackQuizAttempt } from '@/lib/analytics';
 import { CheckCircle2, XCircle, AlertCircle, Award, RotateCcw, ArrowLeft, PlayCircle } from 'lucide-react';
 
@@ -14,7 +15,8 @@ export default function DedicatedQuizPage() {
   const router = useRouter();
   const sessionId = params.id as string;
 
-  const session = CURRICULUM_SESSIONS.find((s) => s.id === sessionId);
+  const { session: dynamicSession } = useCurriculumSession(sessionId);
+  const session = dynamicSession || CURRICULUM_SESSIONS.find((s) => s.id === sessionId);
   const quiz = SESSION_QUIZZES[sessionId];
 
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number>>({});

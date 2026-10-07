@@ -3,7 +3,7 @@ import { SessionQuiz } from './types';
 export const SESSION_QUIZZES: Record<string, SessionQuiz> = {
   'session-1': {
     sessionId: 'session-1',
-    title: 'Session 1 Concept Check: Qiskit & Quantum Foundations',
+    title: 'Session 1 Concept Check: Introduction to Qiskit & Quantum Computing',
     passingScore: 75,
     questions: [
       {
@@ -85,7 +85,7 @@ export const SESSION_QUIZZES: Record<string, SessionQuiz> = {
   },
   'session-2': {
     sessionId: 'session-2',
-    title: 'Session 2 Concept Check: Quantum Materials & Simulation',
+    title: 'Session 2 Concept Check: Quantum Material',
     passingScore: 75,
     questions: [
       {
@@ -249,7 +249,7 @@ export const SESSION_QUIZZES: Record<string, SessionQuiz> = {
   },
   'session-4': {
     sessionId: 'session-4',
-    title: 'Session 4 Concept Check: Quantum Optics & Sensing',
+    title: 'Session 4 Concept Check: Quantum Sensing & Quantum Optics',
     passingScore: 75,
     questions: [
       {
@@ -423,7 +423,7 @@ export const SESSION_QUIZZES: Record<string, SessionQuiz> = {
   },
   'session-6': {
     sessionId: 'session-6',
-    title: 'Session 6 Concept Check: Quantum Cryptography & Cyber Security',
+    title: 'Session 6 Concept Check: Quantum Cyber Security / Cryptography',
     passingScore: 75,
     questions: [
       {
