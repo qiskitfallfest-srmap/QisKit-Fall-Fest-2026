@@ -82,7 +82,7 @@ export const ROUTE_RELEASE_CONFIG: Record<string, RouteConfig> = {
   faqs: {
     path: '/faqs',
     name: 'FAQs',
-    status: 'coming-soon',
+    status: 'live',
     title: `Frequently Asked Questions | ${SITE_CONFIG.brandName}`,
     description: 'Answers to registration, hardware access quotas, prerequisites, and participation inquiries for Qiskit Fall Fest SRMAP 2026.',
   },
