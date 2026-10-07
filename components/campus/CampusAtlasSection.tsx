@@ -63,8 +63,8 @@ export function CampusAtlasSection() {
           </div>
         </div>
 
-        {/* Quick Venue Filter Chips (Mobile-first horizontal scrollbar) */}
-        <div className="w-full overflow-x-auto no-scrollbar py-1 -my-1">
+        {/* Quick Venue Filter Chips (Mobile-first horizontal scrollbar, hidden scrollbar track) */}
+        <div className="w-full overflow-x-auto scrollbar-none no-scrollbar py-1 -my-1">
           <div className="flex items-center gap-2 min-w-max pb-1">
             <span className="text-xs font-mono font-medium text-stone-500 dark:text-stone-400 mr-1 hidden sm:inline">
               Quick Select:
