@@ -23,6 +23,7 @@ export const onlineSchedule: Day[] = [
         initials: "VS",
         duration: "5 min",
         timezone: "IST",
+        learningUrl: "/learning",
         learn: [
           "Welcome Address and opening remarks for the 3-Day Online Module on Quantum Computing",
         ],
@@ -131,6 +132,7 @@ export const onlineSchedule: Day[] = [
         initials: "RS",
         duration: "60 Mins",
         timezone: "IST",
+        learningUrl: "/learning/session/session-1",
         learn: [
           "Introduction to Qiskit SDK & Quantum Computing fundamentals",
           "Quantum state representation and circuit execution",
@@ -169,6 +171,7 @@ export const onlineSchedule: Day[] = [
         initials: "LB",
         duration: "60 Mins",
         timezone: "IST",
+        learningUrl: "/learning",
         learn: [
           "Midday break for rest and informal networking",
         ],
@@ -187,6 +190,7 @@ export const onlineSchedule: Day[] = [
         initials: "JD",
         duration: "120 Mins",
         timezone: "IST",
+        learningUrl: "/learning/session/session-2",
         learn: [
           "Quantum materials, physical qubit substrates, and fabrication insights",
           "National Quantum Mission QMD Foundation developments at IIT Delhi",
@@ -206,6 +210,7 @@ export const onlineSchedule: Day[] = [
         initials: "QZ",
         duration: "Accessible via LMS",
         timezone: "IST",
+        learningUrl: "/learning/session/session-1/quiz",
         learn: [
           "Complete concept check quizzes accessible via LMS",
         ],
@@ -224,6 +229,7 @@ export const onlineSchedule: Day[] = [
         initials: "TR",
         duration: "by 11:59 PM",
         timezone: "IST",
+        learningUrl: "/learning?challenge=1",
         learn: [
           "Participate in the Online Game: Tech Reels Competition before 11:59 PM IST",
         ],
@@ -252,6 +258,7 @@ export const onlineSchedule: Day[] = [
         initials: "KD",
         duration: "120 Mins",
         timezone: "IST",
+        learningUrl: "/learning/session/session-3",
         learn: [
           "Qubit connectivity graphs, coupling maps, and transpiler routing",
           "Hardware architecture and business analysis perspectives",
@@ -271,6 +278,7 @@ export const onlineSchedule: Day[] = [
         initials: "LB",
         duration: "120 Mins",
         timezone: "IST",
+        learningUrl: "/learning",
         learn: [
           "Midday break for rest and informal networking",
         ],
@@ -289,6 +297,7 @@ export const onlineSchedule: Day[] = [
         initials: "DD",
         duration: "60 Mins",
         timezone: "IST",
+        learningUrl: "/learning/session/session-4",
         learn: [
           "Quantum sensing principles and defence system engineering applications",
         ],
@@ -307,6 +316,7 @@ export const onlineSchedule: Day[] = [
         initials: "GS",
         duration: "60 Mins",
         timezone: "IST",
+        learningUrl: "/learning/session/session-4",
         learn: [
           "Quantum optics principles and photonic quantum systems",
         ],
@@ -325,6 +335,7 @@ export const onlineSchedule: Day[] = [
         initials: "DP",
         duration: "by 11:59 PM",
         timezone: "IST",
+        learningUrl: "/learning?challenge=2",
         learn: [
           "Participate in the Online Game: Digital Poster Creation before 11:59 PM IST",
         ],
@@ -353,6 +364,7 @@ export const onlineSchedule: Day[] = [
         initials: "JS",
         duration: "120 Mins",
         timezone: "IST",
+        learningUrl: "/learning/session/session-5",
         learn: [
           "Quantum Machine Learning algorithms, variational quantum circuits, and industry use cases",
         ],
@@ -371,6 +383,7 @@ export const onlineSchedule: Day[] = [
         initials: "LB",
         duration: "120 Mins",
         timezone: "IST",
+        learningUrl: "/learning",
         learn: [
           "Midday break before cybersecurity session and hackathon problem statement release",
         ],
@@ -389,6 +402,7 @@ export const onlineSchedule: Day[] = [
         initials: "SB",
         duration: "120 Mins",
         timezone: "IST",
+        learningUrl: "/learning/session/session-6",
         learn: [
           "Quantum Cyber Security, Cryptography, Shor's algorithm, and post-quantum security standards",
         ],
@@ -407,6 +421,7 @@ export const onlineSchedule: Day[] = [
         initials: "OT",
         duration: "60 Mins",
         timezone: "IST",
+        learningUrl: "/learning/hackathon",
         learn: [
           "Official release of hackathon problem statements across all tracks & online phase closing ceremony",
         ],
@@ -425,6 +440,7 @@ export const onlineSchedule: Day[] = [
         initials: "EC",
         duration: "by 11:59 PM",
         timezone: "IST",
+        learningUrl: "/learning?challenge=3",
         learn: [
           "Participate in the Online Game: Essay Competition before 11:59 PM IST",
         ],

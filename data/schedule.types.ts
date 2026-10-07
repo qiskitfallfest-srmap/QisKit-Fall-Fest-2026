@@ -22,6 +22,7 @@ export interface Session {
   learn: string[];
   deliverables?: string | string[];
   registrationUrl?: string;
+  learningUrl?: string;
   posterImage?: string;
 }
 

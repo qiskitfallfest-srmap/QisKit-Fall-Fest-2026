@@ -96,3 +96,229 @@ export function computeScheduleStats(phase: SchedulePhase) {
     },
   ];
 }
+
+export interface SessionActionInfo {
+  href: string;
+  cardLabel: string;
+  detailLabel: string;
+  isExternal?: boolean;
+}
+
+export function getSessionAction(session: Session, phase: SchedulePhase): SessionActionInfo {
+  const url = session.learningUrl;
+  const sId = (session.id || '').toLowerCase();
+  const title = (session.title || '').toLowerCase();
+
+  // Session 1
+  if (
+    url === '/learning/session/session-1' ||
+    sId.includes('s1') ||
+    title.includes('session 1') ||
+    title.includes('introduction to qiskit')
+  ) {
+    return {
+      href: '/learning/session/session-1',
+      cardLabel: 'Enter Session 1',
+      detailLabel: 'Launch Learning Session 1',
+    };
+  }
+
+  // Session 2
+  if (
+    url === '/learning/session/session-2' ||
+    sId.includes('s2') ||
+    title.includes('session 2') ||
+    title.includes('quantum material')
+  ) {
+    return {
+      href: '/learning/session/session-2',
+      cardLabel: 'Enter Session 2',
+      detailLabel: 'Launch Learning Session 2',
+    };
+  }
+
+  // Session 3
+  if (
+    url === '/learning/session/session-3' ||
+    sId.includes('s3') ||
+    title.includes('session 3') ||
+    title.includes('connectivity') ||
+    title.includes('architecture')
+  ) {
+    return {
+      href: '/learning/session/session-3',
+      cardLabel: 'Enter Session 3',
+      detailLabel: 'Launch Learning Session 3',
+    };
+  }
+
+  // Session 4 (4A / 4B)
+  if (
+    url === '/learning/session/session-4' ||
+    sId.includes('s4') ||
+    title.includes('session 4') ||
+    title.includes('sensing') ||
+    title.includes('optics')
+  ) {
+    const isSensing = title.includes('sensing') || sId.includes('4a');
+    const isOptics = title.includes('optics') || sId.includes('4b');
+    return {
+      href: '/learning/session/session-4',
+      cardLabel: isSensing ? 'Enter Session 4A' : isOptics ? 'Enter Session 4B' : 'Enter Session 4',
+      detailLabel: isSensing ? 'Launch Session 4A (Sensing)' : isOptics ? 'Launch Session 4B (Optics)' : 'Launch Learning Session 4',
+    };
+  }
+
+  // Session 5
+  if (
+    url === '/learning/session/session-5' ||
+    sId.includes('s5') ||
+    title.includes('session 5') ||
+    title.includes('machine learning') ||
+    title.includes('qml')
+  ) {
+    return {
+      href: '/learning/session/session-5',
+      cardLabel: 'Enter Session 5',
+      detailLabel: 'Launch Learning Session 5',
+    };
+  }
+
+  // Session 6
+  if (
+    url === '/learning/session/session-6' ||
+    sId.includes('s6') ||
+    title.includes('session 6') ||
+    title.includes('cryptography') ||
+    title.includes('cyber security')
+  ) {
+    return {
+      href: '/learning/session/session-6',
+      cardLabel: 'Enter Session 6',
+      detailLabel: 'Launch Learning Session 6',
+    };
+  }
+
+  // LMS Quizzes
+  if (
+    url?.includes('/quiz') ||
+    sId.includes('quiz') ||
+    title.includes('quiz')
+  ) {
+    return {
+      href: url || '/learning/session/session-1/quiz',
+      cardLabel: 'Take LMS Quiz',
+      detailLabel: 'Start LMS Concept Quiz',
+    };
+  }
+
+  // Tech Reels (Day 1 Online Game)
+  if (
+    url?.includes('challenge=1') ||
+    sId.includes('reels') ||
+    title.includes('reels')
+  ) {
+    return {
+      href: '/learning?challenge=1',
+      cardLabel: 'View Challenge',
+      detailLabel: 'Submit Tech Reels Challenge',
+    };
+  }
+
+  // Digital Poster (Day 2 Online Game)
+  if (
+    url?.includes('challenge=2') ||
+    sId.includes('poster') ||
+    title.includes('poster')
+  ) {
+    return {
+      href: '/learning?challenge=2',
+      cardLabel: 'View Challenge',
+      detailLabel: 'Submit Digital Poster Challenge',
+    };
+  }
+
+  // Essay Competition (Day 3 Online Game)
+  if (
+    url?.includes('challenge=3') ||
+    sId.includes('essay') ||
+    title.includes('essay')
+  ) {
+    return {
+      href: '/learning?challenge=3',
+      cardLabel: 'View Challenge',
+      detailLabel: 'Submit Academic Essay Challenge',
+    };
+  }
+
+  // Hackathon Problem Release or Hackathon milestones
+  if (
+    url === '/learning/hackathon' ||
+    sId.includes('hackathon') ||
+    sId.includes('hack') ||
+    title.includes('hackathon')
+  ) {
+    return {
+      href: '/learning/hackathon',
+      cardLabel: 'Hackathon Hub',
+      detailLabel: 'Go to Hackathon Workspace',
+    };
+  }
+
+  // Inauguration & addresses
+  if (
+    title.includes('inaugur') ||
+    title.includes('welcome') ||
+    title.includes('keynote')
+  ) {
+    return {
+      href: '/learning',
+      cardLabel: 'Learning Hub',
+      detailLabel: 'Explore Learning Hub',
+    };
+  }
+
+  // Lunch Break / Networking
+  if (title.includes('lunch') || session.track === 'Networking') {
+    return {
+      href: '/learning',
+      cardLabel: 'Learning Hub',
+      detailLabel: 'View Learning Hub & Lounge',
+    };
+  }
+
+  // If explicit learningUrl is specified
+  if (url) {
+    return {
+      href: url,
+      cardLabel: 'Go to Session',
+      detailLabel: 'Launch Learning Session',
+    };
+  }
+
+  // Online phase default
+  if (phase === 'online') {
+    return {
+      href: '/learning',
+      cardLabel: 'Go to Session',
+      detailLabel: 'Launch Learning Session',
+    };
+  }
+
+  // Offline phase
+  if (session.registrationUrl) {
+    return {
+      href: session.registrationUrl,
+      cardLabel: 'Register',
+      detailLabel: 'Complete Registration',
+      isExternal: true,
+    };
+  }
+
+  return {
+    href: '/learning',
+    cardLabel: 'Learning Hub',
+    detailLabel: 'Go to Learning Hub',
+  };
+}
+
