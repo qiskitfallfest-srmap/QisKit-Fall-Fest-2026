@@ -398,9 +398,11 @@ export function ExploreSchedule({ currentPhase, onPhaseChange, targetDayIndex }:
                             <span className="font-mono text-sm font-semibold text-[#6C151E] dark:text-[#E45464]">
                               {session.time}
                             </span>
-                            <span className="font-mono text-xs text-[#665B57] dark:text-[#BEB5B4]">
-                              &mdash; {session.end}
-                            </span>
+                            {session.end && (
+                              <span className="font-mono text-xs text-[#665B57] dark:text-[#BEB5B4]">
+                                &mdash; {session.end}
+                              </span>
+                            )}
                           </div>
 
                           {/* Session Content */}
