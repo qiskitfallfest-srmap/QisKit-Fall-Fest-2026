@@ -245,34 +245,32 @@ export default function SessionPlayerPage() {
             {/* Resources and Lecturer Profile Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* Lecturer Profile Card */}
-              <div className="p-5 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl shadow-xs space-y-3">
+              <div className="p-5 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl shadow-xs space-y-4">
                 <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-burgundy dark:text-[#E89BA5] block">
-                  Lecturer
+                  {session.coSpeakers && session.coSpeakers.length > 0 ? 'Lecturers & Speakers' : 'Session Lecturer'}
                 </span>
 
-                <div>
-                  <h3 className="font-serif text-base font-bold text-slate-900 dark:text-[#FAF6F3]">{session.speaker.name}</h3>
-                  <p className="font-mono text-[11px] font-semibold text-burgundy dark:text-[#E89BA5] uppercase tracking-wide mt-0.5">{session.speaker.role}</p>
-                  <p className="font-sans text-xs text-slate-500 dark:text-slate-400">{session.speaker.institution}</p>
-                </div>
-
-                <p className="font-sans text-xs text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-100 dark:border-[#3D1418] pt-2.5">
-                  {session.speaker.bio}
-                </p>
-
-                {session.speaker.websiteUrl && (
-                  <div className="pt-2 border-t border-slate-100 dark:border-[#3D1418]">
-                    <a
-                      href={session.speaker.websiteUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-burgundy dark:text-[#E89BA5] hover:underline font-semibold inline-flex items-center gap-1 transition-colors"
-                    >
-                      <span>Institution Page</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
+                <div className="space-y-3.5">
+                  <div className="space-y-1">
+                    <h3 className="font-serif text-base font-bold text-slate-900 dark:text-[#FAF6F3]">{session.speaker.name}</h3>
+                    <p className="font-mono text-[11px] font-semibold text-burgundy dark:text-[#E89BA5] uppercase tracking-wide">{session.speaker.role}</p>
+                    <p className="font-sans text-xs text-slate-500 dark:text-slate-400">{session.speaker.institution}</p>
+                    <p className="font-sans text-xs text-slate-600 dark:text-slate-300 leading-relaxed pt-1">
+                      {session.speaker.bio}
+                    </p>
                   </div>
-                )}
+
+                  {session.coSpeakers?.map((co, cIdx) => (
+                    <div key={cIdx} className="space-y-1 pt-3 border-t border-slate-100 dark:border-[#3D1418]">
+                      <h3 className="font-serif text-base font-bold text-slate-900 dark:text-[#FAF6F3]">{co.name}</h3>
+                      <p className="font-mono text-[11px] font-semibold text-burgundy dark:text-[#E89BA5] uppercase tracking-wide">{co.role}</p>
+                      <p className="font-sans text-xs text-slate-500 dark:text-slate-400">{co.institution}</p>
+                      <p className="font-sans text-xs text-slate-600 dark:text-slate-300 leading-relaxed pt-1">
+                        {co.bio}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Lecture Notes & Resources */}

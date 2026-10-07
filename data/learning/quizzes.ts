@@ -85,88 +85,11 @@ export const SESSION_QUIZZES: Record<string, SessionQuiz> = {
   },
   'session-2': {
     sessionId: 'session-2',
-    title: 'Session 2 Concept Check: Qubit Connectivity & Architecture',
+    title: 'Session 2 Concept Check: Quantum Materials & Simulation',
     passingScore: 75,
     questions: [
       {
         id: 's2-q1',
-        question:
-          'Why does a 1D linear nearest-neighbor architecture incur high SWAP overhead for long-range two-qubit interactions?',
-        options: [
-          'Because linear processors do not support single-qubit gates',
-          'Two-qubit gates can only execute between adjacent physical qubits, requiring O(N) SWAP gates to bring distant qubits together',
-          'Linear processors have 0% gate fidelity',
-          'The transpiler disables optimization on linear chains',
-        ],
-        correctIndex: 1,
-        explanation:
-          'In a linear chain, physical connectivity is strictly degree-2. Interacting non-adjacent qubits requires inserting sequences of SWAP gates, inflating two-qubit gate count and circuit depth.',
-      },
-      {
-        id: 's2-q2',
-        question:
-          'What key advantage does the heavy-hex lattice topology offer in superconducting quantum systems compared to high-degree square lattices?',
-        options: [
-          'It completely eliminates all two-qubit gate errors',
-          'It reduces frequency collisions and parasitic crosstalk by limiting vertex degree to 2 and 3',
-          'It guarantees zero SWAP insertions for arbitrary graphs',
-          'It allows infinite coherence times (T1 = ∞)',
-        ],
-        correctIndex: 1,
-        explanation:
-          'Heavy-hex topology limits connectivity to degree-2 and degree-3 vertices, which substantially suppresses parasitic ZZ crosstalk and microwave frequency collisions across multi-qubit chips.',
-      },
-      {
-        id: 's2-q3',
-        question:
-          'How many native CNOT (CX) gates are typically required to implement a single SWAP gate on superconducting architectures?',
-        options: ['1 CX gate', '2 CX gates', '3 CX gates', '4 CX gates'],
-        correctIndex: 2,
-        explanation:
-          'A SWAP gate decomposes into 3 alternating CNOT gates (CX_01, CX_10, CX_01), tripling the two-qubit gate error penalty for every routing step.',
-      },
-      {
-        id: 's2-q4',
-        question:
-          'Which Qiskit transpiler routing algorithm uses a heuristic look-ahead mechanism to minimize SWAP insertions?',
-        options: ['TrivialRouting', 'SabreSwap', 'LinearSweep', 'UnitarySynthesis'],
-        correctIndex: 1,
-        explanation:
-          'SabreSwap (SWAP-based Bounded-depth Heuristic) evaluates a look-ahead window of future circuit gates to choose routing SWAPs that minimize overall circuit depth.',
-      },
-      {
-        id: 's2-q5',
-        question: 'What is the primary role of the PassManager in Qiskit?',
-        options: [
-          'To execute the final circuit on cloud hardware',
-          'To authenticate the user’s IBM Quantum credentials',
-          'To define a custom sequence of transpilation passes for circuit optimization and hardware routing',
-          'To manage quantum state vectors in memory',
-        ],
-        correctIndex: 2,
-        explanation: 'The PassManager orchestrates a pipeline of transpiler passes (like layout, routing, translation, and optimization) to tailor a logical circuit to a specific backend topology.',
-      },
-      {
-        id: 's2-q6',
-        question: 'Which of these best describes T1 relaxation time in superconducting qubits?',
-        options: [
-          'The time it takes for a qubit to lose its phase coherence without losing energy',
-          'The characteristic time for a qubit in the excited |1⟩ state to decay to the ground |0⟩ state via energy loss',
-          'The execution time of a single CNOT gate',
-          'The time taken to cool the cryostat',
-        ],
-        correctIndex: 1,
-        explanation: 'T1 (longitudinal relaxation time) measures amplitude damping—the time scale over which a qubit loses energy to its environment and decays from |1⟩ to |0⟩.',
-      }
-    ],
-  },
-  'session-3': {
-    sessionId: 'session-3',
-    title: 'Session 3 Concept Check: Quantum Materials & Simulation',
-    passingScore: 75,
-    questions: [
-      {
-        id: 's3-q1',
         question:
           'Why are classical supercomputers fundamentally limited when simulating strongly correlated electronic materials?',
         options: [
@@ -177,10 +100,10 @@ export const SESSION_QUIZZES: Record<string, SessionQuiz> = {
         ],
         correctIndex: 1,
         explanation:
-          'Quantum many-body state spaces scale exponentially with system size ($O(2^N)$), demanding impossible memory and compute overhead on classical Von Neumann architectures.',
+          'Quantum many-body state spaces scale exponentially with system size (O(2^N)), demanding impossible memory and compute overhead on classical Von Neumann architectures.',
       },
       {
-        id: 's3-q2',
+        id: 's2-q2',
         question:
           'What is the purpose of the Jordan-Wigner transformation in electronic structure quantum simulation?',
         options: [
@@ -194,7 +117,7 @@ export const SESSION_QUIZZES: Record<string, SessionQuiz> = {
           'Fermionic creation and annihilation operators satisfy canonical anti-commutation relations. The Jordan-Wigner transformation maps these onto Pauli spin strings (X, Y, Z) that can be directly executed on qubit circuits.',
       },
       {
-        id: 's3-q3',
+        id: 's2-q3',
         question:
           'What is the objective function minimized by the classical optimizer in the Variational Quantum Eigensolver (VQE)?',
         options: [
@@ -208,7 +131,7 @@ export const SESSION_QUIZZES: Record<string, SessionQuiz> = {
           'VQE is governed by the Rayleigh-Ritz variational principle: the expectation value ⟨ψ(θ)|H|ψ(θ)⟩ provides an upper bound to the ground-state energy E_0, which the classical optimizer minimizes.',
       },
       {
-        id: 's3-q4',
+        id: 's2-q4',
         question:
           'In hardware-efficient ansatze (e.g. RealAmplitudes), why are parameterized single-qubit rotations interleaved with native entanglers?',
         options: [
@@ -222,7 +145,7 @@ export const SESSION_QUIZZES: Record<string, SessionQuiz> = {
           'Hardware-efficient ansatze restrict two-qubit entangling gates strictly to the physically connected hardware edges, avoiding expensive SWAP chains while parameterizing single-qubit Ry/Rz rotations.',
       },
       {
-        id: 's3-q5',
+        id: 's2-q5',
         question: 'What is the primary objective of the Variational Quantum Eigensolver (VQE)?',
         options: [
           'To factor large prime numbers exponentially faster',
@@ -234,7 +157,7 @@ export const SESSION_QUIZZES: Record<string, SessionQuiz> = {
         explanation: 'VQE uses a parameterized quantum circuit and a classical optimizer (hybrid approach) to minimize the expectation value of a Hamiltonian, finding an upper bound to its ground state energy.',
       },
       {
-        id: 's3-q6',
+        id: 's2-q6',
         question: 'How does the Trotter-Suzuki decomposition enable quantum Hamiltonian simulation?',
         options: [
           'By splitting the exponential of a sum of non-commuting operators into a product of short-time exponentials that can be mapped to quantum gates',
@@ -244,6 +167,83 @@ export const SESSION_QUIZZES: Record<string, SessionQuiz> = {
         ],
         correctIndex: 0,
         explanation: 'Since many Hamiltonian terms do not commute, Trotterization approximates e^{-i(A+B)t} as (e^{-iAt/n} e^{-iBt/n})^n, allowing the simulation to be built from native rotation gates.',
+      }
+    ],
+  },
+  'session-3': {
+    sessionId: 'session-3',
+    title: 'Session 3 Concept Check: Qubit Connectivity & Architecture',
+    passingScore: 75,
+    questions: [
+      {
+        id: 's3-q1',
+        question:
+          'Why does a 1D linear nearest-neighbor architecture incur high SWAP overhead for long-range two-qubit interactions?',
+        options: [
+          'Because linear processors do not support single-qubit gates',
+          'Two-qubit gates can only execute between adjacent physical qubits, requiring O(N) SWAP gates to bring distant qubits together',
+          'Linear processors have 0% gate fidelity',
+          'The transpiler disables optimization on linear chains',
+        ],
+        correctIndex: 1,
+        explanation:
+          'In a linear chain, physical connectivity is strictly degree-2. Interacting non-adjacent qubits requires inserting sequences of SWAP gates, inflating two-qubit gate count and circuit depth.',
+      },
+      {
+        id: 's3-q2',
+        question:
+          'What key advantage does the heavy-hex lattice topology offer in superconducting quantum systems compared to high-degree square lattices?',
+        options: [
+          'It completely eliminates all two-qubit gate errors',
+          'It reduces frequency collisions and parasitic crosstalk by limiting vertex degree to 2 and 3',
+          'It guarantees zero SWAP insertions for arbitrary graphs',
+          'It allows infinite coherence times (T1 = ∞)',
+        ],
+        correctIndex: 1,
+        explanation:
+          'Heavy-hex topology limits connectivity to degree-2 and degree-3 vertices, which substantially suppresses parasitic ZZ crosstalk and microwave frequency collisions across multi-qubit chips.',
+      },
+      {
+        id: 's3-q3',
+        question:
+          'How many native CNOT (CX) gates are typically required to implement a single SWAP gate on superconducting architectures?',
+        options: ['1 CX gate', '2 CX gates', '3 CX gates', '4 CX gates'],
+        correctIndex: 2,
+        explanation:
+          'A SWAP gate decomposes into 3 alternating CNOT gates (CX_01, CX_10, CX_01), tripling the two-qubit gate error penalty for every routing step.',
+      },
+      {
+        id: 's3-q4',
+        question:
+          'Which Qiskit transpiler routing algorithm uses a heuristic look-ahead mechanism to minimize SWAP insertions?',
+        options: ['TrivialRouting', 'SabreSwap', 'LinearSweep', 'UnitarySynthesis'],
+        correctIndex: 1,
+        explanation:
+          'SabreSwap (SWAP-based Bounded-depth Heuristic) evaluates a look-ahead window of future circuit gates to choose routing SWAPs that minimize overall circuit depth.',
+      },
+      {
+        id: 's3-q5',
+        question: 'What is the primary role of the PassManager in Qiskit?',
+        options: [
+          'To execute the final circuit on cloud hardware',
+          'To authenticate the user’s IBM Quantum credentials',
+          'To define a custom sequence of transpilation passes for circuit optimization and hardware routing',
+          'To manage quantum state vectors in memory',
+        ],
+        correctIndex: 2,
+        explanation: 'The PassManager orchestrates a pipeline of transpiler passes (like layout, routing, translation, and optimization) to tailor a logical circuit to a specific backend topology.',
+      },
+      {
+        id: 's3-q6',
+        question: 'Which of these best describes T1 relaxation time in superconducting qubits?',
+        options: [
+          'The time it takes for a qubit to lose its phase coherence without losing energy',
+          'The characteristic time for a qubit in the excited |1⟩ state to decay to the ground |0⟩ state via energy loss',
+          'The execution time of a single CNOT gate',
+          'The time taken to cool the cryostat',
+        ],
+        correctIndex: 1,
+        explanation: 'T1 (longitudinal relaxation time) measures amplitude damping—the time scale over which a qubit loses energy to its environment and decays from |1⟩ to |0⟩.',
       }
     ],
   },

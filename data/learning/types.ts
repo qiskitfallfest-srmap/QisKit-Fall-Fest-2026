@@ -19,6 +19,7 @@ export interface LectureSession {
   youtubeId: string; // Youtube video embed ID
   youtubeUrl: string;
   speaker: Speaker;
+  coSpeakers?: Speaker[];
   description: string;
   prerequisites: string;
   learnPoints: string[];
