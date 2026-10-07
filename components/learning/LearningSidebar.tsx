@@ -14,6 +14,7 @@ import {
   Shield,
   Menu,
   X,
+  Calendar,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { supabase } from '@/lib/supabase';
@@ -23,8 +24,8 @@ import { useCurriculumSessions } from '@/hooks/use-curriculum-sessions';
 
 const DAYS = [
   { id: 1, label: 'Day 1: Foundations' },
-  { id: 2, label: 'Day 2: Physical Realization' },
-  { id: 3, label: 'Day 3: Applications & Security' },
+  { id: 2, label: 'Day 2: Architecture & Optics' },
+  { id: 3, label: 'Day 3: QML & Cyber Security' },
 ];
 
 export function LearningSidebar() {
@@ -147,6 +148,37 @@ export function LearningSidebar() {
       <div className="font-mono text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] px-3 pb-2 pt-1">
         Learning Phase
       </div>
+
+      <Link
+        href="/learning"
+        onClick={() => setIsMobileMenuOpen(false)}
+        className={clsx(
+          'w-full flex items-center justify-between px-3 py-2 mb-1.5 rounded-lg transition-colors text-xs sm:text-sm font-semibold group',
+          pathname === '/learning' && !activeChallengeDay
+            ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] border border-burgundy/20 dark:border-burgundy/40'
+            : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1C0A0D] border border-transparent'
+        )}
+      >
+        <div className="flex items-center gap-2">
+          <Calendar
+            className={clsx(
+              'w-3.5 h-3.5 shrink-0',
+              pathname === '/learning' && !activeChallengeDay
+                ? 'text-burgundy dark:text-[#E89BA5]'
+                : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
+            )}
+          />
+          <span>Overview & Programme</span>
+        </div>
+        <ChevronRight
+          className={clsx(
+            'w-3.5 h-3.5 shrink-0',
+            pathname === '/learning' && !activeChallengeDay
+              ? 'text-burgundy dark:text-[#E89BA5]'
+              : 'text-slate-300 dark:text-slate-600'
+          )}
+        />
+      </Link>
 
       {DAYS.map((day) => {
         const isDayOpen = openDays.includes(day.id);

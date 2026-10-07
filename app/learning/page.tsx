@@ -3,10 +3,12 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import clsx from 'clsx';
 import { AuthGate } from '@/components/learning/AuthGate';
 import { CertificateModal } from '@/components/learning/CertificateModal';
-import { CURRICULUM_SESSIONS } from '@/data/learning/curriculum';
+import { CURRICULUM_SESSIONS, ONLINE_PROGRAMME_SCHEDULE } from '@/data/learning/curriculum';
 import { DAILY_COMPETITIONS } from '@/data/learning/competitions';
+import { useCurriculumSessions } from '@/hooks/use-curriculum-sessions';
 import {
   Award,
   Send,
@@ -16,6 +18,11 @@ import {
   Clock,
   BookOpen,
   ArrowRight,
+  Calendar,
+  Sparkles,
+  ChevronRight,
+  Coffee,
+  Users,
 } from 'lucide-react';
 
 function LearningDashboardContent() {
@@ -38,6 +45,16 @@ function LearningDashboardContent() {
 
   // Session progress state
   const [progress, setProgress] = useState<Record<string, any>>({});
+
+  // Dynamic curriculum sessions from admin/Redis
+  const { sessions } = useCurriculumSessions();
+  const curriculumList = sessions && sessions.length > 0 ? sessions : CURRICULUM_SESSIONS;
+
+  // Schedule timetable tab state
+  const [selectedScheduleDay, setSelectedScheduleDay] = useState<number>(1);
+  const currentDayProgramme =
+    ONLINE_PROGRAMME_SCHEDULE.find((d) => d.day === selectedScheduleDay) ||
+    ONLINE_PROGRAMME_SCHEDULE[0];
 
   // Certificate Modal state
   const [isCertModalOpen, setIsCertModalOpen] = useState(false);
@@ -127,10 +144,10 @@ function LearningDashboardContent() {
 
   // Next session to study
   const nextSession =
-    CURRICULUM_SESSIONS.find((s) => {
+    curriculumList.find((s) => {
       const p = progress[s.id];
       return !p || !p.videoCompleted || !p.quizPassed;
-    }) || CURRICULUM_SESSIONS[0];
+    }) || curriculumList[0];
 
   // 1. If viewing a challenge
   if (challengeDay) {
@@ -334,7 +351,7 @@ function LearningDashboardContent() {
           Curriculum Sessions
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {CURRICULUM_SESSIONS.map((s) => {
+          {curriculumList.map((s) => {
             const p = progress[s.id];
             const isDone = p?.videoCompleted && p?.quizPassed;
 
@@ -364,6 +381,182 @@ function LearningDashboardContent() {
             );
           })}
         </div>
+      </div>
+
+      {/* Official 3-Day Programme Schedule (8–10 October 2026) */}
+      <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-[#3D1418]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
+              <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-[#FAF6F3]">
+                Official 3-Day Programme Schedule
+              </h3>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              SRM AP Partner Plus · Qiskit Fall Fest 2026 Online Phase (8–10 October 2026)
+            </p>
+          </div>
+
+          {/* Day Fast Switcher Tabs */}
+          <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-[#1C0A0D] rounded-lg border border-slate-200 dark:border-[#3D1418] self-start sm:self-auto">
+            {ONLINE_PROGRAMME_SCHEDULE.map((prog) => (
+              <button
+                key={prog.day}
+                type="button"
+                onClick={() => setSelectedScheduleDay(prog.day)}
+                className={clsx(
+                  'px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer',
+                  selectedScheduleDay === prog.day
+                    ? 'bg-white dark:bg-burgundy text-slate-900 dark:text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                )}
+              >
+                Day {prog.day} ({prog.weekday.slice(0, 3)})
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Selected Day Programme Timetable */}
+        {currentDayProgramme && (
+          <div className="bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl overflow-hidden shadow-xs">
+            <div className="px-4 py-3 bg-slate-50/80 dark:bg-[#1C0A0D]/80 border-b border-slate-200 dark:border-[#3D1418] flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <span className="font-mono text-[10px] font-bold text-burgundy dark:text-[#E89BA5] uppercase tracking-wider block">
+                  {currentDayProgramme.theme}
+                </span>
+                <span className="text-xs font-semibold text-slate-800 dark:text-[#FAF6F3]">
+                  {currentDayProgramme.dateStr}
+                </span>
+              </div>
+              <span className="font-mono text-xs font-medium text-slate-500 dark:text-slate-400 px-2.5 py-0.5 rounded-full bg-slate-200/60 dark:bg-[#2A0E12]">
+                {currentDayProgramme.timeRange}
+              </span>
+            </div>
+
+            <div className="divide-y divide-slate-100 dark:divide-[#220B0F]">
+              {currentDayProgramme.items.map((item, idx) => {
+                const isSession = item.type === 'session';
+                const isQuiz = item.type === 'quiz';
+                const isCompetition = item.type === 'competition';
+                const isBreak = item.type === 'break';
+                const isInauguration = item.type === 'inauguration';
+                const isCeremony = item.type === 'ceremony';
+
+                return (
+                  <div
+                    key={idx}
+                    className={clsx(
+                      'p-3.5 sm:p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 transition-colors',
+                      isBreak
+                        ? 'bg-emerald-50/40 dark:bg-emerald-950/20'
+                        : isSession
+                        ? 'hover:bg-slate-50/80 dark:hover:bg-[#1C0A0D]/60'
+                        : 'hover:bg-slate-50/50 dark:hover:bg-[#1C0A0D]/40'
+                    )}
+                  >
+                    {/* Time & Duration */}
+                    <div className="flex md:flex-col items-center md:items-start justify-between md:justify-center gap-1 shrink-0 md:w-36">
+                      <span className="font-mono text-xs font-bold text-slate-900 dark:text-[#FAF6F3]">
+                        {item.time}
+                      </span>
+                      <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                        {item.duration}
+                      </span>
+                    </div>
+
+                    {/* Details & Speaker Info */}
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {isInauguration && (
+                          <span className="px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-mono text-[9px] font-bold uppercase tracking-wider border border-indigo-200/60 dark:border-indigo-900/60">
+                            Inaugural Address
+                          </span>
+                        )}
+                        {isSession && (
+                          <span className="px-2 py-0.5 rounded bg-burgundy/10 text-burgundy dark:bg-burgundy/25 dark:text-[#E89BA5] font-mono text-[9px] font-bold uppercase tracking-wider border border-burgundy/20 dark:border-burgundy/40">
+                            Lecture Session
+                          </span>
+                        )}
+                        {isBreak && (
+                          <span className="px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-mono text-[9px] font-bold uppercase tracking-wider border border-emerald-200 dark:border-emerald-900">
+                            Midday Break
+                          </span>
+                        )}
+                        {isQuiz && (
+                          <span className="px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-mono text-[9px] font-bold uppercase tracking-wider border border-amber-200 dark:border-amber-900">
+                            LMS Assessment
+                          </span>
+                        )}
+                        {isCompetition && (
+                          <span className="px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 font-mono text-[9px] font-bold uppercase tracking-wider border border-purple-200 dark:border-purple-900">
+                            Daily Online Game
+                          </span>
+                        )}
+                        {isCeremony && (
+                          <span className="px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 font-mono text-[9px] font-bold uppercase tracking-wider border border-sky-200 dark:border-sky-900">
+                            Ceremony & Release
+                          </span>
+                        )}
+                        <h4 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-[#FAF6F3]">
+                          {item.title}
+                        </h4>
+                      </div>
+
+                      {item.speaker && item.speaker !== '—' && (
+                        <div className="text-xs text-slate-600 dark:text-slate-300 flex items-center gap-1.5 flex-wrap">
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">
+                            {item.speaker}
+                          </span>
+                          {item.speakerRole && (
+                            <>
+                              <span className="text-slate-400">·</span>
+                              <span className="text-slate-500 dark:text-slate-400">
+                                {item.speakerRole}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action Quick Link */}
+                    <div className="shrink-0 flex items-center gap-2 pt-1 md:pt-0">
+                      {item.sessionId && (
+                        <Link
+                          href={`/learning/session/${item.sessionId}`}
+                          className="px-3 py-1.5 rounded-lg bg-burgundy/10 text-burgundy dark:bg-burgundy/25 dark:text-[#E89BA5] hover:bg-burgundy hover:text-white dark:hover:bg-burgundy-deep text-xs font-semibold transition-colors flex items-center gap-1"
+                        >
+                          <span>Session Video</span>
+                          <ArrowRight className="w-3 h-3" />
+                        </Link>
+                      )}
+                      {isQuiz && (
+                        <Link
+                          href={`/learning/session/${item.sessionId || 'session-1'}/quiz`}
+                          className="px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 hover:bg-amber-600 hover:text-white text-xs font-semibold transition-colors flex items-center gap-1 border border-amber-200 dark:border-amber-900"
+                        >
+                          <Award className="w-3 h-3" />
+                          <span>Concept Quiz</span>
+                        </Link>
+                      )}
+                      {isCompetition && (
+                        <Link
+                          href={`/learning?challenge=${currentDayProgramme.day}`}
+                          className="px-3 py-1.5 rounded-lg bg-purple-50 dark:bg-purple-950/50 text-purple-800 dark:text-purple-300 hover:bg-purple-600 hover:text-white text-xs font-semibold transition-colors flex items-center gap-1 border border-purple-200 dark:border-purple-900"
+                        >
+                          <Send className="w-3 h-3" />
+                          <span>Submit Work</span>
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       <CertificateModal
