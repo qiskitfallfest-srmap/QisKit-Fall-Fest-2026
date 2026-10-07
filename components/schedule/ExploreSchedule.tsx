@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight,
@@ -20,8 +21,7 @@ import {
   X,
 } from 'lucide-react';
 import { Day, SchedulePhase, Session, Track } from '@/data/schedule.types';
-import { getPhaseDays, getPhaseInfo, filterSessions } from '@/data/schedule.utils';
-import { REGISTRATION_URL } from '@/lib/constants';
+import { getPhaseDays, getPhaseInfo, filterSessions, getSessionAction } from '@/data/schedule.utils';
 import { PhaseSelector } from './PhaseSelector';
 import { StaggeredTextReveal } from '@/components/ui/StaggeredTextReveal';
 
@@ -81,8 +81,11 @@ export function ExploreSchedule({ currentPhase, onPhaseChange, targetDayIndex }:
     setSelectedId(null);
   };
 
-  const renderDetailContent = (session: Session) => (
-    <aside className="rounded-3xl border border-[#D9D0CB] dark:border-[rgba(108,21,30,0.4)] bg-white dark:bg-[#1C0709] p-5 sm:p-6 shadow-2xl space-y-5 transition-colors">
+  const renderDetailContent = (session: Session) => {
+    const action = getSessionAction(session, currentPhase);
+
+    return (
+      <aside className="rounded-3xl border border-[#D9D0CB] dark:border-[rgba(108,21,30,0.4)] bg-white dark:bg-[#1C0709] p-5 sm:p-6 shadow-2xl space-y-5 transition-colors">
       
       {/* Header Track & Day Badge with Close (X) Button */}
       <div className="flex items-center justify-between border-b border-[#D9D0CB]/60 dark:border-white/10 pb-3 text-xs font-bold uppercase tracking-wider">
@@ -200,28 +203,48 @@ export function ExploreSchedule({ currentPhase, onPhaseChange, targetDayIndex }:
 
       {/* Action Buttons */}
       <div className="pt-2">
-        <a
-          href={session.registrationUrl || REGISTRATION_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group relative flex w-full items-center justify-between overflow-hidden rounded-xl border border-[rgba(193,46,63,0.85)] bg-[#6C151E] text-white py-3.5 px-6 text-xs font-bold transition-all duration-300 shadow-md active:scale-[0.98]"
-        >
-          {/* Expanding Circle Background Fill */}
-          <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-[#3A0B10] rounded-full opacity-0 pointer-events-none group-hover:w-[600px] group-hover:h-[600px] group-hover:opacity-100 transition-all duration-[1200ms] ease-[cubic-bezier(0.25,1,0.35,1)]" />
+        {action.isExternal ? (
+          <a
+            href={action.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group relative flex w-full items-center justify-between overflow-hidden rounded-xl border border-[rgba(193,46,63,0.85)] bg-[#6C151E] text-white py-3.5 px-6 text-xs font-bold transition-all duration-300 shadow-md active:scale-[0.98]"
+          >
+            {/* Expanding Circle Background Fill */}
+            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-[#3A0B10] rounded-full opacity-0 pointer-events-none group-hover:w-[600px] group-hover:h-[600px] group-hover:opacity-100 transition-all duration-[1200ms] ease-[cubic-bezier(0.25,1,0.35,1)]" />
 
-          {/* Text */}
-          <span className="relative z-[1] tracking-wide">Register Now</span>
+            {/* Text */}
+            <span className="relative z-[1] tracking-wide">{action.detailLabel}</span>
 
-          {/* Arrow */}
-          <ArrowRight
-            size={16}
-            className="relative z-[1] transition-transform duration-300 ease-out group-hover:translate-x-1.5"
-          />
-        </a>
+            {/* Arrow */}
+            <ArrowRight
+              size={16}
+              className="relative z-[1] transition-transform duration-300 ease-out group-hover:translate-x-1.5"
+            />
+          </a>
+        ) : (
+          <Link
+            href={action.href}
+            className="group relative flex w-full items-center justify-between overflow-hidden rounded-xl border border-[rgba(193,46,63,0.85)] bg-[#6C151E] text-white py-3.5 px-6 text-xs font-bold transition-all duration-300 shadow-md active:scale-[0.98]"
+          >
+            {/* Expanding Circle Background Fill */}
+            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-[#3A0B10] rounded-full opacity-0 pointer-events-none group-hover:w-[600px] group-hover:h-[600px] group-hover:opacity-100 transition-all duration-[1200ms] ease-[cubic-bezier(0.25,1,0.35,1)]" />
+
+            {/* Text */}
+            <span className="relative z-[1] tracking-wide">{action.detailLabel}</span>
+
+            {/* Arrow */}
+            <ArrowRight
+              size={16}
+              className="relative z-[1] transition-transform duration-300 ease-out group-hover:translate-x-1.5"
+            />
+          </Link>
+        )}
       </div>
 
     </aside>
   );
+};
 
   return (
     <section 
@@ -391,6 +414,7 @@ export function ExploreSchedule({ currentPhase, onPhaseChange, targetDayIndex }:
               <div className="space-y-3">
                 {visibleSessions.map((session) => {
                   const isSelected = selectedSession?.id === session.id;
+                  const action = getSessionAction(session, currentPhase);
 
                   return (
                     <React.Fragment key={session.id}>
@@ -431,7 +455,25 @@ export function ExploreSchedule({ currentPhase, onPhaseChange, targetDayIndex }:
                             </div>
 
                             <h4 className="font-serif text-lg sm:text-xl font-bold tracking-tight text-[#13090A] dark:text-[#F6F2F1] group-hover:text-[#6C151E] dark:group-hover:text-[#E45464] transition-colors leading-snug">
-                              {session.title}
+                              {action.isExternal ? (
+                                <a
+                                  href={action.href}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="hover:underline"
+                                >
+                                  {session.title}
+                                </a>
+                              ) : (
+                                <Link
+                                  href={action.href}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="hover:underline"
+                                >
+                                  {session.title}
+                                </Link>
+                              )}
                             </h4>
 
                             <p className="font-sans font-normal text-xs sm:text-sm leading-relaxed text-[#665B57] dark:text-[#BEB5B4] line-clamp-2">
@@ -442,20 +484,45 @@ export function ExploreSchedule({ currentPhase, onPhaseChange, targetDayIndex }:
                         </div>
 
                         {/* Right: Actions */}
-                        <div className="flex items-center gap-2 mt-3 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#D9D0CB]/40 dark:border-white/10 w-full sm:w-auto justify-end">
-                          {!selectedSession && (
-                            <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-mono font-semibold text-[#6C151E] dark:text-[#E45464] opacity-0 group-hover:opacity-100 transition-opacity mr-1">
-                              View Details <ArrowRight size={12} />
-                            </span>
+                        <div className="flex items-center gap-2 mt-3 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#D9D0CB]/40 dark:border-white/10 w-full sm:w-auto justify-end shrink-0">
+                          {action.isExternal ? (
+                            <a
+                              href={action.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-xl bg-[#6C151E] hover:bg-[#8F2632] text-white text-xs font-bold shadow-xs transition-all active:scale-95 shrink-0"
+                            >
+                              <span>{action.cardLabel}</span>
+                              <ArrowRight size={13} />
+                            </a>
+                          ) : (
+                            <Link
+                              href={action.href}
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-xl bg-[#6C151E] hover:bg-[#8F2632] text-white text-xs font-bold shadow-xs transition-all active:scale-95 shrink-0"
+                            >
+                              <span>{action.cardLabel}</span>
+                              <ArrowRight size={13} />
+                            </Link>
                           )}
 
-                          <div className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
-                            isSelected
-                              ? 'bg-[#6C151E] text-white'
-                              : 'bg-[#6C151E]/10 text-[#6C151E] dark:bg-white/10 dark:text-white group-hover:bg-[#6C151E] group-hover:text-white'
-                          }`}>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedId(isSelected ? null : session.id);
+                            }}
+                            className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors shrink-0 ${
+                              isSelected
+                                ? 'bg-[#6C151E] text-white'
+                                : 'bg-[#6C151E]/10 text-[#6C151E] dark:bg-white/10 dark:text-white hover:bg-[#6C151E] hover:text-white'
+                            }`}
+                            title={isSelected ? "Close details" : "View session details"}
+                            aria-label={isSelected ? "Close session details" : "View session details"}
+                          >
                             <ArrowRight size={15} className={`transition-transform duration-200 ${isSelected ? 'rotate-90' : ''}`} />
-                          </div>
+                          </button>
                         </div>
 
                       </div>

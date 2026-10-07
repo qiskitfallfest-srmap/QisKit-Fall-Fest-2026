@@ -23,6 +23,7 @@ export const onlineSchedule: Day[] = [
         initials: "VS",
         duration: "60 min",
         timezone: "IST",
+        learningUrl: "/learning",
         learn: [
           "Overview of Qiskit Fall Fest 2026 3-day online intensive course curriculum & milestones",
           "Welcome addresses from university leadership, faculty coordinators, and IBM research directors",
@@ -43,6 +44,7 @@ export const onlineSchedule: Day[] = [
         initials: "RS",
         duration: "2h",
         timezone: "IST",
+        learningUrl: "/learning/session/session-1",
         learn: [
           "Qubit vs classical bit representation and Bloch sphere geometry",
           "Principles of quantum superposition, relative phase, and two-qubit entanglement",
@@ -65,6 +67,7 @@ export const onlineSchedule: Day[] = [
         initials: "CH",
         duration: "60 min",
         timezone: "IST",
+        learningUrl: "/learning",
         learn: [
           "Peer networking with student developers across India and international attendees",
         ],
@@ -83,6 +86,7 @@ export const onlineSchedule: Day[] = [
         initials: "JD",
         duration: "2h",
         timezone: "IST",
+        learningUrl: "/learning/session/session-2",
         learn: [
           "Superconducting qubits: Nonlinear Josephson junctions, LC circuits, and transmon design",
           "Semiconductor spin qubits and quantum dot nanostructures",
@@ -105,6 +109,7 @@ export const onlineSchedule: Day[] = [
         initials: "CM",
         duration: "Self-paced",
         timezone: "IST",
+        learningUrl: "/learning/session/session-1/quiz",
         learn: [
           "Real-time problem-solving sprint testing foundational quantum gate logic and materials",
           "LMS quiz verifying superposition, statevectors, and transmon coherence metrics",
@@ -124,6 +129,7 @@ export const onlineSchedule: Day[] = [
         initials: "TR",
         duration: "Deadline",
         timezone: "IST",
+        learningUrl: "/learning?challenge=1",
         learn: [
           "Creative technical storytelling: Explain a quantum computing concept in under 60 seconds",
           "Showcase SRM University-AP and IBM Qiskit Fall Fest 2026 branding and vision",
@@ -154,6 +160,7 @@ export const onlineSchedule: Day[] = [
         initials: "KD",
         duration: "2h",
         timezone: "IST",
+        learningUrl: "/learning/session/session-3",
         learn: [
           "Physical coupling maps and topology of superconducting quantum processors",
           "Transpiler routing passes, SWAP gate insertion, and circuit depth expansion",
@@ -176,6 +183,7 @@ export const onlineSchedule: Day[] = [
         initials: "CH",
         duration: "2h",
         timezone: "IST",
+        learningUrl: "/learning",
         learn: [
           "Peer discussions on physical quantum hardware and university research labs",
         ],
@@ -194,6 +202,7 @@ export const onlineSchedule: Day[] = [
         initials: "DD",
         duration: "1h",
         timezone: "IST",
+        learningUrl: "/learning/session/session-4",
         learn: [
           "Quantum sensing principles: Surpassing classical shot-noise limits with quantum probes",
           "NV-center diamond magnetometry and precision measurement systems",
@@ -215,6 +224,7 @@ export const onlineSchedule: Day[] = [
         initials: "GR",
         duration: "1h",
         timezone: "IST",
+        learningUrl: "/learning/session/session-4",
         learn: [
           "Photonic quantum computing: Beam splitters, phase shifters, and single-photon detectors",
           "Optical interferometry and quantum state generation",
@@ -236,6 +246,7 @@ export const onlineSchedule: Day[] = [
         initials: "DP",
         duration: "Deadline",
         timezone: "IST",
+        learningUrl: "/learning?challenge=2",
         learn: [
           "Synthesizing intricate quantum mechanics and hardware architectures into compelling visual infographics",
           "Communicating concepts such as entanglement, superposition, or sensor physics",
@@ -266,6 +277,7 @@ export const onlineSchedule: Day[] = [
         initials: "JS",
         duration: "2h",
         timezone: "IST",
+        learningUrl: "/learning/session/session-5",
         learn: [
           "Parameterized quantum circuits (PQC) and variational ansatz design",
           "Hybrid classical-quantum training loops with gradient estimators (parameter-shift rule)",
@@ -289,6 +301,7 @@ export const onlineSchedule: Day[] = [
         initials: "CH",
         duration: "2h",
         timezone: "IST",
+        learningUrl: "/learning",
         learn: [
           "Finalize team recruitment and discuss track preferences ahead of the Problem Statement release",
         ],
@@ -307,6 +320,7 @@ export const onlineSchedule: Day[] = [
         initials: "SB",
         duration: "2h",
         timezone: "IST",
+        learningUrl: "/learning/session/session-6",
         learn: [
           "Foundations of classical cryptography (RSA, Diffie-Hellman, ECC) and prime factorization hardness",
           "Why classical computers take exponential time to factor large semiprimes",
@@ -330,6 +344,7 @@ export const onlineSchedule: Day[] = [
         initials: "OC",
         duration: "60 min",
         timezone: "IST",
+        learningUrl: "/learning/hackathon",
         learn: [
           "Official release of the Universal Challenge Framework across hackathon tracks",
           "Processor benchmark rules and submission guidelines",
@@ -352,6 +367,7 @@ export const onlineSchedule: Day[] = [
         initials: "EC",
         duration: "Deadline",
         timezone: "IST",
+        learningUrl: "/learning?challenge=3",
         learn: [
           "In-depth academic synthesis on quantum societal impact, post-quantum cybersecurity, or quantum hardware roadmaps",
           "Evaluation criteria: Topic understanding (25%), Depth & analysis (25%), Originality (20%), Structure (15%), Writing quality (10%), References (5%)",
