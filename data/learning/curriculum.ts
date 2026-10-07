@@ -56,8 +56,6 @@ export const CURRICULUM_SESSIONS: LectureSession[] = [
       'Multi-qubit entanglement and Bell state synthesis via CNOT gates',
       'Qiskit 1.x QuantumCircuit construction, transpilation, and statevector simulation',
     ],
-    lectureNotesUrl: 'https://docs.quantum.ibm.com/build',
-    slidesUrl: 'https://github.com/qiskit-community/qiskit-community-tutorials',
   },
   {
     id: 'session-2',
@@ -85,8 +83,6 @@ export const CURRICULUM_SESSIONS: LectureSession[] = [
       'Coherence times (T1 relaxation, T2 dephasing) and material fabrication trade-offs',
       'Variational Quantum Eigensolver (VQE) for condensed matter systems',
     ],
-    lectureNotesUrl: 'https://qiskit-community.github.io/qiskit-nature/',
-    slidesUrl: 'https://github.com/qiskit-community/qiskit-nature',
   },
   {
     id: 'session-3',
@@ -114,8 +110,6 @@ export const CURRICULUM_SESSIONS: LectureSession[] = [
       'SWAP overhead calculation and two-qubit gate depth inflation',
       'Benchmarking coupling constraints on Processor A (5Q linear) vs Processor B (7Q heavy-hex)',
     ],
-    lectureNotesUrl: 'https://docs.quantum.ibm.com/transpile',
-    slidesUrl: 'https://github.com/Qiskit/qiskit',
   },
   {
     id: 'session-4',
@@ -152,8 +146,6 @@ export const CURRICULUM_SESSIONS: LectureSession[] = [
       'Session 4B: Photonic quantum computing, beam splitters, and optical interferometry',
       'Quantum state generation and platform comparisons between photonic and matter qubits',
     ],
-    lectureNotesUrl: 'https://docs.quantum.ibm.com/run/primitives-get-started',
-    slidesUrl: 'https://arxiv.org/abs/1802.04638',
   },
   {
     id: 'session-5',
@@ -181,8 +173,6 @@ export const CURRICULUM_SESSIONS: LectureSession[] = [
       'Data encoding techniques: Amplitude encoding, angle encoding, and ZZ-feature maps',
       'Hands-on implementation of a Variational Quantum Classifier (VQC) using EstimatorV2',
     ],
-    lectureNotesUrl: 'https://qiskit-community.github.io/qiskit-machine-learning/',
-    slidesUrl: 'https://github.com/qiskit-community/qiskit-machine-learning',
   },
   {
     id: 'session-6',
@@ -210,8 +200,6 @@ export const CURRICULUM_SESSIONS: LectureSession[] = [
       'NIST Post-Quantum Cryptography standards: Lattice-based ML-KEM and ML-DSA',
       'Quantum Key Distribution (BB84) vs Post-Quantum Mathematical Cryptography',
     ],
-    lectureNotesUrl: 'https://csrc.nist.gov/pubs/fips/203/final',
-    slidesUrl: 'https://github.com/Qiskit/qiskit-tutorials',
   },
 ];
 
