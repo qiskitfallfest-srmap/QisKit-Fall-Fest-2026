@@ -197,7 +197,7 @@ export function LearningSidebar() {
                         href={`/learning/session/${sessionItem.id}`}
                         onClick={() => setIsMobileMenuOpen(false)}
                         className={clsx(
-                          'group flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs sm:text-sm transition-colors',
+                          'group flex items-start gap-2 px-2.5 py-1.5 rounded-md text-xs sm:text-sm transition-colors',
                           isJustSessionActive
                             ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/25 dark:text-[#E89BA5] font-semibold'
                             : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1C0A0D] hover:text-slate-900 dark:hover:text-[#FAF6F3] font-medium'
@@ -205,13 +205,13 @@ export function LearningSidebar() {
                       >
                         <PlayCircle
                           className={clsx(
-                            'w-3.5 h-3.5 shrink-0',
+                            'w-3.5 h-3.5 shrink-0 mt-0.5',
                             isJustSessionActive
                               ? 'text-burgundy dark:text-[#E89BA5]'
                               : 'text-slate-400'
                           )}
                         />
-                        <span className="line-clamp-1 leading-snug">
+                        <span className="leading-snug break-words flex-1">
                           {sessionItem.title}
                         </span>
                         {sessionItem.isLive && (
@@ -251,7 +251,7 @@ export function LearningSidebar() {
                     href={`/learning?challenge=${day.id}`}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={clsx(
-                      'group flex items-center gap-2 px-2.5 py-1.5 mt-0.5 rounded-md text-xs sm:text-sm transition-colors',
+                      'group flex items-start gap-2 px-2.5 py-1.5 mt-0.5 rounded-md text-xs sm:text-sm transition-colors',
                       activeChallengeDay === String(day.id)
                         ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/25 dark:text-[#E89BA5] font-semibold'
                         : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1C0A0D] hover:text-slate-900 dark:hover:text-[#FAF6F3] font-medium'
@@ -259,13 +259,13 @@ export function LearningSidebar() {
                   >
                     <Award
                       className={clsx(
-                        'w-3.5 h-3.5 shrink-0',
+                        'w-3.5 h-3.5 shrink-0 mt-0.5',
                         activeChallengeDay === String(day.id)
                           ? 'text-burgundy dark:text-[#E89BA5]'
                           : 'text-slate-400'
                       )}
                     />
-                    <span className="line-clamp-1 leading-snug">
+                    <span className="leading-snug break-words flex-1">
                       Daily Challenge: {dayChallenge.title}
                     </span>
                   </Link>
