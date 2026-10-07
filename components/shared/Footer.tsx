@@ -299,6 +299,7 @@ export function Footer() {
                     src="/images/footer/HOME-09-FALL-FEST-2026-BADGE.png" 
                     alt="Qiskit Fall Fest 2026 Badge" 
                     fill 
+                    sizes="(max-width: 768px) 104px, 148px"
                     className="object-contain" 
                     referrerPolicy="no-referrer"
                   />
@@ -329,6 +330,7 @@ export function Footer() {
                     src="/images/footer/srm-ap-emblem.png" 
                     alt="SRM University-AP Emblem" 
                     fill 
+                    sizes="52px"
                     className="object-contain" 
                     referrerPolicy="no-referrer"
                   />
@@ -389,6 +391,7 @@ export function Footer() {
                       src="/images/branding/IBM_Quantum_logotype_pos_RGB.png"
                       alt="IBM Quantum"
                       fill
+                      sizes="(max-width: 768px) 205px, 254px"
                       className="object-contain object-left select-none"
                       referrerPolicy="no-referrer"
                     />
@@ -399,6 +402,7 @@ export function Footer() {
                       src="/images/branding/IBM_Quantum_logotype_rev_RGB.png"
                       alt="IBM Quantum"
                       fill
+                      sizes="(max-width: 768px) 142px, 176px"
                       className="object-contain object-left select-none"
                       referrerPolicy="no-referrer"
                     />
@@ -436,6 +440,7 @@ export function Footer() {
                       src="/images/footer/HOME-09-FOOTER-QISKIT-DARK.png" 
                       alt="" 
                       fill 
+                      sizes="38px"
                       className="object-contain dark:hidden" 
                       referrerPolicy="no-referrer"
                     />
@@ -444,6 +449,7 @@ export function Footer() {
                       src="/images/footer/HOME-09-FOOTER-QISKIT-LIGHT.png" 
                       alt="" 
                       fill 
+                      sizes="38px"
                       className="object-contain hidden dark:block" 
                       referrerPolicy="no-referrer"
                     />

@@ -68,6 +68,7 @@ export function NextDecadeSection() {
           src={NEXT_DECADE_ASSETS.backgroundLight}
           alt="The Next Decade Together Background Light"
           fill
+          sizes="100vw"
           priority={false}
           className={`${styles.bgImageLight} dark:hidden`}
         />
@@ -75,6 +76,7 @@ export function NextDecadeSection() {
           src={NEXT_DECADE_ASSETS.backgroundDark}
           alt="The Next Decade Together Background Dark"
           fill
+          sizes="100vw"
           priority={false}
           className={`${styles.bgImageDark} hidden dark:block`}
         />
