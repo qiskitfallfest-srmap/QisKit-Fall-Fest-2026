@@ -15,6 +15,8 @@ import {
   Menu,
   X,
   Calendar,
+  Code2,
+  Terminal,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { supabase } from '@/lib/supabase';
@@ -34,6 +36,7 @@ export function LearningSidebar() {
   const { sessions } = useCurriculumSessions();
 
   const isHackathon = pathname === '/learning/hackathon';
+  const isCodingChallenge = pathname === '/learning/qiskit-challenge' || pathname?.startsWith('/learning/qiskit-challenge');
   const activeChallengeDay = searchParams?.get('challenge');
 
   // Detect active session from pathname (e.g. /learning/session/session-3 or /learning/session/session-3/quiz)
@@ -134,7 +137,9 @@ export function LearningSidebar() {
 
   // Active Label for mobile header
   let activeMobileTitle = 'Curriculum Hub';
-  if (isHackathon) {
+  if (isCodingChallenge) {
+    activeMobileTitle = 'Qiskit Coding Challenge';
+  } else if (isHackathon) {
     activeMobileTitle = 'Hackathon Workspace';
   } else if (activeSessionObj) {
     activeMobileTitle = `Day ${activeSessionObj.day} · Session ${activeSessionObj.sessionNumber}`;
@@ -341,6 +346,37 @@ export function LearningSidebar() {
               : 'text-slate-300 dark:text-slate-600'
           )}
         />
+      </Link>
+
+      <Link
+        href="/learning/qiskit-challenge"
+        onClick={() => setIsMobileMenuOpen(false)}
+        className={clsx(
+          'w-full flex items-center justify-between px-3 py-2 mt-1 rounded-lg transition-colors text-xs sm:text-sm font-semibold group',
+          isCodingChallenge
+            ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] border border-burgundy/20 dark:border-burgundy/40 shadow-sm'
+            : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1C0A0D] border border-transparent'
+        )}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <Terminal
+            className={clsx(
+              'w-3.5 h-3.5 shrink-0',
+              isCodingChallenge
+                ? 'text-burgundy dark:text-[#E89BA5]'
+                : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
+            )}
+          />
+          <div className="flex flex-col min-w-0">
+            <span className="truncate">Qiskit Coding Challenge</span>
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono font-normal">
+              9 Problems · 100 pts
+            </span>
+          </div>
+        </div>
+        <span className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+          ACTIVE
+        </span>
       </Link>
     </>
   );
