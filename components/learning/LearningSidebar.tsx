@@ -270,15 +270,15 @@ export function LearningSidebar() {
                             href={`/learning/session/${sessionItem.id}/quiz`}
                             onClick={() => setIsMobileMenuOpen(false)}
                             className={clsx(
-                              'group flex items-center gap-2 px-2.5 py-1 ml-4 rounded-md text-[11px] sm:text-xs transition-colors',
+                              'group flex items-start gap-2 px-2.5 py-1.5 rounded-md text-xs sm:text-sm transition-colors',
                               isQuizActive
                                 ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/25 dark:text-[#E89BA5] font-semibold'
-                                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1C0A0D] hover:text-slate-800 dark:hover:text-slate-200'
+                                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1C0A0D] hover:text-slate-900 dark:hover:text-[#FAF6F3] font-medium'
                             )}
                           >
                             <Award
                               className={clsx(
-                                'w-3 h-3 shrink-0',
+                                'w-3.5 h-3.5 shrink-0 mt-0.5',
                                 isQuizActive
                                   ? 'text-burgundy dark:text-[#E89BA5]'
                                   : isQuizLocked
@@ -286,9 +286,9 @@ export function LearningSidebar() {
                                   : 'text-slate-400'
                               )}
                             />
-                            <span>Concept Quiz</span>
+                            <span className="leading-snug break-words flex-1">Concept Quiz</span>
                             {isQuizLocked && (
-                              <span className="ml-auto shrink-0 px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 font-mono text-[9px] font-semibold tracking-wide flex items-center gap-1">
+                              <span className="ml-auto shrink-0 px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 font-mono text-[9px] font-semibold tracking-wide flex items-center gap-1 mt-0.5">
                                 <Lock className="w-2.5 h-2.5" />
                                 Soon
                               </span>
