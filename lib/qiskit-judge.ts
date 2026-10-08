@@ -37,6 +37,7 @@ export interface JudgeEvaluationResult {
 
 export interface CompetitionConfig {
   enabled: boolean;
+  is_locked?: boolean;
   start_time: string;
   end_time: string;
   max_submissions_per_problem: number;
@@ -46,6 +47,7 @@ export interface CompetitionConfig {
 
 const DEFAULT_CONFIG: CompetitionConfig = {
   enabled: true,
+  is_locked: true,
   start_time: '2026-10-01T00:00:00+05:30',
   end_time: '2026-10-20T23:59:59+05:30',
   max_submissions_per_problem: 10,
@@ -80,6 +82,14 @@ export async function getChallengeConfig(): Promise<CompetitionConfig> {
  */
 export async function checkCompetitionStatus(): Promise<{ allowed: boolean; reason?: string; config: CompetitionConfig }> {
   const config = await getChallengeConfig();
+
+  if (config.is_locked) {
+    return {
+      allowed: false,
+      reason: 'The Qiskit Coding Challenge is currently locked by organizers. Coming Soon!',
+      config,
+    };
+  }
 
   if (!config.enabled) {
     return { allowed: false, reason: 'The Qiskit Coding Challenge is currently disabled by organizers.', config };
