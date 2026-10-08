@@ -23,6 +23,7 @@ import {
   ChevronRight,
   Coffee,
   Users,
+  Terminal,
 } from 'lucide-react';
 
 function LearningDashboardContent() {
@@ -317,6 +318,35 @@ function LearningDashboardContent() {
             <span className="text-xs text-slate-400">/ 3</span>
           </div>
         </div>
+      </div>
+
+      {/* Qiskit Coding Challenge Feature Card */}
+      <div className="p-5 bg-gradient-to-r from-burgundy/10 via-burgundy/5 to-transparent dark:from-burgundy/25 dark:via-burgundy/10 dark:to-transparent border border-burgundy/30 dark:border-burgundy/40 rounded-xl shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[10px] font-bold text-burgundy dark:text-[#E89BA5] uppercase tracking-wider px-2 py-0.5 rounded bg-burgundy/10 dark:bg-burgundy/20">
+              Official Evaluation
+            </span>
+            <span className="font-mono text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+              9 Problems · 100 Points Total
+            </span>
+          </div>
+          <h2 className="font-serif text-base sm:text-lg font-bold text-slate-900 dark:text-[#FAF6F3]">
+            Qiskit Coding Challenge
+          </h2>
+          <p className="text-xs text-slate-600 dark:text-slate-300 font-sans max-w-xl">
+            Solve quantum programming problems using Python and Qiskit. Run your code against public tests, pass hidden tests, and earn points on the live leaderboard.
+          </p>
+        </div>
+
+        <Link
+          href="/learning/qiskit-challenge"
+          className="px-4 py-2.5 bg-burgundy text-white hover:bg-burgundy-deep text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5 shrink-0 shadow-sm"
+        >
+          <Terminal className="w-4 h-4" />
+          <span>Enter Challenge</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
       </div>
 
       {/* Quick Resume Card */}
