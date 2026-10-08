@@ -400,11 +400,11 @@ function QiskitChallengeWorkspace() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-[#0D0406] text-slate-900 dark:text-[#FAF6F3] font-sans flex flex-col">
+    <div className="min-h-screen lg:h-screen lg:overflow-hidden bg-slate-100 dark:bg-[#0D0406] text-slate-900 dark:text-[#FAF6F3] font-sans flex flex-col">
       {/* ─────────────────────────────────────────────────────────────
           1. LEETCODE TOP NAVIGATION BAR
          ───────────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 bg-white dark:bg-[#160608] border-b border-slate-200 dark:border-[#3D1418] px-3 sm:px-6 py-2.5 flex items-center justify-between gap-3 shadow-xs">
+      <header className="shrink-0 z-40 bg-white dark:bg-[#160608] border-b border-slate-200 dark:border-[#3D1418] px-3 sm:px-6 py-2.5 flex items-center justify-between gap-3 shadow-xs">
         {/* Left: Hub Link, Problem List Modal Button, Prev/Next Navigation */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <Link
@@ -529,13 +529,13 @@ function QiskitChallengeWorkspace() {
       {/* ─────────────────────────────────────────────────────────────
           2. MAIN LEETCODE DUAL-PANE SPLIT WORKSPACE
          ───────────────────────────────────────────────────────────── */}
-      <div className="flex-1 p-3 sm:p-4 grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-[1920px] mx-auto w-full">
+      <div className="flex-1 min-h-0 p-2.5 sm:p-3.5 grid grid-cols-1 lg:grid-cols-2 gap-3.5 max-w-[1920px] mx-auto w-full lg:overflow-hidden">
         {/* ───────────────────────────────────────────────────────────
             LEFT PANE: PROBLEM STATEMENT & SUBMISSIONS TABS
            ─────────────────────────────────────────────────────────── */}
-        <div className="flex flex-col bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl overflow-hidden shadow-xs h-full min-h-[500px]">
+        <div className="flex flex-col h-[550px] lg:h-full min-h-0 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl overflow-hidden shadow-xs">
           {/* Left Pane Navigation Tabs */}
-          <div className="flex items-center px-4 bg-slate-50 dark:bg-[#1C0A0D] border-b border-slate-200 dark:border-[#3D1418]">
+          <div className="shrink-0 flex items-center px-4 bg-slate-50 dark:bg-[#1C0A0D] border-b border-slate-200 dark:border-[#3D1418]">
             <button
               onClick={() => setLeftTab('description')}
               type="button"
@@ -574,7 +574,7 @@ function QiskitChallengeWorkspace() {
           </div>
 
           {/* Left Pane Content Body */}
-          <div className="flex-1 p-5 sm:p-6 overflow-y-auto space-y-6">
+          <div className="flex-1 min-h-0 p-5 sm:p-6 overflow-y-auto space-y-6 overscroll-contain">
             {leftTab === 'description' ? (
               <div className="space-y-6">
                 {/* Title & Metadata Badges */}
@@ -785,7 +785,7 @@ function QiskitChallengeWorkspace() {
         {/* ───────────────────────────────────────────────────────────
             RIGHT PANE: MONACO CODE EDITOR & CONSOLE DRAWER
            ─────────────────────────────────────────────────────────── */}
-        <div className="flex flex-col h-full min-h-[500px]">
+        <div className="flex flex-col h-[650px] lg:h-full min-h-0 overflow-hidden">
           <QiskitPlayground
             challenge={selectedChallenge}
             userEmail={sessionUser?.email || ''}

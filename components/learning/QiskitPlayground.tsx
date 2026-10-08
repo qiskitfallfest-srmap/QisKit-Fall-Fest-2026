@@ -19,6 +19,7 @@ import {
   FileCode,
   Layers,
   ChevronDown,
+  ChevronUp,
   Sparkles,
 } from 'lucide-react';
 import { CodingChallenge } from '@/data/qiskit/challenges';
@@ -81,6 +82,7 @@ export function QiskitPlayground({
   const [activeBottomTab, setActiveBottomTab] = useState<'testcase' | 'result' | 'submission' | 'console'>('testcase');
   const [selectedCaseIdx, setSelectedCaseIdx] = useState<number>(0);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [isConsoleCollapsed, setIsConsoleCollapsed] = useState<boolean>(false);
 
   // Run execution result state
   const [runStdout, setRunStdout] = useState<string>('');
@@ -209,6 +211,7 @@ export function QiskitPlayground({
     if (isRunning || isSubmitting) return;
 
     setIsRunning(true);
+    setIsConsoleCollapsed(false);
     setActiveBottomTab('result');
     setRunStdout('');
     setRunStderr('');
@@ -280,6 +283,7 @@ export function QiskitPlayground({
     if (isRunning || isSubmitting) return;
 
     setIsSubmitting(true);
+    setIsConsoleCollapsed(false);
     setActiveBottomTab('submission');
     setSubmission({
       submissionId: '',
@@ -423,13 +427,13 @@ export function QiskitPlayground({
 
   return (
     <div
-      className="flex flex-col h-full bg-[#181818] border border-slate-700/60 dark:border-[#3D1418] rounded-xl overflow-hidden shadow-lg"
+      className="flex flex-col h-full min-h-0 bg-[#181818] border border-slate-700/60 dark:border-[#3D1418] rounded-xl overflow-hidden shadow-lg"
       onKeyDown={handleKeyDown}
     >
       {/* ─────────────────────────────────────────────────────────────
           1. LEETCODE-STYLE EDITOR TOOLBAR
          ───────────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-4 py-2 bg-[#252526] border-b border-[#333333] select-none">
+      <div className="shrink-0 flex items-center justify-between px-4 py-2 bg-[#252526] border-b border-[#333333] select-none">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-[#1e1e1e] text-xs font-mono font-medium text-slate-200 border border-[#3e3e42]">
             <Code2 className="w-3.5 h-3.5 text-emerald-400" />
@@ -467,7 +471,7 @@ export function QiskitPlayground({
           2. MONACO CODE EDITOR (Guaranteed Clickable & Focused)
          ───────────────────────────────────────────────────────────── */}
       <div
-        className="relative w-full h-[460px] bg-[#1e1e1e] cursor-text"
+        className="relative w-full flex-1 min-h-[200px] min-h-0 bg-[#1e1e1e] cursor-text"
         onClick={() => {
           if (editorRef.current) {
             editorRef.current.focus();
@@ -513,16 +517,19 @@ export function QiskitPlayground({
       {/* ─────────────────────────────────────────────────────────────
           3. LEETCODE-STYLE CONSOLE & TESTCASE PANEL
          ───────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col bg-[#1e1e1e] border-t border-[#333333]">
+      <div className="shrink-0 flex flex-col bg-[#1e1e1e] border-t border-[#333333]">
         {/* Tab Headers */}
-        <div className="flex items-center justify-between px-3 bg-[#252526] border-b border-[#333333]">
+        <div className="shrink-0 flex items-center justify-between px-3 bg-[#252526] border-b border-[#333333]">
           <div className="flex items-center gap-1">
             <button
-              onClick={() => setActiveBottomTab('testcase')}
+              onClick={() => {
+                setActiveBottomTab('testcase');
+                setIsConsoleCollapsed(false);
+              }}
               type="button"
               className={clsx(
                 'px-3 py-2 text-xs font-mono font-medium border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer',
-                activeBottomTab === 'testcase'
+                activeBottomTab === 'testcase' && !isConsoleCollapsed
                   ? 'border-emerald-500 text-white font-semibold'
                   : 'border-transparent text-slate-400 hover:text-slate-200'
               )}
@@ -532,11 +539,14 @@ export function QiskitPlayground({
             </button>
 
             <button
-              onClick={() => setActiveBottomTab('result')}
+              onClick={() => {
+                setActiveBottomTab('result');
+                setIsConsoleCollapsed(false);
+              }}
               type="button"
               className={clsx(
                 'px-3 py-2 text-xs font-mono font-medium border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer',
-                activeBottomTab === 'result'
+                activeBottomTab === 'result' && !isConsoleCollapsed
                   ? 'border-emerald-500 text-white font-semibold'
                   : 'border-transparent text-slate-400 hover:text-slate-200'
               )}
@@ -554,11 +564,14 @@ export function QiskitPlayground({
             </button>
 
             <button
-              onClick={() => setActiveBottomTab('submission')}
+              onClick={() => {
+                setActiveBottomTab('submission');
+                setIsConsoleCollapsed(false);
+              }}
               type="button"
               className={clsx(
                 'px-3 py-2 text-xs font-mono font-medium border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer',
-                activeBottomTab === 'submission'
+                activeBottomTab === 'submission' && !isConsoleCollapsed
                   ? 'border-emerald-500 text-white font-semibold'
                   : 'border-transparent text-slate-400 hover:text-slate-200'
               )}
@@ -573,7 +586,7 @@ export function QiskitPlayground({
             </button>
           </div>
 
-          {/* Action Buttons: Run & Submit */}
+          {/* Action Buttons: Run & Submit & Minimize Toggle */}
           <div className="flex items-center gap-2 py-1.5">
             <button
               onClick={handleRunCode}
@@ -605,11 +618,26 @@ export function QiskitPlayground({
               )}
               <span>Submit</span>
             </button>
+
+            {/* Collapse / Expand Toggle Button */}
+            <button
+              onClick={() => setIsConsoleCollapsed((prev) => !prev)}
+              type="button"
+              title={isConsoleCollapsed ? 'Expand test panel' : 'Collapse test panel'}
+              className="p-1.5 rounded hover:bg-[#333333] text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+            >
+              {isConsoleCollapsed ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
+            </button>
           </div>
         </div>
 
         {/* Tab Body */}
-        <div className="p-4 min-h-[170px] max-h-[260px] overflow-y-auto font-mono text-xs text-slate-200">
+        {!isConsoleCollapsed && (
+          <div className="p-4 h-[210px] sm:h-[230px] overflow-y-auto font-mono text-xs text-slate-200 overscroll-contain">
           {/* TAB 1: Testcase Selector */}
           {activeBottomTab === 'testcase' && (
             <div className="space-y-3">
@@ -849,6 +877,7 @@ export function QiskitPlayground({
             </div>
           )}
         </div>
+      )}
       </div>
     </div>
   );
