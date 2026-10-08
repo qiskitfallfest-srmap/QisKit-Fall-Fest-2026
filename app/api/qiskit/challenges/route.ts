@@ -4,10 +4,15 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 import { QISKIT_CHALLENGES } from '@/data/qiskit/challenges';
 import { getChallengeConfig } from '@/lib/qiskit-judge';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession();
     const config = await getChallengeConfig();
+    const isAdmin = Boolean(session?.isAdmin);
+    const isLocked = Boolean(config.is_locked);
 
     let userSubmissions: Record<string, { status: string; score: number; maxScore: number }> = {};
 
@@ -45,10 +50,16 @@ export async function GET(req: NextRequest) {
       };
     });
 
+    // If challenge is locked: non-admin participants receive empty problem set (preventing leaks)
+    // Administrators retain full access for testing purposes
+    const challengesToReturn = isLocked && !isAdmin ? [] : challengesWithStatus;
+
     return NextResponse.json({
       success: true,
-      challenges: challengesWithStatus,
+      challenges: challengesToReturn,
       config,
+      isLocked,
+      isAdmin,
     });
   } catch (err: any) {
     console.error('[API /api/qiskit/challenges] Error:', err);
