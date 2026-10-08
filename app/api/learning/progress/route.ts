@@ -62,6 +62,7 @@ export async function GET() {
         videoCompleted: boolean;
         quizPassed: boolean;
         quizScore: number;
+        quizAttempts: number;
         completedAt: string | null;
       }
     > = {};
@@ -82,6 +83,7 @@ export async function GET() {
         videoCompleted: isVideoDone,
         quizPassed: isQuizPassed,
         quizScore: record?.quiz_score || 0,
+        quizAttempts: record?.quiz_attempts || 0,
         completedAt: record?.completed_at || null,
       };
 
@@ -203,6 +205,7 @@ export async function POST(request: NextRequest) {
         .eq('session_id', sessionId)
         .maybeSingle();
 
+      const nextAttempts = (existingProgress?.quiz_attempts || 0) + 1;
       const finalPassed = passed || existingProgress?.quiz_passed === true;
       const finalVideoCompleted =
         existingProgress?.video_completed === true || passed;
@@ -216,6 +219,7 @@ export async function POST(request: NextRequest) {
             session_id: sessionId,
             quiz_score: finalScore,
             quiz_passed: finalPassed,
+            quiz_attempts: nextAttempts,
             video_completed: finalVideoCompleted,
             completed_at: finalPassed
               ? existingProgress?.completed_at || new Date().toISOString()
@@ -239,6 +243,7 @@ export async function POST(request: NextRequest) {
         correctCount,
         totalQuestions: quiz.questions.length,
         questionResults,
+        attempts: nextAttempts,
         data,
       });
     }

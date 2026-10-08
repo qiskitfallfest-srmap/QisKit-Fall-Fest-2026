@@ -34,6 +34,7 @@ export default function DedicatedQuizPage() {
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [attemptCount, setAttemptCount] = useState<number>(0);
   const [results, setResults] = useState<{
     scorePercent: number;
     passed: boolean;
@@ -41,6 +42,38 @@ export default function DedicatedQuizPage() {
     totalQuestions: number;
     questionResults: Record<string, boolean>;
   } | null>(null);
+
+  // Fetch current quiz attempts count from API and local cache
+  const fetchAttempts = React.useCallback(async () => {
+    try {
+      if (typeof window !== 'undefined') {
+        const cached = localStorage.getItem(`qff_quiz_attempts_${sessionId}`);
+        if (cached) {
+          setAttemptCount(parseInt(cached, 10) || 0);
+        }
+      }
+
+      const res = await fetch('/api/learning/progress', { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.progress?.[sessionId]) {
+          const attempts = data.progress[sessionId].quizAttempts || 0;
+          setAttemptCount(attempts);
+          if (typeof window !== 'undefined') {
+            try {
+              localStorage.setItem(`qff_quiz_attempts_${sessionId}`, String(attempts));
+            } catch (_) {}
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error fetching quiz attempts:', e);
+    }
+  }, [sessionId]);
+
+  React.useEffect(() => {
+    fetchAttempts();
+  }, [fetchAttempts]);
 
   React.useEffect(() => {
     if (sessionId === 'session-2') {
@@ -186,6 +219,14 @@ export default function DedicatedQuizPage() {
 
       const data = await res.json();
       if (res.ok && data.success) {
+        const nextAttempts = typeof data.attempts === 'number' ? data.attempts : attemptCount + 1;
+        setAttemptCount(nextAttempts);
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem(`qff_quiz_attempts_${sessionId}`, String(nextAttempts));
+          } catch (_) {}
+        }
+
         setResults({
           scorePercent: data.scorePercent,
           passed: data.passed,
@@ -193,6 +234,11 @@ export default function DedicatedQuizPage() {
           totalQuestions: data.totalQuestions,
           questionResults: data.questionResults,
         });
+
+        // Redirect / smooth scroll to top immediately so user sees their score & attempt stats
+        if (typeof window !== 'undefined') {
+          window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+        }
 
         // Track quiz telemetry
         trackQuizAttempt(sessionId, data.scorePercent || 0, !!data.passed);
@@ -211,10 +257,16 @@ export default function DedicatedQuizPage() {
         }
       } else {
         setSubmissionError(data.error || 'Failed to submit quiz. Please try again.');
+        if (typeof window !== 'undefined') {
+          window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+        }
       }
     } catch (err: any) {
       console.error('Quiz submission error:', err);
       setSubmissionError(err?.message || 'Error communicating with server.');
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -224,6 +276,9 @@ export default function DedicatedQuizPage() {
     setSelectedAnswers({});
     setResults(null);
     setSubmissionError(null);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+    }
   }
 
   return (
@@ -251,7 +306,7 @@ export default function DedicatedQuizPage() {
         <div className="max-w-3xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6 font-sans">
           <div className="bg-white dark:bg-[#150709] rounded-xl shadow-xs border border-slate-200 dark:border-[#3D1418] overflow-hidden">
             {/* Header */}
-            <div className="px-4 py-4 sm:px-6 sm:py-4 bg-slate-50 dark:bg-[#1C0A0D] border-b border-slate-200 dark:border-[#3D1418] flex items-center justify-between">
+            <div className="px-4 py-4 sm:px-6 sm:py-4 bg-slate-50 dark:bg-[#1C0A0D] border-b border-slate-200 dark:border-[#3D1418] flex items-center justify-between gap-3">
               <div>
                 <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-burgundy dark:text-[#E89BA5] block">
                   Session {session.sessionNumber} Quiz
@@ -260,7 +315,19 @@ export default function DedicatedQuizPage() {
                   {quiz.title || session.title}
                 </h1>
               </div>
-              <Award className="w-6 h-6 text-burgundy dark:text-[#E89BA5] shrink-0 opacity-80" />
+              <div className="flex items-center gap-2.5">
+                <div className="flex flex-col items-end">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    Attempt Counter
+                  </span>
+                  <span className="font-mono text-xs font-bold text-burgundy dark:text-[#E89BA5] px-2 py-0.5 rounded bg-burgundy/10 dark:bg-[#3D1418] border border-burgundy/20 dark:border-[#4D1A20]">
+                    {results ? `Attempt #${attemptCount}` : `Attempt #${attemptCount + 1}`}
+                  </span>
+                </div>
+                <div className="w-9 h-9 rounded-lg bg-burgundy/10 dark:bg-[#3D1418] border border-burgundy/20 dark:border-[#4D1A20] flex items-center justify-center shrink-0">
+                  <Award className="w-5 h-5 text-burgundy dark:text-[#E89BA5]" />
+                </div>
+              </div>
             </div>
 
             {/* Content */}
@@ -274,26 +341,66 @@ export default function DedicatedQuizPage() {
 
               {results ? (
                 <div className="space-y-6">
-                  {/* Result banner */}
+                  {/* Result banner with Attempt Counter and Top Try Again Button */}
                   <div
-                    className={`p-4 rounded-xl border flex items-center gap-3.5 ${
+                    className={`p-4 sm:p-5 rounded-xl border transition-all ${
                       results.passed
                         ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
                         : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900 text-rose-900 dark:text-rose-200'
                     }`}
                   >
-                    {results.passed ? (
-                      <CheckCircle2 className="w-6 h-6 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                    ) : (
-                      <AlertCircle className="w-6 h-6 text-rose-600 dark:text-rose-400 shrink-0" />
-                    )}
-                    <div>
-                      <h2 className="font-bold text-sm sm:text-base">
-                        {results.passed ? 'Quiz Passed' : 'Passing Threshold Not Met'}
-                      </h2>
-                      <p className="text-xs mt-0.5 text-slate-700 dark:text-slate-300 font-mono">
-                        Score: {results.scorePercent}% ({results.correctCount}/{results.totalQuestions} correct) · Pass requirement: {quiz.passingScore}%
-                      </p>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex items-start sm:items-center gap-3.5">
+                        {results.passed ? (
+                          <CheckCircle2 className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5 sm:mt-0" />
+                        ) : (
+                          <AlertCircle className="w-7 h-7 sm:w-8 sm:h-8 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5 sm:mt-0" />
+                        )}
+                        <div className="space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h2 className="font-bold text-base sm:text-lg tracking-tight">
+                              {results.passed ? 'Quiz Passed!' : 'Passing Threshold Not Met'}
+                            </h2>
+                            {/* Attempt Counter Badge */}
+                            <span
+                              className={`px-2.5 py-0.5 rounded-full font-mono text-[11px] font-bold uppercase tracking-wider border shadow-2xs ${
+                                results.passed
+                                  ? 'bg-emerald-100 dark:bg-emerald-900/60 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200'
+                                  : 'bg-rose-100 dark:bg-rose-900/60 border-rose-300 dark:border-rose-700 text-rose-800 dark:text-rose-200'
+                              }`}
+                            >
+                              Attempt #{attemptCount}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-700 dark:text-slate-300 font-mono">
+                            Score: <span className="font-bold">{results.scorePercent}%</span> ({results.correctCount}/{results.totalQuestions} correct) · Pass requirement: {quiz.passingScore}%
+                          </p>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                            Total attempts submitted: <span className="font-semibold text-slate-700 dark:text-slate-300">{attemptCount}</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Top Action Button: Try Again directly at top so user doesn't have to scroll */}
+                      <div className="flex flex-wrap items-center gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200 dark:border-[#3D1418]">
+                        <button
+                          type="button"
+                          onClick={handleReset}
+                          className="w-full sm:w-auto px-4 py-2 bg-burgundy hover:bg-burgundy-deep text-white text-xs font-semibold rounded-lg shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          Try Again
+                        </button>
+                        {results.passed && (
+                          <Link
+                            href={`/learning/session/${sessionId}`}
+                            className="w-full sm:w-auto px-4 py-2 bg-slate-900 hover:bg-slate-800 dark:bg-[#250D11] dark:hover:bg-[#351419] dark:border dark:border-[#4D1A20] text-white text-xs font-semibold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1.5 shrink-0"
+                          >
+                            <PlayCircle className="w-3.5 h-3.5" />
+                            Return to Session
+                          </Link>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -350,27 +457,52 @@ export default function DedicatedQuizPage() {
                   </div>
 
                   <div className="pt-4 border-t border-slate-200 dark:border-[#3D1418] flex flex-col sm:flex-row items-center justify-between gap-3">
-                    {!results.passed ? (
+                    <span className="font-mono text-xs text-slate-500 dark:text-slate-400">
+                      Attempt #{attemptCount} evaluated · Total attempts: {attemptCount}
+                    </span>
+                    <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                       <button
+                        type="button"
                         onClick={handleReset}
                         className="w-full sm:w-auto px-5 py-2 bg-burgundy text-white text-xs font-semibold rounded-lg hover:bg-burgundy-deep transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                       >
                         <RotateCcw className="w-3.5 h-3.5" />
                         Try Again
                       </button>
-                    ) : (
-                      <Link
-                        href={`/learning/session/${sessionId}`}
-                        className="w-full sm:w-auto px-5 py-2 bg-slate-900 dark:bg-burgundy text-white text-xs font-semibold rounded-lg hover:bg-slate-800 dark:hover:bg-burgundy-deep transition-colors flex items-center justify-center gap-1.5"
-                      >
-                        <PlayCircle className="w-3.5 h-3.5" />
-                        Return to Session
-                      </Link>
-                    )}
+                      {results.passed && (
+                        <Link
+                          href={`/learning/session/${sessionId}`}
+                          className="w-full sm:w-auto px-5 py-2 bg-slate-900 dark:bg-[#250D11] text-white text-xs font-semibold rounded-lg hover:bg-slate-800 dark:hover:bg-[#351419] border border-transparent dark:border-[#4D1A20] transition-colors flex items-center justify-center gap-1.5"
+                        >
+                          <PlayCircle className="w-3.5 h-3.5" />
+                          Return to Session
+                        </Link>
+                      )}
+                    </div>
                   </div>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Attempt in progress banner */}
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono uppercase font-bold text-[10px] text-slate-500 dark:text-slate-400">
+                        Current Attempt:
+                      </span>
+                      <span className="font-mono font-bold text-burgundy dark:text-[#E89BA5] px-2 py-0.5 rounded bg-burgundy/10 dark:bg-[#3D1418] border border-burgundy/20 dark:border-[#4D1A20]">
+                        Attempt #{attemptCount + 1}
+                      </span>
+                      {attemptCount > 0 && (
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono hidden sm:inline">
+                          ({attemptCount} completed so far)
+                        </span>
+                      )}
+                    </div>
+                    <span className="font-mono text-slate-600 dark:text-slate-300 text-[11px]">
+                      Pass score: <strong className="text-slate-900 dark:text-[#FAF6F3]">{quiz.passingScore}%</strong>
+                    </span>
+                  </div>
+
                   <div className="space-y-4">
                     {quiz.questions.map((q, idx) => (
                       <div
@@ -415,9 +547,11 @@ export default function DedicatedQuizPage() {
                   </div>
 
                   <div className="flex flex-col sm:flex-row items-center justify-between pt-4 border-t border-slate-200 dark:border-[#3D1418] gap-3">
-                    <span className="font-mono text-xs text-slate-500 dark:text-slate-400">
-                      Pass score: <span className="font-bold text-slate-800 dark:text-[#FAF6F3]">{quiz.passingScore}%</span>
-                    </span>
+                    <div className="flex items-center gap-2 font-mono text-xs text-slate-500 dark:text-slate-400">
+                      <span>Pass score: <strong className="text-slate-800 dark:text-[#FAF6F3]">{quiz.passingScore}%</strong></span>
+                      <span>·</span>
+                      <span>Submitting: <strong className="text-burgundy dark:text-[#E89BA5]">Attempt #{attemptCount + 1}</strong></span>
+                    </div>
                     <button
                       type="submit"
                       disabled={!allAnswered || isSubmitting}
