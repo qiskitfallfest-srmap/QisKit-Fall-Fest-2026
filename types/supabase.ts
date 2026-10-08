@@ -309,6 +309,167 @@ export interface Database {
           issued_at?: string;
         };
       };
+      coding_challenges: {
+        Row: {
+          id: string;
+          problem_code: string;
+          title: string;
+          level: 'L1' | 'L2' | 'L3' | 'L4';
+          points: number;
+          function_name: string;
+          starter_code: string;
+          description: string;
+          constraints: string | null;
+          time_limit_ms: number;
+          memory_limit_mb: number;
+          enabled: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          problem_code: string;
+          title: string;
+          level?: 'L1' | 'L2' | 'L3' | 'L4';
+          points?: number;
+          function_name: string;
+          starter_code: string;
+          description: string;
+          constraints?: string | null;
+          time_limit_ms?: number;
+          memory_limit_mb?: number;
+          enabled?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          problem_code?: string;
+          title?: string;
+          level?: 'L1' | 'L2' | 'L3' | 'L4';
+          points?: number;
+          function_name?: string;
+          starter_code?: string;
+          description?: string;
+          constraints?: string | null;
+          time_limit_ms?: number;
+          memory_limit_mb?: number;
+          enabled?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      coding_submissions: {
+        Row: {
+          id: string;
+          user_email: string;
+          challenge_id: string;
+          source_code: string;
+          status: 'queued' | 'running' | 'completed' | 'failed' | 'timeout' | 'system_error';
+          score: number;
+          max_score: number;
+          passed_tests: number;
+          total_tests: number;
+          execution_time_ms: number;
+          error_message: string | null;
+          stdout: string | null;
+          stderr: string | null;
+          submitted_at: string;
+          completed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_email: string;
+          challenge_id: string;
+          source_code: string;
+          status?: 'queued' | 'running' | 'completed' | 'failed' | 'timeout' | 'system_error';
+          score?: number;
+          max_score?: number;
+          passed_tests?: number;
+          total_tests?: number;
+          execution_time_ms?: number;
+          error_message?: string | null;
+          stdout?: string | null;
+          stderr?: string | null;
+          submitted_at?: string;
+          completed_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_email?: string;
+          challenge_id?: string;
+          source_code?: string;
+          status?: 'queued' | 'running' | 'completed' | 'failed' | 'timeout' | 'system_error';
+          score?: number;
+          max_score?: number;
+          passed_tests?: number;
+          total_tests?: number;
+          execution_time_ms?: number;
+          error_message?: string | null;
+          stdout?: string | null;
+          stderr?: string | null;
+          submitted_at?: string;
+          completed_at?: string | null;
+        };
+      };
+      coding_test_results: {
+        Row: {
+          id: string;
+          submission_id: string;
+          test_type: 'public' | 'hidden';
+          test_number: number;
+          test_name: string | null;
+          passed: boolean;
+          execution_time_ms: number;
+          error_message: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          submission_id: string;
+          test_type: 'public' | 'hidden';
+          test_number: number;
+          test_name?: string | null;
+          passed?: boolean;
+          execution_time_ms?: number;
+          error_message?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          submission_id?: string;
+          test_type?: 'public' | 'hidden';
+          test_number?: number;
+          test_name?: string | null;
+          passed?: boolean;
+          execution_time_ms?: number;
+          error_message?: string | null;
+          created_at?: string;
+        };
+      };
+      coding_drafts: {
+        Row: {
+          id: string;
+          user_email: string;
+          challenge_id: string;
+          code: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_email: string;
+          challenge_id: string;
+          code: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_email?: string;
+          challenge_id?: string;
+          code?: string;
+          updated_at?: string;
+        };
+      };
     };
   };
 }

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { AuthGate } from '@/components/learning/AuthGate';
 import { AdminAnalyticsView } from '@/components/learning/AdminAnalyticsView';
 import { AdminSessionsManager } from '@/components/learning/AdminSessionsManager';
+import { AdminCodingChallengeView } from '@/components/learning/AdminCodingChallengeView';
 import {
   Shield,
   UserPlus,
@@ -23,12 +24,13 @@ import {
   FileUp,
   Loader2,
   X,
+  Terminal,
 } from 'lucide-react';
 import { extractParticipantsFromCSV, ParsedParticipant } from '@/lib/csv';
 
 export default function AdminConsolePage() {
   const [session, setSession] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'analytics' | 'whitelist' | 'overrides' | 'sessions'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'whitelist' | 'overrides' | 'sessions' | 'coding'>('analytics');
 
   const [emails, setEmails] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -412,6 +414,19 @@ export default function AdminConsolePage() {
 
             <button
               type="button"
+              onClick={() => setActiveTab('coding')}
+              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+                activeTab === 'coding'
+                  ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
+                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
+              }`}
+            >
+              <Terminal className="w-4 h-4" />
+              <span>Qiskit Coding Challenge</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setActiveTab('overrides')}
               className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
                 activeTab === 'overrides'
@@ -423,6 +438,9 @@ export default function AdminConsolePage() {
               <span>System & Release Overrides</span>
             </button>
           </div>
+
+          {/* TAB: CODING CHALLENGE */}
+          {activeTab === 'coding' && <AdminCodingChallengeView />}
 
           {/* TAB 1: ANALYTICS */}
           {activeTab === 'analytics' && <AdminAnalyticsView />}
