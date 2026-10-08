@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Validate teammates list (1 to 5 additional members, total team size 1 to 6)
+    // 3. Validate teammates list (1 to 5 additional members, total team size 2 to 6)
     const rawMembers: Array<{ email: string; fullName: string }> = Array.isArray(
       teammates
     )
@@ -181,6 +181,13 @@ export async function POST(request: NextRequest) {
       validMembers.push({ email, fullName });
     }
 
+    if (validMembers.length < 1) {
+      return NextResponse.json(
+        { error: 'A team must have at least 2 members. Please add at least 1 teammate (Team size: 2 to 6 members).' },
+        { status: 400 }
+      );
+    }
+
     // Second pass: Concurrent Supabase/Redis checks using Promise.all
     const validationResults = await Promise.all(
       validMembers.map(async (member) => {
@@ -190,7 +197,7 @@ export async function POST(request: NextRequest) {
           return { error: `Teammate ${member.email} is not authorized on the platform whitelist.` };
         }
 
-        // Verify not in another team
+        // Verify not in another active team
         const { data: activeTeam } = await supabase
           .from('team_members')
           .select('team_id')
@@ -233,6 +240,18 @@ export async function POST(request: NextRequest) {
       throw teamInsertError || new Error('Failed to create team record');
     }
 
+    // Clean up any stale declined invitation rows for these emails to avoid unique constraint violations
+    const allRosterEmails = [session.email.toLowerCase(), ...cleanedMembers.map((m) => m.email.toLowerCase())];
+    try {
+      await supabase
+        .from('team_members')
+        .delete()
+        .in('email', allRosterEmails)
+        .eq('status', 'declined');
+    } catch (cleanupErr) {
+      console.warn('Note: Stale declined row cleanup notice:', cleanupErr);
+    }
+
     // 5. Insert leader into team_members
     const membersToInsert = [
       {
@@ -259,6 +278,12 @@ export async function POST(request: NextRequest) {
     if (membersError) {
       // rollback team
       await supabase.from('hackathon_teams').delete().eq('id', newTeam.id);
+      if (membersError.message?.includes('team_members_email_key') || (membersError as any).code === '23505') {
+        return NextResponse.json(
+          { error: 'One or more members are already registered in a team. Each participant can only join one team.' },
+          { status: 400 }
+        );
+      }
       throw membersError;
     }
 

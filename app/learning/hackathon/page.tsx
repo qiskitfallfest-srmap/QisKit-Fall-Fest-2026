@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { AuthGate } from '@/components/learning/AuthGate';
 import { TeammateInput } from '@/components/learning/TeammateInput';
 import { ProblemStatementDossier } from '@/components/learning/ProblemStatementDossier';
+import { ProblemStatementDriveNotice } from '@/components/learning/ProblemStatementDriveNotice';
 import { PROBLEM_STATEMENTS } from '@/data/learning/problem-statements';
 import { VerticalType, ProblemStatement } from '@/data/learning/types';
 import { trackTeamCreated } from '@/lib/analytics';
@@ -25,6 +26,10 @@ import {
   Edit3,
   X,
   Check,
+  UserPlus,
+  Trash2,
+  RefreshCw,
+  FileCode,
 } from 'lucide-react';
 
 const VERTICALS: VerticalType[] = [
@@ -54,7 +59,9 @@ export default function HackathonWorkspacePage() {
   const [teamName, setTeamName] = useState('');
   const [selectedVertical, setSelectedVertical] = useState<VerticalType>('Quantum Chemistry');
   const [selectedPSId, setSelectedPSId] = useState('PS-C1');
-  const [teammates, setTeammates] = useState<Array<{ email: string; fullName: string; status?: any }>>([]);
+  const [teammates, setTeammates] = useState<Array<{ email: string; fullName: string; status?: any }>>([
+    { email: '', fullName: '', status: 'idle' },
+  ]);
   const [isSubmittingTeam, setIsSubmittingTeam] = useState(false);
   const [teamFormError, setTeamFormError] = useState('');
 
@@ -72,6 +79,17 @@ export default function HackathonWorkspacePage() {
   const [isSubmittingPSChange, setIsSubmittingPSChange] = useState(false);
   const [changePSError, setChangePSError] = useState('');
   const [changePSSuccess, setChangePSSuccess] = useState('');
+
+  // Active Team Member Management state
+  const [isAddingMember, setIsAddingMember] = useState(false);
+  const [newMemberEmail, setNewMemberEmail] = useState('');
+  const [newMemberName, setNewMemberName] = useState('');
+  const [newMemberStatus, setNewMemberStatus] = useState<any>('idle');
+  const [isSubmittingNewMember, setIsSubmittingNewMember] = useState(false);
+  const [memberActionMsg, setMemberActionMsg] = useState('');
+  const [memberActionErr, setMemberActionErr] = useState('');
+  const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
+  const [resendingMemberId, setResendingMemberId] = useState<string | null>(null);
 
   // Sync change state when team loads
   useEffect(() => {
@@ -147,6 +165,12 @@ export default function HackathonWorkspacePage() {
 
     if (!teamName.trim() || teamName.trim().length < 3) {
       setTeamFormError('Team name must be at least 3 characters.');
+      return;
+    }
+
+    const filledTeammates = teammates.filter((t) => t.email.trim());
+    if (filledTeammates.length < 1) {
+      setTeamFormError('A team must have at least 2 members. Please add at least 1 teammate (Team size: 2 to 6 members).');
       return;
     }
 
@@ -285,6 +309,117 @@ export default function HackathonWorkspacePage() {
     }
   }
 
+  // Active Team: Add new teammate
+  async function handleAddMemberToTeam(e: React.FormEvent) {
+    e.preventDefault();
+    if (!team?.id || !newMemberEmail.trim()) return;
+
+    if (newMemberStatus === 'not_whitelisted') {
+      setMemberActionErr(`Teammate ${newMemberEmail} is not authorized on the whitelist.`);
+      return;
+    }
+    if (newMemberStatus === 'already_in_team') {
+      setMemberActionErr(`Teammate ${newMemberEmail} is already registered in another team.`);
+      return;
+    }
+
+    setIsSubmittingNewMember(true);
+    setMemberActionMsg('');
+    setMemberActionErr('');
+
+    try {
+      const res = await fetch('/api/hackathon/team/member', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          teamId: team.id,
+          email: newMemberEmail.trim(),
+          fullName: newMemberName.trim(),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setMemberActionErr(data.error || 'Failed to add teammate.');
+        return;
+      }
+
+      setMemberActionMsg(`Invitation dispatched to ${newMemberEmail.trim()}!`);
+      setNewMemberEmail('');
+      setNewMemberName('');
+      setNewMemberStatus('idle');
+      setIsAddingMember(false);
+      await fetchTeamData();
+    } catch (err: any) {
+      setMemberActionErr(err?.message || 'Error adding teammate.');
+    } finally {
+      setIsSubmittingNewMember(false);
+    }
+  }
+
+  // Active Team: Remove teammate (enforces min 2 members)
+  async function handleRemoveMember(memberId: string, memberEmail: string) {
+    if (!team?.id) return;
+    const confirmDelete = window.confirm(`Are you sure you want to remove ${memberEmail} from the team?`);
+    if (!confirmDelete) return;
+
+    setRemovingMemberId(memberId);
+    setMemberActionMsg('');
+    setMemberActionErr('');
+
+    try {
+      const res = await fetch(`/api/hackathon/team/member?teamId=${team.id}&memberId=${memberId}`, {
+        method: 'DELETE',
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setMemberActionErr(data.error || 'Failed to remove member.');
+        return;
+      }
+
+      setMemberActionMsg(`Member ${memberEmail} removed from the team.`);
+      await fetchTeamData();
+    } catch (err: any) {
+      setMemberActionErr(err?.message || 'Error removing member.');
+    } finally {
+      setRemovingMemberId(null);
+    }
+  }
+
+  // Active Team: Resend invite
+  async function handleResendInvite(memberId: string, memberEmail: string) {
+    if (!team?.id) return;
+    setResendingMemberId(memberId);
+    setMemberActionMsg('');
+    setMemberActionErr('');
+
+    try {
+      const res = await fetch('/api/hackathon/team/member', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          teamId: team.id,
+          memberId,
+          action: 'resend',
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setMemberActionErr(data.error || 'Failed to resend invitation.');
+        return;
+      }
+
+      setMemberActionMsg(`Invitation refreshed for ${memberEmail}.`);
+      await fetchTeamData();
+    } catch (err: any) {
+      setMemberActionErr(err?.message || 'Error resending invitation.');
+    } finally {
+      setResendingMemberId(null);
+    }
+  }
+
   const verticalStatements = PROBLEM_STATEMENTS.filter((ps) => ps.vertical === selectedVertical);
   const changeVerticalStatements = PROBLEM_STATEMENTS.filter((ps) => ps.vertical === changeVertical);
   const selectedPSObj = PROBLEM_STATEMENTS.find((ps) => ps.id === (team ? team.problem_statement_id : selectedPSId));
@@ -338,7 +473,7 @@ export default function HackathonWorkspacePage() {
               Flagship Hackathon Workspace
             </h1>
             <p className="font-sans text-sm sm:text-base text-slate-600 dark:text-slate-300 mt-1 max-w-2xl leading-relaxed">
-              Form your team of 1 to 6 members, select your specialized domain track and problem
+              Form your team of 2 to 6 members, select your specialized domain track and problem
               statement, and benchmark quantum algorithms across Processors A, B, and C before
               proposing custom Processor D.
             </p>
@@ -539,16 +674,10 @@ export default function HackathonWorkspacePage() {
                               </div>
                             </div>
 
-                            {/* Full Description from PDF */}
-                            {isChosen && ps.description && (
+                            {/* Mandatory Drive Notice */}
+                            {isChosen && (
                               <div className="mt-3.5 pt-3.5 border-t border-burgundy/20 dark:border-[#E89BA5]/30 animate-in fade-in slide-in-from-top-1 duration-200">
-                                <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-burgundy dark:text-[#E89BA5] mb-2">
-                                  <Sparkles className="w-3.5 h-3.5 shrink-0" />
-                                  <span>Full Problem Description & Scientific Context</span>
-                                </div>
-                                <div className="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-white/80 dark:bg-[#120507] p-3.5 sm:p-4 rounded-lg border border-burgundy/15 dark:border-burgundy/40 font-normal">
-                                  {ps.description}
-                                </div>
+                                <ProblemStatementDriveNotice psId={ps.id} />
                               </div>
                             )}
                           </label>
@@ -591,40 +720,208 @@ export default function HackathonWorkspacePage() {
                 )}
 
                 {/* Team Roster */}
-                <div>
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-[#FAF6F3] mb-3">
-                    Team Members Roster (1–6 Members)
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                    {team.members?.map((m: any) => (
-                      <div
-                        key={m.id}
-                        className="p-3 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-slate-50 dark:bg-[#1C0A0D] text-sm space-y-1"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-slate-900 dark:text-[#FAF6F3] truncate">
-                            {m.full_name || m.email.split('@')[0]}
-                          </span>
-                          <span className="px-1.5 py-0.2 rounded text-xs uppercase font-bold bg-slate-200 dark:bg-[#250D11] text-slate-700 dark:text-slate-300">
-                            {m.role}
-                          </span>
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-[#FAF6F3]">
+                        Team Members Roster (2–6 Members)
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        Manage your team roster. Add, remove, or update members (minimum 2, maximum 6 members).
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs px-2.5 py-1 rounded-md bg-slate-100 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] text-slate-700 dark:text-slate-300 font-semibold">
+                        {team.members?.length || 0}/6 Members
+                      </span>
+                      {(!team.members || team.members.length < 6) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsAddingMember(!isAddingMember);
+                            setMemberActionMsg('');
+                            setMemberActionErr('');
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-burgundy hover:bg-burgundy-deep text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs"
+                        >
+                          <UserPlus className="w-3.5 h-3.5" />
+                          <span>{isAddingMember ? 'Close' : 'Add Teammate'}</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Feedback alerts */}
+                  {memberActionMsg && (
+                    <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs flex items-center justify-between gap-2 animate-in fade-in">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <span>{memberActionMsg}</span>
+                      </div>
+                      <button type="button" onClick={() => setMemberActionMsg('')} className="p-1 text-emerald-600 hover:text-emerald-800 cursor-pointer">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+
+                  {memberActionErr && (
+                    <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-300 text-xs flex items-center justify-between gap-2 animate-in fade-in">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                        <span>{memberActionErr}</span>
+                      </div>
+                      <button type="button" onClick={() => setMemberActionErr('')} className="p-1 text-rose-600 hover:text-rose-800 cursor-pointer">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Inline Add Member Panel */}
+                  {isAddingMember && (
+                    <form onSubmit={handleAddMemberToTeam} className="p-4 rounded-xl border border-burgundy/30 bg-burgundy/[0.03] dark:bg-burgundy/10 space-y-3 animate-in fade-in slide-in-from-top-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold uppercase tracking-wider text-burgundy dark:text-[#E89BA5]">
+                          Invite Additional Teammate (Up to 6 total)
+                        </span>
+                        <button type="button" onClick={() => setIsAddingMember(false)} className="text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            Teammate Email (Registered Gmail):
+                          </label>
+                          <input
+                            type="email"
+                            value={newMemberEmail}
+                            onChange={(e) => setNewMemberEmail(e.target.value)}
+                            placeholder="teammate@gmail.com"
+                            required
+                            className="w-full px-3 py-1.5 text-xs rounded border border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#150709] text-slate-900 dark:text-[#FAF6F3] focus:outline-none focus:ring-1 focus:ring-burgundy"
+                          />
                         </div>
-                        <span className="text-slate-500 dark:text-slate-400 truncate block">{m.email}</span>
-                        <div className="pt-1">
-                          {m.status === 'accepted' ? (
-                            <span className="inline-flex items-center gap-1 text-sm font-medium text-emerald-700 dark:text-emerald-400">
-                              <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> Confirmed
-                            </span>
-                          ) : m.status === 'invited' ? (
-                            <span className="inline-flex items-center gap-1 text-sm font-medium text-amber-700 dark:text-amber-400">
-                              <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" /> Invitation Pending
-                            </span>
-                          ) : (
-                            <span className="text-sm text-slate-400">Declined</span>
-                          )}
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            Full Name (Optional):
+                          </label>
+                          <input
+                            type="text"
+                            value={newMemberName}
+                            onChange={(e) => setNewMemberName(e.target.value)}
+                            placeholder="Teammate Full Name"
+                            className="w-full px-3 py-1.5 text-xs rounded border border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#150709] text-slate-900 dark:text-[#FAF6F3] focus:outline-none focus:ring-1 focus:ring-burgundy"
+                          />
                         </div>
                       </div>
-                    ))}
+                      <div className="flex justify-end gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setIsAddingMember(false)}
+                          className="px-3 py-1.5 text-xs rounded border border-slate-200 dark:border-[#3D1418] text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#200B0E] cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={isSubmittingNewMember || !newMemberEmail.trim()}
+                          className="px-4 py-1.5 text-xs font-bold rounded bg-burgundy hover:bg-burgundy-deep text-white transition-colors disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+                        >
+                          {isSubmittingNewMember ? (
+                            <span>Dispatching...</span>
+                          ) : (
+                            <>
+                              <Send className="w-3.5 h-3.5" />
+                              <span>Dispatch Invitation</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+
+                  {/* Member cards grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {team.members?.map((m: any) => {
+                      const isLeader = m.role === 'leader';
+                      const canRemove =
+                        (team.currentUserRole === 'leader' && !isLeader) ||
+                        (m.email?.toLowerCase() === sessionUser?.email?.toLowerCase() && !isLeader);
+                      const isAtMinCapacity = (team.members?.length || 0) <= 2;
+
+                      return (
+                        <div
+                          key={m.id}
+                          className="p-3.5 rounded-xl border border-slate-200 dark:border-[#3D1418] bg-slate-50 dark:bg-[#1C0A0D] text-xs space-y-2 flex flex-col justify-between"
+                        >
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="font-bold text-slate-900 dark:text-[#FAF6F3] truncate text-sm">
+                                {m.full_name || m.email.split('@')[0]}
+                              </span>
+                              <span
+                                className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ${
+                                  isLeader
+                                    ? 'bg-burgundy/15 text-burgundy dark:bg-burgundy/25 dark:text-[#E89BA5]'
+                                    : 'bg-slate-200 dark:bg-[#250D11] text-slate-700 dark:text-slate-300'
+                                }`}
+                              >
+                                {m.role}
+                              </span>
+                            </div>
+                            <span className="text-slate-500 dark:text-slate-400 truncate block font-mono text-[11px]">
+                              {m.email}
+                            </span>
+                          </div>
+
+                          <div className="pt-2 border-t border-slate-200/60 dark:border-[#3D1418] flex items-center justify-between gap-2">
+                            <div>
+                              {m.status === 'accepted' ? (
+                                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> Confirmed
+                                </span>
+                              ) : m.status === 'invited' ? (
+                                <div className="flex items-center gap-1.5">
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 dark:text-amber-400">
+                                    <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" /> Pending
+                                  </span>
+                                  {team.currentUserRole === 'leader' && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleResendInvite(m.id, m.email)}
+                                      disabled={resendingMemberId === m.id}
+                                      className="text-[10px] font-bold text-burgundy dark:text-[#E89BA5] underline hover:text-burgundy-deep cursor-pointer"
+                                    >
+                                      {resendingMemberId === m.id ? 'Resending...' : 'Resend'}
+                                    </button>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-[11px] text-slate-400">Declined</span>
+                              )}
+                            </div>
+
+                            {/* Remove button */}
+                            {canRemove && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveMember(m.id, m.email)}
+                                disabled={removingMemberId === m.id || isAtMinCapacity}
+                                title={isAtMinCapacity ? 'Teams must maintain at least 2 members' : 'Remove from team'}
+                                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${
+                                  isAtMinCapacity
+                                    ? 'text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-60'
+                                    : 'text-rose-600 hover:text-rose-800 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer'
+                                }`}
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                <span>{removingMemberId === m.id ? 'Removing...' : 'Remove'}</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -690,6 +987,28 @@ export default function HackathonWorkspacePage() {
                     </div>
                   )}
                 </form>
+
+                {/* Deliverables Checklist for Evaluation */}
+                <div className="p-4 rounded-xl border border-slate-200 dark:border-[#3D1418] bg-slate-50/70 dark:bg-[#1A0A0D] space-y-2 text-xs">
+                  <span className="font-bold uppercase tracking-wider text-burgundy dark:text-[#E89BA5] flex items-center gap-1.5 text-[11px]">
+                    <FileCode className="w-3.5 h-3.5" />
+                    Required Deliverables Checklist for Judges
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-slate-600 dark:text-slate-300">
+                    <div className="p-2.5 rounded-lg bg-white dark:bg-[#120507] border border-slate-200/60 dark:border-[#3D1418]">
+                      <span className="font-bold text-slate-900 dark:text-[#FAF6F3] block mb-0.5">1. Algorithm Notebook</span>
+                      <span className="text-[11px] leading-relaxed block">`main.ipynb` with Qiskit 1.2+ VQE/QAOA/transpilation scripts and metrics.</span>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-white dark:bg-[#120507] border border-slate-200/60 dark:border-[#3D1418]">
+                      <span className="font-bold text-slate-900 dark:text-[#FAF6F3] block mb-0.5">2. Processor D Map</span>
+                      <span className="text-[11px] leading-relaxed block">`processors/processor_D.json` with 12-qubit coupling map and justification.</span>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-white dark:bg-[#120507] border border-slate-200/60 dark:border-[#3D1418]">
+                      <span className="font-bold text-slate-900 dark:text-[#FAF6F3] block mb-0.5">3. Benchmark Plots</span>
+                      <span className="text-[11px] leading-relaxed block">`results/` with depth, CX counts, and SWAP penalty across Processors A, B, and C.</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* UNLOCKED PROBLEM STATEMENT DOSSIER */}
@@ -729,6 +1048,9 @@ export default function HackathonWorkspacePage() {
                       technical dossier for the selected statement upon creation.
                     </p>
                   </div>
+
+                  {/* Mandatory Drive Notice across all statements */}
+                  <ProblemStatementDriveNotice />
 
                   {/* Vertical Selection Dropdown */}
                   <div>
@@ -789,16 +1111,10 @@ export default function HackathonWorkspacePage() {
                               </div>
                             </div>
 
-                            {/* Description - Revealed on selection */}
-                            {isSelected && ps.description && (
+                            {/* Mandatory Drive Notice - Revealed on selection */}
+                            {isSelected && (
                               <div className="mt-3.5 pt-3.5 border-t border-burgundy/15 dark:border-[#E89BA5]/20 animate-in fade-in slide-in-from-top-1 duration-200">
-                                <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-burgundy dark:text-[#E89BA5] mb-2">
-                                  <Sparkles className="w-3.5 h-3.5 shrink-0" />
-                                  <span>Problem Description & Scientific Context</span>
-                                </div>
-                                <div className="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-white/70 dark:bg-[#150709]/70 p-3.5 sm:p-4 rounded-lg border border-burgundy/10 dark:border-burgundy/30 font-normal">
-                                  {ps.description}
-                                </div>
+                                <ProblemStatementDriveNotice psId={ps.id} />
                               </div>
                             )}
                           </label>
@@ -811,12 +1127,10 @@ export default function HackathonWorkspacePage() {
                   <div className="pt-6 border-t border-slate-200 dark:border-[#3D1418] space-y-4">
                     <div>
                       <h2 className="text-lg font-bold text-slate-900 dark:text-[#FAF6F3]">
-                        Step 2: Team Name & Members (1–6 Members)
+                        Step 2: Team Name & Members (2–6 Members)
                       </h2>
                       <p className="text-base text-slate-600 dark:text-slate-300 mt-1">
-                        Team names must be globally unique. You are the team leader. Add up to 5
-                        additional members. Teammate Gmails are authenticated in real time against the
-                        platform whitelist.
+                        Team names must be globally unique. You are the team leader. Teams must consist of 2 to 6 members (1 leader + 1 to 5 teammates). Add between 1 and 5 additional teammates. Teammate Gmails are authenticated in real time against the platform whitelist.
                       </p>
                     </div>
 
