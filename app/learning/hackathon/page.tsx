@@ -90,6 +90,10 @@ export default function HackathonWorkspacePage() {
   const [memberActionErr, setMemberActionErr] = useState('');
   const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
   const [resendingMemberId, setResendingMemberId] = useState<string | null>(null);
+  const [isFinalizeModalOpen, setIsFinalizeModalOpen] = useState(false);
+  const [isFinalizingTeam, setIsFinalizingTeam] = useState(false);
+  const [finalizeError, setFinalizeError] = useState('');
+  const [finalizeSuccess, setFinalizeSuccess] = useState('');
 
   // Sync change state when team loads
   useEffect(() => {
@@ -420,6 +424,44 @@ export default function HackathonWorkspacePage() {
     }
   }
 
+  // Active Team: Finalize Roster
+  async function handleFinalizeTeam() {
+    if (!team?.id) return;
+    setIsFinalizingTeam(true);
+    setFinalizeError('');
+    try {
+      const res = await fetch('/api/hackathon/team/finalize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teamId: team.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to finalize team.');
+      }
+      setFinalizeSuccess(data.message || 'Team roster officially finalized and locked!');
+      setIsFinalizeModalOpen(false);
+      await fetchTeamData();
+    } catch (err: any) {
+      setFinalizeError(err?.message || 'Error finalizing team.');
+    } finally {
+      setIsFinalizingTeam(false);
+    }
+  }
+
+  const confirmedMembers = (team?.members || []).filter(
+    (m: any) => m.status === 'accepted' || m.role === 'leader'
+  );
+  const pendingMembers = (team?.members || []).filter(
+    (m: any) => m.status === 'invited'
+  );
+  const declinedMembers = (team?.members || []).filter(
+    (m: any) => m.status === 'declined'
+  );
+  const isFinalized = !!team?.is_finalized;
+  const totalOccupiedSlots = confirmedMembers.length + pendingMembers.length;
+  const canAddMore = !isFinalized && totalOccupiedSlots < 6;
+
   const verticalStatements = PROBLEM_STATEMENTS.filter((ps) => ps.vertical === selectedVertical);
   const changeVerticalStatements = PROBLEM_STATEMENTS.filter((ps) => ps.vertical === changeVertical);
   const selectedPSObj = PROBLEM_STATEMENTS.find((ps) => ps.id === (team ? team.problem_statement_id : selectedPSId));
@@ -553,26 +595,40 @@ export default function HackathonWorkspacePage() {
                       <span>Track: <span className="font-semibold text-slate-800 dark:text-[#FAF6F3]">{team.vertical}</span></span>
                       <span>·</span>
                       <span>Problem Statement: <span className="font-mono font-bold text-burgundy dark:text-[#E89BA5]">{team.problem_statement_id}</span></span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setChangeVertical(team.vertical);
-                          setChangePSId(team.problem_statement_id);
-                          setIsChangingPS(!isChangingPS);
-                        }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-burgundy/30 bg-burgundy/5 dark:bg-burgundy/20 hover:bg-burgundy/10 text-burgundy dark:text-[#E89BA5] text-xs font-semibold transition-all cursor-pointer ml-0 sm:ml-1 mt-1 sm:mt-0"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" />
-                        <span>{isChangingPS ? 'Close Switcher' : 'Change Problem Statement'}</span>
-                      </button>
+                      {!isFinalized ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setChangeVertical(team.vertical);
+                            setChangePSId(team.problem_statement_id);
+                            setIsChangingPS(!isChangingPS);
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-burgundy/30 bg-burgundy/5 dark:bg-burgundy/20 hover:bg-burgundy/10 text-burgundy dark:text-[#E89BA5] text-xs font-semibold transition-all cursor-pointer ml-0 sm:ml-1 mt-1 sm:mt-0"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span>{isChangingPS ? 'Close Switcher' : 'Change Problem Statement'}</span>
+                        </button>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-slate-100 dark:bg-[#1C0A0D] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-[#3D1418] ml-0 sm:ml-1 mt-1 sm:mt-0">
+                          <Lock className="w-3 h-3 text-slate-400" />
+                          <span>Track Locked</span>
+                        </span>
+                      )}
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 font-bold text-sm border border-emerald-200 dark:border-emerald-800 flex items-center gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                      Team Confirmed ({team.members?.length || 1} Member{team.members?.length !== 1 ? 's' : ''})
-                    </span>
+                    {isFinalized ? (
+                      <span className="px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-bold text-xs sm:text-sm border border-emerald-300 dark:border-emerald-700 flex items-center gap-1.5 shadow-2xs">
+                        <Lock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        Team Roster Finalized & Locked ({confirmedMembers.length} Members)
+                      </span>
+                    ) : (
+                      <span className="px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 font-bold text-xs sm:text-sm border border-amber-200 dark:border-amber-800 flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                        Draft Roster ({confirmedMembers.length}/6 Confirmed)
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -727,14 +783,18 @@ export default function HackathonWorkspacePage() {
                         Team Members Roster (2–6 Members)
                       </h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Manage your team roster. Add, remove, or update members (minimum 2, maximum 6 members).
+                        {isFinalized
+                          ? 'Your team roster is finalized and permanently locked.'
+                          : 'Manage your roster. Add, remove, or resend invites freely before finalization (min 2, max 6 accepted members).'}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-xs px-2.5 py-1 rounded-md bg-slate-100 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] text-slate-700 dark:text-slate-300 font-semibold">
-                        {team.members?.length || 0}/6 Members
+                        {confirmedMembers.length}/6 Confirmed
+                        {pendingMembers.length > 0 ? ` · ${pendingMembers.length} Pending` : ''}
+                        {declinedMembers.length > 0 ? ` · ${declinedMembers.length} Declined` : ''}
                       </span>
-                      {(!team.members || team.members.length < 6) && (
+                      {canAddMore && (
                         <button
                           type="button"
                           onClick={() => {
@@ -750,6 +810,8 @@ export default function HackathonWorkspacePage() {
                       )}
                     </div>
                   </div>
+
+
 
                   {/* Feedback alerts */}
                   {memberActionMsg && (
@@ -845,9 +907,9 @@ export default function HackathonWorkspacePage() {
                     {team.members?.map((m: any) => {
                       const isLeader = m.role === 'leader';
                       const canRemove =
-                        (team.currentUserRole === 'leader' && !isLeader) ||
-                        (m.email?.toLowerCase() === sessionUser?.email?.toLowerCase() && !isLeader);
-                      const isAtMinCapacity = (team.members?.length || 0) <= 2;
+                        !isFinalized &&
+                        ((team.currentUserRole === 'leader' && !isLeader) ||
+                          (m.email?.toLowerCase() === sessionUser?.email?.toLowerCase() && !isLeader));
 
                       return (
                         <div
@@ -885,7 +947,7 @@ export default function HackathonWorkspacePage() {
                                   <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 dark:text-amber-400">
                                     <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" /> Pending
                                   </span>
-                                  {team.currentUserRole === 'leader' && (
+                                  {team.currentUserRole === 'leader' && !isFinalized && (
                                     <button
                                       type="button"
                                       onClick={() => handleResendInvite(m.id, m.email)}
@@ -897,7 +959,19 @@ export default function HackathonWorkspacePage() {
                                   )}
                                 </div>
                               ) : (
-                                <span className="text-[11px] text-slate-400">Declined</span>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[11px] text-rose-600 dark:text-rose-400 font-semibold">Declined</span>
+                                  {team.currentUserRole === 'leader' && !isFinalized && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleResendInvite(m.id, m.email)}
+                                      disabled={resendingMemberId === m.id}
+                                      className="text-[10px] font-bold text-burgundy dark:text-[#E89BA5] underline hover:text-burgundy-deep cursor-pointer"
+                                    >
+                                      {resendingMemberId === m.id ? 'Resending...' : 'Resend Invite'}
+                                    </button>
+                                  )}
+                                </div>
                               )}
                             </div>
 
@@ -906,13 +980,9 @@ export default function HackathonWorkspacePage() {
                               <button
                                 type="button"
                                 onClick={() => handleRemoveMember(m.id, m.email)}
-                                disabled={removingMemberId === m.id || isAtMinCapacity}
-                                title={isAtMinCapacity ? 'Teams must maintain at least 2 members' : 'Remove from team'}
-                                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${
-                                  isAtMinCapacity
-                                    ? 'text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-60'
-                                    : 'text-rose-600 hover:text-rose-800 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer'
-                                }`}
+                                disabled={removingMemberId === m.id}
+                                title="Remove from team"
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold text-rose-600 hover:text-rose-800 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition-colors"
                               >
                                 <Trash2 className="w-3 h-3" />
                                 <span>{removingMemberId === m.id ? 'Removing...' : 'Remove'}</span>
@@ -923,6 +993,91 @@ export default function HackathonWorkspacePage() {
                       );
                     })}
                   </div>
+
+                  {/* Team Finalization Banner & Action */}
+                  {team.currentUserRole === 'leader' ? (
+                    <>
+                      {!isFinalized ? (
+                        <div className="p-4 rounded-xl border border-burgundy/30 bg-burgundy/[0.04] dark:bg-[#1A090C] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <Shield className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
+                              <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-[#FAF6F3]">
+                                Finalize & Lock Team Roster
+                              </h4>
+                              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] font-bold uppercase tracking-wider">
+                                Draft Mode
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-600 dark:text-slate-300 max-w-xl leading-relaxed">
+                              You can freely add, remove, and resend teammate invitations. Once all teammates have accepted, click <strong>Finalize Team Roster</strong> to lock your team. Once finalized, the roster cannot be modified.
+                            </p>
+                            {confirmedMembers.length < 2 ? (
+                              <p className="text-[11px] text-amber-700 dark:text-amber-400 font-semibold flex items-center gap-1">
+                                <Clock className="w-3 h-3 shrink-0" />
+                                <span>Waiting for at least 1 teammate to accept their invite before you can finalize (currently {confirmedMembers.length} confirmed).</span>
+                              </p>
+                            ) : (
+                              <p className="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                                <CheckCircle2 className="w-3 h-3 shrink-0" />
+                                <span>Ready to finalize! You have {confirmedMembers.length} confirmed members (2–6 required).</span>
+                              </p>
+                            )}
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFinalizeError('');
+                              setIsFinalizeModalOpen(true);
+                            }}
+                            disabled={confirmedMembers.length < 2 || isFinalizingTeam}
+                            className="px-4 py-2.5 rounded-lg bg-burgundy hover:bg-burgundy-deep text-white font-bold text-xs disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 shrink-0 shadow-xs cursor-pointer transition-colors"
+                          >
+                            <Lock className="w-3.5 h-3.5" />
+                            <span>Finalize Team Roster</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="p-3.5 rounded-xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50/80 dark:bg-emerald-950/40 flex items-center justify-between gap-3 text-xs">
+                          <div className="flex items-center gap-2.5 text-emerald-900 dark:text-emerald-200">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                            <span>
+                              <strong>Team Roster Permanently Finalized:</strong> Your team of {confirmedMembers.length} members is officially locked. Team roster cannot be edited anymore.
+                            </span>
+                          </div>
+                          <span className="font-mono text-[11px] font-bold text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/60 shrink-0">
+                            LOCKED
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  ) : isFinalized ? (
+                    <div className="p-3.5 rounded-xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50/80 dark:bg-emerald-950/40 flex items-center justify-between gap-3 text-xs">
+                      <div className="flex items-center gap-2.5 text-emerald-900 dark:text-emerald-200">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <span>
+                          <strong>Team Roster Permanently Finalized:</strong> Your team of {confirmedMembers.length} members is officially locked.
+                        </span>
+                      </div>
+                      <span className="font-mono text-[11px] font-bold text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/60 shrink-0">
+                        LOCKED
+                      </span>
+                    </div>
+                  ) : null}
+
+                  {/* Finalize success feedback */}
+                  {finalizeSuccess && (
+                    <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs flex items-center justify-between gap-2 animate-in fade-in">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <span>{finalizeSuccess}</span>
+                      </div>
+                      <button type="button" onClick={() => setFinalizeSuccess('')} className="p-1 text-emerald-600 hover:text-emerald-800 cursor-pointer">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1261,6 +1416,64 @@ export default function HackathonWorkspacePage() {
           </>
           )}
         </div>
+
+        {/* Finalize Team Confirmation Modal */}
+        {isFinalizeModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+            <div className="bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl max-w-md w-full p-6 space-y-4 shadow-xl">
+              <div className="flex items-center gap-2 text-burgundy dark:text-[#E89BA5]">
+                <Lock className="w-5 h-5" />
+                <h3 className="font-bold text-base text-slate-900 dark:text-[#FAF6F3]">Confirm Team Finalization</h3>
+              </div>
+              <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                Are you sure you want to finalize <strong>{team?.name}</strong>?
+              </p>
+              <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs space-y-1.5">
+                <span className="font-bold block">⚠️ Important: This action cannot be undone.</span>
+                <ul className="list-disc list-inside space-y-1 text-amber-800 dark:text-amber-300">
+                  <li>Your team roster will be <strong>permanently locked</strong>.</li>
+                  <li>You will <strong>not</strong> be able to add, delete, or change teammates anymore.</li>
+                  <li>Your confirmed roster will be locked with <strong>{confirmedMembers.length} members</strong>.</li>
+                </ul>
+              </div>
+              {pendingMembers.length > 0 && (
+                <p className="text-xs text-rose-600 dark:text-rose-400 font-medium">
+                  Notice: {pendingMembers.length} teammate(s) with pending invitations have not accepted yet and will NOT be included in your finalized team.
+                </p>
+              )}
+              {finalizeError && (
+                <div className="p-2.5 rounded bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-300 text-xs">
+                  {finalizeError}
+                </div>
+              )}
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-[#3D1418]">
+                <button
+                  type="button"
+                  onClick={() => setIsFinalizeModalOpen(false)}
+                  disabled={isFinalizingTeam}
+                  className="px-4 py-2 text-xs font-semibold rounded-lg border border-slate-300 dark:border-[#3D1418] text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#200B0E] cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleFinalizeTeam}
+                  disabled={isFinalizingTeam}
+                  className="px-4 py-2 text-xs font-bold rounded-lg bg-burgundy hover:bg-burgundy-deep text-white flex items-center gap-1.5 shadow-xs disabled:opacity-50 cursor-pointer"
+                >
+                  {isFinalizingTeam ? (
+                    <span>Locking Team...</span>
+                  ) : (
+                    <>
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Yes, Finalize & Lock</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
     </AuthGate>
   );
 }

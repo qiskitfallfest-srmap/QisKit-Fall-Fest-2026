@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { isEmailWhitelisted, invalidateHackathonTeamCache, invalidateEmailCache } from '@/lib/redis';
+import { isTeamFinalized } from '@/lib/finalized-teams';
 
 // Helper to invalidate all team member caches
 async function invalidateAllTeamCaches(teamId: string, additionalEmail?: string) {
@@ -49,7 +50,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 1. Verify caller is authorized (must be leader or accepted member of this team)
+    // 1. Guard: Check if team is finalized
+    const finStatus = await isTeamFinalized(teamId);
+    if (finStatus.isFinalized) {
+      return NextResponse.json(
+        { error: 'Team roster has been finalized and locked. No further teammates can be added.' },
+        { status: 400 }
+      );
+    }
+
+    // 2. Verify caller is authorized (must be leader or accepted member of this team)
     const { data: callerMembership } = await supabase
       .from('team_members')
       .select('role, status')
@@ -65,30 +75,60 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Check current team member count (Max 6 members)
+    // 3. Check current team member count (Max 6 active/pending members)
     const { data: currentMembers } = await supabase
       .from('team_members')
       .select('id, email, status')
       .eq('team_id', teamId)
       .neq('status', 'declined');
 
-    const memberCount = currentMembers?.length || 0;
-    if (memberCount >= 6) {
+    const activeMemberCount = currentMembers?.length || 0;
+    if (activeMemberCount >= 6) {
       return NextResponse.json(
         { error: 'Team has reached the maximum capacity of 6 members.' },
         { status: 400 }
       );
     }
 
-    // Check if email is already in this team
-    if (currentMembers?.some((m) => m.email.toLowerCase() === trimmedEmail)) {
+    // 4. Check if email already has a record in THIS team
+    const { data: existingInThisTeam } = await supabase
+      .from('team_members')
+      .select('id, email, status')
+      .ilike('email', trimmedEmail)
+      .eq('team_id', teamId)
+      .maybeSingle();
+
+    if (existingInThisTeam) {
+      // If they were previously declined, re-invite them seamlessly!
+      if (existingInThisTeam.status === 'declined') {
+        const { data: resurrected, error: resurrectErr } = await supabase
+          .from('team_members')
+          .update({
+            status: 'invited',
+            invited_at: new Date().toISOString(),
+            responded_at: null,
+          })
+          .eq('id', existingInThisTeam.id)
+          .select()
+          .single();
+
+        if (resurrectErr) throw resurrectErr;
+        await invalidateAllTeamCaches(teamId, trimmedEmail);
+
+        return NextResponse.json({
+          success: true,
+          message: `Invitation re-dispatched to ${trimmedEmail}.`,
+          member: resurrected,
+        });
+      }
+
       return NextResponse.json(
         { error: `${trimmedEmail} is already in your team roster.` },
         { status: 400 }
       );
     }
 
-    // 3. Verify teammate email is whitelisted on Unstop
+    // 5. Verify teammate email is whitelisted on Unstop
     const whitelistCheck = await isEmailWhitelisted(trimmedEmail);
     if (!whitelistCheck.whitelisted) {
       return NextResponse.json(
@@ -97,7 +137,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. Verify teammate is not already registered in another active team
+    // 6. Verify teammate is not already registered in another active team
     const { data: activeTeam } = await supabase
       .from('team_members')
       .select('team_id, hackathon_teams(name)')
@@ -114,14 +154,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Clean up any stale declined row for this email to avoid unique constraint collisions
+    // Clean up any stale declined row for this email across any team to avoid unique constraint collisions
     await supabase
       .from('team_members')
       .delete()
       .ilike('email', trimmedEmail)
       .eq('status', 'declined');
 
-    // 5. Insert new invited member
+    // 7. Insert new invited member
     const { data: newMember, error: insertError } = await supabase
       .from('team_members')
       .insert({
@@ -163,7 +203,7 @@ export async function POST(request: NextRequest) {
 }
 
 // ---------------------------------------------------------------------------
-// DELETE: Remove a member from an existing team (Min 2 members safeguard)
+// DELETE: Remove a member from an existing team (Freely editable before finalization)
 // ---------------------------------------------------------------------------
 export async function DELETE(request: NextRequest) {
   const session = await getServerSession();
@@ -183,7 +223,16 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // 1. Fetch member to be removed
+    // 1. Guard: Check if team is finalized
+    const finStatus = await isTeamFinalized(teamId);
+    if (finStatus.isFinalized) {
+      return NextResponse.json(
+        { error: 'Team roster has been finalized and locked. Members cannot be removed.' },
+        { status: 400 }
+      );
+    }
+
+    // 2. Fetch member to be removed
     const { data: targetMember } = await supabase
       .from('team_members')
       .select('id, team_id, email, role, status')
@@ -206,7 +255,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // 2. Verify caller is team leader or the member removing themselves
+    // 3. Verify caller is team leader or the member removing themselves
     const { data: callerEntry } = await supabase
       .from('team_members')
       .select('role')
@@ -225,22 +274,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // 3. Minimum team size safeguard: team must maintain at least 2 members
-    const { data: currentMembers } = await supabase
-      .from('team_members')
-      .select('id')
-      .eq('team_id', teamId)
-      .neq('status', 'declined');
-
-    const totalActiveMembers = currentMembers?.length || 0;
-    if (totalActiveMembers <= 2) {
-      return NextResponse.json(
-        { error: 'Cannot remove member: Hackathon teams must maintain a minimum of 2 members.' },
-        { status: 400 }
-      );
-    }
-
-    // 4. Delete the member record
+    // 4. Delete the member record (leader can freely remove anyone before finalization)
     const { error: deleteError } = await supabase
       .from('team_members')
       .delete()
@@ -267,7 +301,7 @@ export async function DELETE(request: NextRequest) {
 }
 
 // ---------------------------------------------------------------------------
-// PATCH: Resend invitation or update member info
+// PATCH: Resend invitation (for pending or declined invitations)
 // ---------------------------------------------------------------------------
 export async function PATCH(request: NextRequest) {
   const session = await getServerSession();
@@ -286,7 +320,16 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Verify caller is team leader
+    // 1. Guard: Check if team is finalized
+    const finStatus = await isTeamFinalized(teamId);
+    if (finStatus.isFinalized) {
+      return NextResponse.json(
+        { error: 'Team roster has been finalized and locked. Invitations cannot be modified.' },
+        { status: 400 }
+      );
+    }
+
+    // 2. Verify caller is team leader
     const { data: callerEntry } = await supabase
       .from('team_members')
       .select('role')
@@ -301,7 +344,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Fetch target member
+    // 3. Fetch target member
     const { data: targetMember } = await supabase
       .from('team_members')
       .select('*')
@@ -319,6 +362,7 @@ export async function PATCH(request: NextRequest) {
         .update({
           invited_at: new Date().toISOString(),
           status: 'invited',
+          responded_at: null,
         })
         .eq('id', memberId)
         .select()
@@ -330,7 +374,7 @@ export async function PATCH(request: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        message: `Invitation refreshed for ${targetMember.email}.`,
+        message: `Invitation refreshed and dispatched to ${targetMember.email}.`,
         member: updated,
       });
     }

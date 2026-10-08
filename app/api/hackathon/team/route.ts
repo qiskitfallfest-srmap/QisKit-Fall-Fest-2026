@@ -7,6 +7,7 @@ import {
   getHackathonTeamCached,
   invalidateHackathonTeamCache,
 } from '@/lib/redis';
+import { isTeamFinalized } from '@/lib/finalized-teams';
 
 export async function GET() {
   const session = await getServerSession();
@@ -42,11 +43,15 @@ export async function GET() {
             .eq('team_id', memberEntry.team_id)
             .order('role', { ascending: true }); // leader first
 
+          const finCheck = await isTeamFinalized(memberEntry.team_id);
+
           team = {
             ...teamData,
             currentUserRole: memberEntry.role,
             currentUserStatus: memberEntry.status,
             members: allMembers || [],
+            is_finalized: finCheck.isFinalized,
+            finalized_at: finCheck.finalizedAt || null,
           };
         }
       }
@@ -340,7 +345,16 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // 2. Safely UPDATE only problem_statement_id and vertical without touching other fields
+    // 2. Guard: check if team is finalized
+    const finCheck = await isTeamFinalized(teamId);
+    if (finCheck.isFinalized) {
+      return NextResponse.json(
+        { error: 'Team roster and track selection have been finalized and locked.' },
+        { status: 400 }
+      );
+    }
+
+    // 3. Safely UPDATE only problem_statement_id and vertical without touching other fields
     const { data: updatedTeam, error: updateError } = await supabase
       .from('hackathon_teams')
       .update({
