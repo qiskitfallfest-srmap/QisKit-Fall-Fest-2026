@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import clsx from 'clsx';
 import { AuthGate } from '@/components/learning/AuthGate';
@@ -29,6 +29,11 @@ import {
   ArrowLeft,
   Loader2,
   Info,
+  Lock,
+  PlayCircle,
+  Shield,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
 
 interface LeaderboardEntry {
@@ -245,9 +250,12 @@ export default function QiskitChallengePage() {
 function QiskitChallengeWorkspace() {
   const [selectedProblemId, setSelectedProblemId] = useState<string>('P1');
   const [challenges, setChallenges] = useState<any[]>(QISKIT_CHALLENGES);
-  const [sessionUser, setSessionUser] = useState<{ email: string; fullName: string } | null>(null);
+  const [sessionUser, setSessionUser] = useState<{ email: string; fullName: string; isAdmin?: boolean } | null>(null);
   const [competitionConfig, setCompetitionConfig] = useState<any>(null);
   const [timeRemaining, setTimeRemaining] = useState<string>('--:--:--');
+  const [isLocked, setIsLocked] = useState<boolean>(true);
+  const [isAdminUser, setIsAdminUser] = useState<boolean>(false);
+  const [isLoadingStatus, setIsLoadingStatus] = useState<boolean>(true);
   
   // UI Tabs & Modals
   const [leftTab, setLeftTab] = useState<'description' | 'submissions'>('description');
@@ -276,7 +284,11 @@ function QiskitChallengeWorkspace() {
           setSessionUser({
             email: data.session.email,
             fullName: data.session.fullName || data.session.email,
+            isAdmin: Boolean(data.session.isAdmin),
           });
+          if (data.session.isAdmin) {
+            setIsAdminUser(true);
+          }
         }
       } catch (e) {
         console.error('Failed to load session:', e);
@@ -291,11 +303,17 @@ function QiskitChallengeWorkspace() {
       const res = await fetch('/api/qiskit/challenges', { cache: 'no-store' });
       const data = await res.json();
       if (data?.success) {
-        setChallenges(data.challenges);
+        setChallenges(data.challenges || []);
         setCompetitionConfig(data.config);
+        setIsLocked(Boolean(data.isLocked ?? data.config?.is_locked ?? true));
+        if (data.isAdmin !== undefined) {
+          setIsAdminUser(Boolean(data.isAdmin));
+        }
       }
     } catch (e) {
       console.warn('Failed to load challenge metadata:', e);
+    } finally {
+      setIsLoadingStatus(false);
     }
   }, []);
 
@@ -377,8 +395,105 @@ function QiskitChallengeWorkspace() {
     }
   };
 
+  // If Challenge is locked and user is NOT an admin: Render Coming Soon Screen
+  if (!isLoadingStatus && isLocked && !isAdminUser) {
+    return (
+      <div className="min-h-screen bg-slate-50/60 dark:bg-[#100405] pb-16 font-sans">
+        {/* Navigation Breadcrumb Bar */}
+        <div className="bg-white dark:bg-[#150709] border-b border-slate-200 dark:border-[#3D1418]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-2">
+            <Link
+              href="/learning"
+              className="font-mono text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-burgundy dark:hover:text-[#E89BA5] flex items-center gap-1.5 transition-colors uppercase tracking-wider"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Learning Hub
+            </Link>
+
+            <div className="flex items-center gap-2 font-mono text-xs">
+              <span className="text-slate-500 dark:text-slate-400">Competitive Arena</span>
+              <span className="text-slate-300 dark:text-slate-600">/</span>
+              <span className="font-bold text-amber-600 dark:text-amber-400">Challenge Locked</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-6 sm:pt-12 font-sans">
+          <div className="bg-white dark:bg-[#150709] rounded-2xl shadow-sm border border-slate-200 dark:border-[#3D1418] overflow-hidden text-center p-6 sm:p-10 space-y-6">
+            {/* Lock Icon */}
+            <div className="relative mx-auto w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full bg-amber-500/10 dark:bg-amber-500/20 animate-ping opacity-60" />
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/80 flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-sm relative z-10">
+                <Lock className="w-8 h-8 sm:w-10 sm:h-10" />
+              </div>
+            </div>
+
+            {/* Title & Badge */}
+            <div className="space-y-2.5">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/70 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 font-mono text-xs font-semibold uppercase tracking-wider">
+                <Clock className="w-3.5 h-3.5" />
+                Coming Soon · Arena Locked
+              </div>
+              <h1 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight">
+                Qiskit Quantum Coding Challenge
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-sans max-w-lg mx-auto">
+                The competitive quantum coding challenge arena is currently locked by the organizers.
+                Problem statements, the Monaco code editor, and the quantum test-suite judge will unlock at the scheduled launch time.
+              </p>
+            </div>
+
+            {/* Arena Highlights */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left max-w-lg mx-auto">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] space-y-1">
+                <span className="font-mono text-[10px] uppercase font-bold text-burgundy dark:text-[#E89BA5]">
+                  9 Quantum Problems
+                </span>
+                <p className="text-xs text-slate-600 dark:text-slate-300">
+                  State prep, Bernstein-Vazirani, ZNE noise mitigation, QAOA & V2 Primitives.
+                </p>
+              </div>
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] space-y-1">
+                <span className="font-mono text-[10px] uppercase font-bold text-burgundy dark:text-[#E89BA5]">
+                  Real-Time Quantum Judge
+                </span>
+                <p className="text-xs text-slate-600 dark:text-slate-300">
+                  Built-in basis gate transpilation, unit testing, and instant score evaluation.
+                </p>
+              </div>
+            </div>
+
+            {/* Preparation Guidance */}
+            <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] max-w-lg mx-auto text-left space-y-2 text-xs text-slate-600 dark:text-slate-300">
+              <div className="flex items-center gap-2 font-semibold text-slate-800 dark:text-slate-200 font-sans">
+                <Sparkles className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
+                How to prepare while waiting:
+              </div>
+              <ul className="list-disc list-inside space-y-1.5 pl-1 leading-relaxed">
+                <li>Review the 6 Online Masterclass lectures and concept quizzes</li>
+                <li>Familiarize yourself with Qiskit 1.2+ syntax and QuantumCircuit methods</li>
+                <li>Practice state vector calculations, Pauli expectation values, and Bell states</li>
+              </ul>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+              <Link
+                href="/learning"
+                className="w-full sm:w-auto px-5 py-2.5 bg-burgundy hover:bg-burgundy-deep text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+              >
+                <PlayCircle className="w-4 h-4" />
+                Go to Curriculum Masterclasses
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const selectedChallenge: CodingChallenge =
-    challenges.find((c) => c.id === selectedProblemId) || challenges[0];
+    challenges.find((c) => c.id === selectedProblemId) || challenges[0] || QISKIT_CHALLENGES[0];
 
   const currentIndex = challenges.findIndex((c) => c.id === selectedProblemId);
   const prevProblem = currentIndex > 0 ? challenges[currentIndex - 1] : null;
@@ -399,12 +514,161 @@ function QiskitChallengeWorkspace() {
     window.dispatchEvent(new CustomEvent('qiskit:submit'));
   };
 
+  // Fullscreen management
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const challengeContainerRef = useRef<HTMLDivElement>(null);
+
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      if (challengeContainerRef.current?.requestFullscreen) {
+        challengeContainerRef.current.requestFullscreen().catch(() => {
+          setIsFullscreen(true);
+        });
+      } else {
+        setIsFullscreen((prev) => !prev);
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {
+          setIsFullscreen(false);
+        });
+      } else {
+        setIsFullscreen(false);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+    const handleCustomToggle = () => {
+      toggleFullscreen();
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    window.addEventListener('qiskit:toggle-fullscreen', handleCustomToggle);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      window.removeEventListener('qiskit:toggle-fullscreen', handleCustomToggle);
+    };
+  }, [toggleFullscreen]);
+
+  // Split pane adjuster state (in percentage, default 50%)
+  const [splitRatio, setSplitRatio] = useState<number>(50);
+  const [isResizing, setIsResizing] = useState<boolean>(false);
+  const [isMounted, setIsMounted] = useState<boolean>(false);
+  const [isDesktop, setIsDesktop] = useState<boolean>(false);
+  const splitContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setIsMounted(true);
+    const checkDesktop = () => setIsDesktop(window.innerWidth >= 1024);
+    checkDesktop();
+    window.addEventListener('resize', checkDesktop);
+
+    try {
+      const saved = localStorage.getItem('qff_challenge_split_ratio');
+      if (saved) {
+        const parsed = parseFloat(saved);
+        if (!isNaN(parsed) && parsed >= 25 && parsed <= 75) {
+          setSplitRatio(parsed);
+        }
+      }
+    } catch {}
+
+    return () => window.removeEventListener('resize', checkDesktop);
+  }, []);
+
+  // Handle Drag Resizing between Problem Statement & Editor
+  const handleSplitMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      if (!splitContainerRef.current) return;
+      const rect = splitContainerRef.current.getBoundingClientRect();
+      const newRatio = ((moveEvent.clientX - rect.left) / rect.width) * 100;
+      // Clamp between 25% and 75%
+      const clamped = Math.min(Math.max(newRatio, 25), 75);
+      setSplitRatio(clamped);
+    };
+
+    const onMouseUp = () => {
+      setIsResizing(false);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+
+      setSplitRatio((finalRatio) => {
+        try {
+          localStorage.setItem('qff_challenge_split_ratio', finalRatio.toFixed(1));
+        } catch {}
+        return finalRatio;
+      });
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  }, []);
+
+  // Reset to 50/50 on double click
+  const handleSplitDoubleClick = useCallback(() => {
+    setSplitRatio(50);
+    try {
+      localStorage.setItem('qff_challenge_split_ratio', '50');
+    } catch {}
+  }, []);
+
+  // Sync cursor & user-select styles while dragging
+  useEffect(() => {
+    if (isResizing) {
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    } else {
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    }
+    return () => {
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing]);
+
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-[#0D0406] text-slate-900 dark:text-[#FAF6F3] font-sans flex flex-col">
+    <div
+      ref={challengeContainerRef}
+      data-lenis-prevent="true"
+      className={clsx(
+        'bg-slate-100 dark:bg-[#0D0406] text-slate-900 dark:text-[#FAF6F3] font-sans flex flex-col',
+        isFullscreen
+          ? 'fixed inset-0 z-50 h-screen w-screen overflow-hidden'
+          : 'h-full min-h-0 overflow-hidden flex-1'
+      )}
+    >
+      {/* Admin Testing Mode Notice Banner */}
+      {isLocked && isAdminUser && (
+        <div className="bg-amber-500/15 border-b border-amber-500/40 px-3 sm:px-6 py-2 flex items-center justify-between text-xs text-amber-900 dark:text-amber-200 font-sans z-50 shrink-0">
+          <div className="flex items-center gap-2">
+            <Lock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 animate-pulse" />
+            <span>
+              <strong>Admin Testing Mode:</strong> Coding Challenge is currently <strong>LOCKED</strong> for participants (students see Coming Soon). You have administrator bypass access to test problems, run Python/TypeScript code, and verify submissions.
+            </span>
+          </div>
+          <Link
+            href="/learning/admin"
+            className="px-2.5 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-950 dark:text-amber-100 font-semibold transition-colors shrink-0 ml-3 text-[11px] flex items-center gap-1"
+          >
+            <span>Admin Console</span>
+            <ExternalLink className="w-3 h-3" />
+          </Link>
+        </div>
+      )}
+
       {/* ─────────────────────────────────────────────────────────────
           1. LEETCODE TOP NAVIGATION BAR
          ───────────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 bg-white dark:bg-[#160608] border-b border-slate-200 dark:border-[#3D1418] px-3 sm:px-6 py-2.5 flex items-center justify-between gap-3 shadow-xs">
+      <header className="shrink-0 z-40 bg-white dark:bg-[#160608] border-b border-slate-200 dark:border-[#3D1418] px-3 sm:px-6 py-2.5 flex items-center justify-between gap-3 shadow-xs">
         {/* Left: Hub Link, Problem List Modal Button, Prev/Next Navigation */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <Link
@@ -523,19 +787,51 @@ function QiskitChallengeWorkspace() {
             <Trophy className="w-3.5 h-3.5 text-amber-500" />
             <span className="hidden sm:inline">Leaderboard</span>
           </button>
+
+          {/* Full Screen Toggle Button */}
+          <button
+            onClick={toggleFullscreen}
+            type="button"
+            title={isFullscreen ? 'Exit Full Screen (Esc)' : 'Enter Full Screen'}
+            className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#3D1418] hover:bg-slate-50 dark:hover:bg-[#1C0A0D] text-slate-700 dark:text-slate-300 font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+          >
+            {isFullscreen ? (
+              <>
+                <Minimize2 className="w-3.5 h-3.5 text-burgundy dark:text-[#E89BA5]" />
+                <span className="hidden sm:inline">Exit Full Screen</span>
+              </>
+            ) : (
+              <>
+                <Maximize2 className="w-3.5 h-3.5 text-burgundy dark:text-[#E89BA5]" />
+                <span className="hidden sm:inline">Full Screen</span>
+              </>
+            )}
+          </button>
         </div>
       </header>
 
       {/* ─────────────────────────────────────────────────────────────
           2. MAIN LEETCODE DUAL-PANE SPLIT WORKSPACE
          ───────────────────────────────────────────────────────────── */}
-      <div className="flex-1 p-3 sm:p-4 grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-[1920px] mx-auto w-full">
+      <div
+        ref={splitContainerRef}
+        className={clsx(
+          'flex-1 min-h-0 p-3 sm:p-4 pb-4 sm:pb-6 flex flex-col lg:flex-row items-stretch gap-0 max-w-[1920px] mx-auto w-full overflow-hidden relative',
+          isResizing && 'select-none pointer-events-auto'
+        )}
+      >
         {/* ───────────────────────────────────────────────────────────
             LEFT PANE: PROBLEM STATEMENT & SUBMISSIONS TABS
            ─────────────────────────────────────────────────────────── */}
-        <div className="flex flex-col bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl overflow-hidden shadow-xs h-full min-h-[500px]">
+        <div
+          data-lenis-prevent="true"
+          style={{
+            width: isMounted && isDesktop ? `calc(${splitRatio}% - 6px)` : undefined,
+          }}
+          className="flex flex-col h-full min-h-0 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl overflow-hidden shadow-xs shrink-0 w-full lg:w-auto"
+        >
           {/* Left Pane Navigation Tabs */}
-          <div className="flex items-center px-4 bg-slate-50 dark:bg-[#1C0A0D] border-b border-slate-200 dark:border-[#3D1418]">
+          <div className="shrink-0 flex items-center px-4 bg-slate-50 dark:bg-[#1C0A0D] border-b border-slate-200 dark:border-[#3D1418]">
             <button
               onClick={() => setLeftTab('description')}
               type="button"
@@ -574,7 +870,7 @@ function QiskitChallengeWorkspace() {
           </div>
 
           {/* Left Pane Content Body */}
-          <div className="flex-1 p-5 sm:p-6 overflow-y-auto space-y-6">
+          <div data-lenis-prevent="true" className="flex-1 min-h-0 p-5 sm:p-6 pb-20 overflow-y-auto space-y-6 overscroll-contain">
             {leftTab === 'description' ? (
               <div className="space-y-6">
                 {/* Title & Metadata Badges */}
@@ -704,7 +1000,7 @@ function QiskitChallengeWorkspace() {
               </div>
             ) : (
               /* Submissions History Tab */
-              <div className="space-y-4">
+              <div className="space-y-4 pb-20">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-[#3D1418]">
                   <span className="font-mono text-xs font-bold uppercase tracking-wider text-slate-500">
                     Your Submission Records ({problemSubmissions.length})
@@ -783,12 +1079,61 @@ function QiskitChallengeWorkspace() {
         </div>
 
         {/* ───────────────────────────────────────────────────────────
+            LEETCODE VERTICAL SPLIT ADJUSTER / RESIZER HANDLE
+           ─────────────────────────────────────────────────────────── */}
+        <div
+          onMouseDown={handleSplitMouseDown}
+          onDoubleClick={handleSplitDoubleClick}
+          role="separator"
+          aria-orientation="vertical"
+          aria-valuenow={splitRatio}
+          aria-valuemin={25}
+          aria-valuemax={75}
+          title="Drag to resize problem and editor · Double-click to reset (50%)"
+          className="hidden lg:flex flex-col items-center justify-center w-3 h-full cursor-col-resize z-30 group select-none shrink-0 relative transition-colors px-0.5"
+        >
+          {/* Subtle background line on hover or drag */}
+          <div
+            className={clsx(
+              'w-1 h-full rounded-full transition-colors',
+              isResizing
+                ? 'bg-burgundy dark:bg-[#E89BA5]'
+                : 'bg-transparent group-hover:bg-burgundy/30 dark:group-hover:bg-[#E89BA5]/30'
+            )}
+          />
+          {/* Centered visual grip handle */}
+          <div
+            className={clsx(
+              'absolute top-1/2 -translate-y-1/2 w-1.5 h-10 rounded-full transition-all duration-150 flex flex-col items-center justify-center gap-1 shadow-xs',
+              isResizing
+                ? 'bg-burgundy dark:bg-[#E89BA5] scale-y-125 shadow-md'
+                : 'bg-slate-300 dark:bg-[#3D1418] group-hover:bg-burgundy dark:group-hover:bg-[#E89BA5]'
+            )}
+          >
+            <div className="w-0.5 h-0.5 rounded-full bg-white dark:bg-black/60" />
+            <div className="w-0.5 h-0.5 rounded-full bg-white dark:bg-black/60" />
+            <div className="w-0.5 h-0.5 rounded-full bg-white dark:bg-black/60" />
+          </div>
+        </div>
+
+        {/* ───────────────────────────────────────────────────────────
             RIGHT PANE: MONACO CODE EDITOR & CONSOLE DRAWER
            ─────────────────────────────────────────────────────────── */}
-        <div className="flex flex-col h-full min-h-[500px]">
+        <div
+          data-lenis-prevent="true"
+          style={{
+            width: isMounted && isDesktop ? `calc(${100 - splitRatio}% - 6px)` : undefined,
+          }}
+          className={clsx(
+            'flex flex-col h-full min-h-0 overflow-hidden flex-1 min-w-0 w-full lg:w-auto',
+            isResizing && 'pointer-events-none'
+          )}
+        >
           <QiskitPlayground
             challenge={selectedChallenge}
             userEmail={sessionUser?.email || ''}
+            isFullscreen={isFullscreen}
+            onToggleFullscreen={toggleFullscreen}
             onSubmissionSuccess={() => {
               refreshChallenges();
               loadSubmissions(selectedProblemId);

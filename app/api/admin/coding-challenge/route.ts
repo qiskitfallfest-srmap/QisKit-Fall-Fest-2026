@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { QISKIT_CHALLENGES } from '@/data/qiskit/challenges';
+import { getChallengeConfig, CompetitionConfig } from '@/lib/qiskit-judge';
+import { invalidateCache, invalidatePlatformConfigCache } from '@/lib/redis';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET(req: NextRequest) {
   try {
@@ -9,6 +14,8 @@ export async function GET(req: NextRequest) {
     if (!session || !session.isAdmin) {
       return NextResponse.json({ success: false, error: 'Unauthorized admin access' }, { status: 403 });
     }
+
+    const config = await getChallengeConfig();
 
     // 1. Fetch all submissions
     const { data: submissions, error: subErr } = await supabaseAdmin
@@ -45,6 +52,8 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      config,
+      isLocked: Boolean(config.is_locked),
       stats: {
         totalSubmissions: (submissions || []).length,
         uniqueParticipants: uniqueAllParticipants,
@@ -53,7 +62,61 @@ export async function GET(req: NextRequest) {
       recentSubmissions: submissions || [],
     });
   } catch (err: any) {
-    console.error('[API /api/admin/coding-challenge] Error:', err);
+    console.error('[API /api/admin/coding-challenge GET] Error:', err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const session = await getServerSession();
+    if (!session || !session.isAdmin) {
+      return NextResponse.json({ success: false, error: 'Unauthorized admin access' }, { status: 403 });
+    }
+
+    const body = await req.json();
+    const { is_locked, enabled, config: customConfig, toggleLock } = body;
+
+    const currentConfig = await getChallengeConfig();
+    const nextLocked =
+      is_locked !== undefined
+        ? Boolean(is_locked)
+        : toggleLock
+        ? !currentConfig.is_locked
+        : currentConfig.is_locked;
+
+    const updatedConfig: CompetitionConfig = {
+      ...currentConfig,
+      ...(customConfig || {}),
+      is_locked: nextLocked,
+      ...(enabled !== undefined ? { enabled: Boolean(enabled) } : {}),
+    };
+
+    const { error } = await supabaseAdmin
+      .from('platform_config')
+      .upsert({
+        key: 'qiskit_challenge_config',
+        value: updatedConfig,
+        updated_at: new Date().toISOString(),
+      });
+
+    if (error) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
+
+    await invalidatePlatformConfigCache('qiskit_challenge_config');
+    await invalidateCache(['platform_config:qiskit_challenge', 'platform_config:all', 'admin:stats_overview']);
+
+    return NextResponse.json({
+      success: true,
+      config: updatedConfig,
+      isLocked: Boolean(updatedConfig.is_locked),
+      message: `Qiskit Coding Challenge is now ${
+        updatedConfig.is_locked ? 'LOCKED (Coming Soon mode active)' : 'UNLOCKED (Live & Open to participants)'
+      }.`,
+    });
+  } catch (err: any) {
+    console.error('[API /api/admin/coding-challenge POST] Error:', err);
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }

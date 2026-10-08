@@ -85,18 +85,37 @@ export class MockQuantumCircuit {
   size() { return this.gates.length; }
 }
 
+function stripLineComment(line: string): string {
+  let inSingle = false;
+  let inDouble = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === "'" && !inDouble && (i === 0 || line[i - 1] !== '\\')) {
+      inSingle = !inSingle;
+    } else if (ch === '"' && !inSingle && (i === 0 || line[i - 1] !== '\\')) {
+      inDouble = !inDouble;
+    } else if (ch === '#' && !inSingle && !inDouble) {
+      return line.slice(0, i);
+    }
+  }
+  return line;
+}
+
 /**
  * Transpiles Python function body into valid JavaScript for sandboxed evaluation.
  */
 function transpilePythonToJS(pyCode: string): string {
-  const lines = pyCode.split('\n');
+  // Strip multiline docstrings: """ ... """ and ''' ... '''
+  const cleanedPyCode = pyCode
+    .replace(/"""[\s\S]*?"""/g, '')
+    .replace(/'''[\s\S]*?'''/g, '');
+
+  const lines = cleanedPyCode.split('\n');
   const jsLines: string[] = [];
   const indentStack = [0];
 
   for (const rawLine of lines) {
-    let line = rawLine;
-    const hashIdx = line.indexOf('#');
-    if (hashIdx !== -1) line = line.slice(0, hashIdx);
+    let line = stripLineComment(rawLine);
     if (!line.trim()) continue;
 
     const indent = rawLine.search(/\S/);
@@ -107,6 +126,10 @@ function transpilePythonToJS(pyCode: string): string {
 
     let trimmed = line.trim();
     if (trimmed.startsWith('import ') || trimmed.startsWith('from ')) continue;
+    if (trimmed === 'pass') continue;
+
+    // Type annotations on variable assignments like: qc: QuantumCircuit = QuantumCircuit(n)
+    trimmed = trimmed.replace(/^([a-zA-Z0-9_]+)\s*:\s*[a-zA-Z0-9_\[\],\s]+\s*=/, '$1 =');
 
     // Support slice [::-1]
     trimmed = trimmed.replace(/\[::-1\]/g, '.split("").reverse().join("")');
@@ -219,6 +242,7 @@ function executeUserFunction(pyCode: string, targetFunctionName: string): any {
   const js = transpilePythonToJS(pyCode);
 
   const sandbox: Record<string, any> = {
+    pass: undefined,
     QuantumCircuit: function (numQubits: number, numClbits: number = 0) {
       return new MockQuantumCircuit(numQubits, numClbits);
     },

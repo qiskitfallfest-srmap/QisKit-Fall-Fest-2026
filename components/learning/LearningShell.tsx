@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 
 interface LearningShellProps {
   children: React.ReactNode;
@@ -89,8 +90,11 @@ export function LearningShell({ children, sidebar }: LearningShellProps) {
     };
   }, [isDragging]);
 
+  const pathname = usePathname();
+  const isCodingChallenge = pathname?.startsWith('/learning/qiskit-challenge');
+
   return (
-    <div className="flex-1 flex flex-col md:flex-row min-w-0">
+    <div className={`flex-1 flex flex-col md:flex-row min-w-0 ${isCodingChallenge ? 'min-h-0 h-full overflow-hidden' : ''}`}>
       {/* Resizable Sidebar Container */}
       <aside
         ref={asideRef}
@@ -136,7 +140,7 @@ export function LearningShell({ children, sidebar }: LearningShellProps) {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 min-w-0 bg-[#FAF7F4] dark:bg-[#100405]">
+      <main className={`flex-1 min-w-0 bg-[#FAF7F4] dark:bg-[#100405] ${isCodingChallenge ? 'min-h-0 h-full overflow-hidden flex flex-col' : ''}`}>
         {children}
       </main>
     </div>

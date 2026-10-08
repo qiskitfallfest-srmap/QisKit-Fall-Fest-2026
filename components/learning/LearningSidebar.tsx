@@ -25,6 +25,7 @@ import { CURRICULUM_SESSIONS } from '@/data/learning/curriculum';
 import { DAILY_COMPETITIONS } from '@/data/learning/competitions';
 import { useCurriculumSessions } from '@/hooks/use-curriculum-sessions';
 import { useQuizzes } from '@/hooks/use-quizzes';
+import { useCodingChallengeStatus } from '@/hooks/use-coding-challenge';
 
 const DAYS = [
   { id: 1, label: 'Day 1: Foundations' },
@@ -37,6 +38,7 @@ export function LearningSidebar() {
   const searchParams = useSearchParams();
   const { sessions } = useCurriculumSessions();
   const { quizzes } = useQuizzes();
+  const { isLocked: isChallengeLocked } = useCodingChallengeStatus();
 
   const isHackathon = pathname === '/learning/hackathon';
   const isCodingChallenge = pathname === '/learning/qiskit-challenge' || pathname?.startsWith('/learning/qiskit-challenge');
@@ -429,6 +431,8 @@ export function LearningSidebar() {
               'w-3.5 h-3.5 shrink-0',
               isCodingChallenge
                 ? 'text-burgundy dark:text-[#E89BA5]'
+                : isChallengeLocked
+                ? 'text-amber-500'
                 : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
             )}
           />
@@ -439,9 +443,16 @@ export function LearningSidebar() {
             </span>
           </div>
         </div>
-        <span className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-          ACTIVE
-        </span>
+        {isChallengeLocked ? (
+          <span className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-mono font-semibold bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-500/20 flex items-center gap-1">
+            <Lock className="w-2.5 h-2.5" />
+            Soon
+          </span>
+        ) : (
+          <span className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+            ACTIVE
+          </span>
+        )}
       </Link>
     </>
   );
