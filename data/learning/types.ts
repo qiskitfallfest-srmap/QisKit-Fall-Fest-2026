@@ -44,6 +44,9 @@ export interface SessionQuiz {
   title: string;
   passingScore: number; // e.g. 75%
   questions: QuizQuestion[];
+  isLocked?: boolean;
+  updatedAt?: string;
+  updatedBy?: string;
 }
 
 export interface DailyCompetition {

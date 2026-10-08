@@ -216,16 +216,31 @@ export async function dispatchJudgeEvaluation(
     }
   }
 
-  // 2. Try local Python runner ONLY if runner.py exists and is executable
-  const runnerPath = path.join(process.cwd(), 'qiskit-judge', 'runner.py');
-  if (fs.existsSync(runnerPath)) {
-    try {
-      const localRes = await executeLocalRunner(problemId, sourceCode, mode);
-      if (localRes && !localRes.stderr?.includes("No module named 'qiskit'")) {
-        return localRes;
+  // 2. Try local Python runner ONLY in non-serverless environments if explicitly enabled
+  const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+  const enableLocalPython = process.env.ENABLE_LOCAL_PYTHON_JUDGE === 'true';
+
+  if (!isServerless && enableLocalPython) {
+    const runnerPath = path.join(process.cwd(), 'qiskit-judge', 'runner.py');
+    if (fs.existsSync(runnerPath)) {
+      try {
+        const localRes = await executeLocalRunner(problemId, sourceCode, mode);
+        const hasRuntimeFailure =
+          !localRes ||
+          Boolean(localRes.error_message?.includes('Python runtime error')) ||
+          Boolean(localRes.error_message?.includes('Python runner execution error')) ||
+          Boolean(localRes.stderr?.includes('ENOENT')) ||
+          Boolean(localRes.stderr?.includes('not found')) ||
+          Boolean(localRes.stderr?.includes("No module named 'qiskit'")) ||
+          Boolean(localRes.stderr?.includes('Judge runtime dependency error'));
+
+        if (!hasRuntimeFailure) {
+          return localRes;
+        }
+        console.warn('[Local Python Runner] Runtime error detected, falling back to TypeScript evaluator:', localRes?.stderr);
+      } catch (err) {
+        console.warn('[Local Python Runner] Failed, falling back to TypeScript evaluator:', err);
       }
-    } catch (err) {
-      console.warn('[Local Python Runner] Failed, falling back to TypeScript evaluator:', err);
     }
   }
 

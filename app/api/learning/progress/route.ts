@@ -7,7 +7,7 @@ import {
   invalidateUserProgressCache,
 } from '@/lib/redis';
 import { CURRICULUM_SESSIONS } from '@/data/learning/curriculum';
-import { SESSION_QUIZZES } from '@/data/learning/quizzes';
+import { getQuizForSession } from '@/lib/quizzes';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -167,9 +167,16 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === 'submit_quiz') {
-      const quiz = SESSION_QUIZZES[sessionId];
+      const quiz = await getQuizForSession(sessionId, { admin: true });
       if (!quiz) {
         return NextResponse.json({ error: 'Quiz not found' }, { status: 404 });
+      }
+
+      if (quiz.isLocked) {
+        return NextResponse.json(
+          { error: 'This quiz is currently locked and not accepting submissions.' },
+          { status: 403 }
+        );
       }
 
       // Grade the quiz

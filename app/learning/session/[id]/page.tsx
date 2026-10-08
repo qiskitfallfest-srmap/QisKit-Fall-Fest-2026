@@ -5,8 +5,8 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { AuthGate } from '@/components/learning/AuthGate';
 import { CURRICULUM_SESSIONS } from '@/data/learning/curriculum';
-import { SESSION_QUIZZES } from '@/data/learning/quizzes';
 import { useCurriculumSession } from '@/hooks/use-curriculum-sessions';
+import { useQuiz } from '@/hooks/use-quizzes';
 import { trackLectureView } from '@/lib/analytics';
 import {
   ArrowLeft,
@@ -17,6 +17,7 @@ import {
   Award,
   Video,
   ChevronRight,
+  Lock,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -28,7 +29,7 @@ export default function SessionPlayerPage() {
 
   const { session: dynamicSession } = useCurriculumSession(sessionId);
   const session = dynamicSession || CURRICULUM_SESSIONS.find((s) => s.id === sessionId);
-  const quiz = SESSION_QUIZZES[sessionId];
+  const { quiz, isLocked } = useQuiz(sessionId);
   const hasReferenceMaterial = Boolean(session?.lectureNotesUrl?.trim() || session?.slidesUrl?.trim());
 
   const [videoCompleted, setVideoCompleted] = useState(false);
@@ -189,6 +190,14 @@ export default function SessionPlayerPage() {
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                       Session Complete ({quizScore}%)
                     </span>
+                  ) : isLocked ? (
+                    <Link
+                      href={`/learning/session/${session.id}/quiz`}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-300/80 dark:border-amber-700/60 text-xs font-semibold transition-colors"
+                    >
+                      <Lock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                      Quiz Coming Soon
+                    </Link>
                   ) : (
                     <Link
                       href={`/learning/session/${session.id}/quiz`}

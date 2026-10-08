@@ -246,9 +246,13 @@ export function QiskitPlayground({
 
       if (!res.ok || !data.success) {
         setLastRunSuccess(false);
-        setRunStderr(data.error || 'Execution failed.');
-        if (data.stderr) setRunStderr((prev) => `${prev}\n${data.stderr}`);
-        if (data.publicResults) setPublicTestResults(data.publicResults);
+        if (data.publicResults && data.publicResults.length > 0) {
+          setPublicTestResults(data.publicResults);
+          setRunStdout(data.stdout || '');
+          setRunStderr(data.stderr || '');
+        } else {
+          setRunStderr(data.error || data.stderr || 'Execution failed.');
+        }
       } else {
         const allPassed = data.publicResults?.every((t: any) => t.passed);
         setLastRunSuccess(allPassed);
