@@ -61,6 +61,19 @@ export class MockQuantumCircuit {
     }
     return this;
   }
+  barrier(...qubits: number[]) { return this; }
+  depth() { return this.gates.length; }
+  count_ops() {
+    const counts: Record<string, number> = {};
+    for (const g of this.gates) counts[g.name] = (counts[g.name] || 0) + 1;
+    return counts;
+  }
+  copy() {
+    const c = new MockQuantumCircuit(this.numQubits, this.numClbits);
+    c.gates = this.gates.map((g) => ({ ...g }));
+    return c;
+  }
+  draw() { return ''; }
   compose(other: any, qubits?: number[], clbits?: number[], inplace: boolean = true) {
     if (other && other.gates) {
       for (const g of other.gates) {
@@ -92,8 +105,11 @@ function transpilePythonToJS(pyCode: string): string {
       jsLines.push(' '.repeat(indentStack[indentStack.length - 1]) + '}');
     }
 
-    const trimmed = line.trim();
+    let trimmed = line.trim();
     if (trimmed.startsWith('import ') || trimmed.startsWith('from ')) continue;
+
+    // Support slice [::-1]
+    trimmed = trimmed.replace(/\[::-1\]/g, '.split("").reverse().join("")');
 
     // def func(...) -> Ret:
     const defMatch = trimmed.match(/^def\s+([a-zA-Z0-9_]+)\s*\((.*?)\)(\s*->.*?)?:$/);
@@ -125,7 +141,8 @@ function transpilePythonToJS(pyCode: string): string {
       const idxVar = forEnumMatch[1];
       const valVar = forEnumMatch[2];
       const listExpr = forEnumMatch[3];
-      jsLines.push(' '.repeat(indent) + `const _list_${idxVar} = ${listExpr};`);
+      jsLines.push(' '.repeat(indent) + `const _raw_${idxVar} = ${listExpr};`);
+      jsLines.push(' '.repeat(indent) + `const _list_${idxVar} = (typeof _raw_${idxVar} === 'string' ? _raw_${idxVar}.split('') : Array.from(_raw_${idxVar} || []));`);
       jsLines.push(' '.repeat(indent) + `for (let ${idxVar} = 0; ${idxVar} < _list_${idxVar}.length; ${idxVar}++) { const ${valVar} = _list_${idxVar}[${idxVar}];`);
       continue;
     }
@@ -135,6 +152,23 @@ function transpilePythonToJS(pyCode: string): string {
     if (forInMatch) {
       indentStack.push(indent + 4);
       jsLines.push(' '.repeat(indent) + `for (const ${forInMatch[1]} of ${forInMatch[2]}) {`);
+      continue;
+    }
+
+    // single-line if statement: if <cond>: <stmt>
+    const singleIfMatch = trimmed.match(/^if\s+(.*?):\s*(.+)$/);
+    if (singleIfMatch) {
+      const cond = singleIfMatch[1]
+        .replace(/\bTrue\b/g, 'true')
+        .replace(/\bFalse\b/g, 'false')
+        .replace(/\bNone\b/g, 'null')
+        .replace(/\band\b/g, '&&')
+        .replace(/\bor\b/g, '||')
+        .replace(/\bnot\b/g, '!')
+        .trim();
+      let stmt = singleIfMatch[2].trim();
+      if (!stmt.endsWith(';')) stmt += ';';
+      jsLines.push(' '.repeat(indent) + `if (${cond}) { ${stmt} }`);
       continue;
     }
 
@@ -193,7 +227,46 @@ function executeUserFunction(pyCode: string, targetFunctionName: string): any {
       if (n2 === undefined) return Array.from({ length: n1 }, (_, i) => i);
       return Array.from({ length: n2 - n1 }, (_, i) => n1 + i);
     },
-    enumerate: (arr: any[]) => (arr || []).map((v, i) => [i, v]),
+    enumerate: (arr: any) => {
+      const items: any[] = typeof arr === 'string' ? arr.split('') : Array.from(arr || []);
+      return items.map((v: any, i: number) => [i, v]);
+    },
+    reversed: (x: any) => {
+      if (typeof x === 'string') return x.split('').reverse();
+      if (Array.isArray(x)) return [...x].reverse();
+      return Array.from(x || []).reverse();
+    },
+    list: (x: any) => {
+      if (Array.isArray(x)) return [...x];
+      if (typeof x === 'string') return x.split('');
+      return Array.from(x || []);
+    },
+    str: (x: any) => (x === null || x === undefined ? '' : String(x)),
+    int: (x: any) => (isNaN(parseInt(x, 10)) ? 0 : parseInt(x, 10)),
+    float: (x: any) => (isNaN(parseFloat(x)) ? 0 : parseFloat(x)),
+    bool: (x: any) => Boolean(x),
+    dict: () => ({}),
+    set: (x: any) => new Set(x || []),
+    sorted: (arr: any[], key?: any, reverse?: boolean) => {
+      const c = [...(arr || [])];
+      if (key) c.sort((a, b) => key(a) - key(b));
+      else c.sort();
+      if (reverse) c.reverse();
+      return c;
+    },
+    zip: (...arrays: any[][]) => {
+      const minLen = Math.min(...arrays.map((a) => (a ? a.length : 0)));
+      return Array.from({ length: minLen }, (_, i) => arrays.map((a) => a[i]));
+    },
+    any: (arr: any[]) => (arr || []).some(Boolean),
+    all: (arr: any[]) => (arr || []).every(Boolean),
+    round: (x: number, n: number = 0) => {
+      const f = Math.pow(10, n);
+      return Math.round(x * f) / f;
+    },
+    pow: Math.pow,
+    map: (fn: any, arr: any[]) => (arr || []).map(fn),
+    filter: (fn: any, arr: any[]) => (arr || []).filter(fn),
     abs: Math.abs,
     min: Math.min,
     max: Math.max,
@@ -346,7 +419,7 @@ function evaluateP1(userCode: string, mode: 'run' | 'submit'): JudgeEvaluationRe
     total_tests: allTests.length,
     execution_time_ms: Date.now() - start,
     stdout: `[Evaluator] Passed ${passedCount}/${allTests.length} test cases.`,
-    stderr: isFull ? '' : 'Some test cases did not pass.',
+    stderr: '',
     error_message: isFull ? null : 'Not all test cases passed.',
     public_results: pubResults,
     hidden_results: hidResults,
@@ -448,7 +521,7 @@ function evaluateP2(userCode: string, mode: 'run' | 'submit'): JudgeEvaluationRe
     total_tests: allTests.length,
     execution_time_ms: Date.now() - start,
     stdout: `[Evaluator] Passed ${passedCount}/${allTests.length} test cases.`,
-    stderr: isFull ? '' : 'Some test cases did not pass.',
+    stderr: '',
     error_message: isFull ? null : 'Not all test cases passed.',
     public_results: pubResults,
     hidden_results: hidResults,
