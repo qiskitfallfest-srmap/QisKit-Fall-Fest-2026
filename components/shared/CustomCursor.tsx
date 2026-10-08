@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { createPortal } from 'react-dom';
+import { usePathname } from 'next/navigation';
 
 type HoverState = 'default' | 'interactive' | 'cta' | 'hidden';
 
@@ -20,6 +21,9 @@ function getServerSnapshot() {
 }
 
 export function CustomCursor() {
+  const pathname = usePathname();
+  const isCodingChallenge = pathname?.startsWith('/learning/qiskit-challenge');
+
   const isSupported = React.useSyncExternalStore(
     subscribeToMediaQuery,
     getMediaSnapshot,
@@ -38,10 +42,20 @@ export function CustomCursor() {
   const ringInnerRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    if (!isSupported) {
+    if (!isSupported || isCodingChallenge) {
+      document.documentElement.classList.remove('has-custom-cursor');
       return;
     }
 
+    const handleFullscreenChange = () => {
+      if (document.fullscreenElement) {
+        document.documentElement.classList.remove('has-custom-cursor');
+      } else if (!isCodingChallenge) {
+        document.documentElement.classList.add('has-custom-cursor');
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.documentElement.classList.add('has-custom-cursor');
 
     // Pointer state stored in mutable variables to avoid React re-renders
@@ -247,6 +261,7 @@ export function CustomCursor() {
     animationFrameId = requestAnimationFrame(renderLoop);
 
     return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
       document.documentElement.classList.remove('has-custom-cursor');
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerdown', onPointerDown);
@@ -255,9 +270,9 @@ export function CustomCursor() {
       document.removeEventListener('pointerenter', onPointerEnter);
       cancelAnimationFrame(animationFrameId);
     };
-  }, [isSupported]);
+  }, [isSupported, isCodingChallenge]);
 
-  if (!isSupported || !mounted || typeof document === 'undefined') {
+  if (!isSupported || !mounted || isCodingChallenge || typeof document === 'undefined') {
     return null;
   }
 

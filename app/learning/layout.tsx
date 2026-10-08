@@ -15,7 +15,7 @@ export default function LearningLayout({ children }: { children: React.ReactNode
       data-lenis-prevent={isCodingChallenge ? 'true' : undefined}
       className={
         isCodingChallenge
-          ? 'flex flex-col h-screen overflow-hidden font-sans bg-[#FAF7F4] text-[#181313] dark:bg-[#100405] dark:text-[#F8F4EF]'
+          ? 'flex flex-col h-[calc(100dvh-76px)] sm:h-[calc(100dvh-82px)] xl:h-[calc(100dvh-88px)] overflow-hidden font-sans bg-[#FAF7F4] text-[#181313] dark:bg-[#100405] dark:text-[#F8F4EF]'
           : 'flex flex-col min-h-screen font-sans bg-[#FAF7F4] text-[#181313] dark:bg-[#100405] dark:text-[#F8F4EF]'
       }
     >
