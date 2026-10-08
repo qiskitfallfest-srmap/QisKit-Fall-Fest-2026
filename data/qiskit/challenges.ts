@@ -54,14 +54,14 @@ def prepare_ket(ket: str) -> QuantumCircuit:
     # Write your code here
     pass
 `,
-    description: `Given a binary string \`ket\` of length $n$ representing a basis state written in standard textbook notation:
+    description: `Given a binary string \`ket\` of length n representing a basis state written in standard textbook notation:
 
-$$|q_0 q_1 \\dots q_{n-1}\\rangle$$
+$$|q₀ q₁ … qₙ₋₁⟩$$
 
-where the **leftmost character is qubit 0**, return a \`QuantumCircuit\` that prepares exactly that state starting from the all-zero state $|0 \\dots 0\\rangle$.
+where the **leftmost character is qubit 0**, return a \`QuantumCircuit\` that prepares exactly that state starting from the all-zero state |0 … 0⟩.
 
 > **Note on Endianness:**
-> Qiskit represents measurement bitstrings in **little-endian order** (qubit 0 is the rightmost bit). For example, if $q_0 = 1$ and $q_1 = 0$, the textbook state is $|10\\rangle$, but Qiskit's probability key is \`"01"\`.`,
+> Qiskit represents measurement bitstrings in **little-endian order** (qubit 0 is the rightmost bit). For example, if q₀ = 1 and q₁ = 0, the textbook state is |10⟩, but Qiskit's probability key is \`"01"\`.`,
     examples: [
       {
         id: 1,
@@ -144,10 +144,10 @@ def parity_probe(n: int) -> QuantumCircuit:
     # Write your code here
     pass
 `,
-    description: `Build a quantum circuit on $n$ data qubits ($0 \\dots n-1$), one ancilla qubit located at index $n$, and one classical bit.
+    description: `Build a quantum circuit on n data qubits (0 … n-1), one ancilla qubit located at index n, and one classical bit.
 
 The circuit must measure the parity of the data register into the classical bit:
-$$\\text{parity}(x) = \\left(\\sum_{i=0}^{n-1} x_i\\right) \\bmod 2$$
+$$parity(x) = (∑ xᵢ) mod 2$$
 
 **Requirements:**
 1. The measurement must not disturb the superposition or relative phases of the data state.
@@ -221,14 +221,14 @@ def repair_circuit(buggy: QuantumCircuit, target) -> QuantumCircuit:
     description: `You are given a \`buggy\` circuit intended to prepare a \`target\` statevector, but it contains **1 to 2 seeded faults**.
 
 Return a repaired \`QuantumCircuit\` such that the state fidelity between the output state and the target state satisfies:
-$$\\mathcal{F}(\\psi_{\\text{repaired}}, \\psi_{\\text{target}}) \\ge 1 - 10^{-9}$$
+$$F(ψ_repaired, ψ_target) ≥ 1 - 10⁻⁹$$
 
 **Possible Faults:**
 - Swapped CX control and target direction
 - Wrong qubit index on a single gate
 - Inverted rotation angle sign
 - Missing single gate
-- Phase gate swap ($S \\leftrightarrow S^\\dagger$ or $X \\leftrightarrow Z$)`,
+- Phase gate swap (S ↔ S† or X ↔ Z)`,
     examples: [
       {
         id: 1,
@@ -291,11 +291,11 @@ def bernstein_vazirani(oracle: QuantumCircuit, n: int, anc: int) -> QuantumCircu
     pass
 `,
     description: `Given a black-box oracle gate implementing an affine boolean function:
-$$f(x) = s \\cdot x \\oplus b$$
+$$f(x) = (s · x) ⊕ b$$
 
-acting on $n$ data qubits plus one output ancilla qubit located at an **arbitrary index** \`anc\`, construct a quantum circuit that recovers the secret bitstring $s$ with **exactly one query** to the oracle.
+acting on n data qubits plus one output ancilla qubit located at an **arbitrary index** \`anc\`, construct a quantum circuit that recovers the secret bitstring s with **exactly one query** to the oracle.
 
-The data qubits are all remaining qubit indices $\\{0, 1, \\dots, n\\} \\setminus \\{\\text{anc}\\}$ in strictly increasing order.`,
+The data qubits are all remaining qubit indices {0, 1, …, n} \\ {anc} in strictly increasing order.`,
     examples: [
       {
         id: 1,
@@ -370,18 +370,18 @@ def expectation_from_counts(counts: dict, pauli: str) -> float:
     # Write your code here
     pass
 `,
-    description: `Implement two independent functions to measure and estimate the expectation value $\\langle P \\rangle$ of an arbitrary Pauli string $P \\in \\{I, X, Y, Z\\}^{\\otimes n}$:
+    description: `Implement two independent functions to measure and estimate the expectation value ⟨P⟩ of an arbitrary Pauli string P ∈ {I, X, Y, Z}ⁿ:
 
 1. **\`pauli_measurement_circuit(state_prep, pauli)\`**:
    - Appends single-qubit basis change rotations:
-     - **X**: apply $H$
-     - **Y**: apply $S^\\dagger$ followed by $H$
+     - **X**: apply H
+     - **Y**: apply S† followed by H
      - **Z / I**: no basis rotation
-   - Measures every qubit $i$ into classical bit $i$.
+   - Measures every qubit i into classical bit i.
 
 2. **\`expectation_from_counts(counts, pauli)\`**:
    - Computes:
-     $$\\mathbb{E}\\left[(-1)^{\\text{parity of measured bits on support}}\\right]$$
+     $$⟨P⟩ = E[(-1)^{parity of measured bits on support}]$$
    - All-identity string (e.g. \`"II"\`) returns \`1.0\`.`,
     examples: [
       {
@@ -450,11 +450,11 @@ def param_shift_gradient(circuit: QuantumCircuit, values: list, evaluate) -> np.
     # Write your code here
     pass
 `,
-    description: `Given a parameterized circuit $U(\\vec{\\theta})$ and a black-box evaluator \`evaluate(bound_circuit) -> float\` returning an expectation value $\\langle H \\rangle$, return the gradient vector with respect to each parameter using the **parameter-shift rule**:
+    description: `Given a parameterized circuit U(θ) and a black-box evaluator \`evaluate(bound_circuit) -> float\` returning an expectation value ⟨H⟩, return the gradient vector with respect to each parameter using the **parameter-shift rule**:
 
-$$\\frac{\\partial \\langle H \\rangle}{\\partial \\theta_k} = \\frac{\\langle H \\rangle_{\\theta_k + \\frac{\\pi}{2}} - \\langle H \\rangle_{\\theta_k - \\frac{\\pi}{2}}}{2}$$
+$$∂⟨H⟩/∂θ_k = (⟨H⟩(θ_k + π/2) - ⟨H⟩(θ_k - π/2)) / 2$$
 
-Parameterized gates are \`rx\`, \`ry\`, \`rz\`, or \`rzz\` with angles $a \\cdot \\theta + b$. Parameters may appear across multiple gates.`,
+Parameterized gates are \`rx\`, \`ry\`, \`rz\`, or \`rzz\` with angles a · θ + b. Parameters may appear across multiple gates.`,
     examples: [
       {
         id: 1,
@@ -510,10 +510,10 @@ def route_to_coupling(circuit: QuantumCircuit, coupling: list) -> QuantumCircuit
 `,
     description: `Rewrite an input circuit to comply with hardware topology constraints:
 
-1. **Basis Gates**: Output must use only gates from $\\{\\text{cx}, \\text{rz}, \\text{sx}, \\text{x}\\}$.
-2. **Directed Coupling**: Every \`cx(u, v)\` instruction must satisfy $(u, v) \\in \\text{coupling}$.
+1. **Basis Gates**: Output must use only gates from {cx, rz, sx, x}.
+2. **Directed Coupling**: Every \`cx(u, v)\` instruction must satisfy (u, v) ∈ coupling.
 3. **Equivalence**: The unitary operator must be preserved (up to global phase).
-4. **Layout**: Zero residual qubit permutations (qubit $i$ corresponds to physical qubit $i$).`,
+4. **Layout**: Zero residual qubit permutations (qubit i corresponds to physical qubit i).`,
     examples: [
       {
         id: 1,
@@ -568,13 +568,13 @@ def zne_expectation(circuit: QuantumCircuit, z_mask: str, run, shots: int) -> fl
     # Write your code here
     pass
 `,
-    description: `Estimate the ideal zero-noise expectation value of a $Z/I$ Pauli mask from a noisy quantum simulator using **Zero-Noise Extrapolation (ZNE)**.
+    description: `Estimate the ideal zero-noise expectation value of a Z / I Pauli mask from a noisy quantum simulator using **Zero-Noise Extrapolation (ZNE)**.
 
 **Methodology:**
 1. Scale circuit noise via **unitary folding**:
-   $$G \\longrightarrow G (G^\\dagger G)^k \\quad \\text{yielding noise scales } \\lambda = 1, 3, 5, \\dots$$
-2. Add $Z$ measurements and call \`run(qc_measured, shots)\`.
-3. Fit a polynomial / Richardson extrapolation to infer the zero-noise limit $\\lambda \\to 0$.`,
+   $$G ⟶ G (G† G)ᵏ   [noise scales λ = 1, 3, 5, …]$$
+2. Add Z measurements and call \`run(qc_measured, shots)\`.
+3. Fit a polynomial / Richardson extrapolation to infer the zero-noise limit λ ⟶ 0.`,
     examples: [
       {
         id: 1,
@@ -625,11 +625,11 @@ def qaoa_maxcut(n: int, edges: list, p: int) -> QuantumCircuit:
     description: `Construct a fully parameter-bound **QAOA** (Quantum Approximate Optimization Algorithm) circuit for weighted MaxCut.
 
 **Required Circuit Structure:**
-1. **Initial State:** Apply $H$ on all qubits $0 \\dots n-1$.
-2. **For each layer $k = 0 \\dots p-1$:**
-   - **Cost Unitary:** One \`rzz(2 * gamma_k * w, u, v)\` for every weighted edge $(u, v, w)$ with layer angle $\\gamma_k$.
-   - **Mixer Unitary:** One \`rx(2 * beta_k, q)\` on every qubit $q$ with layer angle $\\beta_k$.
-3. **Measurement:** Measure each qubit $q_i$ into classical bit $c_i$.
+1. **Initial State:** Apply H on all qubits 0 … n-1.
+2. **For each layer k = 0 … p-1:**
+   - **Cost Unitary:** One \`rzz(2 * γ_k * w, u, v)\` for every weighted edge (u, v, w) with layer angle γ_k.
+   - **Mixer Unitary:** One \`rx(2 * β_k, q)\` on every qubit q with layer angle β_k.
+3. **Measurement:** Measure each qubit qᵢ into classical bit cᵢ.
 4. **No Free Parameters:** All angles must be bound numerical floats.`,
     examples: [
       {

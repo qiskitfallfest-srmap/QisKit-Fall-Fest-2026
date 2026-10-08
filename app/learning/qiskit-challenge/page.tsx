@@ -28,6 +28,7 @@ import {
   Sparkles,
   ArrowLeft,
   Loader2,
+  Info,
 } from 'lucide-react';
 
 interface LeaderboardEntry {
@@ -51,6 +52,186 @@ interface UserSubmissionSummary {
   executionTimeMs: number;
   submittedAt: string;
   errorMessage?: string | null;
+}
+
+function renderInlineFormatted(text: string): React.ReactNode {
+  if (!text) return null;
+
+  // Split by inline code `...`, bold **...**, and inline math $...$
+  const regex = /(`[^`]+`|\*\*[^*]+\*\*|\$[^$]+\$)/g;
+  const parts = text.split(regex);
+
+  return parts.map((part, idx) => {
+    if (part.startsWith('`') && part.endsWith('`') && part.length >= 2) {
+      return (
+        <code
+          key={idx}
+          className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-[#250D11] text-burgundy dark:text-[#E89BA5] font-mono text-xs font-semibold border border-slate-200/60 dark:border-[#3D1418]"
+        >
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
+      return (
+        <strong key={idx} className="font-semibold text-slate-900 dark:text-[#FAF6F3]">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    if (part.startsWith('$') && part.endsWith('$') && part.length >= 2) {
+      return (
+        <code
+          key={idx}
+          className="px-1 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-300 font-mono text-xs font-medium border border-amber-500/20"
+        >
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    return <span key={idx}>{part}</span>;
+  });
+}
+
+function FormattedProblemDescription({ description }: { description: string }) {
+  if (!description) return null;
+
+  const lines = description.split('\n');
+  const elements: React.ReactNode[] = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const rawLine = lines[i];
+    const trimmed = rawLine.trim();
+
+    if (!trimmed) {
+      i++;
+      continue;
+    }
+
+    // 1. Formula Block: $$ ... $$
+    if (trimmed.startsWith('$$')) {
+      let formula = '';
+      if (trimmed.endsWith('$$') && trimmed.length > 2) {
+        formula = trimmed.slice(2, -2).trim();
+        i++;
+      } else {
+        formula = trimmed.slice(2);
+        i++;
+        while (i < lines.length && !lines[i].trim().endsWith('$$')) {
+          formula += '\n' + lines[i];
+          i++;
+        }
+        if (i < lines.length) {
+          formula += '\n' + lines[i].trim().replace(/\$\$$/, '');
+          i++;
+        }
+        formula = formula.trim();
+      }
+
+      elements.push(
+        <div
+          key={`formula-${i}`}
+          className="my-3 py-3 px-4 rounded-xl bg-slate-900 text-amber-300 dark:bg-[#1A0A0D] dark:text-[#E89BA5] border border-slate-800 dark:border-[#3D1418] shadow-inner text-center font-mono text-sm sm:text-base font-semibold tracking-wide overflow-x-auto"
+        >
+          {formula}
+        </div>
+      );
+      continue;
+    }
+
+    // 2. Callout / Alert Block: lines starting with >
+    if (trimmed.startsWith('>')) {
+      const calloutLines: string[] = [];
+      while (i < lines.length && lines[i].trim().startsWith('>')) {
+        calloutLines.push(lines[i].trim().replace(/^>\s?/, ''));
+        i++;
+      }
+      elements.push(
+        <div
+          key={`callout-${i}`}
+          className="my-3 p-3.5 rounded-xl border border-amber-500/25 bg-amber-500/5 dark:bg-[#201108] dark:border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs sm:text-sm flex items-start gap-2.5"
+        >
+          <Info className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+          <div className="space-y-1.5 flex-1">
+            {calloutLines.map((cLine, cIdx) => (
+              <p key={cIdx} className="leading-relaxed">
+                {renderInlineFormatted(cLine)}
+              </p>
+            ))}
+          </div>
+        </div>
+      );
+      continue;
+    }
+
+    // 3. Bullet list item: lines starting with - or *
+    if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+      const indent = rawLine.search(/\S/);
+      const isNested = indent >= 2;
+      const content = trimmed.replace(/^[-*]\s+/, '');
+
+      elements.push(
+        <div
+          key={`bullet-${i}`}
+          className={clsx(
+            'flex items-start gap-2 text-xs sm:text-sm my-1',
+            isNested ? 'ml-5 text-slate-600 dark:text-slate-400' : 'text-slate-700 dark:text-slate-300'
+          )}
+        >
+          <span
+            className={clsx(
+              'shrink-0 rounded-full mt-2',
+              isNested
+                ? 'w-1 h-1 bg-slate-400 dark:bg-slate-500'
+                : 'w-1.5 h-1.5 bg-burgundy dark:bg-[#E89BA5]'
+            )}
+          />
+          <span className="flex-1 leading-relaxed">{renderInlineFormatted(content)}</span>
+        </div>
+      );
+      i++;
+      continue;
+    }
+
+    // 4. Ordered list item: 1. , 2. , etc.
+    const olMatch = trimmed.match(/^(\d+)\.\s+(.*)$/);
+    if (olMatch) {
+      const num = olMatch[1];
+      const content = olMatch[2];
+      const indent = rawLine.search(/\S/);
+      const isNested = indent >= 2;
+
+      elements.push(
+        <div
+          key={`ol-${i}`}
+          className={clsx(
+            'flex items-start gap-2.5 text-xs sm:text-sm my-1.5',
+            isNested && 'ml-5'
+          )}
+        >
+          <span className="shrink-0 w-5 h-5 rounded-full bg-slate-100 dark:bg-[#250D11] border border-slate-200 dark:border-[#3D1418] text-[11px] font-mono font-bold flex items-center justify-center text-burgundy dark:text-[#E89BA5] mt-0.5">
+            {num}
+          </span>
+          <span className="flex-1 leading-relaxed text-slate-700 dark:text-slate-300">
+            {renderInlineFormatted(content)}
+          </span>
+        </div>
+      );
+      i++;
+      continue;
+    }
+
+    // 5. Standard paragraph
+    elements.push(
+      <p key={`p-${i}`} className="leading-relaxed text-slate-700 dark:text-slate-300 text-xs sm:text-sm my-1.5">
+        {renderInlineFormatted(trimmed)}
+      </p>
+    );
+    i++;
+  }
+
+  return <div className="space-y-1">{elements}</div>;
 }
 
 export default function QiskitChallengePage() {
@@ -450,11 +631,7 @@ function QiskitChallengeWorkspace() {
                 </div>
 
                 {/* Problem Description Statement */}
-                <div className="space-y-4 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-sans">
-                  <div className="whitespace-pre-line leading-relaxed">
-                    {selectedChallenge.description}
-                  </div>
-                </div>
+                <FormattedProblemDescription description={selectedChallenge.description} />
 
                 {/* Structured LeetCode Examples */}
                 {selectedChallenge.examples && selectedChallenge.examples.length > 0 && (
@@ -507,7 +684,7 @@ function QiskitChallengeWorkspace() {
                     <ul className="list-disc list-inside space-y-1.5 text-xs text-slate-700 dark:text-slate-300 font-mono bg-slate-50 dark:bg-[#1C0A0D] p-3.5 rounded-xl border border-slate-200 dark:border-[#3D1418]">
                       {selectedChallenge.constraints.map((c, i) => (
                         <li key={i} className="leading-relaxed">
-                          <span className="text-slate-800 dark:text-slate-200">{c}</span>
+                          <span className="text-slate-800 dark:text-slate-200">{renderInlineFormatted(c)}</span>
                         </li>
                       ))}
                     </ul>
