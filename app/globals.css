@@ -86,6 +86,49 @@ body {
   html.has-custom-cursor select {
     cursor: text !important;
   }
+
+  /* Fullscreen & coding challenge native cursor visibility */
+  :fullscreen,
+  :fullscreen *,
+  html:fullscreen,
+  html:fullscreen *,
+  .native-cursor,
+  .native-cursor * {
+    cursor: auto !important;
+  }
+
+  :fullscreen button,
+  :fullscreen button *,
+  :fullscreen a,
+  :fullscreen a *,
+  :fullscreen [role="button"],
+  :fullscreen [role="button"] *,
+  .native-cursor button,
+  .native-cursor button *,
+  .native-cursor a,
+  .native-cursor a *,
+  .native-cursor [role="button"],
+  .native-cursor [role="button"] * {
+    cursor: pointer !important;
+  }
+
+  :fullscreen [role="separator"],
+  .native-cursor [role="separator"] {
+    cursor: col-resize !important;
+  }
+
+  :fullscreen input,
+  :fullscreen textarea,
+  :fullscreen [contenteditable="true"],
+  :fullscreen .monaco-editor,
+  :fullscreen .monaco-editor *,
+  .native-cursor input,
+  .native-cursor textarea,
+  .native-cursor [contenteditable="true"],
+  .native-cursor .monaco-editor,
+  .native-cursor .monaco-editor * {
+    cursor: text !important;
+  }
 }
 
 /* Hide scrollbars cross-browser while preserving scroll functionality */

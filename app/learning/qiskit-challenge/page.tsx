@@ -564,6 +564,7 @@ function QiskitChallengeWorkspace() {
 
   useEffect(() => {
     setIsMounted(true);
+    document.documentElement.classList.remove('has-custom-cursor');
     const checkDesktop = () => setIsDesktop(window.innerWidth >= 1024);
     checkDesktop();
     window.addEventListener('resize', checkDesktop);
@@ -640,7 +641,7 @@ function QiskitChallengeWorkspace() {
       ref={challengeContainerRef}
       data-lenis-prevent="true"
       className={clsx(
-        'bg-slate-100 dark:bg-[#0D0406] text-slate-900 dark:text-[#FAF6F3] font-sans flex flex-col',
+        'bg-slate-100 dark:bg-[#0D0406] text-slate-900 dark:text-[#FAF6F3] font-sans flex flex-col native-cursor',
         isFullscreen
           ? 'fixed inset-0 z-50 h-screen w-screen overflow-hidden'
           : 'h-full min-h-0 overflow-hidden flex-1'
@@ -757,15 +758,8 @@ function QiskitChallengeWorkspace() {
           </button>
         </div>
 
-        {/* Right: Timer, Score, and Leaderboard Toggle */}
+        {/* Right: Score, Leaderboard Toggle, and Fullscreen */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          {/* Server-authoritative timer */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418]">
-            <Clock className="w-3.5 h-3.5 text-burgundy dark:text-[#E89BA5]" />
-            <span className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
-              {timeRemaining}
-            </span>
-          </div>
 
           {/* User Score Pill */}
           <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-burgundy/10 dark:bg-burgundy/25 border border-burgundy/30">
@@ -816,7 +810,7 @@ function QiskitChallengeWorkspace() {
       <div
         ref={splitContainerRef}
         className={clsx(
-          'flex-1 min-h-0 p-3 sm:p-4 pb-4 sm:pb-6 flex flex-col lg:flex-row items-stretch gap-0 max-w-[1920px] mx-auto w-full overflow-hidden relative',
+          'flex-1 min-h-0 p-2.5 sm:p-3 pb-3 sm:pb-3.5 flex flex-col lg:flex-row items-stretch gap-0 max-w-[1920px] mx-auto w-full overflow-hidden relative',
           isResizing && 'select-none pointer-events-auto'
         )}
       >
@@ -870,7 +864,7 @@ function QiskitChallengeWorkspace() {
           </div>
 
           {/* Left Pane Content Body */}
-          <div data-lenis-prevent="true" className="flex-1 min-h-0 p-5 sm:p-6 pb-20 overflow-y-auto space-y-6 overscroll-contain">
+          <div data-lenis-prevent="true" className="flex-1 min-h-0 p-5 sm:p-6 pb-32 sm:pb-36 overflow-y-auto space-y-6 overscroll-contain">
             {leftTab === 'description' ? (
               <div className="space-y-6">
                 {/* Title & Metadata Badges */}
@@ -1000,7 +994,7 @@ function QiskitChallengeWorkspace() {
               </div>
             ) : (
               /* Submissions History Tab */
-              <div className="space-y-4 pb-20">
+              <div className="space-y-4 pb-28 sm:pb-32">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-[#3D1418]">
                   <span className="font-mono text-xs font-bold uppercase tracking-wider text-slate-500">
                     Your Submission Records ({problemSubmissions.length})

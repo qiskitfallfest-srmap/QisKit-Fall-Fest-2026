@@ -657,10 +657,10 @@ export function QiskitPlayground({
 
         {/* Tab Body */}
         {!isConsoleCollapsed && (
-          <div data-lenis-prevent="true" className="p-4 pb-6 h-[220px] sm:h-[240px] overflow-y-auto font-mono text-xs text-slate-200 overscroll-contain">
+          <div data-lenis-prevent="true" className="p-3.5 sm:p-4 pb-8 sm:pb-10 h-[210px] sm:h-[230px] overflow-y-auto font-mono text-xs text-slate-200 overscroll-contain">
           {/* TAB 1: Testcase Selector */}
           {activeBottomTab === 'testcase' && (
-            <div className="space-y-3 pb-6">
+            <div className="space-y-3 pb-8">
               {/* Case Chips */}
               <div className="flex items-center gap-2">
                 {challenge.publicTests.map((t, idx) => (
@@ -717,7 +717,7 @@ export function QiskitPlayground({
                   You must run your code first to view test results.
                 </div>
               ) : (
-                <div className="space-y-3 pb-6">
+                <div className="space-y-3 pb-8">
                   {/* Status Headline */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -812,7 +812,7 @@ export function QiskitPlayground({
                   </div>
                 </div>
               ) : (
-                <div className="space-y-3 pb-6">
+                <div className="space-y-3 pb-8">
                   {/* Status Headline Banner */}
                   <div className={clsx(
                     'p-4 rounded-xl border flex items-center justify-between',
