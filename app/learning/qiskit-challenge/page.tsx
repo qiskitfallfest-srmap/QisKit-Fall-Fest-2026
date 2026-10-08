@@ -555,6 +555,86 @@ function QiskitChallengeWorkspace() {
     };
   }, [toggleFullscreen]);
 
+  // Split pane adjuster state (in percentage, default 50%)
+  const [splitRatio, setSplitRatio] = useState<number>(50);
+  const [isResizing, setIsResizing] = useState<boolean>(false);
+  const [isMounted, setIsMounted] = useState<boolean>(false);
+  const [isDesktop, setIsDesktop] = useState<boolean>(false);
+  const splitContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setIsMounted(true);
+    const checkDesktop = () => setIsDesktop(window.innerWidth >= 1024);
+    checkDesktop();
+    window.addEventListener('resize', checkDesktop);
+
+    try {
+      const saved = localStorage.getItem('qff_challenge_split_ratio');
+      if (saved) {
+        const parsed = parseFloat(saved);
+        if (!isNaN(parsed) && parsed >= 25 && parsed <= 75) {
+          setSplitRatio(parsed);
+        }
+      }
+    } catch {}
+
+    return () => window.removeEventListener('resize', checkDesktop);
+  }, []);
+
+  // Handle Drag Resizing between Problem Statement & Editor
+  const handleSplitMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      if (!splitContainerRef.current) return;
+      const rect = splitContainerRef.current.getBoundingClientRect();
+      const newRatio = ((moveEvent.clientX - rect.left) / rect.width) * 100;
+      // Clamp between 25% and 75%
+      const clamped = Math.min(Math.max(newRatio, 25), 75);
+      setSplitRatio(clamped);
+    };
+
+    const onMouseUp = () => {
+      setIsResizing(false);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+
+      setSplitRatio((finalRatio) => {
+        try {
+          localStorage.setItem('qff_challenge_split_ratio', finalRatio.toFixed(1));
+        } catch {}
+        return finalRatio;
+      });
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  }, []);
+
+  // Reset to 50/50 on double click
+  const handleSplitDoubleClick = useCallback(() => {
+    setSplitRatio(50);
+    try {
+      localStorage.setItem('qff_challenge_split_ratio', '50');
+    } catch {}
+  }, []);
+
+  // Sync cursor & user-select styles while dragging
+  useEffect(() => {
+    if (isResizing) {
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    } else {
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    }
+    return () => {
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing]);
+
   return (
     <div
       ref={challengeContainerRef}
@@ -733,11 +813,23 @@ function QiskitChallengeWorkspace() {
       {/* ─────────────────────────────────────────────────────────────
           2. MAIN LEETCODE DUAL-PANE SPLIT WORKSPACE
          ───────────────────────────────────────────────────────────── */}
-      <div className="flex-1 min-h-0 p-2.5 sm:p-3.5 grid grid-cols-1 lg:grid-cols-2 gap-3.5 max-w-[1920px] mx-auto w-full h-[calc(100%-60px)] overflow-hidden">
+      <div
+        ref={splitContainerRef}
+        className={clsx(
+          'flex-1 min-h-0 p-3 sm:p-4 pb-4 sm:pb-6 flex flex-col lg:flex-row items-stretch gap-0 max-w-[1920px] mx-auto w-full overflow-hidden relative',
+          isResizing && 'select-none pointer-events-auto'
+        )}
+      >
         {/* ───────────────────────────────────────────────────────────
             LEFT PANE: PROBLEM STATEMENT & SUBMISSIONS TABS
            ─────────────────────────────────────────────────────────── */}
-        <div data-lenis-prevent="true" className="flex flex-col h-full min-h-0 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl overflow-hidden shadow-xs">
+        <div
+          data-lenis-prevent="true"
+          style={{
+            width: isMounted && isDesktop ? `calc(${splitRatio}% - 6px)` : undefined,
+          }}
+          className="flex flex-col h-full min-h-0 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl overflow-hidden shadow-xs shrink-0 w-full lg:w-auto"
+        >
           {/* Left Pane Navigation Tabs */}
           <div className="shrink-0 flex items-center px-4 bg-slate-50 dark:bg-[#1C0A0D] border-b border-slate-200 dark:border-[#3D1418]">
             <button
@@ -778,7 +870,7 @@ function QiskitChallengeWorkspace() {
           </div>
 
           {/* Left Pane Content Body */}
-          <div data-lenis-prevent="true" className="flex-1 min-h-0 p-5 sm:p-6 overflow-y-auto space-y-6 overscroll-contain">
+          <div data-lenis-prevent="true" className="flex-1 min-h-0 p-5 sm:p-6 pb-20 overflow-y-auto space-y-6 overscroll-contain">
             {leftTab === 'description' ? (
               <div className="space-y-6">
                 {/* Title & Metadata Badges */}
@@ -908,7 +1000,7 @@ function QiskitChallengeWorkspace() {
               </div>
             ) : (
               /* Submissions History Tab */
-              <div className="space-y-4">
+              <div className="space-y-4 pb-20">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-[#3D1418]">
                   <span className="font-mono text-xs font-bold uppercase tracking-wider text-slate-500">
                     Your Submission Records ({problemSubmissions.length})
@@ -987,9 +1079,56 @@ function QiskitChallengeWorkspace() {
         </div>
 
         {/* ───────────────────────────────────────────────────────────
+            LEETCODE VERTICAL SPLIT ADJUSTER / RESIZER HANDLE
+           ─────────────────────────────────────────────────────────── */}
+        <div
+          onMouseDown={handleSplitMouseDown}
+          onDoubleClick={handleSplitDoubleClick}
+          role="separator"
+          aria-orientation="vertical"
+          aria-valuenow={splitRatio}
+          aria-valuemin={25}
+          aria-valuemax={75}
+          title="Drag to resize problem and editor · Double-click to reset (50%)"
+          className="hidden lg:flex flex-col items-center justify-center w-3 h-full cursor-col-resize z-30 group select-none shrink-0 relative transition-colors px-0.5"
+        >
+          {/* Subtle background line on hover or drag */}
+          <div
+            className={clsx(
+              'w-1 h-full rounded-full transition-colors',
+              isResizing
+                ? 'bg-burgundy dark:bg-[#E89BA5]'
+                : 'bg-transparent group-hover:bg-burgundy/30 dark:group-hover:bg-[#E89BA5]/30'
+            )}
+          />
+          {/* Centered visual grip handle */}
+          <div
+            className={clsx(
+              'absolute top-1/2 -translate-y-1/2 w-1.5 h-10 rounded-full transition-all duration-150 flex flex-col items-center justify-center gap-1 shadow-xs',
+              isResizing
+                ? 'bg-burgundy dark:bg-[#E89BA5] scale-y-125 shadow-md'
+                : 'bg-slate-300 dark:bg-[#3D1418] group-hover:bg-burgundy dark:group-hover:bg-[#E89BA5]'
+            )}
+          >
+            <div className="w-0.5 h-0.5 rounded-full bg-white dark:bg-black/60" />
+            <div className="w-0.5 h-0.5 rounded-full bg-white dark:bg-black/60" />
+            <div className="w-0.5 h-0.5 rounded-full bg-white dark:bg-black/60" />
+          </div>
+        </div>
+
+        {/* ───────────────────────────────────────────────────────────
             RIGHT PANE: MONACO CODE EDITOR & CONSOLE DRAWER
            ─────────────────────────────────────────────────────────── */}
-        <div data-lenis-prevent="true" className="flex flex-col h-full min-h-0 overflow-hidden">
+        <div
+          data-lenis-prevent="true"
+          style={{
+            width: isMounted && isDesktop ? `calc(${100 - splitRatio}% - 6px)` : undefined,
+          }}
+          className={clsx(
+            'flex flex-col h-full min-h-0 overflow-hidden flex-1 min-w-0 w-full lg:w-auto',
+            isResizing && 'pointer-events-none'
+          )}
+        >
           <QiskitPlayground
             challenge={selectedChallenge}
             userEmail={sessionUser?.email || ''}
