@@ -281,3 +281,82 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export async function PATCH(request: NextRequest) {
+  const session = await getServerSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const body = await request.json();
+    const { teamId, problemStatementId, vertical } = body;
+
+    if (!teamId || !problemStatementId || !vertical) {
+      return NextResponse.json(
+        { error: 'Team ID, vertical, and problem statement ID are required.' },
+        { status: 400 }
+      );
+    }
+
+    // 1. Verify user is an authorized member/leader of this team
+    const { data: memberEntry } = await supabase
+      .from('team_members')
+      .select('team_id, role, status')
+      .ilike('email', session.email)
+      .eq('team_id', teamId)
+      .neq('status', 'declined')
+      .maybeSingle();
+
+    if (!memberEntry) {
+      return NextResponse.json(
+        { error: 'You are not authorized to modify this team.' },
+        { status: 403 }
+      );
+    }
+
+    // 2. Safely UPDATE only problem_statement_id and vertical without touching other fields
+    const { data: updatedTeam, error: updateError } = await supabase
+      .from('hackathon_teams')
+      .update({
+        problem_statement_id: problemStatementId,
+        vertical: vertical,
+      })
+      .eq('id', teamId)
+      .select()
+      .single();
+
+    if (updateError || !updatedTeam) {
+      throw updateError || new Error('Failed to update problem statement record');
+    }
+
+    // 3. Invalidate Redis caches for all team members so the change reflects immediately
+    const { data: allMembers } = await supabase
+      .from('team_members')
+      .select('email')
+      .eq('team_id', teamId);
+
+    if (allMembers && allMembers.length > 0) {
+      for (const m of allMembers) {
+        if (m.email) {
+          await invalidateHackathonTeamCache(m.email);
+        }
+      }
+    } else {
+      await invalidateHackathonTeamCache(session.email);
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Problem statement successfully updated.',
+      team: updatedTeam,
+    });
+  } catch (error: any) {
+    console.error('Error updating problem statement:', error);
+    return NextResponse.json(
+      { error: error?.message || 'Failed to update problem statement' },
+      { status: 500 }
+    );
+  }
+}
+
