@@ -73,11 +73,15 @@ export default function DedicatedQuizPage() {
 
         // Also mark video as attended automatically if passed
         if (data.passed) {
-          await fetch('/api/learning/progress', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sessionId, action: 'mark_video' }),
-          });
+          try {
+            await fetch('/api/learning/progress', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ sessionId, action: 'mark_video' }),
+            });
+          } catch (e) {
+            console.warn('Auto mark video error:', e);
+          }
         }
       }
     } catch (err) {

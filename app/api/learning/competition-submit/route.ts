@@ -6,20 +6,25 @@ import {
   invalidateCompetitionSubmissionsCache,
 } from '@/lib/redis';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   const session = await getServerSession();
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const normalizedEmail = session.email.trim().toLowerCase();
+
   try {
     const submissionsMap = await getCompetitionSubmissionsCached(
-      session.email,
+      normalizedEmail,
       async () => {
         const { data, error } = await supabase
           .from('competition_submissions')
           .select('*')
-          .ilike('email', session.email);
+          .ilike('email', normalizedEmail);
 
         if (error) throw error;
 
@@ -31,9 +36,18 @@ export async function GET() {
       }
     );
 
-    return NextResponse.json({
-      submissions: submissionsMap,
-    });
+    return NextResponse.json(
+      {
+        submissions: submissionsMap,
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          Pragma: 'no-cache',
+          Expires: '0',
+        },
+      }
+    );
   } catch (error) {
     console.error('Error fetching submissions:', error);
     return NextResponse.json(
@@ -48,6 +62,8 @@ export async function POST(request: NextRequest) {
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  const normalizedEmail = session.email.trim().toLowerCase();
 
   try {
     const body = await request.json();
@@ -72,7 +88,7 @@ export async function POST(request: NextRequest) {
       .from('competition_submissions')
       .upsert(
         {
-          email: session.email,
+          email: normalizedEmail,
           competition_type: competitionType,
           submission_url: submissionUrl.trim(),
           submission_title: submissionTitle?.trim() || null,
@@ -88,7 +104,7 @@ export async function POST(request: NextRequest) {
     if (error) throw error;
 
     // Invalidate cached submissions for this user
-    await invalidateCompetitionSubmissionsCache(session.email);
+    await invalidateCompetitionSubmissionsCache(normalizedEmail);
 
     return NextResponse.json({
       success: true,

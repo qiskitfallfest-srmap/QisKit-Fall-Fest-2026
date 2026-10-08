@@ -40,7 +40,7 @@ export default function SessionPlayerPage() {
   const fetchSessionProgress = React.useCallback(async () => {
     try {
       setIsLoadingProgress(true);
-      const res = await fetch('/api/learning/progress');
+      const res = await fetch('/api/learning/progress', { cache: 'no-store' });
       const data = await res.json();
       if (data?.progress?.[sessionId]) {
         const s = data.progress[sessionId];
@@ -76,6 +76,7 @@ export default function SessionPlayerPage() {
       const data = await res.json();
       if (data.success) {
         setVideoCompleted(true);
+        fetchSessionProgress();
       }
     } catch (err) {
       console.error('Error marking video completed:', err);

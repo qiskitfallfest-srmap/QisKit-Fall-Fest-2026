@@ -3,6 +3,9 @@ import { getServerSession } from '@/lib/auth';
 import { checkCertificateEligibility } from '@/lib/certificate';
 import { CERTIFICATE_PRICE_INR } from '@/lib/razorpay';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   const session = await getServerSession();
   if (!session) {
@@ -11,11 +14,20 @@ export async function GET() {
 
   try {
     const result = await checkCertificateEligibility(session.email);
-    return NextResponse.json({
-      success: true,
-      priceInr: CERTIFICATE_PRICE_INR,
-      ...result,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        priceInr: CERTIFICATE_PRICE_INR,
+        ...result,
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          Pragma: 'no-cache',
+          Expires: '0',
+        },
+      }
+    );
   } catch (err: any) {
     console.error('[Certificate Eligibility Error]:', err);
     return NextResponse.json(
