@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { AuthGate } from '@/components/learning/AuthGate';
 import { AdminAnalyticsView } from '@/components/learning/AdminAnalyticsView';
 import { AdminSessionsManager } from '@/components/learning/AdminSessionsManager';
+import { AdminQuizzesManager } from '@/components/learning/AdminQuizzesManager';
 import { AdminCodingChallengeView } from '@/components/learning/AdminCodingChallengeView';
 import {
   Shield,
@@ -25,12 +26,13 @@ import {
   Loader2,
   X,
   Terminal,
+  Award,
 } from 'lucide-react';
 import { extractParticipantsFromCSV, ParsedParticipant } from '@/lib/csv';
 
 export default function AdminConsolePage() {
   const [session, setSession] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'analytics' | 'whitelist' | 'overrides' | 'sessions' | 'coding'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'whitelist' | 'overrides' | 'sessions' | 'quizzes' | 'coding'>('analytics');
 
   const [emails, setEmails] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -414,6 +416,19 @@ export default function AdminConsolePage() {
 
             <button
               type="button"
+              onClick={() => setActiveTab('quizzes')}
+              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+                activeTab === 'quizzes'
+                  ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
+                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
+              }`}
+            >
+              <Award className="w-4 h-4" />
+              <span>Concept Quizzes & Locking</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setActiveTab('coding')}
               className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
                 activeTab === 'coding'
@@ -438,6 +453,9 @@ export default function AdminConsolePage() {
               <span>System & Release Overrides</span>
             </button>
           </div>
+
+          {/* TAB: CONCEPT QUIZZES & LOCKING */}
+          {activeTab === 'quizzes' && <AdminQuizzesManager />}
 
           {/* TAB: CODING CHALLENGE */}
           {activeTab === 'coding' && <AdminCodingChallengeView />}

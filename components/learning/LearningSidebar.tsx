@@ -17,12 +17,14 @@ import {
   Calendar,
   Code2,
   Terminal,
+  Lock,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { supabase } from '@/lib/supabase';
 import { CURRICULUM_SESSIONS } from '@/data/learning/curriculum';
 import { DAILY_COMPETITIONS } from '@/data/learning/competitions';
 import { useCurriculumSessions } from '@/hooks/use-curriculum-sessions';
+import { useQuizzes } from '@/hooks/use-quizzes';
 
 const DAYS = [
   { id: 1, label: 'Day 1: Foundations' },
@@ -34,6 +36,7 @@ export function LearningSidebar() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { sessions } = useCurriculumSessions();
+  const { quizzes } = useQuizzes();
 
   const isHackathon = pathname === '/learning/hackathon';
   const isCodingChallenge = pathname === '/learning/qiskit-challenge' || pathname?.startsWith('/learning/qiskit-challenge');
@@ -258,26 +261,39 @@ export function LearningSidebar() {
                         )}
                       </Link>
 
-                      <Link
-                        href={`/learning/session/${sessionItem.id}/quiz`}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className={clsx(
-                          'group flex items-center gap-2 px-2.5 py-1 ml-4 rounded-md text-[11px] sm:text-xs transition-colors',
-                          isQuizActive
-                            ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/25 dark:text-[#E89BA5] font-semibold'
-                            : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1C0A0D] hover:text-slate-800 dark:hover:text-slate-200'
-                        )}
-                      >
-                        <Award
-                          className={clsx(
-                            'w-3 h-3 shrink-0',
-                            isQuizActive
-                              ? 'text-burgundy dark:text-[#E89BA5]'
-                              : 'text-slate-400'
-                          )}
-                        />
-                        <span>Concept Quiz</span>
-                      </Link>
+                      {(() => {
+                        const isQuizLocked = Boolean(quizzes[sessionItem.id]?.isLocked);
+                        return (
+                          <Link
+                            href={`/learning/session/${sessionItem.id}/quiz`}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className={clsx(
+                              'group flex items-center gap-2 px-2.5 py-1 ml-4 rounded-md text-[11px] sm:text-xs transition-colors',
+                              isQuizActive
+                                ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/25 dark:text-[#E89BA5] font-semibold'
+                                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1C0A0D] hover:text-slate-800 dark:hover:text-slate-200'
+                            )}
+                          >
+                            <Award
+                              className={clsx(
+                                'w-3 h-3 shrink-0',
+                                isQuizActive
+                                  ? 'text-burgundy dark:text-[#E89BA5]'
+                                  : isQuizLocked
+                                  ? 'text-amber-500'
+                                  : 'text-slate-400'
+                              )}
+                            />
+                            <span>Concept Quiz</span>
+                            {isQuizLocked && (
+                              <span className="ml-auto shrink-0 px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 font-mono text-[9px] font-semibold tracking-wide flex items-center gap-1">
+                                <Lock className="w-2.5 h-2.5" />
+                                Soon
+                              </span>
+                            )}
+                          </Link>
+                        );
+                      })()}
                     </div>
                   );
                 })}
