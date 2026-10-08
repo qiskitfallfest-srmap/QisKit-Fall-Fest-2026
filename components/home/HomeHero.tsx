@@ -141,25 +141,26 @@ export function HomeHero() {
             </span>
           </p>
 
-          {/* Headline with typography entrance and subtle luminous shimmer */}
+          {/* Main Headline */}
           <h1
             id="home-hero-title"
             className={`
               ${styles.headline}
-              ${styles.headlineShimmer}
               font-serif
               font-bold
               tracking-[-0.045em]
               m-0
-              text-transparent
-              bg-clip-text
-              bg-[linear-gradient(90deg,#A7192A_0%,#851722_38%,#241617_85%)]
-              dark:bg-[linear-gradient(90deg,#F07B88_0%,#F5A3AC_42%,#FDF5F2_100%)]
             `}
           >
-            <span className={styles.animTitleLine1}>QISKIT</span>
-            <span className={`${styles.animTitleLine2} whitespace-nowrap`}>FALL FEST</span>
-            <span className={styles.animTitleLine3}>2026</span>
+            <span className={styles.animTitleLine1}>
+              <span className={styles.gradientTitle}>QISKIT</span>
+            </span>
+            <span className={`${styles.animTitleLine2} whitespace-nowrap`}>
+              <span className={styles.gradientTitle}>FALL FEST</span>
+            </span>
+            <span className={styles.animTitleLine3}>
+              <span className={styles.gradientTitle}>2026</span>
+            </span>
           </h1>
 
           {/* Host with continuous typewriter loop */}
