@@ -549,7 +549,7 @@ export default function FAQsPageContent() {
                                       Online Phase
                                     </div>
                                     <div className="text-lg sm:text-xl font-serif font-bold text-[#3A0B10] dark:text-white">
-                                      October 5–9, 2026
+                                      October 8–10, 2026
                                     </div>
                                     <p className="text-xs sm:text-sm text-[#16171B]/80 dark:text-[#C4B9B8]">
                                       Virtual lectures, algorithmic masterclasses, and online interactive sessions.
