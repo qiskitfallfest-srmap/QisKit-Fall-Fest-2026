@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { getSubmissionWithFallback } from '@/lib/qiskit-judge';
 
 export async function GET(
   req: NextRequest,
@@ -25,19 +26,31 @@ export async function GET(
       );
     }
 
-    // 2. Fetch submission record
-    const { data: submission, error: subErr } = await supabaseAdmin
-      .from('coding_submissions')
-      .select('*')
-      .eq('id', submissionId)
-      .single();
+    // 2. Fetch submission record (Supabase with memory/redis fallback)
+    let submission: any = null;
 
-    if (subErr || !submission) {
+    try {
+      const { data, error } = await supabaseAdmin
+        .from('coding_submissions')
+        .select('*')
+        .eq('id', submissionId)
+        .single();
+      if (!error && data) {
+        submission = data;
+      }
+    } catch {}
+
+    if (!submission) {
+      submission = await getSubmissionWithFallback(submissionId);
+    }
+
+    if (!submission) {
       return NextResponse.json(
         { success: false, error: 'Submission not found.' },
         { status: 404 }
       );
     }
+
 
     // 3. Authorization check: participant can only view their own submission (unless admin)
     const normUserEmail = session.email.trim().toLowerCase();

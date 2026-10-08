@@ -7,21 +7,19 @@ import {
   Play,
   Send,
   RotateCcw,
-  Save,
   CheckCircle2,
   XCircle,
   Clock,
   Terminal as TerminalIcon,
   Award,
   AlertTriangle,
-  ChevronRight,
   Code2,
-  Trophy,
-  Info,
   Check,
   Loader2,
-  Flame,
   FileCode,
+  Layers,
+  ChevronDown,
+  Sparkles,
 } from 'lucide-react';
 import { CodingChallenge } from '@/data/qiskit/challenges';
 
@@ -29,8 +27,8 @@ import { CodingChallenge } from '@/data/qiskit/challenges';
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
   loading: () => (
-    <div className="flex flex-col items-center justify-center h-full min-h-[350px] bg-slate-900 text-slate-400 font-mono text-xs gap-2">
-      <Loader2 className="w-5 h-5 animate-spin text-burgundy" />
+    <div className="flex flex-col items-center justify-center h-full min-h-[420px] bg-[#1e1e1e] text-slate-400 font-mono text-xs gap-3">
+      <Loader2 className="w-6 h-6 animate-spin text-burgundy" />
       <span>Loading Monaco Code Editor...</span>
     </div>
   ),
@@ -80,7 +78,8 @@ export function QiskitPlayground({
   const [code, setCode] = useState<string>(challenge.starterCode);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'console' | 'tests' | 'submission'>('console');
+  const [activeBottomTab, setActiveBottomTab] = useState<'testcase' | 'result' | 'submission' | 'console'>('testcase');
+  const [selectedCaseIdx, setSelectedCaseIdx] = useState<number>(0);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
   // Run execution result state
@@ -88,10 +87,12 @@ export function QiskitPlayground({
   const [runStderr, setRunStderr] = useState<string>('');
   const [runExecutionMs, setRunExecutionMs] = useState<number>(0);
   const [publicTestResults, setPublicTestResults] = useState<PublicTestResult[]>([]);
+  const [lastRunSuccess, setLastRunSuccess] = useState<boolean | null>(null);
 
   // Submission result state
   const [submission, setSubmission] = useState<SubmissionDetails | null>(null);
 
+  const editorRef = useRef<any>(null);
   const localDraftKey = `qff_draft_${userEmail.toLowerCase()}_${challenge.id}`;
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -99,19 +100,15 @@ export function QiskitPlayground({
   useEffect(() => {
     let initialCode = challenge.starterCode;
 
-    // Check LocalStorage first
     try {
       const local = localStorage.getItem(localDraftKey);
       if (local && local.trim()) {
         initialCode = local;
       }
-    } catch (e) {
-      // LocalStorage unavailable
-    }
+    } catch (e) {}
 
     setCode(initialCode);
 
-    // Fetch server draft asynchronously
     async function fetchServerDraft() {
       try {
         const res = await fetch(`/api/qiskit/draft?problemId=${challenge.id}`);
@@ -129,12 +126,21 @@ export function QiskitPlayground({
 
     fetchServerDraft();
 
-    // Reset results when switching problem
     setRunStdout('');
     setRunStderr('');
     setPublicTestResults([]);
     setSubmission(null);
-    setActiveTab('console');
+    setLastRunSuccess(null);
+    setActiveBottomTab('testcase');
+    setSelectedCaseIdx(0);
+
+    // Re-layout and focus editor on problem switch
+    setTimeout(() => {
+      if (editorRef.current) {
+        editorRef.current.layout();
+        editorRef.current.focus();
+      }
+    }, 150);
 
     return () => {
       if (pollingIntervalRef.current) {
@@ -167,29 +173,46 @@ export function QiskitPlayground({
       } catch {
         setSaveStatus('idle');
       }
-    }, 2500);
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, [code, challenge.id, localDraftKey]);
 
   // 3. Reset to Starter Code
   const handleReset = () => {
-    if (confirm('Reset code to starter template? Any unsaved edits will be replaced.')) {
+    if (confirm('Reset code to default starter template? Unsaved changes will be discarded.')) {
       setCode(challenge.starterCode);
       try {
         localStorage.removeItem(localDraftKey);
       } catch {}
+      if (editorRef.current) {
+        editorRef.current.focus();
+      }
     }
   };
 
-  // 4. Run Code (Public Tests Only)
-  const handleRunCode = async () => {
+  // 4. Editor Mount Handler (Guarantees Clickable & Interactive)
+  const handleEditorDidMount = (editor: any) => {
+    editorRef.current = editor;
+    editor.layout();
+    editor.focus();
+    setTimeout(() => {
+      if (editorRef.current) {
+        editorRef.current.layout();
+        editorRef.current.focus();
+      }
+    }, 150);
+  };
+
+  // 5. Run Code (Public Tests Only)
+  const handleRunCode = useCallback(async () => {
     if (isRunning || isSubmitting) return;
 
     setIsRunning(true);
-    setActiveTab('console');
+    setActiveBottomTab('result');
     setRunStdout('');
     setRunStderr('');
+    setLastRunSuccess(null);
 
     try {
       const res = await fetch('/api/qiskit/run', {
@@ -205,30 +228,33 @@ export function QiskitPlayground({
       setRunExecutionMs(data.executionTimeMs || 0);
 
       if (!res.ok || !data.success) {
+        setLastRunSuccess(false);
         setRunStderr(data.error || 'Execution failed.');
         if (data.stderr) setRunStderr((prev) => `${prev}\n${data.stderr}`);
         if (data.publicResults) setPublicTestResults(data.publicResults);
       } else {
+        const allPassed = data.publicResults?.every((t: any) => t.passed);
+        setLastRunSuccess(allPassed);
         setRunStdout(data.stdout || '');
         setRunStderr(data.stderr || '');
         if (data.publicResults) {
           setPublicTestResults(data.publicResults);
-          setActiveTab('tests');
         }
       }
     } catch (err: any) {
+      setLastRunSuccess(false);
       setRunStderr(`Connection error: ${err.message || 'Failed to communicate with runner.'}`);
     } finally {
       setIsRunning(false);
     }
-  };
+  }, [isRunning, isSubmitting, challenge.id, code]);
 
-  // 5. Submit Solution (Asynchronous Evaluation)
-  const handleSubmitCode = async () => {
+  // 6. Submit Solution (Asynchronous Evaluation)
+  const handleSubmitCode = useCallback(async () => {
     if (isRunning || isSubmitting) return;
 
     setIsSubmitting(true);
-    setActiveTab('submission');
+    setActiveBottomTab('submission');
     setSubmission({
       submissionId: '',
       status: 'queued',
@@ -262,7 +288,6 @@ export function QiskitPlayground({
         status: 'queued',
       });
 
-      // Begin polling submission status
       pollSubmissionStatus(subId);
     } catch (err: any) {
       setSubmission({
@@ -272,12 +297,38 @@ export function QiskitPlayground({
       });
       setIsSubmitting(false);
     }
-  };
+  }, [isRunning, isSubmitting, challenge.id, code]);
 
-  // 6. Polling Worker for Asynchronous Submission Status
+  // Global event integration with top-navbar Run / Submit buttons
+  useEffect(() => {
+    const onRun = () => handleRunCode();
+    const onSubmit = () => handleSubmitCode();
+
+    window.addEventListener('qiskit:run', onRun);
+    window.addEventListener('qiskit:submit', onSubmit);
+
+    return () => {
+      window.removeEventListener('qiskit:run', onRun);
+      window.removeEventListener('qiskit:submit', onSubmit);
+    };
+  }, [handleRunCode, handleSubmitCode]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('qiskit:state', {
+          detail: { isRunning, isSubmitting },
+        })
+      );
+    }
+  }, [isRunning, isSubmitting]);
+
+
+
+  // 7. Polling Worker for Asynchronous Submission Status
   const pollSubmissionStatus = useCallback((subId: string) => {
     let attempts = 0;
-    const maxAttempts = 30; // 30 * 1000ms = 30s timeout
+    const maxAttempts = 30;
 
     if (pollingIntervalRef.current) {
       clearInterval(pollingIntervalRef.current);
@@ -328,28 +379,33 @@ export function QiskitPlayground({
     }
   };
 
-  return (
-    <div className="flex flex-col h-full bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl overflow-hidden shadow-xs" onKeyDown={handleKeyDown}>
-      {/* Editor Control Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-slate-50 dark:bg-[#1C0A0D] border-b border-slate-200 dark:border-[#3D1418]">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 font-mono text-xs text-slate-700 dark:text-slate-300 font-semibold">
-            <FileCode className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
-            <span>solution.py</span>
-          </div>
+  const selectedPublicTest = challenge.publicTests?.[selectedCaseIdx] || challenge.publicTests?.[0];
 
-          <span className="text-slate-300 dark:text-slate-700">|</span>
+  return (
+    <div
+      className="flex flex-col h-full bg-[#181818] border border-slate-700/60 dark:border-[#3D1418] rounded-xl overflow-hidden shadow-lg"
+      onKeyDown={handleKeyDown}
+    >
+      {/* ─────────────────────────────────────────────────────────────
+          1. LEETCODE-STYLE EDITOR TOOLBAR
+         ───────────────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between px-4 py-2 bg-[#252526] border-b border-[#333333] select-none">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-[#1e1e1e] text-xs font-mono font-medium text-slate-200 border border-[#3e3e42]">
+            <Code2 className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Python 3 (Qiskit 2.x)</span>
+          </div>
 
           {saveStatus === 'saving' && (
             <span className="flex items-center gap-1 text-[11px] font-mono text-slate-400">
-              <Loader2 className="w-3 h-3 animate-spin" />
-              Saving...
+              <Loader2 className="w-3 h-3 animate-spin text-burgundy" />
+              Saving draft...
             </span>
           )}
           {saveStatus === 'saved' && (
-            <span className="flex items-center gap-1 text-[11px] font-mono text-emerald-600 dark:text-emerald-400">
+            <span className="flex items-center gap-1 text-[11px] font-mono text-emerald-400">
               <Check className="w-3 h-3" />
-              Saved
+              Draft saved
             </span>
           )}
         </div>
@@ -358,145 +414,289 @@ export function QiskitPlayground({
           {/* Reset Template */}
           <button
             onClick={handleReset}
+            type="button"
             title="Reset code to starter template"
-            className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#3D1418] text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#2A0E12] text-xs font-mono transition-colors flex items-center gap-1.5 cursor-pointer"
+            className="p-1.5 rounded hover:bg-[#333333] text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Reset</span>
-          </button>
-
-          {/* Run Code Button */}
-          <button
-            onClick={handleRunCode}
-            disabled={isRunning || isSubmitting}
-            title="Run code against public tests (Cmd/Ctrl + Enter)"
-            className="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-xs"
-          >
-            {isRunning ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Play className="w-3.5 h-3.5 fill-current" />
-            )}
-            <span>Run Code</span>
-            <span className="hidden md:inline text-[10px] font-mono opacity-60 ml-0.5">⌘↵</span>
-          </button>
-
-          {/* Submit Solution Button */}
-          <button
-            onClick={handleSubmitCode}
-            disabled={isRunning || isSubmitting}
-            title="Submit solution for official judging"
-            className="px-4 py-1.5 rounded-lg bg-burgundy hover:bg-burgundy-deep text-white text-xs font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-xs"
-          >
-            {isSubmitting ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Send className="w-3.5 h-3.5" />
-            )}
-            <span>Submit</span>
           </button>
         </div>
       </div>
 
-      {/* Monaco Code Editor Pane */}
-      <div className="relative flex-1 min-h-[360px] sm:min-h-[420px] bg-[#1e1e1e]">
+      {/* ─────────────────────────────────────────────────────────────
+          2. MONACO CODE EDITOR (Guaranteed Clickable & Focused)
+         ───────────────────────────────────────────────────────────── */}
+      <div
+        className="relative w-full h-[460px] bg-[#1e1e1e] cursor-text"
+        onClick={() => {
+          if (editorRef.current) {
+            editorRef.current.focus();
+          }
+        }}
+      >
         <Editor
           height="100%"
+          width="100%"
           language="python"
           theme="vs-dark"
           value={code}
+          onMount={handleEditorDidMount}
           onChange={(newVal) => setCode(newVal || '')}
           options={{
-            fontSize: 13,
-            fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+            readOnly: false,
+            domReadOnly: false,
+            cursorBlinking: 'blink',
+            cursorStyle: 'line',
+            selectOnLineNumbers: true,
+            automaticLayout: true,
             lineNumbers: 'on',
-            minimap: { enabled: false },
+            glyphMargin: false,
+            folding: true,
+            scrollbar: {
+              vertical: 'visible',
+              horizontal: 'visible',
+              verticalScrollbarSize: 10,
+              horizontalScrollbarSize: 10,
+            },
+            overviewRulerLanes: 0,
+            hideCursorInOverviewRuler: true,
             scrollBeyondLastLine: false,
             wordWrap: 'on',
             tabSize: 4,
-            automaticLayout: true,
-            bracketPairColorization: { enabled: true },
+            fontSize: 13,
+            fontFamily: "'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
             padding: { top: 12, bottom: 12 },
           }}
         />
       </div>
 
-      {/* Output / Test Results Drawer */}
-      <div className="border-t border-slate-200 dark:border-[#3D1418] bg-slate-50 dark:bg-[#120507]">
-        {/* Output Tabs Header */}
-        <div className="flex items-center justify-between px-3 border-b border-slate-200 dark:border-[#3D1418] bg-slate-100/70 dark:bg-[#180609]">
+      {/* ─────────────────────────────────────────────────────────────
+          3. LEETCODE-STYLE CONSOLE & TESTCASE PANEL
+         ───────────────────────────────────────────────────────────── */}
+      <div className="flex flex-col bg-[#1e1e1e] border-t border-[#333333]">
+        {/* Tab Headers */}
+        <div className="flex items-center justify-between px-3 bg-[#252526] border-b border-[#333333]">
           <div className="flex items-center gap-1">
             <button
-              onClick={() => setActiveTab('console')}
+              onClick={() => setActiveBottomTab('testcase')}
+              type="button"
               className={clsx(
-                'px-3 py-2 text-xs font-mono font-semibold border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer',
-                activeTab === 'console'
-                  ? 'border-burgundy text-burgundy dark:text-[#E89BA5]'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
-              )}
-            >
-              <TerminalIcon className="w-3.5 h-3.5" />
-              <span>Console Output</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('tests')}
-              className={clsx(
-                'px-3 py-2 text-xs font-mono font-semibold border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer',
-                activeTab === 'tests'
-                  ? 'border-burgundy text-burgundy dark:text-[#E89BA5]'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
+                'px-3 py-2 text-xs font-mono font-medium border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer',
+                activeBottomTab === 'testcase'
+                  ? 'border-emerald-500 text-white font-semibold'
+                  : 'border-transparent text-slate-400 hover:text-slate-200'
               )}
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>Public Tests {publicTestResults.length > 0 && `(${publicTestResults.filter(t => t.passed).length}/${publicTestResults.length})`}</span>
+              <span>Testcase</span>
             </button>
 
             <button
-              onClick={() => setActiveTab('submission')}
+              onClick={() => setActiveBottomTab('result')}
+              type="button"
               className={clsx(
-                'px-3 py-2 text-xs font-mono font-semibold border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer',
-                activeTab === 'submission'
-                  ? 'border-burgundy text-burgundy dark:text-[#E89BA5]'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
+                'px-3 py-2 text-xs font-mono font-medium border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer',
+                activeBottomTab === 'result'
+                  ? 'border-emerald-500 text-white font-semibold'
+                  : 'border-transparent text-slate-400 hover:text-slate-200'
+              )}
+            >
+              <TerminalIcon className="w-3.5 h-3.5" />
+              <span>Test Result</span>
+              {publicTestResults.length > 0 && (
+                <span className={clsx(
+                  'px-1.5 py-0.2 rounded text-[10px] font-bold',
+                  lastRunSuccess ? 'bg-emerald-950 text-emerald-400' : 'bg-rose-950 text-rose-400'
+                )}>
+                  {publicTestResults.filter(t => t.passed).length}/{publicTestResults.length}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => setActiveBottomTab('submission')}
+              type="button"
+              className={clsx(
+                'px-3 py-2 text-xs font-mono font-medium border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer',
+                activeBottomTab === 'submission'
+                  ? 'border-emerald-500 text-white font-semibold'
+                  : 'border-transparent text-slate-400 hover:text-slate-200'
               )}
             >
               <Award className="w-3.5 h-3.5" />
-              <span>Submission {submission?.score !== undefined ? `(${submission.score}/${challenge.points} pts)` : ''}</span>
+              <span>Submission</span>
+              {submission?.score !== undefined && (
+                <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-950 text-amber-300">
+                  {submission.score}/{challenge.points} pts
+                </span>
+              )}
             </button>
           </div>
 
-          {runExecutionMs > 0 && (
-            <span className="font-mono text-[11px] text-slate-400">
-              {runExecutionMs} ms
-            </span>
-          )}
+          {/* Action Buttons: Run & Submit */}
+          <div className="flex items-center gap-2 py-1.5">
+            <button
+              onClick={handleRunCode}
+              disabled={isRunning || isSubmitting}
+              type="button"
+              title="Run code against public tests (Cmd/Ctrl + Enter)"
+              className="px-3 py-1.5 rounded-md bg-[#333333] hover:bg-[#3e3e42] text-white text-xs font-medium transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-xs"
+            >
+              {isRunning ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Play className="w-3.5 h-3.5 fill-current text-slate-300" />
+              )}
+              <span>Run</span>
+              <span className="text-[10px] font-mono text-slate-400 ml-0.5">⌘↵</span>
+            </button>
+
+            <button
+              onClick={handleSubmitCode}
+              disabled={isRunning || isSubmitting}
+              type="button"
+              title="Submit solution for official judging"
+              className="px-4 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-xs"
+            >
+              {isSubmitting ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Send className="w-3.5 h-3.5" />
+              )}
+              <span>Submit</span>
+            </button>
+          </div>
         </div>
 
-        {/* Tab Content Display */}
-        <div className="p-4 min-h-[160px] max-h-[260px] overflow-y-auto font-mono text-xs">
-          {/* TAB 1: Console Output */}
-          {activeTab === 'console' && (
+        {/* Tab Body */}
+        <div className="p-4 min-h-[170px] max-h-[260px] overflow-y-auto font-mono text-xs text-slate-200">
+          {/* TAB 1: Testcase Selector */}
+          {activeBottomTab === 'testcase' && (
+            <div className="space-y-3">
+              {/* Case Chips */}
+              <div className="flex items-center gap-2">
+                {challenge.publicTests.map((t, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setSelectedCaseIdx(idx)}
+                    className={clsx(
+                      'px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-colors cursor-pointer',
+                      selectedCaseIdx === idx
+                        ? 'bg-[#333333] text-white font-bold'
+                        : 'bg-[#252526] text-slate-400 hover:bg-[#2c2c2d] hover:text-slate-200'
+                    )}
+                  >
+                    Case {idx + 1}
+                  </button>
+                ))}
+              </div>
+
+              {selectedPublicTest && (
+                <div className="space-y-2 pt-1">
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                      Input ({selectedPublicTest.name})
+                    </span>
+                    <div className="p-2.5 rounded-lg bg-[#252526] border border-[#333333] text-emerald-400 font-mono text-xs">
+                      {selectedPublicTest.inputSummary}
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                      Expected Output
+                    </span>
+                    <div className="p-2.5 rounded-lg bg-[#252526] border border-[#333333] text-slate-300 font-mono text-xs">
+                      {selectedPublicTest.expectedSummary}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 2: Run Result */}
+          {activeBottomTab === 'result' && (
             <div>
               {isRunning ? (
-                <div className="flex items-center gap-2 text-slate-500 py-4">
-                  <Loader2 className="w-4 h-4 animate-spin text-burgundy" />
-                  <span>Executing code against test runner in quantum sandbox...</span>
+                <div className="flex items-center gap-2 py-6 text-slate-400">
+                  <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+                  <span>Executing code on public test suite...</span>
                 </div>
-              ) : !runStdout && !runStderr ? (
-                <div className="text-slate-400 italic py-2">
-                  No execution output yet. Click <span className="font-semibold text-slate-600 dark:text-slate-300">[Run Code]</span> or press <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-[10px]">Cmd/Ctrl + Enter</kbd> to run your solution.
+              ) : lastRunSuccess === null ? (
+                <div className="text-slate-400 italic py-6">
+                  You must run your code first to view test results.
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
+                  {/* Status Headline */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className={clsx(
+                        'text-base font-bold font-sans',
+                        lastRunSuccess ? 'text-emerald-400' : 'text-rose-400'
+                      )}>
+                        {lastRunSuccess ? 'Accepted' : 'Wrong Answer'}
+                      </span>
+                      <span className="text-slate-500">•</span>
+                      <span className="text-xs text-slate-400">
+                        Runtime: {runExecutionMs} ms
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Public Test Cards */}
+                  <div className="space-y-2">
+                    {publicTestResults.map((t, idx) => (
+                      <div
+                        key={idx}
+                        className={clsx(
+                          'p-3 rounded-lg border flex flex-col gap-1',
+                          t.passed
+                            ? 'bg-[#1b2b22] border-emerald-800/60'
+                            : 'bg-[#2b181a] border-rose-800/60'
+                        )}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {t.passed ? (
+                              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                            ) : (
+                              <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                            )}
+                            <span className="font-semibold text-white">
+                              {t.test_name}
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-slate-400">
+                            {t.execution_time_ms} ms
+                          </span>
+                        </div>
+                        {t.error_message && (
+                          <div className="text-[11px] text-rose-300 pl-6 whitespace-pre-wrap font-mono mt-1">
+                            {t.error_message}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Stdout / Stderr logs */}
                   {runStdout && (
-                    <div className="text-slate-800 dark:text-slate-200 whitespace-pre-wrap font-mono">
-                      {runStdout}
+                    <div className="space-y-1 pt-2">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase">Stdout</span>
+                      <div className="p-2.5 rounded bg-[#252526] text-slate-300 whitespace-pre-wrap">
+                        {runStdout}
+                      </div>
                     </div>
                   )}
                   {runStderr && (
-                    <div className="p-2.5 rounded-lg bg-red-50 dark:bg-rose-950/40 border border-red-200 dark:border-rose-900/50 text-red-700 dark:text-rose-300 whitespace-pre-wrap font-mono">
-                      {runStderr}
+                    <div className="space-y-1 pt-2">
+                      <span className="text-[10px] font-bold text-rose-400 uppercase">Stderr</span>
+                      <div className="p-2.5 rounded bg-[#2b181a] text-rose-300 whitespace-pre-wrap">
+                        {runStderr}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -504,170 +704,101 @@ export function QiskitPlayground({
             </div>
           )}
 
-          {/* TAB 2: Public Tests Breakdown */}
-          {activeTab === 'tests' && (
-            <div className="space-y-2">
-              {publicTestResults.length === 0 ? (
-                <div className="text-slate-400 italic py-2">
-                  Run your code to see detailed public test results.
-                </div>
-              ) : (
-                publicTestResults.map((t, idx) => (
-                  <div
-                    key={idx}
-                    className={clsx(
-                      'p-2.5 rounded-lg border flex flex-col gap-1 transition-colors',
-                      t.passed
-                        ? 'bg-emerald-50/70 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/60'
-                        : 'bg-red-50/70 dark:bg-rose-950/20 border-red-200 dark:border-rose-800/60'
-                    )}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {t.passed ? (
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                        ) : (
-                          <XCircle className="w-4 h-4 text-red-600 dark:text-rose-400 shrink-0" />
-                        )}
-                        <span className="font-semibold text-slate-800 dark:text-slate-200">
-                          {t.test_name || `Public Test #${t.test_number}`}
-                        </span>
-                      </div>
-                      <span className="text-[11px] text-slate-500">
-                        {t.execution_time_ms} ms
-                      </span>
-                    </div>
-                    {t.error_message && (
-                      <p className="text-[11px] text-red-600 dark:text-rose-300 pl-6 font-mono">
-                        {t.error_message}
-                      </p>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-
-          {/* TAB 3: Official Submission Results */}
-          {activeTab === 'submission' && (
+          {/* TAB 3: Official Submission */}
+          {activeBottomTab === 'submission' && (
             <div>
               {!submission ? (
-                <div className="text-slate-400 italic py-2">
-                  Click <span className="font-semibold text-slate-600 dark:text-slate-300">[Submit]</span> to evaluate your code on public + hidden test suites.
+                <div className="text-slate-400 italic py-6">
+                  Click <span className="font-semibold text-white">[Submit]</span> to evaluate your code against the complete public and hidden test harness.
                 </div>
               ) : submission.status === 'queued' || submission.status === 'running' ? (
-                <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 flex items-center gap-3">
-                  <Loader2 className="w-5 h-5 animate-spin text-amber-600 dark:text-amber-400 shrink-0" />
+                <div className="p-4 rounded-xl bg-amber-950/40 border border-amber-800/50 flex items-center gap-3">
+                  <Loader2 className="w-5 h-5 animate-spin text-amber-400 shrink-0" />
                   <div>
-                    <h4 className="font-semibold text-amber-900 dark:text-amber-200 text-xs">
-                      Submission In Queue ({submission.status})
+                    <h4 className="font-semibold text-amber-200 text-xs">
+                      Evaluating Submission ({submission.status})...
                     </h4>
-                    <p className="text-[11px] text-amber-700 dark:text-amber-300">
-                      Judge worker is executing tests inside isolated sandbox. Please wait...
+                    <p className="text-[11px] text-amber-300/80">
+                      Running public tests and parameterized hidden suites in sandbox.
                     </p>
                   </div>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {/* Score Summary Banner */}
+                <div className="space-y-3">
+                  {/* Status Headline Banner */}
                   <div className={clsx(
-                    'p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3',
+                    'p-4 rounded-xl border flex items-center justify-between',
                     submission.status === 'completed'
-                      ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800'
-                      : 'bg-red-50 dark:bg-rose-950/30 border-red-200 dark:border-rose-800'
+                      ? 'bg-[#1b2b22] border-emerald-800'
+                      : 'bg-[#2b181a] border-rose-800'
                   )}>
-                    <div className="space-y-0.5">
+                    <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300">
-                          Status: {submission.status}
+                        <span className={clsx(
+                          'text-lg font-bold font-sans',
+                          submission.status === 'completed' ? 'text-emerald-400' : 'text-rose-400'
+                        )}>
+                          {submission.status === 'completed'
+                            ? (submission.score === challenge.points ? 'Accepted' : 'Partial Credit')
+                            : 'Submission Failed'}
                         </span>
-                        <span className="text-slate-300 dark:text-slate-700">•</span>
-                        <span className="text-[11px] text-slate-500">
+                        <span className="text-slate-500">•</span>
+                        <span className="text-xs text-slate-300">
                           {submission.executionTimeMs} ms
                         </span>
                       </div>
-                      <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-[#FAF6F3]">
-                        Score: {submission.score || 0} / {challenge.points} Points
-                      </h3>
-                      <p className="text-xs text-slate-600 dark:text-slate-300">
-                        Passed {submission.passedTests || 0} of {submission.totalTests || 0} total test cases.
+                      <p className="text-xs text-slate-300 mt-0.5">
+                        Earned <span className="font-bold text-white">{submission.score || 0}</span> of <span className="font-bold text-white">{challenge.points}</span> points ({submission.passedTests || 0}/{submission.totalTests || 0} tests passed).
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      {submission.score === challenge.points ? (
-                        <div className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs">
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span>ALL TESTS PASSED</span>
-                        </div>
-                      ) : (
-                        <div className="px-3 py-1.5 rounded-lg bg-slate-800 text-white font-bold text-xs">
-                          PARTIAL SCORE
-                        </div>
-                      )}
+                    <div className="text-right">
+                      <span className="text-xs font-mono font-bold px-3 py-1.5 rounded-lg bg-[#252526] border border-[#3e3e42] text-amber-300">
+                        +{submission.score || 0} pts
+                      </span>
                     </div>
                   </div>
 
-                  {/* Public Test Breakdown */}
+                  {/* Public breakdown */}
                   {submission.publicResults && submission.publicResults.length > 0 && (
-                    <div className="space-y-2">
-                      <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                    <div className="space-y-1.5 pt-1">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
                         Public Tests ({submission.publicResults.filter(t => t.passed).length}/{submission.publicResults.length})
                       </span>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                         {submission.publicResults.map((t, i) => (
                           <div
                             key={i}
                             className={clsx(
-                              'p-2 rounded-md border text-[11px] flex items-center justify-between',
-                              t.passed
-                                ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/50'
-                                : 'bg-red-50/50 dark:bg-rose-950/20 border-red-200 dark:border-rose-800/50'
+                              'p-2 rounded border text-xs flex items-center justify-between',
+                              t.passed ? 'bg-[#1b2b22] border-emerald-800/40 text-emerald-300' : 'bg-[#2b181a] border-rose-800/40 text-rose-300'
                             )}
                           >
-                            <div className="flex items-center gap-1.5 truncate">
-                              {t.passed ? (
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                              ) : (
-                                <XCircle className="w-3.5 h-3.5 text-red-600 shrink-0" />
-                              )}
-                              <span className="truncate">{t.test_name || `Public #${t.test_number}`}</span>
-                            </div>
-                            <span className="text-[10px] text-slate-400 shrink-0 ml-1">{t.execution_time_ms}ms</span>
+                            <span className="truncate">{t.test_name}</span>
+                            <span className="text-[10px] text-slate-400">{t.execution_time_ms}ms</span>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
 
-                  {/* Hidden Test Breakdown (Sanitized - No Test Inputs Leaked!) */}
+                  {/* Hidden breakdown */}
                   {submission.hiddenResults && submission.hiddenResults.length > 0 && (
-                    <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-[#3D1418]">
-                      <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                    <div className="space-y-1.5 pt-2 border-t border-[#333333]">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
                         Hidden Tests ({submission.hiddenResults.filter(t => t.passed).length}/{submission.hiddenResults.length})
                       </span>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                         {submission.hiddenResults.map((t, i) => (
                           <div
                             key={i}
                             className={clsx(
-                              'p-2 rounded-md border text-[11px] flex items-center justify-between',
-                              t.passed
-                                ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/50'
-                                : 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/50'
+                              'p-2 rounded border text-xs flex items-center justify-between',
+                              t.passed ? 'bg-[#1b2b22] border-emerald-800/40 text-emerald-300' : 'bg-amber-950/40 border-amber-800/40 text-amber-300'
                             )}
                           >
-                            <div className="flex items-center gap-1.5">
-                              {t.passed ? (
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                              ) : (
-                                <XCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                              )}
-                              <span>Hidden Case #{t.test_number}</span>
-                            </div>
-                            <span className="text-[10px] font-semibold text-slate-500">
-                              {t.passed ? 'Passed' : 'Failed'}
-                            </span>
+                            <span>Hidden Test #{t.test_number}</span>
+                            <span className="text-[10px] font-bold">{t.passed ? 'Passed' : 'Failed'}</span>
                           </div>
                         ))}
                       </div>

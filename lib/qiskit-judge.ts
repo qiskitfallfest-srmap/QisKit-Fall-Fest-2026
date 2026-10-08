@@ -1,7 +1,13 @@
 import { spawn } from 'child_process';
 import path from 'path';
+import crypto from 'crypto';
 import { supabaseAdmin } from './supabase-admin';
 import { redis, cacheAside } from './redis';
+import { QISKIT_CHALLENGES } from '@/data/qiskit/challenges';
+
+// In-memory & Redis fallback store for submissions when database tables are initializing
+export const fallbackSubmissions = new Map<string, any>();
+
 
 export interface TestResultItem {
   test_type: 'public' | 'hidden';
@@ -309,46 +315,90 @@ export async function createAsyncSubmission(
 ): Promise<{ success: boolean; submissionId?: string; status?: string; error?: string }> {
   try {
     const normEmail = email.trim().toLowerCase();
+    const pid = problemId.toUpperCase();
 
-    // 1. Fetch challenge info
-    const { data: challenge, error: cErr } = await supabaseAdmin
-      .from('coding_challenges')
-      .select('id, points')
-      .eq('id', problemId.toUpperCase())
-      .single();
-
-    if (cErr || !challenge) {
+    // 1. Resolve challenge info (static fallback + Supabase)
+    const staticChallenge = QISKIT_CHALLENGES.find((c) => c.id.toUpperCase() === pid);
+    if (!staticChallenge) {
       return { success: false, error: `Invalid problem ID: ${problemId}` };
     }
 
-    // 2. Insert initial queued record
-    const { data: submission, error: subErr } = await supabaseAdmin
-      .from('coding_submissions')
-      .insert({
-        user_email: normEmail,
-        challenge_id: challenge.id,
-        source_code: sourceCode,
-        status: 'queued',
-        score: 0,
-        max_score: challenge.points,
-        passed_tests: 0,
-        total_tests: 0,
-        execution_time_ms: 0,
-      })
-      .select('id')
-      .single();
+    let challengePoints = staticChallenge.points;
 
-    if (subErr || !submission) {
-      return { success: false, error: subErr?.message || 'Failed to create submission record.' };
+    try {
+      const { data: challenge } = await supabaseAdmin
+        .from('coding_challenges')
+        .select('id, points')
+        .eq('id', pid)
+        .single();
+      if (challenge) {
+        challengePoints = challenge.points;
+      }
+    } catch {
+      // Fallback to static challenge points
     }
 
-    const submissionId = submission.id;
+    let submissionId = crypto.randomUUID();
+
+    // 2. Insert initial queued record in Supabase (if table exists)
+    try {
+      const { data: submission, error: subErr } = await supabaseAdmin
+        .from('coding_submissions')
+        .insert({
+          id: submissionId,
+          user_email: normEmail,
+          challenge_id: pid,
+          source_code: sourceCode,
+          status: 'queued',
+          score: 0,
+          max_score: challengePoints,
+          passed_tests: 0,
+          total_tests: 0,
+          execution_time_ms: 0,
+        })
+        .select('id')
+        .single();
+
+      if (!subErr && submission?.id) {
+        submissionId = submission.id;
+      }
+    } catch {
+      // Supabase table not migrated yet, use in-memory UUID
+    }
+
+    // Save in in-memory fallback store
+    fallbackSubmissions.set(submissionId, {
+      id: submissionId,
+      user_email: normEmail,
+      challenge_id: pid,
+      source_code: sourceCode,
+      status: 'queued',
+      score: 0,
+      max_score: challengePoints,
+      passed_tests: 0,
+      total_tests: 0,
+      execution_time_ms: 0,
+      submitted_at: new Date().toISOString(),
+      completed_at: null,
+      error_message: null,
+      stdout: '',
+      stderr: '',
+      public_results: [],
+      hidden_results: [],
+    });
+
+    // Also persist in Redis if available
+    if (redis) {
+      try {
+        await redis.set(`coding:sub:${submissionId}`, JSON.stringify(fallbackSubmissions.get(submissionId)), { ex: 3600 });
+      } catch {}
+    }
 
     // Increment submission counter
-    await incrementSubmissionCount(normEmail, challenge.id);
+    await incrementSubmissionCount(normEmail, pid);
 
     // 3. Trigger asynchronous judge execution in background
-    runSubmissionInBackground(submissionId, challenge.id, sourceCode).catch((err) => {
+    runSubmissionInBackground(submissionId, pid, sourceCode).catch((err) => {
       console.error(`[Judge Background] Submission ${submissionId} failed:`, err);
     });
 
@@ -371,10 +421,17 @@ async function runSubmissionInBackground(
   sourceCode: string
 ): Promise<void> {
   // Update status to 'running'
-  await supabaseAdmin
-    .from('coding_submissions')
-    .update({ status: 'running' })
-    .eq('id', submissionId);
+  try {
+    await supabaseAdmin
+      .from('coding_submissions')
+      .update({ status: 'running' })
+      .eq('id', submissionId);
+  } catch {}
+
+  const memRecord = fallbackSubmissions.get(submissionId);
+  if (memRecord) {
+    memRecord.status = 'running';
+  }
 
   // Dispatch judge evaluation
   const evalResult = await dispatchJudgeEvaluation(problemId, sourceCode, 'submit');
@@ -385,59 +442,115 @@ async function runSubmissionInBackground(
     ? 'timeout'
     : 'failed';
 
-  // Update submission summary
-  await supabaseAdmin
-    .from('coding_submissions')
-    .update({
-      status,
-      score: evalResult.score,
-      passed_tests: evalResult.passed_tests,
-      total_tests: evalResult.total_tests,
-      execution_time_ms: evalResult.execution_time_ms,
-      stdout: evalResult.stdout,
-      stderr: evalResult.stderr,
-      error_message: evalResult.error_message,
-      completed_at: new Date().toISOString(),
-    })
-    .eq('id', submissionId);
+  const completedAt = new Date().toISOString();
 
-  // Insert individual public and hidden test results
-  const testInserts: Array<{
-    submission_id: string;
-    test_type: 'public' | 'hidden';
-    test_number: number;
-    test_name: string | null;
-    passed: boolean;
-    execution_time_ms: number;
-    error_message: string | null;
-  }> = [];
-
-  for (const t of evalResult.public_results || []) {
-    testInserts.push({
-      submission_id: submissionId,
-      test_type: 'public',
-      test_number: t.test_number,
-      test_name: t.test_name,
-      passed: t.passed,
-      execution_time_ms: t.execution_time_ms,
-      error_message: t.error_message,
-    });
-  }
-
-  for (const t of evalResult.hidden_results || []) {
-    testInserts.push({
-      submission_id: submissionId,
+  // Update in-memory fallback
+  if (memRecord) {
+    memRecord.status = status;
+    memRecord.score = evalResult.score;
+    memRecord.passed_tests = evalResult.passed_tests;
+    memRecord.total_tests = evalResult.total_tests;
+    memRecord.execution_time_ms = evalResult.execution_time_ms;
+    memRecord.stdout = evalResult.stdout;
+    memRecord.stderr = evalResult.stderr;
+    memRecord.error_message = evalResult.error_message;
+    memRecord.completed_at = completedAt;
+    memRecord.public_results = evalResult.public_results || [];
+    memRecord.hidden_results = (evalResult.hidden_results || []).map((t) => ({
       test_type: 'hidden',
       test_number: t.test_number,
       test_name: `Hidden Test #${t.test_number}`,
       passed: t.passed,
       execution_time_ms: t.execution_time_ms,
-      // Sanitized: never leak hidden input parameters
       error_message: t.passed ? null : 'Hidden test failed. Check constraints and edge cases.',
-    });
+    }));
   }
 
-  if (testInserts.length > 0) {
-    await supabaseAdmin.from('coding_test_results').insert(testInserts);
+  // Also persist in Redis
+  if (redis && memRecord) {
+    try {
+      await redis.set(`coding:sub:${submissionId}`, JSON.stringify(memRecord), { ex: 3600 });
+      // Add to user submissions list in Redis
+      await redis.lpush(`coding:user_subs:${memRecord.user_email}`, submissionId);
+    } catch {}
+  }
+
+  // Update Supabase if available
+  try {
+    await supabaseAdmin
+      .from('coding_submissions')
+      .update({
+        status,
+        score: evalResult.score,
+        passed_tests: evalResult.passed_tests,
+        total_tests: evalResult.total_tests,
+        execution_time_ms: evalResult.execution_time_ms,
+        stdout: evalResult.stdout,
+        stderr: evalResult.stderr,
+        error_message: evalResult.error_message,
+        completed_at: completedAt,
+      })
+      .eq('id', submissionId);
+
+    // Insert individual public and hidden test results
+    const testInserts: Array<{
+      submission_id: string;
+      test_type: 'public' | 'hidden';
+      test_number: number;
+      test_name: string | null;
+      passed: boolean;
+      execution_time_ms: number;
+      error_message: string | null;
+    }> = [];
+
+    for (const t of evalResult.public_results || []) {
+      testInserts.push({
+        submission_id: submissionId,
+        test_type: 'public',
+        test_number: t.test_number,
+        test_name: t.test_name,
+        passed: t.passed,
+        execution_time_ms: t.execution_time_ms,
+        error_message: t.error_message,
+      });
+    }
+
+    for (const t of evalResult.hidden_results || []) {
+      testInserts.push({
+        submission_id: submissionId,
+        test_type: 'hidden',
+        test_number: t.test_number,
+        test_name: `Hidden Test #${t.test_number}`,
+        passed: t.passed,
+        execution_time_ms: t.execution_time_ms,
+        error_message: t.passed ? null : 'Hidden test failed. Check constraints and edge cases.',
+      });
+    }
+
+    if (testInserts.length > 0) {
+      await supabaseAdmin.from('coding_test_results').insert(testInserts);
+    }
+  } catch (dbErr) {
+    console.warn('[Judge] Supabase write skipped (schema pending):', dbErr);
   }
 }
+
+/**
+ * Retrieve submission from memory or Redis if not found in database.
+ */
+export async function getSubmissionWithFallback(submissionId: string): Promise<any | null> {
+  const inMem = fallbackSubmissions.get(submissionId);
+  if (inMem) return inMem;
+
+  if (redis) {
+    try {
+      const data = await redis.get<string>(`coding:sub:${submissionId}`);
+      if (data) {
+        return typeof data === 'string' ? JSON.parse(data) : data;
+      }
+    } catch {}
+  }
+
+  return null;
+}
+
