@@ -272,13 +272,13 @@ export function HomeHero() {
               </span>
             </a>
 
-            {/* Watch Video Link */}
+            {/* Watch Live Link */}
             <a
-              href="https://youtu.be/EByii89QzVQ?si=td8WOckyuKGbos_O"
+              href="https://www.youtube.com/live/4XOrIH2pIP0"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Watch Qiskit Fall Fest video"
-              onClick={() => trackEvent('watch_video_click', { url: 'https://youtu.be/EByii89QzVQ' })}
+              aria-label="Watch Qiskit Fall Fest live"
+              onClick={() => trackEvent('watch_video_click', { url: 'https://www.youtube.com/live/4XOrIH2pIP0' })}
               className={`
                 ${styles.watchVideoBtn}
                 group
@@ -318,7 +318,7 @@ export function HomeHero() {
                   fill="currentColor"
                 />
               </span>
-              <span>Watch Video</span>
+              <span>Watch Live</span>
             </a>
           </div>
         </div>
