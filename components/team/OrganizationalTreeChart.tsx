@@ -26,7 +26,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { CoverflowCarousel } from '@/components/ui/coverflow-carousel';
-import { FLOWCHART_ROSTER_DATA, FlowchartModalData } from './flowchart-roster-data';
+import { FLOWCHART_ROSTER_DATA, FlowchartModalData, GENERIC_PERSON_AVATAR } from './flowchart-roster-data';
 
 // ─────────────────────────────────────────────────────────────
 // DATA SPECIFICATION — 100% VERBATIM MATCH TO DIAGRAM
@@ -81,7 +81,7 @@ export function OrganizationalTreeChart() {
         linkText: fallbackCell.id === 'cell-3' ? 'Open Website Team Roster' : 'Open Full Organizing Roster',
         slides: [
           {
-            src: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=800&q=80',
+            src: GENERIC_PERSON_AVATAR,
             alt: fallbackCell.label,
             title: fallbackCell.label,
             subtitle: fallbackCell.focusArea,
