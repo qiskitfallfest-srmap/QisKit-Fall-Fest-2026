@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error:
-            'You are not eligible participant. Please register in Unstop and check back after October 7, 11:59 PM.',
+            'You are not eligible participant. Please register in Unstop and check back after few hours.',
           registrationUrl:
             'https://unstop.com/college-fests/qiskit-fall-fest-srmap-2026-srm-university-amaravati-515345',
         },
