@@ -21,6 +21,8 @@ import {
   ChevronDown,
   ChevronUp,
   Sparkles,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
 import { CodingChallenge } from '@/data/qiskit/challenges';
 
@@ -69,12 +71,16 @@ interface QiskitPlaygroundProps {
   challenge: CodingChallenge;
   userEmail: string;
   onSubmissionSuccess?: (score: number) => void;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
 }
 
 export function QiskitPlayground({
   challenge,
   userEmail,
   onSubmissionSuccess,
+  isFullscreen = false,
+  onToggleFullscreen,
 }: QiskitPlaygroundProps) {
   const [code, setCode] = useState<string>(challenge.starterCode);
   const [isRunning, setIsRunning] = useState<boolean>(false);
@@ -247,24 +253,18 @@ export function QiskitPlayground({
 
       setRunExecutionMs(data.executionTimeMs || 0);
 
-      if (!res.ok || !data.success) {
-        setLastRunSuccess(false);
-        if (data.publicResults && data.publicResults.length > 0) {
-          setPublicTestResults(data.publicResults);
-          setRunStdout(data.stdout || '');
-          setRunStderr(data.stderr || '');
-        } else {
-          setRunStderr(data.error || data.stderr || 'Execution failed.');
-        }
-      } else {
-        const allPassed = data.publicResults?.every((t: any) => t.passed);
-        setLastRunSuccess(allPassed);
-        setRunStdout(data.stdout || '');
-        setRunStderr(data.stderr || '');
-        if (data.publicResults) {
-          setPublicTestResults(data.publicResults);
-        }
+      const publicResults = data.publicResults || [];
+      const hasPublicResults = publicResults.length > 0;
+      const allPassed = hasPublicResults
+        ? publicResults.every((t: any) => Boolean(t.passed))
+        : Boolean(data.success);
+
+      if (hasPublicResults) {
+        setPublicTestResults(publicResults);
       }
+      setRunStdout(data.stdout || '');
+      setRunStderr(data.stderr || (allPassed ? '' : (data.error || (!res.ok ? 'Execution failed.' : ''))));
+      setLastRunSuccess(allPassed);
     } catch (err: any) {
       clearTimeout(timeoutId);
       setLastRunSuccess(false);
@@ -455,6 +455,26 @@ export function QiskitPlayground({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Full Screen Toggle */}
+          <button
+            onClick={() => {
+              if (onToggleFullscreen) {
+                onToggleFullscreen();
+              } else if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('qiskit:toggle-fullscreen'));
+              }
+            }}
+            type="button"
+            title={isFullscreen ? 'Exit Full Screen' : 'Full Screen Playground'}
+            className="p-1.5 rounded hover:bg-[#333333] text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+          >
+            {isFullscreen ? (
+              <Minimize2 className="w-3.5 h-3.5 text-emerald-400" />
+            ) : (
+              <Maximize2 className="w-3.5 h-3.5" />
+            )}
+          </button>
+
           {/* Reset Template */}
           <button
             onClick={handleReset}
@@ -637,7 +657,7 @@ export function QiskitPlayground({
 
         {/* Tab Body */}
         {!isConsoleCollapsed && (
-          <div className="p-4 h-[210px] sm:h-[230px] overflow-y-auto font-mono text-xs text-slate-200 overscroll-contain">
+          <div data-lenis-prevent="true" className="p-4 h-[210px] sm:h-[230px] overflow-y-auto font-mono text-xs text-slate-200 overscroll-contain">
           {/* TAB 1: Testcase Selector */}
           {activeBottomTab === 'testcase' && (
             <div className="space-y-3">

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import clsx from 'clsx';
 import { AuthGate } from '@/components/learning/AuthGate';
@@ -32,6 +32,8 @@ import {
   Lock,
   PlayCircle,
   Shield,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
 
 interface LeaderboardEntry {
@@ -512,8 +514,58 @@ function QiskitChallengeWorkspace() {
     window.dispatchEvent(new CustomEvent('qiskit:submit'));
   };
 
+  // Fullscreen management
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const challengeContainerRef = useRef<HTMLDivElement>(null);
+
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      if (challengeContainerRef.current?.requestFullscreen) {
+        challengeContainerRef.current.requestFullscreen().catch(() => {
+          setIsFullscreen(true);
+        });
+      } else {
+        setIsFullscreen((prev) => !prev);
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {
+          setIsFullscreen(false);
+        });
+      } else {
+        setIsFullscreen(false);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+    const handleCustomToggle = () => {
+      toggleFullscreen();
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    window.addEventListener('qiskit:toggle-fullscreen', handleCustomToggle);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      window.removeEventListener('qiskit:toggle-fullscreen', handleCustomToggle);
+    };
+  }, [toggleFullscreen]);
+
   return (
-    <div className="min-h-screen lg:h-screen lg:overflow-hidden bg-slate-100 dark:bg-[#0D0406] text-slate-900 dark:text-[#FAF6F3] font-sans flex flex-col">
+    <div
+      ref={challengeContainerRef}
+      data-lenis-prevent="true"
+      className={clsx(
+        'bg-slate-100 dark:bg-[#0D0406] text-slate-900 dark:text-[#FAF6F3] font-sans flex flex-col',
+        isFullscreen
+          ? 'fixed inset-0 z-50 h-screen w-screen overflow-hidden'
+          : 'h-full min-h-0 overflow-hidden flex-1'
+      )}
+    >
       {/* Admin Testing Mode Notice Banner */}
       {isLocked && isAdminUser && (
         <div className="bg-amber-500/15 border-b border-amber-500/40 px-3 sm:px-6 py-2 flex items-center justify-between text-xs text-amber-900 dark:text-amber-200 font-sans z-50 shrink-0">
@@ -655,17 +707,37 @@ function QiskitChallengeWorkspace() {
             <Trophy className="w-3.5 h-3.5 text-amber-500" />
             <span className="hidden sm:inline">Leaderboard</span>
           </button>
+
+          {/* Full Screen Toggle Button */}
+          <button
+            onClick={toggleFullscreen}
+            type="button"
+            title={isFullscreen ? 'Exit Full Screen (Esc)' : 'Enter Full Screen'}
+            className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#3D1418] hover:bg-slate-50 dark:hover:bg-[#1C0A0D] text-slate-700 dark:text-slate-300 font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+          >
+            {isFullscreen ? (
+              <>
+                <Minimize2 className="w-3.5 h-3.5 text-burgundy dark:text-[#E89BA5]" />
+                <span className="hidden sm:inline">Exit Full Screen</span>
+              </>
+            ) : (
+              <>
+                <Maximize2 className="w-3.5 h-3.5 text-burgundy dark:text-[#E89BA5]" />
+                <span className="hidden sm:inline">Full Screen</span>
+              </>
+            )}
+          </button>
         </div>
       </header>
 
       {/* ─────────────────────────────────────────────────────────────
           2. MAIN LEETCODE DUAL-PANE SPLIT WORKSPACE
          ───────────────────────────────────────────────────────────── */}
-      <div className="flex-1 min-h-0 p-2.5 sm:p-3.5 grid grid-cols-1 lg:grid-cols-2 gap-3.5 max-w-[1920px] mx-auto w-full lg:overflow-hidden">
+      <div className="flex-1 min-h-0 p-2.5 sm:p-3.5 grid grid-cols-1 lg:grid-cols-2 gap-3.5 max-w-[1920px] mx-auto w-full h-[calc(100%-60px)] overflow-hidden">
         {/* ───────────────────────────────────────────────────────────
             LEFT PANE: PROBLEM STATEMENT & SUBMISSIONS TABS
            ─────────────────────────────────────────────────────────── */}
-        <div className="flex flex-col h-[550px] lg:h-full min-h-0 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl overflow-hidden shadow-xs">
+        <div data-lenis-prevent="true" className="flex flex-col h-full min-h-0 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl overflow-hidden shadow-xs">
           {/* Left Pane Navigation Tabs */}
           <div className="shrink-0 flex items-center px-4 bg-slate-50 dark:bg-[#1C0A0D] border-b border-slate-200 dark:border-[#3D1418]">
             <button
@@ -706,7 +778,7 @@ function QiskitChallengeWorkspace() {
           </div>
 
           {/* Left Pane Content Body */}
-          <div className="flex-1 min-h-0 p-5 sm:p-6 overflow-y-auto space-y-6 overscroll-contain">
+          <div data-lenis-prevent="true" className="flex-1 min-h-0 p-5 sm:p-6 overflow-y-auto space-y-6 overscroll-contain">
             {leftTab === 'description' ? (
               <div className="space-y-6">
                 {/* Title & Metadata Badges */}
@@ -917,10 +989,12 @@ function QiskitChallengeWorkspace() {
         {/* ───────────────────────────────────────────────────────────
             RIGHT PANE: MONACO CODE EDITOR & CONSOLE DRAWER
            ─────────────────────────────────────────────────────────── */}
-        <div className="flex flex-col h-[650px] lg:h-full min-h-0 overflow-hidden">
+        <div data-lenis-prevent="true" className="flex flex-col h-full min-h-0 overflow-hidden">
           <QiskitPlayground
             challenge={selectedChallenge}
             userEmail={sessionUser?.email || ''}
+            isFullscreen={isFullscreen}
+            onToggleFullscreen={toggleFullscreen}
             onSubmissionSuccess={() => {
               refreshChallenges();
               loadSubmissions(selectedProblemId);

@@ -529,6 +529,8 @@ async function runSubmissionInBackground(
     ? 'completed'
     : evalResult.error_message?.includes('timed out')
     ? 'timeout'
+    : (evalResult.total_tests > 0 && (evalResult.public_results?.length > 0 || evalResult.hidden_results?.length > 0))
+    ? 'completed'
     : 'failed';
 
   const completedAt = new Date().toISOString();

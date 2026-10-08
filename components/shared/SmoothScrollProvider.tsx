@@ -124,6 +124,16 @@ export function SmoothScrollProvider({ children }: SmoothScrollProviderProps) {
     }
   }, [pathname]);
 
+  // Pause Lenis on coding challenge routes to let nested Monaco editor and problem statements scroll natively
+  React.useEffect(() => {
+    if (!lenisRef.current) return;
+    if (pathname?.startsWith('/learning/qiskit-challenge')) {
+      lenisRef.current.stop();
+    } else {
+      lenisRef.current.start();
+    }
+  }, [pathname]);
+
   const scrollTo = React.useCallback(
     (
       target: string | HTMLElement | number,
