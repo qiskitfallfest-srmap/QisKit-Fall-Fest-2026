@@ -1,4 +1,4 @@
-﻿export interface FAQItem {
+export interface FAQItem {
   id: string;
   number: number;
   question: string;
@@ -42,7 +42,7 @@ export const FAQS_DATA: FAQItem[] = [
     number: 2,
     question: 'When will Qiskit Fall Fest 2026 take place?',
     answer:
-      'Planned schedule:\nOnline Phase: October 5–9, 2026\nOffline Phase: October 26–30, 2026',
+      'Planned schedule:\nOnline Phase: October 8–10, 2026\nOffline Phase: October 26–30, 2026',
     category: 'Schedule & Venues',
     isTopQuestion: true,
   },
@@ -124,7 +124,7 @@ export const FAQS_DATA: FAQItem[] = [
     number: 12,
     question: 'Is there an online phase for Qiskit Fall Fest 2026?',
     answer:
-      'Yes. The planned online phase will take place from October 5–9, 2026. Participants should follow the official announcements for online session links and activity details.',
+      'Yes. The planned online phase will take place from October 8–10, 2026. Participants should follow the official announcements for online session links and activity details.',
     category: 'Schedule & Venues',
   },
   {

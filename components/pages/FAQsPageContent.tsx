@@ -233,7 +233,7 @@ export default function FAQsPageContent() {
                       Schedule &amp; Dates
                     </div>
                     <div className="relative z-10 text-xs sm:text-sm font-sans font-semibold text-[#6C151E] dark:text-[#F0A2B0] group-hover:text-white dark:group-hover:text-white transition-colors duration-300 mt-0.5">
-                      Oct 5–9 &amp; Oct 26–30
+                      Oct 8–10 &amp; Oct 26–30
                     </div>
                   </button>
 
@@ -294,7 +294,7 @@ export default function FAQsPageContent() {
                   Event Timeline
                 </span>
                 <div className="font-serif text-lg sm:text-xl font-bold text-white leading-tight group-hover:text-white transition-colors">
-                  Oct 5–9 &amp; 26–30
+                  Oct 8–10 &amp; 26–30
                 </div>
                 <span className="text-xs font-sans text-[#F0E6E3] dark:text-[#C4B9B8] mt-1">
                   Two-Phase Hybrid Festival
