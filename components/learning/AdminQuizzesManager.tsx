@@ -414,7 +414,7 @@ export function AdminQuizzesManager() {
       </div>
 
       {/* Session Navigation Tabs */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
         {CURRICULUM_SESSIONS.map((s) => {
           const isSelected = s.id === selectedSessionId;
           const sQuiz = quizzes[s.id] || SESSION_QUIZZES[s.id];

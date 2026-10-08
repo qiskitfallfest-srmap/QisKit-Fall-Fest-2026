@@ -153,15 +153,21 @@ export function LearningSidebar() {
   // Navigation Items Renderer
   const renderNavContent = () => (
     <>
-      <div className="font-mono text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] px-3 pb-2 pt-1">
-        Learning Phase
+      {/* Section 1: Learning Phase Header */}
+      <div className="pt-1 pb-2 px-1">
+        <div className="flex items-center gap-2 px-2">
+          <span className="font-mono text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
+            Learning Phase
+          </span>
+          <div className="flex-1 h-px bg-slate-200/80 dark:bg-[#3D1418]" />
+        </div>
       </div>
 
       <Link
         href="/learning"
         onClick={() => setIsMobileMenuOpen(false)}
         className={clsx(
-          'w-full flex items-center justify-between px-3 py-2 mb-1.5 rounded-lg transition-colors text-xs sm:text-sm font-semibold group',
+          'w-full flex items-center justify-between px-3 py-2 mb-2 rounded-lg transition-colors text-xs sm:text-sm font-semibold group',
           pathname === '/learning' && !activeChallengeDay
             ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] border border-burgundy/20 dark:border-burgundy/40'
             : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1C0A0D] border border-transparent'
@@ -194,14 +200,14 @@ export function LearningSidebar() {
         const dayChallenge = DAILY_COMPETITIONS[day.id];
 
         return (
-          <div key={day.id} className="mb-1.5">
+          <div key={day.id} className="mb-2">
             <button
               onClick={() => toggleDay(day.id)}
               className={clsx(
-                'w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors text-xs sm:text-sm font-semibold group cursor-pointer',
+                'w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors text-xs sm:text-sm font-semibold group cursor-pointer border',
                 isDayOpen
-                  ? 'bg-slate-100 dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3]'
-                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1C0A0D]'
+                  ? 'bg-slate-100/90 dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] border-slate-200/60 dark:border-[#3D1418]'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1C0A0D] border-transparent'
               )}
             >
               <div className="flex items-center gap-2 min-w-0 pr-2">
@@ -224,23 +230,28 @@ export function LearningSidebar() {
 
             {/* Expandable Sessions & Challenge */}
             {isDayOpen && (
-              <div className="mt-1 pl-2.5 sm:pl-3 space-y-0.5">
+              <div className="mt-1.5 ml-3 pl-3 border-l-2 border-slate-200/80 dark:border-[#3D1418] space-y-2.5 py-1">
                 {daySessions.map((sessionItem) => {
                   const isJustSessionActive =
                     pathname === `/learning/session/${sessionItem.id}`;
                   const isQuizActive =
                     pathname === `/learning/session/${sessionItem.id}/quiz`;
+                  const isQuizLocked = Boolean(quizzes[sessionItem.id]?.isLocked);
 
                   return (
-                    <div key={sessionItem.id} className="flex flex-col mb-0.5">
+                    <div
+                      key={sessionItem.id}
+                      className="flex flex-col group/session pb-2 border-b border-slate-200/50 dark:border-[#2D1014] last:border-b-0 last:pb-0"
+                    >
+                      {/* Session Item */}
                       <Link
                         href={`/learning/session/${sessionItem.id}`}
                         onClick={() => setIsMobileMenuOpen(false)}
                         className={clsx(
-                          'group flex items-start gap-2 px-2.5 py-1.5 rounded-md text-xs sm:text-sm transition-colors',
+                          'group flex items-start gap-2 px-2.5 py-1.5 rounded-lg text-xs sm:text-sm transition-colors',
                           isJustSessionActive
                             ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/25 dark:text-[#E89BA5] font-semibold'
-                            : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1C0A0D] hover:text-slate-900 dark:hover:text-[#FAF6F3] font-medium'
+                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1C0A0D] hover:text-slate-900 dark:hover:text-[#FAF6F3] font-medium'
                         )}
                       >
                         <PlayCircle
@@ -248,10 +259,10 @@ export function LearningSidebar() {
                             'w-3.5 h-3.5 shrink-0 mt-0.5',
                             isJustSessionActive
                               ? 'text-burgundy dark:text-[#E89BA5]'
-                              : 'text-slate-400'
+                              : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
                           )}
                         />
-                        <span className="leading-snug break-words flex-1">
+                        <span className="leading-snug break-words flex-1 text-xs">
                           {sessionItem.title}
                         </span>
                         {sessionItem.isLive && (
@@ -261,67 +272,99 @@ export function LearningSidebar() {
                         )}
                       </Link>
 
-                      {(() => {
-                        const isQuizLocked = Boolean(quizzes[sessionItem.id]?.isLocked);
-                        return (
-                          <Link
-                            href={`/learning/session/${sessionItem.id}/quiz`}
-                            onClick={() => setIsMobileMenuOpen(false)}
-                            className={clsx(
-                              'group flex items-center gap-2 px-2.5 py-1 ml-4 rounded-md text-[11px] sm:text-xs transition-colors',
-                              isQuizActive
-                                ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/25 dark:text-[#E89BA5] font-semibold'
-                                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1C0A0D] hover:text-slate-800 dark:hover:text-slate-200'
-                            )}
-                          >
+                      {/* Concept Quiz Sub-item with connected branch line */}
+                      <div className="relative pl-5 ml-2 mt-1 mb-0.5">
+                        {/* L-shaped curved branch line */}
+                        <div
+                          aria-hidden="true"
+                          className={clsx(
+                            'absolute left-0 top-0 bottom-1/2 w-3.5 border-b-2 border-l-2 rounded-bl-[6px] transition-colors pointer-events-none',
+                            isQuizActive
+                              ? 'border-burgundy dark:border-[#E89BA5]'
+                              : 'border-slate-300 dark:border-[#4A171E] group-hover/session:border-slate-400 dark:group-hover/session:border-[#6B222B]'
+                          )}
+                        />
+
+                        <Link
+                          href={`/learning/session/${sessionItem.id}/quiz`}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className={clsx(
+                            'group/quiz flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-all border shadow-2xs',
+                            isQuizActive
+                              ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/25 dark:text-[#E89BA5] border-burgundy/30 dark:border-burgundy/50 font-semibold ring-1 ring-burgundy/20'
+                              : 'bg-white/90 dark:bg-[#18080B] text-slate-700 dark:text-slate-300 border-slate-200/90 dark:border-[#3D1418] hover:bg-slate-50 dark:hover:bg-[#220B0F] hover:border-slate-300 dark:hover:border-[#521C23]'
+                          )}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
                             <Award
                               className={clsx(
-                                'w-3 h-3 shrink-0',
+                                'w-3.5 h-3.5 shrink-0',
                                 isQuizActive
                                   ? 'text-burgundy dark:text-[#E89BA5]'
                                   : isQuizLocked
                                   ? 'text-amber-500'
-                                  : 'text-slate-400'
+                                  : 'text-amber-600 dark:text-amber-400'
                               )}
                             />
-                            <span>Concept Quiz</span>
-                            {isQuizLocked && (
-                              <span className="ml-auto shrink-0 px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 font-mono text-[9px] font-semibold tracking-wide flex items-center gap-1">
-                                <Lock className="w-2.5 h-2.5" />
-                                Soon
-                              </span>
-                            )}
-                          </Link>
-                        );
-                      })()}
+                            <span className="font-semibold text-[11px] sm:text-xs truncate">
+                              Concept Quiz
+                            </span>
+                          </div>
+
+                          {isQuizLocked ? (
+                            <span className="shrink-0 px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 font-mono text-[9px] font-semibold tracking-wide flex items-center gap-1">
+                              <Lock className="w-2.5 h-2.5" />
+                              Soon
+                            </span>
+                          ) : (
+                            <span
+                              className={clsx(
+                                'shrink-0 px-1.5 py-0.5 rounded font-mono text-[9px] font-bold uppercase tracking-wider',
+                                isQuizActive
+                                  ? 'bg-burgundy text-white'
+                                  : 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20'
+                              )}
+                            >
+                              Quiz
+                            </span>
+                          )}
+                        </Link>
+                      </div>
                     </div>
                   );
                 })}
 
                 {/* Daily Challenge inside the day */}
                 {dayChallenge && (
-                  <Link
-                    href={`/learning?challenge=${day.id}`}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={clsx(
-                      'group flex items-start gap-2 px-2.5 py-1.5 mt-0.5 rounded-md text-xs sm:text-sm transition-colors',
-                      activeChallengeDay === String(day.id)
-                        ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/25 dark:text-[#E89BA5] font-semibold'
-                        : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1C0A0D] hover:text-slate-900 dark:hover:text-[#FAF6F3] font-medium'
-                    )}
-                  >
-                    <Award
+                  <div className="pt-2 mt-1 border-t border-slate-200/70 dark:border-[#3D1418]">
+                    <Link
+                      href={`/learning?challenge=${day.id}`}
+                      onClick={() => setIsMobileMenuOpen(false)}
                       className={clsx(
-                        'w-3.5 h-3.5 shrink-0 mt-0.5',
+                        'group flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border',
                         activeChallengeDay === String(day.id)
-                          ? 'text-burgundy dark:text-[#E89BA5]'
-                          : 'text-slate-400'
+                          ? 'bg-purple-500/10 text-purple-700 dark:text-purple-300 dark:bg-purple-500/20 border-purple-500/30 font-semibold'
+                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1C0A0D] border-slate-200/60 dark:border-[#3D1418]/60 hover:border-slate-300 dark:hover:border-[#521C23]'
                       )}
-                    />
-                    <span className="leading-snug break-words flex-1">
-                      Daily Challenge: {dayChallenge.title}
-                    </span>
-                  </Link>
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Award
+                          className={clsx(
+                            'w-3.5 h-3.5 shrink-0',
+                            activeChallengeDay === String(day.id)
+                              ? 'text-purple-600 dark:text-purple-400'
+                              : 'text-purple-500'
+                          )}
+                        />
+                        <span className="font-medium text-[11px] sm:text-xs truncate">
+                          Challenge: {dayChallenge.title}
+                        </span>
+                      </div>
+                      <span className="shrink-0 px-1.5 py-0.5 rounded font-mono text-[9px] font-bold bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20 uppercase tracking-wider">
+                        Daily
+                      </span>
+                    </Link>
+                  </div>
                 )}
               </div>
             )}
@@ -329,8 +372,14 @@ export function LearningSidebar() {
         );
       })}
 
-      <div className="font-mono text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] px-3 pb-2 pt-3 sm:pt-4">
-        Hackathon Phase
+      {/* Section 2: Hackathon Phase Header */}
+      <div className="pt-4 pb-2 px-1">
+        <div className="flex items-center gap-2 px-2">
+          <span className="font-mono text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
+            Hackathon Phase
+          </span>
+          <div className="flex-1 h-px bg-slate-200/80 dark:bg-[#3D1418]" />
+        </div>
       </div>
 
       <Link

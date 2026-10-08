@@ -42,6 +42,12 @@ export default function DedicatedQuizPage() {
     questionResults: Record<string, boolean>;
   } | null>(null);
 
+  React.useEffect(() => {
+    if (sessionId === 'session-2') {
+      router.replace('/learning/session/session-1/quiz');
+    }
+  }, [sessionId, router]);
+
   if (isQuizLoading) {
     return (
       <AuthGate>

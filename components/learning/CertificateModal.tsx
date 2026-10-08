@@ -344,26 +344,26 @@ export function CertificateModal({
               {/* Checklist Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                 <div className="p-3 bg-slate-50 dark:bg-[#1C0A0D] rounded-lg border border-slate-200/80 dark:border-[#3D1418] space-y-1">
-                  <span className="font-bold text-slate-700 dark:text-slate-300 block">6 Masterclass Lectures:</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-300 block">{data?.totalSessions || 5} Masterclass Lectures:</span>
                   <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-                    {data?.sessionsCompleted === 6 ? (
+                    {data?.sessionsCompleted === (data?.totalSessions || 5) ? (
                       <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     ) : (
                       <Clock className="w-4 h-4 text-amber-500" />
                     )}
-                    <span>{data?.sessionsCompleted} of 6 Completed</span>
+                    <span>{data?.sessionsCompleted} of {data?.totalSessions || 5} Completed</span>
                   </div>
                 </div>
 
                 <div className="p-3 bg-slate-50 dark:bg-[#1C0A0D] rounded-lg border border-slate-200/80 dark:border-[#3D1418] space-y-1">
-                  <span className="font-bold text-slate-700 dark:text-slate-300 block">6 Concept Quizzes:</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-300 block">{data?.totalSessions || 5} Concept Quizzes:</span>
                   <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-                    {data?.quizzesPassed === 6 ? (
+                    {data?.quizzesPassed === (data?.totalSessions || 5) ? (
                       <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     ) : (
                       <Clock className="w-4 h-4 text-amber-500" />
                     )}
-                    <span>{data?.quizzesPassed} of 6 Passed (Avg: {data?.averageQuizScore}%)</span>
+                    <span>{data?.quizzesPassed} of {data?.totalSessions || 5} Passed (Avg: {data?.averageQuizScore}%)</span>
                   </div>
                 </div>
 

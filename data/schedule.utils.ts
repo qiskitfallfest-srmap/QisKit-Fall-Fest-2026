@@ -123,17 +123,16 @@ export function getSessionAction(session: Session, phase: SchedulePhase): Sessio
     };
   }
 
-  // Session 2
+  // Session 1 (Quantum Material segment)
   if (
     url === '/learning/session/session-2' ||
     sId.includes('s2') ||
-    title.includes('session 2') ||
     title.includes('quantum material')
   ) {
     return {
-      href: '/learning/session/session-2',
-      cardLabel: 'Enter Session 2',
-      detailLabel: 'Launch Learning Session 2',
+      href: '/learning/session/session-1',
+      cardLabel: 'Enter Session 1',
+      detailLabel: 'Launch Learning Session 1',
     };
   }
 

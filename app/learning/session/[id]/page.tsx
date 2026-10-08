@@ -57,6 +57,12 @@ export default function SessionPlayerPage() {
   }, [sessionId]);
 
   useEffect(() => {
+    if (sessionId === 'session-2') {
+      router.replace('/learning/session/session-1');
+    }
+  }, [sessionId, router]);
+
+  useEffect(() => {
     fetchSessionProgress();
     if (session) {
       trackLectureView(sessionId, session.title);
