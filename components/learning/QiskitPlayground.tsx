@@ -214,6 +214,9 @@ export function QiskitPlayground({
     setRunStderr('');
     setLastRunSuccess(null);
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
     try {
       const res = await fetch('/api/qiskit/run', {
         method: 'POST',
@@ -222,9 +225,23 @@ export function QiskitPlayground({
           problemId: challenge.id,
           code,
         }),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
-      const data = await res.json();
+      const contentType = res.headers.get('content-type') || '';
+      let data: any = {};
+      if (contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        const text = await res.text();
+        throw new Error(
+          res.status === 504
+            ? 'Execution timed out on server.'
+            : `Server response error (${res.status}): ${text.slice(0, 120)}`
+        );
+      }
+
       setRunExecutionMs(data.executionTimeMs || 0);
 
       if (!res.ok || !data.success) {
@@ -242,8 +259,13 @@ export function QiskitPlayground({
         }
       }
     } catch (err: any) {
+      clearTimeout(timeoutId);
       setLastRunSuccess(false);
-      setRunStderr(`Connection error: ${err.message || 'Failed to communicate with runner.'}`);
+      setRunStderr(
+        err.name === 'AbortError'
+          ? 'Execution timed out after 10 seconds. Check for infinite loops or long-running computations.'
+          : `Execution error: ${err.message || 'Failed to communicate with runner.'}`
+      );
     } finally {
       setIsRunning(false);
     }
@@ -260,6 +282,9 @@ export function QiskitPlayground({
       status: 'queued',
     });
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
     try {
       const res = await fetch('/api/qiskit/submit', {
         method: 'POST',
@@ -268,9 +293,18 @@ export function QiskitPlayground({
           problemId: challenge.id,
           code,
         }),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
-      const data = await res.json();
+      const contentType = res.headers.get('content-type') || '';
+      let data: any = {};
+      if (contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        const text = await res.text();
+        throw new Error(`Server error (${res.status}): ${text.slice(0, 120)}`);
+      }
 
       if (!res.ok || !data.success) {
         setSubmission({
@@ -290,14 +324,16 @@ export function QiskitPlayground({
 
       pollSubmissionStatus(subId);
     } catch (err: any) {
+      clearTimeout(timeoutId);
       setSubmission({
         submissionId: '',
         status: 'failed',
-        errorMessage: err.message || 'Network error during submission.',
+        errorMessage: err.name === 'AbortError' ? 'Submission timed out.' : err.message || 'Network error during submission.',
       });
       setIsSubmitting(false);
     }
   }, [isRunning, isSubmitting, challenge.id, code]);
+
 
   // Global event integration with top-navbar Run / Submit buttons
   useEffect(() => {

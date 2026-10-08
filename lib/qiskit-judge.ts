@@ -1,9 +1,11 @@
 import { spawn } from 'child_process';
 import path from 'path';
+import fs from 'fs';
 import crypto from 'crypto';
 import { supabaseAdmin } from './supabase-admin';
 import { redis, cacheAside } from './redis';
 import { QISKIT_CHALLENGES } from '@/data/qiskit/challenges';
+import { evaluateProblemWithTypeScript } from './qiskit-evaluator-ts';
 
 // In-memory & Redis fallback store for submissions when database tables are initializing
 export const fallbackSubmissions = new Map<string, any>();
@@ -171,7 +173,8 @@ export async function incrementSubmissionCount(email: string, problemId: string)
 }
 
 /**
- * Dispatches code execution to remote Judge service (if configured) or local Python runner.
+ * Dispatches code execution to remote Judge service (if configured), local Python runner,
+ * or ultra-fast built-in TypeScript Quantum Circuit Evaluator (default for Vercel Serverless).
  */
 export async function dispatchJudgeEvaluation(
   problemId: string,
@@ -184,6 +187,8 @@ export async function dispatchJudgeEvaluation(
   // 1. Try remote judge service if configured
   if (judgeUrl) {
     try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 4000);
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
@@ -199,19 +204,33 @@ export async function dispatchJudgeEvaluation(
           code: sourceCode,
           mode,
         }),
+        signal: controller.signal,
       });
+      clearTimeout(timer);
 
       if (res.ok) {
         return (await res.json()) as JudgeEvaluationResult;
       }
-      console.warn(`[Judge Service] HTTP ${res.status}: ${await res.text()}`);
     } catch (err) {
-      console.warn('[Judge Service] Connection failed, attempting local fallback:', err);
+      console.warn('[Judge Service] Connection failed, attempting local/TS fallback:', err);
     }
   }
 
-  // 2. Local execution via child_process
-  return executeLocalRunner(problemId, sourceCode, mode);
+  // 2. Try local Python runner ONLY if runner.py exists and is executable
+  const runnerPath = path.join(process.cwd(), 'qiskit-judge', 'runner.py');
+  if (fs.existsSync(runnerPath)) {
+    try {
+      const localRes = await executeLocalRunner(problemId, sourceCode, mode);
+      if (localRes && !localRes.stderr?.includes("No module named 'qiskit'")) {
+        return localRes;
+      }
+    } catch (err) {
+      console.warn('[Local Python Runner] Failed, falling back to TypeScript evaluator:', err);
+    }
+  }
+
+  // 3. Ultra-Fast Built-in TypeScript Quantum Evaluator (Guaranteed to work on Vercel Serverless)
+  return evaluateProblemWithTypeScript(problemId, sourceCode, mode);
 }
 
 /**
@@ -231,24 +250,82 @@ function executeLocalRunner(
       mode,
     });
 
-    const py = spawn('python3', [runnerPath], {
-      stdio: ['pipe', 'pipe', 'pipe'],
-      env: {
-        ...process.env,
-        PYTHONPATH: path.join(process.cwd(), 'qiskit-judge'),
-      },
-    });
-
     let stdout = '';
     let stderr = '';
     let timedOut = false;
+    let resolved = false;
+
+    const safeResolve = (res: JudgeEvaluationResult) => {
+      if (!resolved) {
+        resolved = true;
+        resolve(res);
+      }
+    };
+
+    let py: any;
+    try {
+      py = spawn('python3', [runnerPath], {
+        stdio: ['pipe', 'pipe', 'pipe'],
+        env: {
+          ...process.env,
+          PYTHONPATH: path.join(process.cwd(), 'qiskit-judge'),
+        },
+      });
+    } catch (e: any) {
+      return safeResolve({
+        success: false,
+        mode,
+        score: 0,
+        max_score: 0,
+        passed_tests: 0,
+        total_tests: 0,
+        execution_time_ms: 0,
+        stdout: '',
+        stderr: e.message || 'Python not available',
+        error_message: 'Python runner execution error',
+        public_results: [],
+        hidden_results: [],
+      });
+    }
 
     const timer = setTimeout(() => {
       timedOut = true;
       try {
         py.kill('SIGKILL');
       } catch {}
-    }, 15000); // 15 second max timeout
+      safeResolve({
+        success: false,
+        mode,
+        score: 0,
+        max_score: 0,
+        passed_tests: 0,
+        total_tests: 0,
+        execution_time_ms: 4000,
+        stdout: '',
+        stderr: 'Execution timed out after 4 seconds.',
+        error_message: 'Execution timed out.',
+        public_results: [],
+        hidden_results: [],
+      });
+    }, 4000); // 4 second max timeout for Vercel
+
+    py.on('error', (err: any) => {
+      clearTimeout(timer);
+      safeResolve({
+        success: false,
+        mode,
+        score: 0,
+        max_score: 0,
+        passed_tests: 0,
+        total_tests: 0,
+        execution_time_ms: Date.now() - startTime,
+        stdout: '',
+        stderr: err?.message || 'Python3 process error',
+        error_message: 'Local Python runtime error',
+        public_results: [],
+        hidden_results: [],
+      });
+    });
 
     py.stdout?.on('data', (d: Buffer | string) => {
       stdout += d.toString();
@@ -262,28 +339,13 @@ function executeLocalRunner(
       clearTimeout(timer);
       const executionTimeMs = Date.now() - startTime;
 
-      if (timedOut) {
-        return resolve({
-          success: false,
-          mode,
-          score: 0,
-          max_score: 0,
-          passed_tests: 0,
-          total_tests: 0,
-          execution_time_ms: 15000,
-          stdout: '',
-          stderr: 'Execution timed out after 15 seconds.',
-          error_message: 'Execution timed out.',
-          public_results: [],
-          hidden_results: [],
-        });
-      }
+      if (timedOut) return;
 
       try {
         const parsed = JSON.parse(stdout.trim());
-        resolve(parsed as JudgeEvaluationResult);
+        safeResolve(parsed as JudgeEvaluationResult);
       } catch {
-        resolve({
+        safeResolve({
           success: false,
           mode,
           score: 0,
@@ -300,8 +362,10 @@ function executeLocalRunner(
       }
     });
 
-    py.stdin?.write(payload);
-    py.stdin?.end();
+    try {
+      py.stdin?.write(payload);
+      py.stdin?.end();
+    } catch {}
   });
 }
 
