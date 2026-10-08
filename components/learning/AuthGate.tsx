@@ -310,7 +310,7 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
                   Unstop
                   <ExternalLink className="w-3 h-3 inline" />
                 </a>{' '}
-                and check back after <strong>October 7, 11:59 PM</strong>.
+                and check back after <strong>few hours</strong>.
               </p>
             </div>
           </div>
@@ -350,7 +350,7 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
                     Unstop
                     <ExternalLink className="w-3 h-3 inline" />
                   </a>
-                  <span> and check back after <strong>October 7, 11:59 PM</strong>.</span>
+                  <span> and check back after <strong>few hours</strong>.</span>
                 </>
               ) : (
                 <span className="font-medium">{errorMessage}</span>

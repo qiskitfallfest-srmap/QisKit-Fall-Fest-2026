@@ -70,6 +70,7 @@ export interface ProblemStatement {
   vertical: VerticalType;
   title: string;
   subtitle: string;
+  description: string;
   objective: string;
   mathematicalFormulation: string;
   quantumFormulation: string;

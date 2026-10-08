@@ -24,6 +24,19 @@ export function ProblemStatementDossier({ ps }: ProblemStatementDossierProps) {
       </div>
 
       <div className="p-6 space-y-6">
+        {/* Expanded Description from PDF */}
+        {ps.description && (
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-[#FAF6F3] mb-2 flex items-center gap-1.5">
+              <FileText className="w-3.5 h-3.5 text-burgundy dark:text-[#E89BA5]" />
+              Problem Overview & Context
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-[#1C0A0D] p-3.5 rounded-lg border border-slate-200/80 dark:border-[#3D1418]">
+              {ps.description}
+            </p>
+          </div>
+        )}
+
         {/* Objective */}
         <div>
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-[#FAF6F3] mb-2 flex items-center gap-1.5">

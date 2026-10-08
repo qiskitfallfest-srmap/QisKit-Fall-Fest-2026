@@ -22,6 +22,9 @@ import {
   ArrowLeft,
   Lock,
   Sparkles,
+  Edit3,
+  X,
+  Check,
 } from 'lucide-react';
 
 const VERTICALS: VerticalType[] = [
@@ -61,6 +64,24 @@ export default function HackathonWorkspacePage() {
   const [isSubmittingRepo, setIsSubmittingRepo] = useState(false);
   const [repoSuccessMsg, setRepoSuccessMsg] = useState('');
   const [repoErrorMsg, setRepoErrorMsg] = useState('');
+
+  // Problem statement edit state (post-confirmation)
+  const [isChangingPS, setIsChangingPS] = useState(false);
+  const [changeVertical, setChangeVertical] = useState<VerticalType>('Quantum Chemistry');
+  const [changePSId, setChangePSId] = useState('PS-C1');
+  const [isSubmittingPSChange, setIsSubmittingPSChange] = useState(false);
+  const [changePSError, setChangePSError] = useState('');
+  const [changePSSuccess, setChangePSSuccess] = useState('');
+
+  // Sync change state when team loads
+  useEffect(() => {
+    if (team?.vertical) {
+      setChangeVertical(team.vertical);
+    }
+    if (team?.problem_statement_id) {
+      setChangePSId(team.problem_statement_id);
+    }
+  }, [team?.vertical, team?.problem_statement_id]);
 
   // Release status state (Temporarily set to true for testing)
   const [isReleased, setIsReleased] = useState(true);
@@ -221,7 +242,51 @@ export default function HackathonWorkspacePage() {
     }
   }
 
+  function handleChangeVertical(vert: VerticalType) {
+    setChangeVertical(vert);
+    const firstInVert = PROBLEM_STATEMENTS.find((ps) => ps.vertical === vert);
+    if (firstInVert) {
+      setChangePSId(firstInVert.id);
+    }
+  }
+
+  async function handleUpdateProblemStatement(e?: React.FormEvent) {
+    if (e) e.preventDefault();
+    if (!team?.id || !changePSId || !changeVertical) return;
+
+    setIsSubmittingPSChange(true);
+    setChangePSError('');
+    setChangePSSuccess('');
+
+    try {
+      const res = await fetch('/api/hackathon/team', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          teamId: team.id,
+          vertical: changeVertical,
+          problemStatementId: changePSId,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setChangePSError(data.error || 'Failed to update problem statement.');
+        return;
+      }
+
+      setChangePSSuccess(`Successfully switched to ${changePSId}! The technical dossier below is now updated.`);
+      await fetchTeamData();
+      setIsChangingPS(false);
+    } catch (err: any) {
+      setChangePSError(err?.message || 'Error updating problem statement.');
+    } finally {
+      setIsSubmittingPSChange(false);
+    }
+  }
+
   const verticalStatements = PROBLEM_STATEMENTS.filter((ps) => ps.vertical === selectedVertical);
+  const changeVerticalStatements = PROBLEM_STATEMENTS.filter((ps) => ps.vertical === changeVertical);
   const selectedPSObj = PROBLEM_STATEMENTS.find((ps) => ps.id === (team ? team.problem_statement_id : selectedPSId));
 
   return (
@@ -349,9 +414,23 @@ export default function HackathonWorkspacePage() {
                       Your Hackathon Team
                     </span>
                     <h2 className="text-2xl font-bold text-slate-900 dark:text-[#FAF6F3]">{team.name}</h2>
-                    <p className="text-base text-slate-600 dark:text-slate-300 mt-1">
-                      Track: <span className="font-semibold text-slate-800 dark:text-[#FAF6F3]">{team.vertical}</span> · Problem Statement: <span className="font-mono font-bold text-burgundy dark:text-[#E89BA5]">{team.problem_statement_id}</span>
-                    </p>
+                    <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600 dark:text-slate-300 mt-1">
+                      <span>Track: <span className="font-semibold text-slate-800 dark:text-[#FAF6F3]">{team.vertical}</span></span>
+                      <span>·</span>
+                      <span>Problem Statement: <span className="font-mono font-bold text-burgundy dark:text-[#E89BA5]">{team.problem_statement_id}</span></span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setChangeVertical(team.vertical);
+                          setChangePSId(team.problem_statement_id);
+                          setIsChangingPS(!isChangingPS);
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-burgundy/30 bg-burgundy/5 dark:bg-burgundy/20 hover:bg-burgundy/10 text-burgundy dark:text-[#E89BA5] text-xs font-semibold transition-all cursor-pointer ml-0 sm:ml-1 mt-1 sm:mt-0"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>{isChangingPS ? 'Close Switcher' : 'Change Problem Statement'}</span>
+                      </button>
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -361,6 +440,155 @@ export default function HackathonWorkspacePage() {
                     </span>
                   </div>
                 </div>
+
+                {/* Success Feedback Alert */}
+                {changePSSuccess && (
+                  <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm flex items-center justify-between gap-2 animate-in fade-in">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <span>{changePSSuccess}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setChangePSSuccess('')}
+                      className="text-emerald-600 hover:text-emerald-800 dark:hover:text-emerald-200 p-1 rounded cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Change Problem Statement Drawer / Panel */}
+                {isChangingPS && (
+                  <div className="p-4 sm:p-5 rounded-xl border-2 border-burgundy/30 dark:border-[#E89BA5]/30 bg-slate-50/70 dark:bg-[#1A090C] space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="flex items-start justify-between gap-2 pb-3 border-b border-slate-200 dark:border-[#3D1418]">
+                      <div>
+                        <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-[#FAF6F3] flex items-center gap-2">
+                          <Edit3 className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
+                          Switch Problem Statement for {team.name}
+                        </h4>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                          You can switch to any problem statement at any time. Your team roster, team name, and code submissions remain completely safe and untouched.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsChangingPS(false)}
+                        className="p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+                        aria-label="Close editor"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Change Vertical Select */}
+                    <div>
+                      <label className="block text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
+                        Domain Vertical:
+                      </label>
+                      <select
+                        value={changeVertical}
+                        onChange={(e) => handleChangeVertical(e.target.value as VerticalType)}
+                        className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-300 dark:border-[#3D1418] rounded-lg bg-white dark:bg-[#150709] font-medium text-slate-900 dark:text-[#FAF6F3] focus:outline-none focus:ring-1 focus:ring-burgundy"
+                      >
+                        {VERTICALS.map((v) => (
+                          <option key={v} value={v}>
+                            {v}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Statement Radio Cards with Full Description from PDF */}
+                    <div className="space-y-3">
+                      <label className="block text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200">
+                        Select Problem Statement in {changeVertical}:
+                      </label>
+                      {changeVerticalStatements.map((ps) => {
+                        const isChosen = changePSId === ps.id;
+                        return (
+                          <label
+                            key={ps.id}
+                            className={`block p-3.5 sm:p-4 rounded-xl border text-xs sm:text-sm cursor-pointer transition-all ${
+                              isChosen
+                                ? 'bg-burgundy/10 dark:bg-burgundy/30 border-burgundy dark:border-[#E89BA5] ring-1 ring-burgundy dark:ring-[#E89BA5] text-slate-900 dark:text-[#FAF6F3] shadow-xs'
+                                : 'bg-white dark:bg-[#150709] border-slate-200 dark:border-[#3D1418] text-slate-700 dark:text-slate-300 hover:bg-slate-100/60 dark:hover:bg-[#200B0E]'
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <input
+                                type="radio"
+                                name="changeProblemStatement"
+                                value={ps.id}
+                                checked={isChosen}
+                                onChange={() => setChangePSId(ps.id)}
+                                className="mt-1 text-burgundy focus:ring-burgundy cursor-pointer shrink-0"
+                              />
+                              <div className="flex-1 min-w-0 space-y-1">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="font-bold text-slate-900 dark:text-[#FAF6F3] font-mono text-xs bg-slate-200 dark:bg-[#250D11] px-2 py-0.5 rounded border border-slate-300/60 dark:border-[#3D1418]">
+                                    {ps.id}
+                                  </span>
+                                  <span className="font-semibold text-slate-900 dark:text-[#FAF6F3]">
+                                    {ps.title.split(': ')[1] || ps.title}
+                                  </span>
+                                </div>
+                                <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed">
+                                  {ps.subtitle}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Full Description from PDF */}
+                            {isChosen && ps.description && (
+                              <div className="mt-3.5 pt-3.5 border-t border-burgundy/20 dark:border-[#E89BA5]/30 animate-in fade-in slide-in-from-top-1 duration-200">
+                                <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-burgundy dark:text-[#E89BA5] mb-2">
+                                  <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                                  <span>Full Problem Description & Scientific Context</span>
+                                </div>
+                                <div className="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-white/80 dark:bg-[#120507] p-3.5 sm:p-4 rounded-lg border border-burgundy/15 dark:border-burgundy/40 font-normal">
+                                  {ps.description}
+                                </div>
+                              </div>
+                            )}
+                          </label>
+                        );
+                      })}
+                    </div>
+
+                    {changePSError && (
+                      <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-300 text-xs sm:text-sm flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
+                        <span>{changePSError}</span>
+                      </div>
+                    )}
+
+                    <div className="flex flex-col sm:flex-row items-center gap-2 pt-2">
+                      <button
+                        type="button"
+                        onClick={handleUpdateProblemStatement}
+                        disabled={isSubmittingPSChange || changePSId === team.problem_statement_id}
+                        className="w-full sm:w-auto px-4 py-2.5 bg-burgundy hover:bg-burgundy-deep text-white text-xs sm:text-sm font-bold rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                      >
+                        {isSubmittingPSChange ? (
+                          <span>Updating in Supabase...</span>
+                        ) : (
+                          <>
+                            <Check className="w-4 h-4" />
+                            <span>Confirm & Switch to {changePSId}</span>
+                          </>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsChangingPS(false)}
+                        className="w-full sm:w-auto px-4 py-2.5 bg-slate-100 dark:bg-[#1C0A0D] hover:bg-slate-200 dark:hover:bg-[#250D11] text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-semibold rounded-lg transition-colors cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Team Roster */}
                 <div>
@@ -525,37 +753,54 @@ export default function HackathonWorkspacePage() {
                     <label className="block text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2">
                       Choose Problem Statement in {selectedVertical}:
                     </label>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {verticalStatements.map((ps) => {
                         const isSelected = selectedPSId === ps.id;
                         return (
                           <label
                             key={ps.id}
-                            className={`flex items-start gap-3 p-3.5 rounded-lg border text-sm cursor-pointer transition-all ${
+                            className={`block p-3.5 sm:p-4 rounded-xl border text-sm cursor-pointer transition-all ${
                               isSelected
-                                ? 'bg-burgundy/5 dark:bg-burgundy/25 border-burgundy dark:border-[#E89BA5] ring-1 ring-burgundy dark:ring-[#E89BA5] text-slate-900 dark:text-[#FAF6F3]'
+                                ? 'bg-burgundy/5 dark:bg-burgundy/25 border-burgundy dark:border-[#E89BA5] ring-1 ring-burgundy dark:ring-[#E89BA5] text-slate-900 dark:text-[#FAF6F3] shadow-xs'
                                 : 'bg-slate-50/50 dark:bg-[#1C0A0D]/60 border-slate-200 dark:border-[#3D1418] text-slate-700 dark:text-slate-300 hover:bg-slate-100/60 dark:hover:bg-[#250D11]'
                             }`}
                           >
-                            <input
-                              type="radio"
-                              name="problemStatement"
-                              value={ps.id}
-                              checked={isSelected}
-                              onChange={() => setSelectedPSId(ps.id)}
-                              className="mt-0.5 text-burgundy focus:ring-burgundy"
-                            />
-                            <div className="space-y-0.5">
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-slate-900 dark:text-[#FAF6F3] font-mono text-sm bg-slate-200 dark:bg-[#250D11] px-1.5 py-0.2 rounded">
-                                  {ps.id}
-                                </span>
-                                <span className="font-semibold">{ps.title.split(': ')[1] || ps.title}</span>
+                            <div className="flex items-start gap-3">
+                              <input
+                                type="radio"
+                                name="problemStatement"
+                                value={ps.id}
+                                checked={isSelected}
+                                onChange={() => setSelectedPSId(ps.id)}
+                                className="mt-1 text-burgundy focus:ring-burgundy cursor-pointer shrink-0"
+                              />
+                              <div className="flex-1 min-w-0 space-y-1">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="font-bold text-slate-900 dark:text-[#FAF6F3] font-mono text-xs sm:text-sm bg-slate-200 dark:bg-[#250D11] px-2 py-0.5 rounded border border-slate-300/60 dark:border-[#3D1418]">
+                                    {ps.id}
+                                  </span>
+                                  <span className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-[#FAF6F3]">
+                                    {ps.title.split(': ')[1] || ps.title}
+                                  </span>
+                                </div>
+                                <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm leading-relaxed">
+                                  {ps.subtitle}
+                                </p>
                               </div>
-                              <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
-                                {ps.subtitle}
-                              </p>
                             </div>
+
+                            {/* Description - Revealed on selection */}
+                            {isSelected && ps.description && (
+                              <div className="mt-3.5 pt-3.5 border-t border-burgundy/15 dark:border-[#E89BA5]/20 animate-in fade-in slide-in-from-top-1 duration-200">
+                                <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-burgundy dark:text-[#E89BA5] mb-2">
+                                  <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                                  <span>Problem Description & Scientific Context</span>
+                                </div>
+                                <div className="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-white/70 dark:bg-[#150709]/70 p-3.5 sm:p-4 rounded-lg border border-burgundy/10 dark:border-burgundy/30 font-normal">
+                                  {ps.description}
+                                </div>
+                              </div>
+                            )}
                           </label>
                         );
                       })}
