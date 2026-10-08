@@ -95,8 +95,8 @@ export async function checkCertificateEligibility(
 
   for (const session of CURRICULUM_SESSIONS) {
     const prog = progressMap.get(session.id);
-    const videoDone = prog?.video_completed === true;
     const quizDone = prog?.quiz_passed === true;
+    const videoDone = prog?.video_completed === true || quizDone;
 
     if (videoDone) {
       sessionsCompleted++;
@@ -358,24 +358,31 @@ export async function mintCertificate({
     verificationUrl,
   });
 
-  // Upload SVG asset to Supabase Storage bucket 'certificates'
+  // Upload SVG asset to Supabase Storage bucket 'certificates' (optional bucket fallback)
   const filePath = `masterclass/2026/${serialNumber}.svg`;
-  const { error: uploadError } = await supabase.storage
-    .from('certificates')
-    .upload(filePath, Buffer.from(svgContent, 'utf-8'), {
-      contentType: 'image/svg+xml',
-      upsert: true,
-      cacheControl: '31536000',
-    });
-
   let certificateUrl = `${siteUrl}/verify-certificate/${serialNumber}`;
-  if (!uploadError) {
-    const { data: publicUrlData } = supabase.storage
+
+  try {
+    const { error: uploadError } = await supabase.storage
       .from('certificates')
-      .getPublicUrl(filePath);
-    if (publicUrlData?.publicUrl) {
-      certificateUrl = publicUrlData.publicUrl;
+      .upload(filePath, Buffer.from(svgContent, 'utf-8'), {
+        contentType: 'image/svg+xml',
+        upsert: true,
+        cacheControl: '31536000',
+      });
+
+    if (!uploadError) {
+      const { data: publicUrlData } = supabase.storage
+        .from('certificates')
+        .getPublicUrl(filePath);
+      if (publicUrlData?.publicUrl) {
+        certificateUrl = publicUrlData.publicUrl;
+      }
+    } else {
+      console.warn('[Mint Certificate] Storage upload warning:', uploadError.message);
     }
+  } catch (storageErr) {
+    console.warn('[Mint Certificate] Storage upload exception, using verification URL fallback:', storageErr);
   }
 
   // Insert into issued_certificates table

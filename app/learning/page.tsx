@@ -83,7 +83,7 @@ function LearningDashboardContent() {
 
   async function fetchProgress() {
     try {
-      const res = await fetch('/api/learning/progress');
+      const res = await fetch('/api/learning/progress', { cache: 'no-store' });
       const data = await res.json();
       if (data?.progress) {
         setProgress(data.progress);
@@ -95,7 +95,7 @@ function LearningDashboardContent() {
 
   async function fetchCompetitions() {
     try {
-      const res = await fetch('/api/learning/competition-submit');
+      const res = await fetch('/api/learning/competition-submit', { cache: 'no-store' });
       const data = await res.json();
       if (data.submissions) {
         setCompetitions(data.submissions);

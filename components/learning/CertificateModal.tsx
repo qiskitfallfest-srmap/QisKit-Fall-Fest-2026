@@ -66,7 +66,9 @@ export function CertificateModal({
     setLoading(true);
     setErrorMessage('');
     try {
-      const res = await fetch('/api/learning/certificate/eligibility');
+      const res = await fetch('/api/learning/certificate/eligibility', {
+        cache: 'no-store',
+      });
       const json = await res.json();
       if (res.ok && json.success) {
         setData(json);

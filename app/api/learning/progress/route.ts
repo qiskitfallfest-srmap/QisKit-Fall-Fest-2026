@@ -9,11 +9,16 @@ import {
 import { CURRICULUM_SESSIONS } from '@/data/learning/curriculum';
 import { SESSION_QUIZZES } from '@/data/learning/quizzes';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   const session = await getServerSession();
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  const normalizedEmail = session.email.trim().toLowerCase();
 
   try {
     // 1. Check if global lock override is active (Cache-Aside with 1-hr TTL)
@@ -33,12 +38,12 @@ export async function GET() {
 
     // 2. Fetch user progress records (Cache-Aside with 10-min TTL)
     const records = await getUserProgressCached<any[]>(
-      session.email,
+      normalizedEmail,
       async () => {
         const { data, error } = await supabase
           .from('user_progress')
           .select('*')
-          .ilike('email', session.email);
+          .ilike('email', normalizedEmail);
 
         if (error) throw error;
         return data || [];
@@ -66,8 +71,8 @@ export async function GET() {
     for (let i = 0; i < CURRICULUM_SESSIONS.length; i++) {
       const sess = CURRICULUM_SESSIONS[i];
       const record = progressMap.get(sess.id);
-      const isVideoDone = record?.video_completed || false;
-      const isQuizPassed = record?.quiz_passed || false;
+      const isQuizPassed = record?.quiz_passed === true;
+      const isVideoDone = record?.video_completed === true || isQuizPassed;
       const isDone = isVideoDone && isQuizPassed;
 
       const isUnlocked = isLockOverridden || previousSessionCompleted;
@@ -84,11 +89,20 @@ export async function GET() {
       previousSessionCompleted = isDone;
     }
 
-    return NextResponse.json({
-      email: session.email,
-      isLockOverridden,
-      progress: computedProgress,
-    });
+    return NextResponse.json(
+      {
+        email: normalizedEmail,
+        isLockOverridden,
+        progress: computedProgress,
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          Pragma: 'no-cache',
+          Expires: '0',
+        },
+      }
+    );
   } catch (error) {
     console.error('Error fetching progress:', error);
     return NextResponse.json(
@@ -104,6 +118,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const normalizedEmail = session.email.trim().toLowerCase();
+
   try {
     const body = await request.json();
     const { sessionId, action, userAnswers } = body;
@@ -116,13 +132,26 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === 'mark_video') {
+      // Query existing progress to avoid regressing existing quiz state
+      const { data: existingProgress } = await supabase
+        .from('user_progress')
+        .select('*')
+        .ilike('email', normalizedEmail)
+        .eq('session_id', sessionId)
+        .maybeSingle();
+
       const { data, error } = await supabase
         .from('user_progress')
         .upsert(
           {
-            email: session.email,
+            email: normalizedEmail,
             session_id: sessionId,
             video_completed: true,
+            quiz_passed: existingProgress?.quiz_passed ?? false,
+            quiz_score: existingProgress?.quiz_score ?? 0,
+            completed_at: existingProgress?.quiz_passed
+              ? existingProgress?.completed_at || new Date().toISOString()
+              : null,
           },
           { onConflict: 'email,session_id' }
         )
@@ -132,7 +161,7 @@ export async function POST(request: NextRequest) {
       if (error) throw error;
 
       // Invalidate cache-aside progress cache
-      await invalidateUserProgressCache(session.email);
+      await invalidateUserProgressCache(normalizedEmail);
 
       return NextResponse.json({ success: true, data });
     }
@@ -147,7 +176,7 @@ export async function POST(request: NextRequest) {
       let correctCount = 0;
       const questionResults: Record<string, boolean> = {};
 
-      quiz.questions.forEach((q, idx) => {
+      quiz.questions.forEach((q) => {
         const selected = userAnswers?.[q.id];
         const isCorrect = selected === q.correctIndex;
         if (isCorrect) correctCount++;
@@ -159,15 +188,31 @@ export async function POST(request: NextRequest) {
       );
       const passed = scorePercent >= quiz.passingScore;
 
+      // Query existing progress to prevent regression of passing status
+      const { data: existingProgress } = await supabase
+        .from('user_progress')
+        .select('*')
+        .ilike('email', normalizedEmail)
+        .eq('session_id', sessionId)
+        .maybeSingle();
+
+      const finalPassed = passed || existingProgress?.quiz_passed === true;
+      const finalVideoCompleted =
+        existingProgress?.video_completed === true || passed;
+      const finalScore = Math.max(scorePercent, existingProgress?.quiz_score || 0);
+
       const { data, error } = await supabase
         .from('user_progress')
         .upsert(
           {
-            email: session.email,
+            email: normalizedEmail,
             session_id: sessionId,
-            quiz_score: scorePercent,
-            quiz_passed: passed,
-            completed_at: passed ? new Date().toISOString() : null,
+            quiz_score: finalScore,
+            quiz_passed: finalPassed,
+            video_completed: finalVideoCompleted,
+            completed_at: finalPassed
+              ? existingProgress?.completed_at || new Date().toISOString()
+              : null,
           },
           { onConflict: 'email,session_id' }
         )
@@ -177,7 +222,7 @@ export async function POST(request: NextRequest) {
       if (error) throw error;
 
       // Invalidate cache-aside progress cache
-      await invalidateUserProgressCache(session.email);
+      await invalidateUserProgressCache(normalizedEmail);
 
       return NextResponse.json({
         success: true,
