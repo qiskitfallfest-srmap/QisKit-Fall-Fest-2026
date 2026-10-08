@@ -9,6 +9,7 @@ import { CertificateModal } from '@/components/learning/CertificateModal';
 import { CURRICULUM_SESSIONS, ONLINE_PROGRAMME_SCHEDULE } from '@/data/learning/curriculum';
 import { DAILY_COMPETITIONS } from '@/data/learning/competitions';
 import { useCurriculumSessions } from '@/hooks/use-curriculum-sessions';
+import { useQuizzes } from '@/hooks/use-quizzes';
 import {
   Award,
   Send,
@@ -24,6 +25,7 @@ import {
   Coffee,
   Users,
   Terminal,
+  Lock,
 } from 'lucide-react';
 
 function LearningDashboardContent() {
@@ -50,6 +52,7 @@ function LearningDashboardContent() {
   // Dynamic curriculum sessions from admin/Redis
   const { sessions } = useCurriculumSessions();
   const curriculumList = sessions && sessions.length > 0 ? sessions : CURRICULUM_SESSIONS;
+  const { quizzes } = useQuizzes();
 
   // Schedule timetable tab state
   const [selectedScheduleDay, setSelectedScheduleDay] = useState<number>(1);
