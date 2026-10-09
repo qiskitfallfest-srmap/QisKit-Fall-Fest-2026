@@ -208,12 +208,17 @@ export default function SessionPlayerPage() {
         if (!transcriptSearch.trim()) return true;
         const q = transcriptSearch.toLowerCase();
         return (
-          sec.title.toLowerCase().includes(q) ||
-          sec.speaker.toLowerCase().includes(q) ||
-          sec.paragraphs.some((p) => p.toLowerCase().includes(q)) ||
-          sec.keyTakeaways.some((k) => k.toLowerCase().includes(q)) ||
-          (sec.equations && sec.equations.some((eq) => eq.toLowerCase().includes(q))) ||
-          (sec.codeSnippet && sec.codeSnippet.code.toLowerCase().includes(q))
+          (sec.title || '').toLowerCase().includes(q) ||
+          (sec.speaker || '').toLowerCase().includes(q) ||
+          (sec.paragraphs || []).some((p) => (p || '').toLowerCase().includes(q)) ||
+          (sec.keyTakeaways || []).some((k) => (k || '').toLowerCase().includes(q)) ||
+          (sec.equations &&
+            sec.equations.some(
+              (eq) =>
+                (eq.label || '').toLowerCase().includes(q) ||
+                (eq.formula || '').toLowerCase().includes(q)
+            )) ||
+          (sec.codeSnippet && (sec.codeSnippet.code || '').toLowerCase().includes(q))
         );
       })
     : [];
@@ -321,14 +326,14 @@ export default function SessionPlayerPage() {
                   {transcriptData.chapters.map((ch, idx) => {
                     const nextCh = transcriptData.chapters[idx + 1];
                     const isActiveChapter =
-                      activeStartSeconds >= ch.seconds &&
-                      (!nextCh || activeStartSeconds < nextCh.seconds);
+                      activeStartSeconds >= ch.startSeconds &&
+                      (!nextCh || activeStartSeconds < nextCh.startSeconds);
 
                     return (
                       <button
                         key={ch.id}
                         type="button"
-                        onClick={() => handleJumpToTimestamp(ch.seconds)}
+                        onClick={() => handleJumpToTimestamp(ch.startSeconds)}
                         className={clsx(
                           'text-left p-2.5 rounded-lg border transition-all flex flex-col justify-between gap-1.5 cursor-pointer group',
                           isActiveChapter
@@ -427,7 +432,7 @@ export default function SessionPlayerPage() {
                   Learning Objectives
                 </span>
                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {session.learnPoints.map((point, idx) => (
+                  {(session.learnPoints || []).map((point, idx) => (
                     <li key={idx} className="flex items-start gap-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
                       <span className="w-1.5 h-1.5 rounded-full bg-burgundy dark:bg-[#E89BA5] mt-1.5 shrink-0" />
                       <span>{point}</span>
@@ -472,7 +477,7 @@ export default function SessionPlayerPage() {
                         Verified Audio Transcript & Study Guide
                       </span>
                       <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400">
-                        Stream Window: {transcriptData.streamDuration}
+                        Stream Window: {transcriptData.totalBroadcastDuration}
                       </span>
                     </div>
                     <h2 className="font-serif text-lg sm:text-xl font-bold text-slate-900 dark:text-[#FAF6F3]">
@@ -559,7 +564,7 @@ export default function SessionPlayerPage() {
                             {matchingChapter && (
                               <button
                                 type="button"
-                                onClick={() => handleJumpToTimestamp(matchingChapter.seconds)}
+                                onClick={() => handleJumpToTimestamp(matchingChapter.startSeconds)}
                                 className="px-2.5 py-1 rounded-md bg-burgundy/10 dark:bg-burgundy/25 text-burgundy dark:text-[#E89BA5] hover:bg-burgundy hover:text-white font-mono text-[10px] font-bold inline-flex items-center gap-1 transition-colors shrink-0 cursor-pointer"
                                 title="Jump video player to this section"
                               >
@@ -574,7 +579,7 @@ export default function SessionPlayerPage() {
                             <div className="p-4 sm:p-5 space-y-4">
                               {/* Detailed Narrative Paragraphs */}
                               <div className="space-y-2.5">
-                                {sec.paragraphs.map((para, pIdx) => (
+                                {(sec.paragraphs || []).map((para, pIdx) => (
                                   <p
                                     key={pIdx}
                                     className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed"
@@ -614,9 +619,14 @@ export default function SessionPlayerPage() {
                                     {sec.equations.map((eq, eIdx) => (
                                       <div
                                         key={eIdx}
-                                        className="font-mono text-xs text-slate-100 bg-slate-800/70 dark:bg-[#180709] px-3 py-1.5 rounded border border-slate-700/70 dark:border-[#2D1014] overflow-x-auto"
+                                        className="font-mono text-xs text-slate-100 bg-slate-800/70 dark:bg-[#180709] px-3 py-1.5 rounded border border-slate-700/70 dark:border-[#2D1014] overflow-x-auto flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2"
                                       >
-                                        {eq}
+                                        {eq.label && (
+                                          <span className="text-[#E89BA5] font-semibold shrink-0">
+                                            {eq.label}:
+                                          </span>
+                                        )}
+                                        <span>{eq.formula}</span>
                                       </div>
                                     ))}
                                   </div>
