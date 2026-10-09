@@ -360,6 +360,10 @@ function LearningDashboardContent() {
   const completedSessionsCount = curriculumList.filter((s) => progress[s.id]?.videoCompleted).length;
   const passedQuizzesCount = curriculumList.filter((s) => progress[s.id]?.quizPassed).length;
   const submittedCompsCount = Object.keys(competitions).length;
+  const isCertificateEligible =
+    totalSessionsCount > 0 &&
+    completedSessionsCount === totalSessionsCount &&
+    passedQuizzesCount === totalSessionsCount;
 
   // Next session to study: prefer sessions where video is unwatched OR quiz is unlocked & unpassed
   const nextSession =
@@ -750,10 +754,24 @@ function LearningDashboardContent() {
 
         <button
           onClick={() => setIsCertModalOpen(true)}
-          className="px-4 py-2 bg-burgundy text-white hover:bg-burgundy-deep text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+          className={clsx(
+            'px-3.5 py-2 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 self-start sm:self-auto cursor-pointer border',
+            isCertificateEligible
+              ? 'bg-burgundy text-white hover:bg-burgundy-deep border-burgundy shadow-xs'
+              : 'bg-slate-100 dark:bg-[#1C0A0D] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#250D11] border-slate-200 dark:border-[#3D1418]'
+          )}
         >
-          <Award className="w-4 h-4" />
-          <span>Certificate Status</span>
+          {isCertificateEligible ? (
+            <>
+              <Award className="w-4 h-4 text-emerald-400" />
+              <span>Certificate (Unlocked)</span>
+            </>
+          ) : (
+            <>
+              <Lock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+              <span>Certificate (Locked · {completedSessionsCount}/{totalSessionsCount} Videos, {passedQuizzesCount}/{totalSessionsCount} Quizzes)</span>
+            </>
+          )}
         </button>
       </div>
 
@@ -845,6 +863,65 @@ function LearningDashboardContent() {
           <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </div>
+
+      {/* Masterclass Certificate Status Card */}
+      {isCertificateEligible ? (
+        <div className="p-5 bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/80 rounded-xl shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[10px] font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/40">
+                Academic Requirements Met
+              </span>
+              <span className="font-mono text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                Payment Details Updating Soon
+              </span>
+            </div>
+            <h2 className="font-serif text-base sm:text-lg font-bold text-slate-900 dark:text-[#FAF6F3]">
+              Masterclass Certificate Unlocked
+            </h2>
+            <p className="text-xs text-slate-600 dark:text-slate-300 font-sans max-w-xl">
+              You have completed all {totalSessionsCount} video lectures and passed every concept check quiz. Official UPI payment QR and bank transfer details are being updated by the organizing team.
+            </p>
+          </div>
+
+          <button
+            onClick={() => setIsCertModalOpen(true)}
+            className="px-4 py-2.5 bg-burgundy text-white hover:bg-burgundy-deep text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5 shrink-0 shadow-xs cursor-pointer"
+          >
+            <Award className="w-4 h-4" />
+            <span>Claim Certificate</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      ) : (
+        <div className="p-4 sm:p-5 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 dark:bg-[#1C0A0D]">
+                Official Credential
+              </span>
+              <span className="font-mono text-[10px] font-bold text-burgundy dark:text-[#E89BA5]">
+                {completedSessionsCount + passedQuizzesCount} / {totalSessionsCount * 2} Tasks Complete
+              </span>
+            </div>
+            <h2 className="font-serif text-base sm:text-lg font-bold text-slate-900 dark:text-[#FAF6F3]">
+              IBM Quantum Masterclass Certificate
+            </h2>
+            <p className="text-xs text-slate-600 dark:text-slate-400 font-sans max-w-xl">
+              Watch all {totalSessionsCount} video lectures ({completedSessionsCount}/{totalSessionsCount}) and pass all {totalSessionsCount} concept check quizzes ({passedQuizzesCount}/{totalSessionsCount}) to unlock your official co-certified digital credential.
+            </p>
+          </div>
+
+          <button
+            onClick={() => setIsCertModalOpen(true)}
+            className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-[#1C0A0D] dark:hover:bg-[#250D11] text-slate-800 dark:text-[#FAF6F3] border border-slate-200 dark:border-[#3D1418] text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+          >
+            <Lock className="w-3.5 h-3.5 text-slate-400" />
+            <span>Check Requirements</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* Quick Resume Card */}
       {nextSession && (

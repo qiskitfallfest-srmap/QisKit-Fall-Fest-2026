@@ -9,6 +9,7 @@ import { AdminSessionsManager } from '@/components/learning/AdminSessionsManager
 import { AdminQuizzesManager } from '@/components/learning/AdminQuizzesManager';
 import { AdminCodingChallengeView } from '@/components/learning/AdminCodingChallengeView';
 import { AdminCompetitionsView } from '@/components/learning/AdminCompetitionsView';
+import { AdminCertificateManager } from '@/components/learning/AdminCertificateManager';
 import {
   Shield,
   UserPlus,
@@ -35,7 +36,7 @@ import { extractParticipantsFromCSV, ParsedParticipant } from '@/lib/csv';
 
 export default function AdminConsolePage() {
   const [session, setSession] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'analytics' | 'hackathon' | 'competitions' | 'whitelist' | 'overrides' | 'sessions' | 'quizzes' | 'coding'>('hackathon');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'hackathon' | 'competitions' | 'whitelist' | 'overrides' | 'sessions' | 'quizzes' | 'coding' | 'certificates'>('hackathon');
 
   const [emails, setEmails] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -474,6 +475,19 @@ export default function AdminConsolePage() {
 
             <button
               type="button"
+              onClick={() => setActiveTab('certificates')}
+              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+                activeTab === 'certificates'
+                  ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
+                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
+              }`}
+            >
+              <Award className="w-4 h-4" />
+              <span>Certificates &amp; UPI QR</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setActiveTab('overrides')}
               className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
                 activeTab === 'overrides'
@@ -485,6 +499,9 @@ export default function AdminConsolePage() {
               <span>System & Release Overrides</span>
             </button>
           </div>
+
+          {/* TAB: CERTIFICATES & UPI QR CONFIGURATION */}
+          {activeTab === 'certificates' && <AdminCertificateManager />}
 
           {/* TAB: HACKATHON TEAMS & PARTICIPANTS */}
           {activeTab === 'hackathon' && <AdminHackathonView />}

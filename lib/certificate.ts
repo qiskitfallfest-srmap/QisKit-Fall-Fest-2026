@@ -246,7 +246,7 @@ export function generateCertificateSVG({
     Hardware Architectures, Quantum Sensing, QML, and Post-Quantum Cryptography,
   </text>
   <text x="960" y="644" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="500" fill="#334155">
-    including all daily creative competitions and technical mastery evaluations.
+    including all curriculum video lectures and technical concept evaluations.
   </text>
 
   <!-- Distinction Badge Box -->
