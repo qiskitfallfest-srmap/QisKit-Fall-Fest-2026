@@ -373,6 +373,22 @@ export default function HackathonWorkspacePage() {
     }
   }
 
+  function handleToggleChangePS() {
+    if (!team) return;
+    setChangeVertical(team.vertical);
+    setChangePSId(team.problem_statement_id);
+    const willOpen = !isChangingPS;
+    setIsChangingPS(willOpen);
+    if (willOpen) {
+      setTimeout(() => {
+        const el = document.getElementById('problem-statement-switcher');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
+  }
+
   // Active Team: Add new teammate
   async function handleAddMemberToTeam(e: React.FormEvent) {
     e.preventDefault();
@@ -704,11 +720,7 @@ export default function HackathonWorkspacePage() {
                       {!isFinalized ? (
                         <button
                           type="button"
-                          onClick={() => {
-                            setChangeVertical(team.vertical);
-                            setChangePSId(team.problem_statement_id);
-                            setIsChangingPS(!isChangingPS);
-                          }}
+                          onClick={handleToggleChangePS}
                           className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-burgundy/30 bg-burgundy/5 dark:bg-burgundy/20 hover:bg-burgundy/10 text-burgundy dark:text-[#E89BA5] text-xs font-semibold transition-all cursor-pointer ml-0 sm:ml-1 mt-1 sm:mt-0"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
@@ -761,7 +773,10 @@ export default function HackathonWorkspacePage() {
 
                 {/* Change Problem Statement Drawer / Panel */}
                 {isChangingPS && (
-                  <div className="p-4 sm:p-5 rounded-xl border-2 border-burgundy/30 dark:border-[#E89BA5]/30 bg-slate-50/70 dark:bg-[#1A090C] space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div
+                    id="problem-statement-switcher"
+                    className="p-4 sm:p-5 rounded-xl border-2 border-burgundy/30 dark:border-[#E89BA5]/30 bg-slate-50/70 dark:bg-[#1A090C] space-y-4 animate-in fade-in slide-in-from-top-2 duration-200 scroll-mt-24"
+                  >
                     <div className="flex items-start justify-between gap-2 pb-3 border-b border-slate-200 dark:border-[#3D1418]">
                       <div>
                         <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-[#FAF6F3] flex items-center gap-2">
@@ -1358,14 +1373,32 @@ export default function HackathonWorkspacePage() {
 
               {/* UNLOCKED PROBLEM STATEMENT DOSSIER */}
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-[#FAF6F3] flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
-                    Unlocked Problem Statement Dossier ({team.problem_statement_id})
-                  </h3>
-                  <span className="text-base text-slate-500 dark:text-slate-400">
-                    Confidential to Team {team.name}
-                  </span>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                  <div>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-[#FAF6F3] flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
+                      <span>Unlocked Problem Statement Dossier ({team.problem_statement_id})</span>
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      Confidential to Team {team.name}
+                    </p>
+                  </div>
+
+                  {!isFinalized ? (
+                    <button
+                      type="button"
+                      onClick={handleToggleChangePS}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-burgundy/30 bg-burgundy/5 dark:bg-burgundy/20 hover:bg-burgundy/10 text-burgundy dark:text-[#E89BA5] text-xs font-semibold transition-all cursor-pointer self-start sm:self-auto shadow-2xs"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>{isChangingPS ? 'Close Switcher' : 'Change Problem Statement'}</span>
+                    </button>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold bg-slate-100 dark:bg-[#1C0A0D] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-[#3D1418] self-start sm:self-auto">
+                      <Lock className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Track Locked</span>
+                    </span>
+                  )}
                 </div>
 
                 {selectedPSObj ? (
