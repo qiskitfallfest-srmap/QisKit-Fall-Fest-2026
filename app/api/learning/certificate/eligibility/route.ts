@@ -53,6 +53,8 @@ export async function GET() {
           certConfig.notice_message ||
           'The official UPI payment QR code and bank account details for certificate issuance are currently being finalized by the organizing team. Once released, you will be able to scan the QR code to complete the fee transfer and submit your Unique Transaction ID (UTI) / UPI Reference Number below.',
         paymentSubmission: existingSubmission || null,
+        userEmail: session.email,
+        userName: session.fullName || session.email,
         ...result,
       },
       {

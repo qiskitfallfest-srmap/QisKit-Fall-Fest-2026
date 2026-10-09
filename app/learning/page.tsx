@@ -5,7 +5,6 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import clsx from 'clsx';
 import { AuthGate } from '@/components/learning/AuthGate';
-import { CertificateModal } from '@/components/learning/CertificateModal';
 import { supabase } from '@/lib/supabase';
 import { CURRICULUM_SESSIONS, ONLINE_PROGRAMME_SCHEDULE } from '@/data/learning/curriculum';
 import { SESSION_TRANSCRIPTS } from '@/data/learning/transcripts';
@@ -96,8 +95,12 @@ function LearningDashboardContent() {
     ONLINE_PROGRAMME_SCHEDULE.find((d) => d.day === selectedScheduleDay) ||
     ONLINE_PROGRAMME_SCHEDULE[0];
 
-  // Certificate Modal state
-  const [isCertModalOpen, setIsCertModalOpen] = useState(false);
+  // Open Certificate Modal globally
+  const openCertificateModal = () => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('open-certificate-modal'));
+    }
+  };
   const [sessionUser, setSessionUser] = useState<{ email: string; fullName: string } | null>(null);
 
   useEffect(() => {
@@ -753,7 +756,7 @@ function LearningDashboardContent() {
         </div>
 
         <button
-          onClick={() => setIsCertModalOpen(true)}
+          onClick={openCertificateModal}
           className={clsx(
             'px-3.5 py-2 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 self-start sm:self-auto cursor-pointer border',
             isCertificateEligible
@@ -885,7 +888,7 @@ function LearningDashboardContent() {
           </div>
 
           <button
-            onClick={() => setIsCertModalOpen(true)}
+            onClick={openCertificateModal}
             className="px-4 py-2.5 bg-burgundy text-white hover:bg-burgundy-deep text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5 shrink-0 shadow-xs cursor-pointer"
           >
             <Award className="w-4 h-4" />
@@ -913,7 +916,7 @@ function LearningDashboardContent() {
           </div>
 
           <button
-            onClick={() => setIsCertModalOpen(true)}
+            onClick={openCertificateModal}
             className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-[#1C0A0D] dark:hover:bg-[#250D11] text-slate-800 dark:text-[#FAF6F3] border border-slate-200 dark:border-[#3D1418] text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
           >
             <Lock className="w-3.5 h-3.5 text-slate-400" />
@@ -1311,13 +1314,6 @@ function LearningDashboardContent() {
           </div>
         )}
       </div>
-
-      <CertificateModal
-        isOpen={isCertModalOpen}
-        onClose={() => setIsCertModalOpen(false)}
-        userEmail={sessionUser?.email || ''}
-        userName={sessionUser?.fullName || sessionUser?.email || 'Candidate'}
-      />
     </div>
   );
 }

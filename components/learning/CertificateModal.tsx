@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Award,
   CheckCircle2,
@@ -61,6 +62,8 @@ interface EligibilityData {
   quizzesPassed: number;
   averageQuizScore: number;
   missingTasks: string[];
+  userEmail?: string;
+  userName?: string;
 }
 
 export function CertificateModal({
@@ -77,6 +80,35 @@ export function CertificateModal({
   const [utiInput, setUtiInput] = useState('');
   const [isSubmittingUti, setIsSubmittingUti] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
+  // Prevent background scrolling while modal is open
+  useEffect(() => {
+    if (!isOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -150,7 +182,7 @@ export function CertificateModal({
     setTimeout(() => setCopiedField(null), 2000);
   }
 
-  if (!isOpen) return null;
+  if (!isOpen || !isMounted || typeof document === 'undefined') return null;
 
   const totalSessionsCount = data?.totalSessions || 5;
   const totalTasks = totalSessionsCount * 2;
@@ -163,18 +195,29 @@ export function CertificateModal({
 
   const isGatewayActive = data?.paymentStatus === 'active';
   const existingSub = data?.paymentSubmission;
+  const activeUserName = userName || data?.userName || 'Candidate';
+  const activeUserEmail = userEmail || data?.userEmail || 'your registered email';
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/70 backdrop-blur-xs font-sans">
-      <div className="bg-white dark:bg-[#150709] rounded-2xl border border-slate-200 dark:border-[#3D1418] shadow-xl max-w-xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-[#3D1418] flex items-center justify-between">
+  return createPortal(
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 md:p-6 bg-slate-950/70 dark:bg-black/85 backdrop-blur-xs font-sans overflow-y-auto"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="certificate-modal-title"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white dark:bg-[#150709] rounded-2xl border border-slate-200 dark:border-[#3D1418] shadow-2xl max-w-xl w-full max-h-[85vh] sm:max-h-[88vh] flex flex-col my-auto relative overflow-hidden animate-in zoom-in-95 duration-150"
+      >
+        {/* Sticky/Fixed Header - Stays anchored at top */}
+        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-[#3D1418] bg-white dark:bg-[#150709] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5 min-w-0 pr-2">
             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] flex items-center justify-center font-bold shrink-0">
               <Award className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div className="min-w-0">
-              <h2 className="font-serif text-base sm:text-xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight truncate">
+              <h2 id="certificate-modal-title" className="font-serif text-base sm:text-lg font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight truncate">
                 Official Masterclass Credential
               </h2>
               <p className="font-mono text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
@@ -183,16 +226,17 @@ export function CertificateModal({
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1C0A0D] transition-colors cursor-pointer shrink-0"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1C0A0D] transition-colors cursor-pointer shrink-0"
             aria-label="Close"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Body Content */}
-        <div className="p-4 sm:p-6 space-y-6">
+        {/* Scrollable Body Content Container */}
+        <div className="p-4 sm:p-6 space-y-5 overflow-y-auto flex-1 min-h-0 [scrollbar-width:thin] [scrollbar-color:#CBD5E1_transparent] dark:[scrollbar-color:#3D1418_transparent]">
           {loading ? (
             <div className="py-12 flex flex-col items-center justify-center gap-3">
               <div className="w-8 h-8 border-2 border-burgundy border-t-transparent rounded-full animate-spin" />
@@ -212,7 +256,7 @@ export function CertificateModal({
                   Official Certificate Minted
                 </span>
                 <h3 className="text-xl font-bold text-slate-900 dark:text-[#FAF6F3]">
-                  Congratulations, {userName}!
+                  Congratulations, {activeUserName}!
                 </h3>
                 <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 max-w-md mx-auto leading-relaxed">
                   Your academic completion has been verified and permanently recorded on the
@@ -391,7 +435,7 @@ export function CertificateModal({
                     <ol className="list-decimal list-inside space-y-0.5 pl-1 text-[11px] leading-relaxed">
                       <li>Scan the official UPI QR code or transfer directly to the provided bank account.</li>
                       <li>Enter your 12-digit Unique Transaction ID (UTI) or UPI Reference Number in the verification form below.</li>
-                      <li>Upon administrative payment verification, your official co-certified digital certificate will be minted and emailed to <span className="font-mono font-semibold">{userEmail}</span>.</li>
+                      <li>Upon administrative payment verification, your official co-certified digital certificate will be minted and emailed to <span className="font-mono font-semibold">{activeUserEmail}</span>.</li>
                     </ol>
                   </div>
                 </div>
@@ -563,7 +607,7 @@ export function CertificateModal({
                     </code>
                   </div>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                    Your reference number is currently being cross-referenced with university records. The official certificate will be minted and emailed to <span className="font-mono font-semibold">{userEmail}</span> once approved.
+                    Your reference number is currently being cross-referenced with university records. The official certificate will be minted and emailed to <span className="font-mono font-semibold">{activeUserEmail}</span> once approved.
                   </p>
                 </div>
               ) : isGatewayActive ? (
@@ -659,19 +703,21 @@ export function CertificateModal({
           )}
         </div>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-slate-100 dark:border-[#3D1418] bg-slate-50/50 dark:bg-[#1A0A0D]/50 flex items-center justify-between text-xs">
-          <span className="text-slate-400 dark:text-slate-500 text-[11px]">
+        {/* Sticky/Fixed Footer */}
+        <div className="p-3.5 sm:p-4 border-t border-slate-100 dark:border-[#3D1418] bg-slate-50/70 dark:bg-[#1A0A0D]/70 flex items-center justify-between text-xs shrink-0">
+          <span className="text-slate-400 dark:text-slate-500 text-[10px] sm:text-[11px] font-mono">
             Qiskit Fall Fest 2026 · Official Certification
           </span>
           <button
+            type="button"
             onClick={onClose}
-            className="px-3 py-1.5 rounded-lg bg-slate-200/80 hover:bg-slate-200 dark:bg-[#250D11] dark:hover:bg-[#2F1116] text-slate-700 dark:text-slate-300 font-medium transition-colors cursor-pointer text-xs"
+            className="px-3.5 py-1.5 rounded-lg bg-slate-200/80 hover:bg-slate-200 dark:bg-[#250D11] dark:hover:bg-[#2F1116] text-slate-700 dark:text-slate-300 font-medium transition-colors cursor-pointer text-xs"
           >
             Close
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

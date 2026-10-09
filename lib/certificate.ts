@@ -97,11 +97,12 @@ export async function checkCertificateEligibility(
     const prog = progressMap.get(session.id);
     const quizDone = prog?.quiz_passed === true;
     const videoDone = prog?.video_completed === true;
+    const cleanSessionTitle = session.title.replace(/^Session \d+:\s*/, '');
 
     if (videoDone) {
       sessionsCompleted++;
     } else {
-      missingTasks.push(`Session ${session.sessionNumber} Video Lecture (${session.title}) not watched`);
+      missingTasks.push(`Session ${session.sessionNumber} Video Lecture (${cleanSessionTitle}) not watched`);
     }
 
     if (quizDone) {
