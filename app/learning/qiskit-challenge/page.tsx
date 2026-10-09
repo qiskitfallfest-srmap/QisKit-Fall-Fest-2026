@@ -12,7 +12,6 @@ import {
   CheckCircle2,
   Circle,
   Play,
-  Send,
   RotateCcw,
   ChevronLeft,
   ChevronRight,
@@ -33,7 +32,6 @@ import {
   Shield,
   Maximize2,
   Minimize2,
-  PanelLeft,
 } from 'lucide-react';
 
 interface LeaderboardEntry {
@@ -268,12 +266,6 @@ function QiskitChallengeWorkspace() {
   const [problemSubmissions, setProblemSubmissions] = useState<UserSubmissionSummary[]>([]);
   const [isLoadingSubmissions, setIsLoadingSubmissions] = useState<boolean>(false);
 
-  // Playground execution state
-  const [engineState, setEngineState] = useState<{ isRunning: boolean; isSubmitting: boolean }>({
-    isRunning: false,
-    isSubmitting: false,
-  });
-
   // 1. Fetch current user session
   useEffect(() => {
     document.title = 'Python Coding Challenge in Qiskit | Qiskit Fall Fest 2026';
@@ -345,16 +337,7 @@ function QiskitChallengeWorkspace() {
     loadSubmissions(selectedProblemId);
   }, [selectedProblemId, loadSubmissions]);
 
-  // 4. Synchronize engine run/submit state from QiskitPlayground
-  useEffect(() => {
-    const handleStateChange = (e: any) => {
-      if (e.detail) {
-        setEngineState(e.detail);
-      }
-    };
-    window.addEventListener('qiskit:state', handleStateChange);
-    return () => window.removeEventListener('qiskit:state', handleStateChange);
-  }, []);
+
 
   // 5. Server-authoritative timer countdown
   useEffect(() => {
@@ -508,15 +491,6 @@ function QiskitChallengeWorkspace() {
     0
   );
   const solvedCount = challenges.filter((c) => c.userState === 'solved').length;
-
-  // Global action triggers
-  const triggerRun = () => {
-    window.dispatchEvent(new CustomEvent('qiskit:run'));
-  };
-
-  const triggerSubmit = () => {
-    window.dispatchEvent(new CustomEvent('qiskit:submit'));
-  };
 
   // Fullscreen management
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
@@ -678,8 +652,8 @@ function QiskitChallengeWorkspace() {
           1. LEETCODE TOP NAVIGATION BAR
          ───────────────────────────────────────────────────────────── */}
       <header className="shrink-0 z-40 bg-white dark:bg-[#160608] border-b border-slate-200 dark:border-[#3D1418] px-3 sm:px-5 py-2 flex items-center justify-between gap-2.5 sm:gap-3 shadow-xs">
-        {/* Left: Hub Link, Sidebar Toggle, Problem List Modal Button, Prev/Next Navigation */}
-        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
+        {/* Left: Hub Link, Problem List Modal Button, Prev/Next Navigation, Active Problem */}
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <Link
             href="/learning"
             className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-burgundy dark:hover:text-[#E89BA5] transition-colors shrink-0"
@@ -688,19 +662,6 @@ function QiskitChallengeWorkspace() {
             <ArrowLeft className="w-4 h-4" />
             <span className="hidden md:inline">Learning Hub</span>
           </Link>
-
-          <span className="text-slate-300 dark:text-slate-700 hidden sm:inline shrink-0">•</span>
-
-          {/* Toggle Curriculum Sidebar Button */}
-          <button
-            onClick={() => window.dispatchEvent(new CustomEvent('qff_toggle_sidebar'))}
-            type="button"
-            className="px-2 py-1.5 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-slate-50 dark:bg-[#1C0A0D] hover:bg-slate-100 dark:hover:bg-[#250D11] text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
-            title="Toggle Curriculum Sidebar (expand / collapse)"
-          >
-            <PanelLeft className="w-3.5 h-3.5 text-slate-500" />
-            <span className="hidden xl:inline">Sidebar</span>
-          </button>
 
           <span className="text-slate-300 dark:text-slate-700 hidden sm:inline shrink-0">•</span>
 
@@ -750,37 +711,6 @@ function QiskitChallengeWorkspace() {
               {selectedChallenge.title}
             </span>
           </div>
-        </div>
-
-        {/* Center: Action Buttons (Run & Submit) - Displayed cleanly on wide monitors */}
-        <div className="hidden xl:flex items-center gap-2 shrink-0">
-          <button
-            onClick={triggerRun}
-            disabled={engineState.isRunning || engineState.isSubmitting}
-            type="button"
-            className="px-3.5 py-1.5 rounded-lg border border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#1C0A0D] hover:bg-slate-50 dark:hover:bg-[#250D11] text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors flex items-center gap-1.5 shadow-xs disabled:opacity-50 cursor-pointer"
-          >
-            {engineState.isRunning ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Play className="w-3.5 h-3.5 fill-current text-slate-500" />
-            )}
-            <span>Run Code</span>
-          </button>
-
-          <button
-            onClick={triggerSubmit}
-            disabled={engineState.isRunning || engineState.isSubmitting}
-            type="button"
-            className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-xs disabled:opacity-50 cursor-pointer"
-          >
-            {engineState.isSubmitting ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Send className="w-3.5 h-3.5" />
-            )}
-            <span>Submit</span>
-          </button>
         </div>
 
         {/* Right: Score, Leaderboard Toggle, and Fullscreen */}

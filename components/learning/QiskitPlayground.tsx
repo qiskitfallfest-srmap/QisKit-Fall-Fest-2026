@@ -342,29 +342,6 @@ export function QiskitPlayground({
   }, [isRunning, isSubmitting, challenge.id, code]);
 
 
-  // Global event integration with top-navbar Run / Submit buttons
-  useEffect(() => {
-    const onRun = () => handleRunCode();
-    const onSubmit = () => handleSubmitCode();
-
-    window.addEventListener('qiskit:run', onRun);
-    window.addEventListener('qiskit:submit', onSubmit);
-
-    return () => {
-      window.removeEventListener('qiskit:run', onRun);
-      window.removeEventListener('qiskit:submit', onSubmit);
-    };
-  }, [handleRunCode, handleSubmitCode]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(
-        new CustomEvent('qiskit:state', {
-          detail: { isRunning, isSubmitting },
-        })
-      );
-    }
-  }, [isRunning, isSubmitting]);
 
 
 
