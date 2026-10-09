@@ -20,7 +20,6 @@ import {
   BookOpen,
   ArrowRight,
   Calendar,
-  Sparkles,
   ChevronRight,
   Coffee,
   Users,
@@ -205,8 +204,7 @@ function LearningDashboardContent() {
               </div>
             </div>
 
-            <div className="relative z-10 hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-burgundy/10 dark:bg-burgundy/25 border border-burgundy/25 dark:border-burgundy/50 text-burgundy dark:text-[#E89BA5] text-xs font-bold font-mono shadow-2xs">
-              <Sparkles className="w-3.5 h-3.5 text-burgundy dark:text-[#E89BA5]" />
+            <div className="relative z-10 hidden sm:flex items-center px-3.5 py-1.5 rounded-full bg-burgundy/10 dark:bg-burgundy/25 border border-burgundy/25 dark:border-burgundy/50 text-burgundy dark:text-[#E89BA5] text-xs font-bold font-mono shadow-2xs">
               <span>Prize Award</span>
             </div>
           </div>

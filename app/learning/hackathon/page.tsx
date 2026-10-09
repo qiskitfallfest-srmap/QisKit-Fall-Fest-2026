@@ -22,7 +22,6 @@ import {
   Github,
   ArrowLeft,
   Lock,
-  Sparkles,
   Edit3,
   X,
   Check,
@@ -554,8 +553,7 @@ export default function HackathonWorkspacePage() {
               </div>
 
               <div className="flex items-center gap-2 self-start sm:self-auto">
-                <div className="px-3.5 py-1.5 rounded-xl bg-burgundy/10 dark:bg-burgundy/25 border border-burgundy/25 dark:border-burgundy/50 shadow-2xs text-xs font-mono font-bold text-burgundy dark:text-[#E89BA5] flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-burgundy dark:text-[#E89BA5]" />
+                <div className="px-3.5 py-1.5 rounded-xl bg-burgundy/10 dark:bg-burgundy/25 border border-burgundy/25 dark:border-burgundy/50 shadow-2xs text-xs font-mono font-bold text-burgundy dark:text-[#E89BA5]">
                   <span>Phase 1 & Phase 2 Awards</span>
                 </div>
               </div>
@@ -627,7 +625,7 @@ export default function HackathonWorkspacePage() {
               {/* Team Summary Card */}
               <div className="bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl p-6 shadow-xs space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-[#3D1418]">
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <span className="text-sm font-bold uppercase tracking-wider text-burgundy dark:text-[#E89BA5] block mb-1">
                       Your Hackathon Team
                     </span>
@@ -658,7 +656,7 @@ export default function HackathonWorkspacePage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-center sm:justify-end gap-2.5 shrink-0 sm:ml-auto self-start sm:self-center">
                     <span className="px-3 py-1 rounded-full bg-burgundy/10 dark:bg-burgundy/25 text-burgundy dark:text-[#E89BA5] font-bold text-xs sm:text-sm border border-burgundy/25 dark:border-burgundy/40 flex items-center gap-1.5 shadow-2xs">
                       <Trophy className="w-3.5 h-3.5 text-burgundy dark:text-[#E89BA5]" />
                       Prize Pool: Up to ₹1,00,000

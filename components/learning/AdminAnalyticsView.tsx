@@ -14,7 +14,6 @@ import {
   Tablet,
   CheckCircle2,
   Clock,
-  Sparkles,
   Zap,
   Globe,
   Award,
@@ -559,7 +558,7 @@ export function AdminAnalyticsView() {
         <div className="p-6 bg-slate-900 dark:bg-[#150709] border border-slate-800 dark:border-[#3D1418] text-white rounded-xl shadow-xs space-y-4 flex flex-col justify-between">
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-white">
-              <Sparkles className="w-5 h-5 text-amber-400" />
+              <BarChart3 className="w-5 h-5 text-burgundy dark:text-[#E89BA5]" />
               <h3 className="text-sm font-bold">Vercel Web Analytics & Speed Insights</h3>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed">

@@ -13,7 +13,6 @@ import {
   MapPin,
   Building2,
   Calendar,
-  Sparkles,
   Copy,
   Check,
   ArrowRight,

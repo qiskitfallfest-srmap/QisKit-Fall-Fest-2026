@@ -25,7 +25,6 @@ import {
   AlertCircle,
   ExternalLink,
   Award,
-  Sparkles,
   ArrowLeft,
   Loader2,
   Info,
@@ -466,7 +465,7 @@ function QiskitChallengeWorkspace() {
             {/* Preparation Guidance */}
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] max-w-lg mx-auto text-left space-y-2 text-xs text-slate-600 dark:text-slate-300">
               <div className="flex items-center gap-2 font-semibold text-slate-800 dark:text-slate-200 font-sans">
-                <Sparkles className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
+                <Info className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
                 How to prepare while waiting:
               </div>
               <ul className="list-disc list-inside space-y-1.5 pl-1 leading-relaxed">
