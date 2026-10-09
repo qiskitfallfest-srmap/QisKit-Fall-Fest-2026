@@ -19,6 +19,8 @@ import {
   Terminal,
   Lock,
   Trophy,
+  CheckCircle2,
+  ArrowLeft,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { supabase } from '@/lib/supabase';
@@ -80,11 +82,49 @@ export function LearningSidebar() {
   };
   const [session, setSession] = useState<any>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [progress, setProgress] = useState<Record<string, any>>({});
+  const [competitions, setCompetitions] = useState<Record<string, any>>({});
 
-  // Auto-close mobile drawer on route change
+  const fetchSidebarProgress = React.useCallback(async () => {
+    try {
+      const [progRes, compRes] = await Promise.all([
+        fetch('/api/learning/progress', { cache: 'no-store' }),
+        fetch('/api/learning/competition-submit', { cache: 'no-store' }),
+      ]);
+      if (progRes.ok) {
+        const progData = await progRes.json();
+        if (progData?.progress) {
+          setProgress(progData.progress);
+        }
+      }
+      if (compRes.ok) {
+        const compData = await compRes.json();
+        if (compData?.submissions) {
+          setCompetitions(compData.submissions);
+        }
+      }
+    } catch (err) {
+      // Ignore unauthenticated or transient errors in sidebar
+    }
+  }, []);
+
+  // Auto-close mobile drawer on route change and refresh completion badges
   useEffect(() => {
     setIsMobileMenuOpen(false);
-  }, [pathname, searchParams]);
+    if (session) {
+      fetchSidebarProgress();
+    }
+  }, [pathname, searchParams, session, fetchSidebarProgress]);
+
+  useEffect(() => {
+    const handleProgressUpdate = () => {
+      fetchSidebarProgress();
+    };
+    window.addEventListener('learning-progress-updated', handleProgressUpdate);
+    return () => {
+      window.removeEventListener('learning-progress-updated', handleProgressUpdate);
+    };
+  }, [fetchSidebarProgress]);
 
   const fetchSession = React.useCallback(async () => {
     try {
@@ -209,6 +249,11 @@ export function LearningSidebar() {
       {DAYS.map((day) => {
         const isDayOpen = openDays.includes(day.id);
         const daySessions = sessions.filter((s) => s.day === day.id);
+        const completedDaySessions = daySessions.filter(
+          (s) => progress[s.id]?.videoCompleted && progress[s.id]?.quizPassed
+        ).length;
+        const isDayFullyDone =
+          daySessions.length > 0 && completedDaySessions === daySessions.length;
 
         return (
           <div key={day.id} className="mb-2">
@@ -222,21 +267,39 @@ export function LearningSidebar() {
               )}
             >
               <div className="flex items-center gap-2 min-w-0 pr-2">
-                <BookOpen
-                  className={clsx(
-                    'w-3.5 h-3.5 shrink-0',
-                    isDayOpen
-                      ? 'text-burgundy dark:text-[#E89BA5]'
-                      : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
-                  )}
-                />
+                {isDayFullyDone ? (
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                ) : (
+                  <BookOpen
+                    className={clsx(
+                      'w-3.5 h-3.5 shrink-0',
+                      isDayOpen
+                        ? 'text-burgundy dark:text-[#E89BA5]'
+                        : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
+                    )}
+                  />
+                )}
                 <span className="truncate">{day.label}</span>
               </div>
-              {isDayOpen ? (
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-              ) : (
-                <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 shrink-0" />
-              )}
+              <div className="flex items-center gap-1.5 shrink-0">
+                {daySessions.length > 0 && session && (
+                  <span
+                    className={clsx(
+                      'font-mono text-[9px] px-1.5 py-0.5 rounded font-bold',
+                      isDayFullyDone
+                        ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60'
+                        : 'text-slate-400 dark:text-slate-500'
+                    )}
+                  >
+                    {completedDaySessions}/{daySessions.length}
+                  </span>
+                )}
+                {isDayOpen ? (
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 shrink-0" />
+                )}
+              </div>
             </button>
 
             {/* Expandable Sessions & Challenge */}
@@ -248,6 +311,9 @@ export function LearningSidebar() {
                   const isQuizActive =
                     pathname === `/learning/session/${sessionItem.id}/quiz`;
                   const isQuizLocked = Boolean(quizzes[sessionItem.id]?.isLocked);
+                  const sessionProg = progress[sessionItem.id];
+                  const isVideoDone = Boolean(sessionProg?.videoCompleted);
+                  const isQuizDone = Boolean(sessionProg?.quizPassed);
 
                   return (
                     <div
@@ -265,22 +331,28 @@ export function LearningSidebar() {
                             : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1C0A0D] hover:text-slate-900 dark:hover:text-[#FAF6F3] font-medium'
                         )}
                       >
-                        <PlayCircle
-                          className={clsx(
-                            'w-3.5 h-3.5 shrink-0 mt-0.5',
-                            isJustSessionActive
-                              ? 'text-burgundy dark:text-[#E89BA5]'
-                              : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
-                          )}
-                        />
+                        {isVideoDone && !isJustSessionActive ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
+                        ) : (
+                          <PlayCircle
+                            className={clsx(
+                              'w-3.5 h-3.5 shrink-0 mt-0.5',
+                              isJustSessionActive
+                                ? 'text-burgundy dark:text-[#E89BA5]'
+                                : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
+                            )}
+                          />
+                        )}
                         <span className="leading-snug break-words flex-1 text-xs">
                           {sessionItem.title}
                         </span>
-                        {sessionItem.isLive && (
+                        {sessionItem.isLive ? (
                           <span className="ml-auto shrink-0 px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-950/80 text-red-600 dark:text-red-400 font-mono text-[9px] font-bold uppercase tracking-wider animate-pulse">
                             LIVE
                           </span>
-                        )}
+                        ) : isVideoDone && isJustSessionActive ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
+                        ) : null}
                       </Link>
 
                       {/* Concept Quiz Sub-item with connected branch line */}
@@ -292,6 +364,8 @@ export function LearningSidebar() {
                             'absolute left-0 top-0 bottom-1/2 w-3.5 border-b-2 border-l-2 rounded-bl-[6px] transition-colors pointer-events-none',
                             isQuizActive
                               ? 'border-burgundy dark:border-[#E89BA5]'
+                              : isQuizDone
+                              ? 'border-emerald-400/70 dark:border-emerald-700/70'
                               : 'border-slate-300 dark:border-[#4A171E] group-hover/session:border-slate-400 dark:group-hover/session:border-[#6B222B]'
                           )}
                         />
@@ -307,16 +381,20 @@ export function LearningSidebar() {
                           )}
                         >
                           <div className="flex items-center gap-2 min-w-0">
-                            <Award
-                              className={clsx(
-                                'w-3.5 h-3.5 shrink-0',
-                                isQuizActive
-                                  ? 'text-burgundy dark:text-[#E89BA5]'
-                                  : isQuizLocked
-                                  ? 'text-amber-500'
-                                  : 'text-amber-600 dark:text-amber-400'
-                              )}
-                            />
+                            {isQuizDone && !isQuizActive ? (
+                              <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                            ) : (
+                              <Award
+                                className={clsx(
+                                  'w-3.5 h-3.5 shrink-0',
+                                  isQuizActive
+                                    ? 'text-burgundy dark:text-[#E89BA5]'
+                                    : isQuizLocked
+                                    ? 'text-amber-500'
+                                    : 'text-amber-600 dark:text-amber-400'
+                                )}
+                              />
+                            )}
                             <span className="font-semibold text-[11px] sm:text-xs truncate">
                               Concept Quiz
                             </span>
@@ -326,6 +404,10 @@ export function LearningSidebar() {
                             <span className="shrink-0 px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 font-mono text-[9px] font-semibold tracking-wide flex items-center gap-1">
                               <Lock className="w-2.5 h-2.5" />
                               Soon
+                            </span>
+                          ) : isQuizDone ? (
+                            <span className="shrink-0 px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80 font-mono text-[9px] font-bold tracking-wide">
+                              {sessionProg?.quizScore ?? 100}%
                             </span>
                           ) : (
                             <span
@@ -374,19 +456,30 @@ export function LearningSidebar() {
           )}
         >
           <div className="flex items-center gap-2 min-w-0 pr-2">
-            <Trophy
-              className={clsx(
-                'w-3.5 h-3.5 shrink-0',
-                isChallengesOpen
-                  ? 'text-burgundy dark:text-[#E89BA5]'
-                  : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
-              )}
-            />
+            {Object.keys(competitions).length === 3 ? (
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+            ) : (
+              <Trophy
+                className={clsx(
+                  'w-3.5 h-3.5 shrink-0',
+                  isChallengesOpen
+                    ? 'text-burgundy dark:text-[#E89BA5]'
+                    : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
+                )}
+              />
+            )}
             <span className="truncate">Challenges</span>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
-            <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-burgundy/10 dark:bg-burgundy/25 text-burgundy dark:text-[#E89BA5] font-bold border border-burgundy/20 dark:border-burgundy/40">
-              3 Tasks
+            <span
+              className={clsx(
+                'font-mono text-[9px] px-1.5 py-0.5 rounded font-bold border',
+                Object.keys(competitions).length === 3
+                  ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/70'
+                  : 'bg-burgundy/10 dark:bg-burgundy/25 text-burgundy dark:text-[#E89BA5] border-burgundy/20 dark:border-burgundy/40'
+              )}
+            >
+              {session ? `${Object.keys(competitions).length}/3 Done` : '3 Tasks'}
             </span>
             {isChallengesOpen ? (
               <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
@@ -402,6 +495,7 @@ export function LearningSidebar() {
             {Object.values(DAILY_COMPETITIONS).map((comp) => {
               const isCompActive =
                 pathname === '/learning' && activeChallengeDay === String(comp.day);
+              const isCompSubmitted = Boolean(competitions[comp.type]);
               return (
                 <Link
                   key={comp.day}
@@ -415,28 +509,38 @@ export function LearningSidebar() {
                   )}
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <Award
-                      className={clsx(
-                        'w-3.5 h-3.5 shrink-0',
-                        isCompActive
-                          ? 'text-burgundy dark:text-[#E89BA5]'
-                          : 'text-burgundy/80 dark:text-[#E89BA5]/80 group-hover:text-burgundy'
-                      )}
-                    />
+                    {isCompSubmitted && !isCompActive ? (
+                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                    ) : (
+                      <Award
+                        className={clsx(
+                          'w-3.5 h-3.5 shrink-0',
+                          isCompActive
+                            ? 'text-burgundy dark:text-[#E89BA5]'
+                            : 'text-burgundy/80 dark:text-[#E89BA5]/80 group-hover:text-burgundy'
+                        )}
+                      />
+                    )}
                     <span className="truncate text-xs leading-snug font-semibold text-slate-800 dark:text-[#FAF6F3]">
                       {comp.title}
                     </span>
                   </div>
-                  <span
-                    className={clsx(
-                      'shrink-0 px-1.5 py-0.5 rounded font-mono text-[9px] font-bold uppercase tracking-wider',
-                      isCompActive
-                        ? 'bg-burgundy text-white'
-                        : 'bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] border border-burgundy/20 dark:border-burgundy/40'
-                    )}
-                  >
-                    12 Oct
-                  </span>
+                  {isCompSubmitted ? (
+                    <span className="shrink-0 px-1.5 py-0.5 rounded font-mono text-[9px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80">
+                      Done
+                    </span>
+                  ) : (
+                    <span
+                      className={clsx(
+                        'shrink-0 px-1.5 py-0.5 rounded font-mono text-[9px] font-bold uppercase tracking-wider',
+                        isCompActive
+                          ? 'bg-burgundy text-white'
+                          : 'bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] border border-burgundy/20 dark:border-burgundy/40'
+                      )}
+                    >
+                      12 Oct
+                    </span>
+                  )}
                 </Link>
               );
             })}
@@ -527,6 +631,16 @@ export function LearningSidebar() {
     </>
   );
 
+  // Calculate overall sidebar completion stats
+  const totalCurriculumSessions = sessions.length || CURRICULUM_SESSIONS.length || 5;
+  const completedSessionsCount = sessions.filter(
+    (s) => progress[s.id]?.videoCompleted && progress[s.id]?.quizPassed
+  ).length;
+  const submittedChallengesCount = Object.keys(competitions).length;
+  const totalTasks = totalCurriculumSessions + 3;
+  const completedTasks = completedSessionsCount + submittedChallengesCount;
+  const overallProgressPercent = Math.min(100, Math.round((completedTasks / totalTasks) * 100));
+
   // User Profile Renderer
   const renderUserProfile = () => {
     if (!session) return null;
@@ -613,9 +727,14 @@ export function LearningSidebar() {
         {isMobileMenuOpen && (
           <div className="border-t border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] shadow-xl max-h-[75vh] flex flex-col overflow-hidden animate-in slide-in-from-top-2 duration-150">
             <div className="p-3 border-b border-slate-100 dark:border-[#3D1418] flex items-center justify-between">
-              <span className="font-serif text-sm font-bold text-slate-900 dark:text-[#FAF6F3]">
-                Curriculum Hub
-              </span>
+              <Link
+                href="/"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="inline-flex items-center gap-1 font-mono text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-burgundy dark:hover:text-[#E89BA5] transition-colors"
+              >
+                <ArrowLeft className="w-3 h-3" />
+                <span>Main Site</span>
+              </Link>
               <Link
                 href="/learning"
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -644,14 +763,41 @@ export function LearningSidebar() {
       >
         {/* Header section */}
         <div className="p-4 border-b border-slate-100 dark:border-[#3D1418] bg-white dark:bg-[#150709] shrink-0 z-10">
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center justify-between gap-2 mb-1">
             <span className="font-mono px-2 py-0.5 rounded bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] font-semibold text-[10px] uppercase tracking-[0.2em]">
               Curriculum
             </span>
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1 font-mono text-[10px] font-semibold text-slate-400 dark:text-slate-500 hover:text-burgundy dark:hover:text-[#E89BA5] transition-colors"
+              title="Return to Main Event Website"
+            >
+              <ArrowLeft className="w-3 h-3" />
+              <span>Main Site</span>
+            </Link>
           </div>
           <h2 className="font-serif text-lg font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight">
             Masterclass 2026
           </h2>
+
+          {session && (
+            <div className="mt-2.5 space-y-1">
+              <div className="flex items-center justify-between font-mono text-[10px]">
+                <span className="text-slate-500 dark:text-slate-400">
+                  Progress ({completedTasks}/{totalTasks})
+                </span>
+                <span className="font-bold text-burgundy dark:text-[#E89BA5]">
+                  {overallProgressPercent}%
+                </span>
+              </div>
+              <div className="w-full h-1.5 bg-slate-100 dark:bg-[#250D11] rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-burgundy dark:bg-[#E89BA5] rounded-full transition-all duration-500"
+                  style={{ width: `${overallProgressPercent}%` }}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Nav items - strictly scrollable options container */}

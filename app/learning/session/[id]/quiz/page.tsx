@@ -15,6 +15,7 @@ import {
   Award,
   RotateCcw,
   ArrowLeft,
+  ArrowRight,
   PlayCircle,
   Lock,
   Clock,
@@ -196,9 +197,17 @@ export default function DedicatedQuizPage() {
     );
   }
 
+  const totalQuestionsCount = quiz?.questions?.length || 0;
+  const answeredCount =
+    quiz?.questions?.filter((q) => selectedAnswers[q.id] !== undefined).length || 0;
   const allAnswered =
-    Boolean(quiz?.questions?.length) &&
-    Boolean(quiz?.questions?.every((q) => selectedAnswers[q.id] !== undefined));
+    totalQuestionsCount > 0 && answeredCount === totalQuestionsCount;
+
+  const currentIndex = CURRICULUM_SESSIONS.findIndex((s) => s.id === sessionId);
+  const nextSession =
+    currentIndex !== -1 && currentIndex < CURRICULUM_SESSIONS.length - 1
+      ? CURRICULUM_SESSIONS[currentIndex + 1]
+      : null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -254,6 +263,10 @@ export default function DedicatedQuizPage() {
           } catch (e) {
             console.warn('Auto mark video error:', e);
           }
+        }
+
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('learning-progress-updated'));
         }
       } else {
         setSubmissionError(data.error || 'Failed to submit quiz. Please try again.');
@@ -381,7 +394,7 @@ export default function DedicatedQuizPage() {
                         </div>
                       </div>
 
-                      {/* Top Action Button: Try Again directly at top so user doesn't have to scroll */}
+                      {/* Top Action Button: Try Again / Next Session directly at top so user doesn't have to scroll */}
                       <div className="flex flex-wrap items-center gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200 dark:border-[#3D1418]">
                         <button
                           type="button"
@@ -392,13 +405,24 @@ export default function DedicatedQuizPage() {
                           Try Again
                         </button>
                         {results.passed && (
-                          <Link
-                            href={`/learning/session/${sessionId}`}
-                            className="w-full sm:w-auto px-4 py-2 bg-slate-900 hover:bg-slate-800 dark:bg-[#250D11] dark:hover:bg-[#351419] dark:border dark:border-[#4D1A20] text-white text-xs font-semibold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1.5 shrink-0"
-                          >
-                            <PlayCircle className="w-3.5 h-3.5" />
-                            Return to Session
-                          </Link>
+                          <>
+                            <Link
+                              href={`/learning/session/${sessionId}`}
+                              className="w-full sm:w-auto px-4 py-2 bg-slate-900 hover:bg-slate-800 dark:bg-[#250D11] dark:hover:bg-[#351419] dark:border dark:border-[#4D1A20] text-white text-xs font-semibold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1.5 shrink-0"
+                            >
+                              <PlayCircle className="w-3.5 h-3.5" />
+                              Return to Session
+                            </Link>
+                            {nextSession && (
+                              <Link
+                                href={`/learning/session/${nextSession.id}`}
+                                className="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1.5 shrink-0"
+                              >
+                                <span>Next: Session {nextSession.sessionNumber}</span>
+                                <ArrowRight className="w-3.5 h-3.5" />
+                              </Link>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
@@ -470,37 +494,71 @@ export default function DedicatedQuizPage() {
                         Try Again
                       </button>
                       {results.passed && (
-                        <Link
-                          href={`/learning/session/${sessionId}`}
-                          className="w-full sm:w-auto px-5 py-2 bg-slate-900 dark:bg-[#250D11] text-white text-xs font-semibold rounded-lg hover:bg-slate-800 dark:hover:bg-[#351419] border border-transparent dark:border-[#4D1A20] transition-colors flex items-center justify-center gap-1.5"
-                        >
-                          <PlayCircle className="w-3.5 h-3.5" />
-                          Return to Session
-                        </Link>
+                        <>
+                          <Link
+                            href={`/learning/session/${sessionId}`}
+                            className="w-full sm:w-auto px-5 py-2 bg-slate-900 dark:bg-[#250D11] text-white text-xs font-semibold rounded-lg hover:bg-slate-800 dark:hover:bg-[#351419] border border-transparent dark:border-[#4D1A20] transition-colors flex items-center justify-center gap-1.5"
+                          >
+                            <PlayCircle className="w-3.5 h-3.5" />
+                            Return to Session
+                          </Link>
+                          {nextSession && (
+                            <Link
+                              href={`/learning/session/${nextSession.id}`}
+                              className="w-full sm:w-auto px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5"
+                            >
+                              <span>Next: Session {nextSession.sessionNumber}</span>
+                              <ArrowRight className="w-3.5 h-3.5" />
+                            </Link>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Attempt in progress banner */}
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] text-xs">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono uppercase font-bold text-[10px] text-slate-500 dark:text-slate-400">
-                        Current Attempt:
-                      </span>
-                      <span className="font-mono font-bold text-burgundy dark:text-[#E89BA5] px-2 py-0.5 rounded bg-burgundy/10 dark:bg-[#3D1418] border border-burgundy/20 dark:border-[#4D1A20]">
-                        Attempt #{attemptCount + 1}
-                      </span>
-                      {attemptCount > 0 && (
-                        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono hidden sm:inline">
-                          ({attemptCount} completed so far)
+                  {/* Attempt in progress banner + Answered Progress */}
+                  <div className="p-3 rounded-lg bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] text-xs space-y-2.5">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono uppercase font-bold text-[10px] text-slate-500 dark:text-slate-400">
+                          Current Attempt:
                         </span>
-                      )}
+                        <span className="font-mono font-bold text-burgundy dark:text-[#E89BA5] px-2 py-0.5 rounded bg-burgundy/10 dark:bg-[#3D1418] border border-burgundy/20 dark:border-[#4D1A20]">
+                          Attempt #{attemptCount + 1}
+                        </span>
+                        {attemptCount > 0 && (
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono hidden sm:inline">
+                            ({attemptCount} completed so far)
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 font-mono text-[11px]">
+                        <span className="text-slate-600 dark:text-slate-300">
+                          Answered:{' '}
+                          <strong className={allAnswered ? 'text-emerald-600 dark:text-emerald-400' : 'text-burgundy dark:text-[#E89BA5]'}>
+                            {answeredCount} / {totalQuestionsCount}
+                          </strong>
+                        </span>
+                        <span className="text-slate-300 dark:text-slate-700">·</span>
+                        <span className="text-slate-600 dark:text-slate-300">
+                          Pass score: <strong className="text-slate-900 dark:text-[#FAF6F3]">{quiz.passingScore}%</strong>
+                        </span>
+                      </div>
                     </div>
-                    <span className="font-mono text-slate-600 dark:text-slate-300 text-[11px]">
-                      Pass score: <strong className="text-slate-900 dark:text-[#FAF6F3]">{quiz.passingScore}%</strong>
-                    </span>
+                    {totalQuestionsCount > 0 && (
+                      <div className="w-full h-1.5 bg-slate-200/80 dark:bg-[#250D11] rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-300 ${
+                            allAnswered ? 'bg-emerald-600 dark:bg-emerald-400' : 'bg-burgundy dark:bg-[#E89BA5]'
+                          }`}
+                          style={{
+                            width: `${Math.min(100, Math.round((answeredCount / totalQuestionsCount) * 100))}%`,
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-4">
@@ -547,7 +605,14 @@ export default function DedicatedQuizPage() {
                   </div>
 
                   <div className="flex flex-col sm:flex-row items-center justify-between pt-4 border-t border-slate-200 dark:border-[#3D1418] gap-3">
-                    <div className="flex items-center gap-2 font-mono text-xs text-slate-500 dark:text-slate-400">
+                    <div className="flex flex-wrap items-center gap-2 font-mono text-xs text-slate-500 dark:text-slate-400">
+                      <span>
+                        Answered:{' '}
+                        <strong className={allAnswered ? 'text-emerald-600 dark:text-emerald-400' : 'text-burgundy dark:text-[#E89BA5]'}>
+                          {answeredCount} / {totalQuestionsCount}
+                        </strong>
+                      </span>
+                      <span>·</span>
                       <span>Pass score: <strong className="text-slate-800 dark:text-[#FAF6F3]">{quiz.passingScore}%</strong></span>
                       <span>·</span>
                       <span>Submitting: <strong className="text-burgundy dark:text-[#E89BA5]">Attempt #{attemptCount + 1}</strong></span>
@@ -557,7 +622,11 @@ export default function DedicatedQuizPage() {
                       disabled={!allAnswered || isSubmitting}
                       className="w-full sm:w-auto px-6 py-2 bg-burgundy text-white text-xs font-semibold rounded-lg hover:bg-burgundy-deep transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer"
                     >
-                      {isSubmitting ? 'Evaluating...' : 'Submit Answers'}
+                      {isSubmitting
+                        ? 'Evaluating...'
+                        : allAnswered
+                        ? 'Submit Answers'
+                        : `Answer All Questions (${answeredCount}/${totalQuestionsCount})`}
                     </button>
                   </div>
                 </form>

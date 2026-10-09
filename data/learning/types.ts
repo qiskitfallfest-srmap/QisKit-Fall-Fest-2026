@@ -56,7 +56,9 @@ export interface DailyCompetition {
   subtitle: string;
   description: string;
   guidelines: string[];
-  submissionType: 'url' | 'document';
+  submissionType: 'url' | 'document' | 'url_or_document';
+  acceptedFileTypes?: string[];
+  maxFileSizeMb?: number;
   urlPlaceholder: string;
   submissionDeadline: string;
   prize: string;

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import clsx from 'clsx';
 import { AuthGate } from '@/components/learning/AuthGate';
 import { CertificateModal } from '@/components/learning/CertificateModal';
+import { supabase } from '@/lib/supabase';
 import { CURRICULUM_SESSIONS, ONLINE_PROGRAMME_SCHEDULE } from '@/data/learning/curriculum';
 import { DAILY_COMPETITIONS } from '@/data/learning/competitions';
 import { useCurriculumSessions } from '@/hooks/use-curriculum-sessions';
@@ -19,6 +20,7 @@ import {
   Clock,
   BookOpen,
   ArrowRight,
+  ArrowLeft,
   Calendar,
   ChevronRight,
   Coffee,
@@ -26,7 +28,34 @@ import {
   Terminal,
   Lock,
   Trophy,
+  Upload,
+  FileText,
+  Link2,
+  AlertCircle,
+  Loader2,
+  X,
 } from 'lucide-react';
+
+const MAX_DOCUMENT_SIZE_MB = 15;
+const MAX_DOCUMENT_SIZE_BYTES = MAX_DOCUMENT_SIZE_MB * 1024 * 1024;
+
+function isAllowedDocumentFile(file: File): boolean {
+  const lowerName = file.name.toLowerCase();
+  const validExt = lowerName.endsWith('.pdf') || lowerName.endsWith('.docx');
+  const validMime =
+    file.type === 'application/pdf' ||
+    file.type ===
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+    file.type === '';
+  return validExt && validMime;
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  const kb = bytes / 1024;
+  if (kb < 1024) return `${kb.toFixed(1)} KB`;
+  return `${(kb / 1024).toFixed(2)} MB`;
+}
 
 function LearningDashboardContent() {
   const router = useRouter();
@@ -43,8 +72,14 @@ function LearningDashboardContent() {
 
   const [competitions, setCompetitions] = useState<Record<string, any>>({});
   const [competitionUrls, setCompetitionUrls] = useState<Record<string, string>>({});
+  const [submissionModes, setSubmissionModes] = useState<Record<string, 'file' | 'url'>>({
+    poster: 'file',
+    essay: 'file',
+  });
+  const [selectedFiles, setSelectedFiles] = useState<Record<string, File | null>>({});
   const [isSubmittingComp, setIsSubmittingComp] = useState<Record<string, boolean>>({});
   const [compSuccessMsg, setCompSuccessMsg] = useState<Record<string, string>>({});
+  const [compErrorMsg, setCompErrorMsg] = useState<Record<string, string>>({});
 
   // Session progress state
   const [progress, setProgress] = useState<Record<string, any>>({});
@@ -104,54 +139,239 @@ function LearningDashboardContent() {
       if (data.submissions) {
         setCompetitions(data.submissions);
         const urls: Record<string, string> = {};
+        const modes: Record<string, 'file' | 'url'> = {
+          poster: 'file',
+          essay: 'file',
+        };
         Object.entries(data.submissions).forEach(([type, sub]: [string, any]) => {
-          urls[type] = sub.submission_url || '';
+          const recordedUrl = sub.submission_url || '';
+          const isUploadedDoc =
+            sub.notes === 'file_upload' ||
+            recordedUrl.includes('/storage/v1/object/public/media/competition-submissions/');
+          if (!isUploadedDoc) {
+            urls[type] = recordedUrl;
+          }
+          if (type === 'poster' || type === 'essay') {
+            modes[type] = isUploadedDoc ? 'file' : 'url';
+          }
         });
         setCompetitionUrls(urls);
+        setSubmissionModes((prev) => ({ ...prev, ...modes }));
       }
     } catch (e) {
       console.error('Error loading competitions:', e);
     }
   }
 
-  async function handleCompetitionSubmit(e: React.FormEvent, type: 'reels' | 'poster' | 'essay') {
-    e.preventDefault();
-    const url = competitionUrls[type]?.trim();
-    if (!url) return;
-
-    setIsSubmittingComp((prev) => ({ ...prev, [type]: true }));
+  function handleFileSelect(
+    e: React.ChangeEvent<HTMLInputElement>,
+    type: 'poster' | 'essay'
+  ) {
+    setCompErrorMsg((prev) => ({ ...prev, [type]: '' }));
     setCompSuccessMsg((prev) => ({ ...prev, [type]: '' }));
 
+    const file = e.target.files?.[0] || null;
+    if (!file) {
+      setSelectedFiles((prev) => ({ ...prev, [type]: null }));
+      return;
+    }
+
+    if (!isAllowedDocumentFile(file)) {
+      setCompErrorMsg((prev) => ({
+        ...prev,
+        [type]: 'Invalid file format. Please select a .pdf or .docx document.',
+      }));
+      e.target.value = '';
+      setSelectedFiles((prev) => ({ ...prev, [type]: null }));
+      return;
+    }
+
+    if (file.size > MAX_DOCUMENT_SIZE_BYTES) {
+      setCompErrorMsg((prev) => ({
+        ...prev,
+        [type]: `File exceeds the ${MAX_DOCUMENT_SIZE_MB} MB size limit (${formatFileSize(file.size)}). Please compress the file or submit a public cloud link.`,
+      }));
+      e.target.value = '';
+      setSelectedFiles((prev) => ({ ...prev, [type]: null }));
+      return;
+    }
+
+    setSelectedFiles((prev) => ({ ...prev, [type]: file }));
+  }
+
+  async function handleCompetitionSubmit(e: React.FormEvent, type: 'reels' | 'poster' | 'essay') {
+    e.preventDefault();
+    const supportsDocumentUpload = type === 'poster' || type === 'essay';
+    const currentMode = supportsDocumentUpload ? submissionModes[type] || 'file' : 'url';
+
+    setCompErrorMsg((prev) => ({ ...prev, [type]: '' }));
+    setCompSuccessMsg((prev) => ({ ...prev, [type]: '' }));
+    setIsSubmittingComp((prev) => ({ ...prev, [type]: true }));
+
     try {
+      let finalSubmissionUrl = '';
+      let finalSubmissionTitle: string | null = null;
+      let finalNotes = 'external_url';
+
+      if (supportsDocumentUpload && currentMode === 'file') {
+        const file = selectedFiles[type];
+        if (!file) {
+          setCompErrorMsg((prev) => ({
+            ...prev,
+            [type]: 'Please choose a .pdf or .docx file to upload.',
+          }));
+          setIsSubmittingComp((prev) => ({ ...prev, [type]: false }));
+          return;
+        }
+
+        if (!isAllowedDocumentFile(file)) {
+          setCompErrorMsg((prev) => ({
+            ...prev,
+            [type]: 'Only .pdf and .docx files are supported.',
+          }));
+          setIsSubmittingComp((prev) => ({ ...prev, [type]: false }));
+          return;
+        }
+
+        if (file.size > MAX_DOCUMENT_SIZE_BYTES) {
+          setCompErrorMsg((prev) => ({
+            ...prev,
+            [type]: `File size must be under ${MAX_DOCUMENT_SIZE_MB} MB.`,
+          }));
+          setIsSubmittingComp((prev) => ({ ...prev, [type]: false }));
+          return;
+        }
+
+        const ext = file.name.toLowerCase().endsWith('.docx') ? 'docx' : 'pdf';
+        const contentType =
+          ext === 'docx'
+            ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            : 'application/pdf';
+        const emailSlug = (sessionUser?.email || 'participant')
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, '_')
+          .slice(0, 48);
+        const baseName =
+          file.name
+            .replace(/\.[^/.]+$/, '')
+            .replace(/[^a-zA-Z0-9_-]/g, '_')
+            .slice(0, 60) || type;
+        const storagePath = `competition-submissions/${type}/${emailSlug}_${Date.now()}_${baseName}.${ext}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('media')
+          .upload(storagePath, file, {
+            contentType,
+            upsert: true,
+            cacheControl: '3600',
+          });
+
+        if (uploadError) {
+          throw new Error(
+            uploadError.message ||
+              'Could not upload document to storage. Please try again or use a public link.'
+          );
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from('media')
+          .getPublicUrl(storagePath);
+
+        if (!publicUrlData?.publicUrl) {
+          throw new Error('Could not resolve public URL for uploaded document.');
+        }
+
+        finalSubmissionUrl = publicUrlData.publicUrl;
+        finalSubmissionTitle = file.name;
+        finalNotes = 'file_upload';
+      } else {
+        const rawUrl = competitionUrls[type]?.trim() || '';
+        if (!rawUrl) {
+          setCompErrorMsg((prev) => ({
+            ...prev,
+            [type]: 'Please enter a valid public URL.',
+          }));
+          setIsSubmittingComp((prev) => ({ ...prev, [type]: false }));
+          return;
+        }
+
+        if (/^file:\/\//i.test(rawUrl) || /^[a-zA-Z]:\\/.test(rawUrl)) {
+          setCompErrorMsg((prev) => ({
+            ...prev,
+            [type]:
+              'Local computer file paths (file://) cannot be opened by the jury. Please switch to "Upload Document (.pdf / .docx)" to upload your file directly.',
+          }));
+          setIsSubmittingComp((prev) => ({ ...prev, [type]: false }));
+          return;
+        }
+
+        finalSubmissionUrl = rawUrl;
+        finalSubmissionTitle = null;
+        finalNotes = 'external_url';
+      }
+
       const res = await fetch('/api/learning/competition-submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ competitionType: type, submissionUrl: url }),
+        body: JSON.stringify({
+          competitionType: type,
+          submissionUrl: finalSubmissionUrl,
+          submissionTitle: finalSubmissionTitle,
+          notes: finalNotes,
+        }),
       });
 
       const data = await res.json();
-      if (data.success) {
-        setCompetitions((prev) => ({ ...prev, [type]: data.submission }));
-        setCompSuccessMsg((prev) => ({ ...prev, [type]: 'Submitted successfully' }));
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to save submission. Please check your input.');
       }
-    } catch (err) {
+
+      setCompetitions((prev) => ({ ...prev, [type]: data.submission }));
+      if (finalNotes === 'file_upload') {
+        setSelectedFiles((prev) => ({ ...prev, [type]: null }));
+        setCompSuccessMsg((prev) => ({
+          ...prev,
+          [type]: `Document "${finalSubmissionTitle}" uploaded and recorded.`,
+        }));
+      } else {
+        setCompSuccessMsg((prev) => ({
+          ...prev,
+          [type]: 'Public link submitted and recorded.',
+        }));
+      }
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('learning-progress-updated'));
+      }
+    } catch (err: any) {
       console.error('Error submitting competition:', err);
+      setCompErrorMsg((prev) => ({
+        ...prev,
+        [type]: err?.message || 'An error occurred while saving your submission.',
+      }));
     } finally {
       setIsSubmittingComp((prev) => ({ ...prev, [type]: false }));
     }
   }
 
-  // Calculate metrics
-  const completedSessionsCount = Object.values(progress).filter((p: any) => p?.videoCompleted).length;
-  const passedQuizzesCount = Object.values(progress).filter((p: any) => p?.quizPassed).length;
+  // Calculate metrics against active curriculumList
+  const totalSessionsCount = curriculumList.length || 5;
+  const completedSessionsCount = curriculumList.filter((s) => progress[s.id]?.videoCompleted).length;
+  const passedQuizzesCount = curriculumList.filter((s) => progress[s.id]?.quizPassed).length;
   const submittedCompsCount = Object.keys(competitions).length;
 
-  // Next session to study
+  // Next session to study: prefer sessions where video is unwatched OR quiz is unlocked & unpassed
   const nextSession =
     curriculumList.find((s) => {
       const p = progress[s.id];
+      const quizLocked = Boolean(quizzes[s.id]?.isLocked);
+      return !p?.videoCompleted || (!p?.quizPassed && !quizLocked);
+    }) ||
+    curriculumList.find((s) => {
+      const p = progress[s.id];
       return !p || !p.videoCompleted || !p.quizPassed;
-    }) || curriculumList[0];
+    }) ||
+    curriculumList[0];
 
   // 1. If viewing a challenge
   if (challengeDay) {
@@ -166,19 +386,90 @@ function LearningDashboardContent() {
       );
     }
 
+    const recordedSub = competitions[challenge.type];
+    const isCurrentChallengeSubmitted = Boolean(recordedSub);
+    const supportsDocUpload =
+      challenge.submissionType === 'url_or_document' ||
+      challenge.type === 'poster' ||
+      challenge.type === 'essay';
+    const activeMode = supportsDocUpload
+      ? submissionModes[challenge.type] || 'file'
+      : 'url';
+    const currentSelectedFile = selectedFiles[challenge.type] || null;
+    const isRecordedUploadedDoc =
+      recordedSub &&
+      (recordedSub.notes === 'file_upload' ||
+        String(recordedSub.submission_url || '').includes(
+          '/storage/v1/object/public/media/competition-submissions/'
+        ));
+
     return (
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 font-sans">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 font-sans space-y-4">
+        {/* Top Navigation & Challenge Switcher */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Link
+            href="/learning"
+            className="inline-flex items-center gap-1.5 font-mono text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-burgundy dark:hover:text-[#E89BA5] transition-colors uppercase tracking-wider"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to Learning Hub</span>
+          </Link>
+
+          <div className="flex items-center gap-1.5 p-1 bg-white dark:bg-[#150709] rounded-lg border border-slate-200 dark:border-[#3D1418]">
+            {Object.values(DAILY_COMPETITIONS).map((c) => {
+              const isDone = Boolean(competitions[c.type]);
+              const isActive = c.day === day;
+              return (
+                <Link
+                  key={c.day}
+                  href={`/learning?challenge=${c.day}`}
+                  className={clsx(
+                    'px-2.5 py-1 rounded-md font-mono text-[11px] font-semibold flex items-center gap-1 transition-colors',
+                    isActive
+                      ? 'bg-burgundy text-white'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1C0A0D]'
+                  )}
+                >
+                  {isDone && (
+                    <CheckCircle2
+                      className={clsx(
+                        'w-3 h-3 shrink-0',
+                        isActive ? 'text-white' : 'text-emerald-600 dark:text-emerald-400'
+                      )}
+                    />
+                  )}
+                  <span>Day 0{c.day}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
         <div className="bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl shadow-xs p-5 sm:p-7 space-y-6">
-          <div className="border-b border-slate-100 dark:border-[#3D1418] pb-4">
-            <span className="font-mono text-[10px] font-bold text-burgundy dark:text-[#E89BA5] uppercase tracking-wider block mb-1">
-              Challenge · Day 0{day} · Deadline: 12 October 2026
-            </span>
-            <h1 className="font-serif text-xl sm:text-2xl font-bold text-[#181313] dark:text-[#FAF6F3] tracking-tight">
-              {challenge.title}
-            </h1>
-            <p className="font-sans text-slate-600 dark:text-slate-300 text-xs sm:text-sm mt-1">
-              {challenge.description}
-            </p>
+          <div className="border-b border-slate-100 dark:border-[#3D1418] pb-4 flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+            <div>
+              <span className="font-mono text-[10px] font-bold text-burgundy dark:text-[#E89BA5] uppercase tracking-wider block mb-1">
+                Challenge · Day 0{day} · Deadline: 12 October 2026
+              </span>
+              <h1 className="font-serif text-xl sm:text-2xl font-bold text-[#181313] dark:text-[#FAF6F3] tracking-tight">
+                {challenge.title}
+              </h1>
+              <p className="font-sans text-slate-600 dark:text-slate-300 text-xs sm:text-sm mt-1">
+                {challenge.description}
+              </p>
+            </div>
+
+            {isCurrentChallengeSubmitted ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-mono text-[11px] font-bold shrink-0 self-start">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Submitted</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 font-mono text-[11px] font-bold shrink-0 self-start">
+                <Clock className="w-3.5 h-3.5" />
+                <span>Pending</span>
+              </span>
+            )}
           </div>
 
           {/* Highlighted Prize Banner - Styled in Burgundy Shades */}
@@ -229,52 +520,208 @@ function LearningDashboardContent() {
             </div>
           </div>
 
-          <div>
-            <form onSubmit={(e) => handleCompetitionSubmit(e, challenge.type)} className="space-y-3">
-              <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200">
-                Work URL (Public Link)
-              </label>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <input
-                  type="url"
-                  value={competitionUrls[challenge.type] || ''}
-                  onChange={(e) =>
-                    setCompetitionUrls((prev) => ({
-                      ...prev,
-                      [challenge.type]: e.target.value,
-                    }))
-                  }
-                  placeholder={challenge.urlPlaceholder}
-                  required
-                  className="flex-1 px-3 py-2 text-xs font-mono border border-slate-300 dark:border-[#3D1418] rounded-lg bg-white dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] focus:outline-none focus:ring-1 focus:ring-burgundy"
-                />
-                <button
-                  type="submit"
-                  disabled={isSubmittingComp[challenge.type]}
-                  className="px-4 py-2 bg-burgundy hover:bg-burgundy-deep text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  {competitions[challenge.type] ? 'Update Link' : 'Submit'}
-                </button>
+          <div className="space-y-4">
+            {/* Mode Switcher for Digital Poster (Day 2) & Essay (Day 3) */}
+            {supportsDocUpload && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                    Submission Method
+                  </span>
+                  <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400">
+                    Accepts .pdf or .docx (max {MAX_DOCUMENT_SIZE_MB} MB) or public URL
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-[#1C0A0D] rounded-xl border border-slate-200 dark:border-[#3D1418]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSubmissionModes((prev) => ({ ...prev, [challenge.type]: 'file' }));
+                      setCompErrorMsg((prev) => ({ ...prev, [challenge.type]: '' }));
+                    }}
+                    className={clsx(
+                      'py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer',
+                      activeMode === 'file'
+                        ? 'bg-white dark:bg-burgundy text-slate-900 dark:text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                    )}
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>Upload Document (.pdf / .docx)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSubmissionModes((prev) => ({ ...prev, [challenge.type]: 'url' }));
+                      setCompErrorMsg((prev) => ({ ...prev, [challenge.type]: '' }));
+                    }}
+                    className={clsx(
+                      'py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer',
+                      activeMode === 'url'
+                        ? 'bg-white dark:bg-burgundy text-slate-900 dark:text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                    )}
+                  >
+                    <Link2 className="w-3.5 h-3.5" />
+                    <span>Public Link (URL)</span>
+                  </button>
+                </div>
               </div>
+            )}
+
+            <form onSubmit={(e) => handleCompetitionSubmit(e, challenge.type)} className="space-y-3">
+              {supportsDocUpload && activeMode === 'file' ? (
+                <div className="space-y-3">
+                  <div className="rounded-xl border-2 border-dashed border-slate-300 dark:border-[#4A181E] bg-slate-50/70 dark:bg-[#1C0A0D]/70 p-4 sm:p-5 transition-colors hover:border-burgundy/50 dark:hover:border-[#E89BA5]/50">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-lg bg-burgundy/10 dark:bg-burgundy/20 text-burgundy dark:text-[#E89BA5] flex items-center justify-center shrink-0">
+                          <FileText className="w-5 h-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-slate-900 dark:text-[#FAF6F3] truncate">
+                            {currentSelectedFile
+                              ? currentSelectedFile.name
+                              : `Select your ${challenge.type === 'poster' ? 'poster' : 'essay'} file (.pdf or .docx)`}
+                          </p>
+                          <p className="font-mono text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                            {currentSelectedFile
+                              ? `${formatFileSize(currentSelectedFile.size)} · Ready to upload`
+                              : `Supported formats: PDF (.pdf) or Word (.docx) · Max ${MAX_DOCUMENT_SIZE_MB} MB`}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        {currentSelectedFile && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSelectedFiles((prev) => ({ ...prev, [challenge.type]: null }))
+                            }
+                            className="p-1.5 rounded-lg border border-slate-200 dark:border-[#3D1418] text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-white dark:hover:bg-[#150709] transition-colors cursor-pointer"
+                            title="Remove selected file"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        <label className="px-3.5 py-2 rounded-lg border border-slate-300 dark:border-[#4A181E] bg-white dark:bg-[#150709] hover:bg-slate-50 dark:hover:bg-[#240C10] text-slate-800 dark:text-[#FAF6F3] text-xs font-semibold cursor-pointer transition-colors inline-flex items-center gap-1.5">
+                          <Upload className="w-3.5 h-3.5 text-burgundy dark:text-[#E89BA5]" />
+                          <span>{currentSelectedFile ? 'Change File' : 'Choose File'}</span>
+                          <input
+                            type="file"
+                            accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                            onChange={(e) =>
+                              handleFileSelect(e, challenge.type as 'poster' | 'essay')
+                            }
+                            className="sr-only"
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={isSubmittingComp[challenge.type] || !currentSelectedFile}
+                      className="w-full sm:w-auto px-5 py-2.5 bg-burgundy hover:bg-burgundy-deep text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      {isSubmittingComp[challenge.type] ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Uploading Document...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-3.5 h-3.5" />
+                          <span>
+                            {recordedSub ? 'Upload & Replace Submission' : 'Upload & Submit Document'}
+                          </span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200">
+                    Work URL (Public Link)
+                  </label>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      type="url"
+                      value={competitionUrls[challenge.type] || ''}
+                      onChange={(e) => {
+                        setCompErrorMsg((prev) => ({ ...prev, [challenge.type]: '' }));
+                        setCompetitionUrls((prev) => ({
+                          ...prev,
+                          [challenge.type]: e.target.value,
+                        }));
+                      }}
+                      placeholder={challenge.urlPlaceholder}
+                      required
+                      className="flex-1 px-3 py-2 text-xs font-mono border border-slate-300 dark:border-[#3D1418] rounded-lg bg-white dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] focus:outline-none focus:ring-1 focus:ring-burgundy"
+                    />
+                    <button
+                      type="submit"
+                      disabled={isSubmittingComp[challenge.type]}
+                      className="px-4 py-2 bg-burgundy hover:bg-burgundy-deep text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+                    >
+                      {isSubmittingComp[challenge.type] ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Saving...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-3.5 h-3.5" />
+                          <span>{recordedSub ? 'Update Link' : 'Submit Link'}</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {compErrorMsg[challenge.type] && (
+                <div className="p-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 flex items-start gap-2 text-rose-800 dark:text-rose-200 text-xs font-medium">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" />
+                  <span>{compErrorMsg[challenge.type]}</span>
+                </div>
+              )}
 
               {compSuccessMsg[challenge.type] && (
                 <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center gap-2 text-emerald-800 dark:text-emerald-300 text-xs font-medium">
                   <CheckCircle2 className="w-4 h-4 shrink-0" />
-                  {compSuccessMsg[challenge.type]}
+                  <span>{compSuccessMsg[challenge.type]}</span>
                 </div>
               )}
 
-              {competitions[challenge.type] && (
-                <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] text-xs flex items-center justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">Recorded Submission:</span>
+              {recordedSub && (
+                <div className="p-3 rounded-lg bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    {isRecordedUploadedDoc ? (
+                      <FileText className="w-4 h-4 text-burgundy dark:text-[#E89BA5] shrink-0" />
+                    ) : (
+                      <Link2 className="w-4 h-4 text-burgundy dark:text-[#E89BA5] shrink-0" />
+                    )}
+                    <div className="min-w-0">
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 block">
+                        Recorded Submission ({isRecordedUploadedDoc ? 'Uploaded Document' : 'Public Link'}):
+                      </span>
+                      <span className="font-mono text-xs font-semibold text-slate-900 dark:text-[#FAF6F3] truncate block">
+                        {recordedSub.submission_title || recordedSub.submission_url}
+                      </span>
+                    </div>
+                  </div>
                   <a
-                    href={competitions[challenge.type].submission_url}
+                    href={recordedSub.submission_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-mono text-xs text-burgundy dark:text-[#E89BA5] font-semibold hover:underline flex items-center gap-1 truncate max-w-xs"
+                    className="px-3 py-1.5 rounded-md bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] font-mono text-xs text-burgundy dark:text-[#E89BA5] font-semibold hover:underline inline-flex items-center gap-1.5 shrink-0 self-start sm:self-auto"
                   >
-                    {competitions[challenge.type].submission_url}
+                    <span>{isRecordedUploadedDoc ? 'Open Document' : 'Open Link'}</span>
                     <ExternalLink className="w-3 h-3 shrink-0" />
                   </a>
                 </div>
@@ -320,7 +767,13 @@ function LearningDashboardContent() {
             <span className="font-serif text-2xl font-bold text-slate-900 dark:text-[#FAF6F3]">
               {completedSessionsCount}
             </span>
-            <span className="text-xs text-slate-400">/ 6</span>
+            <span className="text-xs text-slate-400">/ {totalSessionsCount}</span>
+          </div>
+          <div className="mt-2.5 w-full h-1 bg-slate-100 dark:bg-[#250D11] rounded-full overflow-hidden">
+            <div
+              className="h-full bg-burgundy dark:bg-[#E89BA5] rounded-full transition-all duration-500"
+              style={{ width: `${Math.min(100, Math.round((completedSessionsCount / totalSessionsCount) * 100))}%` }}
+            />
           </div>
         </div>
 
@@ -333,7 +786,13 @@ function LearningDashboardContent() {
             <span className="font-serif text-2xl font-bold text-slate-900 dark:text-[#FAF6F3]">
               {passedQuizzesCount}
             </span>
-            <span className="text-xs text-slate-400">/ 6</span>
+            <span className="text-xs text-slate-400">/ {totalSessionsCount}</span>
+          </div>
+          <div className="mt-2.5 w-full h-1 bg-slate-100 dark:bg-[#250D11] rounded-full overflow-hidden">
+            <div
+              className="h-full bg-burgundy dark:bg-[#E89BA5] rounded-full transition-all duration-500"
+              style={{ width: `${Math.min(100, Math.round((passedQuizzesCount / totalSessionsCount) * 100))}%` }}
+            />
           </div>
         </div>
 
@@ -347,6 +806,12 @@ function LearningDashboardContent() {
               {submittedCompsCount}
             </span>
             <span className="text-xs text-slate-400">/ 3</span>
+          </div>
+          <div className="mt-2.5 w-full h-1 bg-slate-100 dark:bg-[#250D11] rounded-full overflow-hidden">
+            <div
+              className="h-full bg-burgundy dark:bg-[#E89BA5] rounded-full transition-all duration-500"
+              style={{ width: `${Math.min(100, Math.round((submittedCompsCount / 3) * 100))}%` }}
+            />
           </div>
         </div>
       </div>
@@ -408,36 +873,163 @@ function LearningDashboardContent() {
 
       {/* Curriculum Grid */}
       <div className="space-y-3">
-        <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-          Curriculum Sessions
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Curriculum Sessions ({totalSessionsCount})
+          </h3>
+          <span className="font-mono text-[11px] text-slate-400 dark:text-slate-500">
+            {completedSessionsCount} Watched · {passedQuizzesCount} Quizzes Passed
+          </span>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {curriculumList.map((s) => {
             const p = progress[s.id];
-            const isDone = p?.videoCompleted && p?.quizPassed;
+            const isVideoDone = Boolean(p?.videoCompleted);
+            const isQuizDone = Boolean(p?.quizPassed);
+            const isDone = isVideoDone && isQuizDone;
+            const isQuizLocked = Boolean(quizzes[s.id]?.isLocked);
 
             return (
-              <Link
+              <div
                 key={s.id}
-                href={`/learning/session/${s.id}`}
-                className="p-3.5 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-lg hover:border-burgundy/40 dark:hover:border-[#E89BA5]/40 transition-colors flex items-start justify-between gap-2 group"
+                className="p-3.5 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl hover:border-burgundy/40 dark:hover:border-[#E89BA5]/40 transition-colors flex flex-col justify-between gap-3 group"
               >
-                <div className="min-w-0">
-                  <span className="font-mono text-[10px] font-bold text-burgundy dark:text-[#E89BA5] uppercase block">
-                    Day {s.day} · Session {s.sessionNumber}
-                  </span>
-                  <h4 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-[#FAF6F3] group-hover:text-burgundy dark:group-hover:text-[#E89BA5] transition-colors truncate mt-0.5">
-                    {s.title}
+                <Link href={`/learning/session/${s.id}`} className="flex items-start justify-between gap-2 min-w-0">
+                  <div className="min-w-0">
+                    <span className="font-mono text-[10px] font-bold text-burgundy dark:text-[#E89BA5] uppercase block">
+                      Day {s.day} · Session {s.sessionNumber}
+                    </span>
+                    <h4 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-[#FAF6F3] group-hover:text-burgundy dark:group-hover:text-[#E89BA5] transition-colors line-clamp-2 mt-0.5">
+                      {s.title}
+                    </h4>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-1 truncate">
+                      {s.duration} · {s.speaker.name}
+                    </span>
+                  </div>
+                  {isDone ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                  ) : (
+                    <Clock className="w-4 h-4 text-slate-300 dark:text-slate-600 shrink-0 mt-0.5" />
+                  )}
+                </Link>
+
+                <div className="pt-2.5 border-t border-slate-100 dark:border-[#250D11] flex items-center justify-between gap-2 text-[11px] font-mono">
+                  <Link
+                    href={`/learning/session/${s.id}`}
+                    className={clsx(
+                      'inline-flex items-center gap-1 font-semibold transition-colors',
+                      isVideoDone
+                        ? 'text-emerald-700 dark:text-emerald-400'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-burgundy dark:hover:text-[#E89BA5]'
+                    )}
+                  >
+                    {isVideoDone ? (
+                      <>
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span>Watched</span>
+                      </>
+                    ) : (
+                      <>
+                        <PlayCircle className="w-3 h-3" />
+                        <span>Watch Lecture</span>
+                      </>
+                    )}
+                  </Link>
+
+                  <Link
+                    href={`/learning/session/${s.id}/quiz`}
+                    className={clsx(
+                      'inline-flex items-center gap-1 px-2 py-0.5 rounded font-semibold transition-colors border',
+                      isQuizDone
+                        ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/80'
+                        : isQuizLocked
+                        ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60'
+                        : 'bg-burgundy/10 dark:bg-burgundy/20 text-burgundy dark:text-[#E89BA5] border-burgundy/20 dark:border-burgundy/40 hover:bg-burgundy hover:text-white'
+                    )}
+                  >
+                    {isQuizDone ? (
+                      <>
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span>Quiz {p?.quizScore ?? 100}%</span>
+                      </>
+                    ) : isQuizLocked ? (
+                      <>
+                        <Lock className="w-2.5 h-2.5" />
+                        <span>Quiz Soon</span>
+                      </>
+                    ) : (
+                      <>
+                        <Award className="w-3 h-3" />
+                        <span>Take Quiz</span>
+                      </>
+                    )}
+                  </Link>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Daily Creative Challenges Grid */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Daily Creative Challenges (3)
+          </h3>
+          <span className="font-mono text-[11px] text-slate-400 dark:text-slate-500">
+            {submittedCompsCount} / 3 Submitted
+          </span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {Object.values(DAILY_COMPETITIONS).map((comp) => {
+            const sub = competitions[comp.type];
+            const isSubmitted = Boolean(sub);
+            const supportsDoc =
+              comp.submissionType === 'url_or_document' ||
+              comp.type === 'poster' ||
+              comp.type === 'essay';
+            return (
+              <Link
+                key={comp.day}
+                href={`/learning?challenge=${comp.day}`}
+                className="p-3.5 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl hover:border-burgundy/40 dark:hover:border-[#E89BA5]/40 transition-colors flex flex-col justify-between gap-2.5 group"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-1.5">
+                    <span className="font-mono text-[10px] font-bold text-burgundy dark:text-[#E89BA5] uppercase">
+                      Day 0{comp.day} · {comp.prize}
+                    </span>
+                    {isSubmitted ? (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    ) : (
+                      <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                    )}
+                  </div>
+                  <h4 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-[#FAF6F3] group-hover:text-burgundy dark:group-hover:text-[#E89BA5] transition-colors mt-1 line-clamp-1">
+                    {comp.title}
                   </h4>
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
-                    {s.duration}
+                  <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5 truncate">
+                    {isSubmitted && sub?.submission_title
+                      ? `File: ${sub.submission_title}`
+                      : supportsDoc
+                      ? 'Accepts .pdf, .docx, or URL'
+                      : 'Accepts Public Video URL'}
                   </span>
                 </div>
-                {isDone ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                ) : (
-                  <Clock className="w-4 h-4 text-slate-300 dark:text-slate-600 shrink-0 mt-0.5" />
-                )}
+                <div className="flex items-center justify-between text-[11px] font-mono pt-2 border-t border-slate-100 dark:border-[#250D11]">
+                  <span
+                    className={clsx(
+                      'font-semibold',
+                      isSubmitted
+                        ? 'text-emerald-700 dark:text-emerald-400'
+                        : 'text-burgundy dark:text-[#E89BA5]'
+                    )}
+                  >
+                    {isSubmitted ? 'Submitted' : 'Submit Entry'}
+                  </span>
+                  <ArrowRight className="w-3 h-3 text-slate-400 group-hover:text-burgundy dark:group-hover:text-[#E89BA5] transition-colors" />
+                </div>
               </Link>
             );
           })}
@@ -583,15 +1175,28 @@ function LearningDashboardContent() {
                     </div>
 
                     {/* Action Quick Link */}
-                    <div className="shrink-0 flex items-center gap-2 pt-1 md:pt-0">
-                      {item.sessionId && (
-                        <Link
-                          href={`/learning/session/${item.sessionId}`}
-                          className="px-3 py-1.5 rounded-lg bg-burgundy/10 text-burgundy dark:bg-burgundy/25 dark:text-[#E89BA5] hover:bg-burgundy hover:text-white dark:hover:bg-burgundy-deep text-xs font-semibold transition-colors flex items-center gap-1"
-                        >
-                          <span>Session Video</span>
-                          <ArrowRight className="w-3 h-3" />
-                        </Link>
+                    <div className="shrink-0 flex flex-wrap items-center gap-2 pt-1 md:pt-0">
+                      {item.sessionId && !isQuiz && (
+                        <>
+                          <Link
+                            href={`/learning/session/${item.sessionId}`}
+                            className="px-3 py-1.5 rounded-lg bg-burgundy/10 text-burgundy dark:bg-burgundy/25 dark:text-[#E89BA5] hover:bg-burgundy hover:text-white dark:hover:bg-burgundy-deep text-xs font-semibold transition-colors flex items-center gap-1"
+                          >
+                            <span>Session Video</span>
+                            <ArrowRight className="w-3 h-3" />
+                          </Link>
+                          <Link
+                            href={`/learning/session/${item.sessionId}/quiz`}
+                            className="px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 hover:bg-amber-600 hover:text-white text-xs font-semibold transition-colors flex items-center gap-1 border border-amber-200 dark:border-amber-900"
+                          >
+                            {quizzes[item.sessionId]?.isLocked ? (
+                              <Lock className="w-3 h-3" />
+                            ) : (
+                              <Award className="w-3 h-3" />
+                            )}
+                            <span>Quiz</span>
+                          </Link>
+                        </>
                       )}
                       {isQuiz && (
                         <Link
