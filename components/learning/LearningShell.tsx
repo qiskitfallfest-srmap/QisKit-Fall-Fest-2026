@@ -184,72 +184,79 @@ export function LearningShell({ children, sidebar }: LearningShellProps) {
           width: isMounted && typeof window !== 'undefined' && window.innerWidth >= 768
             ? (isCollapsed ? 0 : `${sidebarWidth}px`)
             : undefined,
+          minWidth: isMounted && typeof window !== 'undefined' && window.innerWidth >= 768
+            ? (isCollapsed ? 0 : `${sidebarWidth}px`)
+            : undefined,
+          maxWidth: isMounted && typeof window !== 'undefined' && window.innerWidth >= 768
+            ? (isCollapsed ? 0 : `${sidebarWidth}px`)
+            : undefined,
         }}
         className={clsx(
-          'w-full md:shrink-0 bg-white dark:bg-[#150709] border-b md:border-b-0 border-slate-200 dark:border-[#3D1418] transition-[width] duration-150',
+          'w-full md:shrink-0 bg-white dark:bg-[#150709] border-b md:border-b-0 border-slate-200 dark:border-[#3D1418]',
+          !isDragging && 'transition-[width] duration-150',
           isCollapsed ? 'hidden md:flex md:w-0 md:overflow-hidden md:border-r-0' : 'md:flex md:flex-col md:border-r md:overflow-hidden',
           isCodingChallenge
-            ? 'md:static md:top-auto md:h-full'
+            ? 'md:relative md:h-full'
             : 'md:sticky md:top-0 md:h-screen',
-          'z-30 overscroll-contain relative',
-          isDragging && 'select-none pointer-events-auto transition-none'
+          'z-30 overscroll-contain',
+          isDragging && 'select-none pointer-events-auto'
         )}
       >
         <div className={clsx('h-full w-full flex flex-col min-w-0', isCollapsed && 'hidden')}>
           {sidebar}
         </div>
-
-        {/* Desktop Interactive Drag Handle on Right Border */}
-        {!isCollapsed && (
-          <div
-            onMouseDown={handleMouseDown}
-            onDoubleClick={handleDoubleClick}
-            role="separator"
-            aria-orientation="vertical"
-            aria-valuenow={sidebarWidth}
-            aria-valuemin={MIN_WIDTH}
-            aria-valuemax={MAX_WIDTH}
-            title="Drag to resize sidebar · Double-click to collapse"
-            className="hidden md:flex flex-col items-center justify-center absolute top-0 -right-2 w-4 h-full cursor-col-resize z-40 group select-none transition-colors"
-          >
-            {/* Subtle background line on hover or drag */}
-            <div
-              className={clsx(
-                'w-1 h-full rounded-full transition-colors',
-                isDragging
-                  ? 'bg-burgundy dark:bg-[#E89BA5]'
-                  : 'bg-transparent group-hover:bg-burgundy/30 dark:group-hover:bg-[#E89BA5]/30'
-              )}
-            />
-            {/* Centered visual grip handle */}
-            <div
-              className={clsx(
-                'absolute top-1/2 -translate-y-1/2 w-1.5 h-10 rounded-full transition-all duration-150 flex flex-col items-center justify-center gap-1 shadow-xs',
-                isDragging
-                  ? 'bg-burgundy dark:bg-[#E89BA5] scale-y-125 shadow-md'
-                  : 'bg-slate-300 dark:bg-[#3D1418] group-hover:bg-burgundy dark:group-hover:bg-[#E89BA5]'
-              )}
-            >
-              <div className="w-0.5 h-0.5 rounded-full bg-white dark:bg-black/60" />
-              <div className="w-0.5 h-0.5 rounded-full bg-white dark:bg-black/60" />
-              <div className="w-0.5 h-0.5 rounded-full bg-white dark:bg-black/60" />
-            </div>
-
-            {/* Quick collapse button docked to border handle */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleCollapse();
-              }}
-              title="Collapse Sidebar"
-              className="absolute top-4 -right-1 w-5 h-5 rounded-full bg-white dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] text-slate-400 hover:text-burgundy dark:hover:text-[#E89BA5] flex items-center justify-center shadow-xs cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <ChevronLeft className="w-3 h-3" />
-            </button>
-          </div>
-        )}
       </aside>
+
+      {/* Desktop Interactive Drag Handle between Sidebar & Main Content */}
+      {!isCollapsed && (
+        <div
+          onMouseDown={handleMouseDown}
+          onDoubleClick={handleDoubleClick}
+          role="separator"
+          aria-orientation="vertical"
+          aria-valuenow={sidebarWidth}
+          aria-valuemin={MIN_WIDTH}
+          aria-valuemax={MAX_WIDTH}
+          title="Drag to resize sidebar · Double-click to collapse"
+          className="hidden md:flex flex-col items-center justify-center w-2 h-full cursor-col-resize z-50 group select-none shrink-0 relative transition-colors -mx-1 px-1"
+        >
+          {/* Subtle vertical indicator line */}
+          <div
+            className={clsx(
+              'w-0.5 h-full transition-colors',
+              isDragging
+                ? 'bg-burgundy dark:bg-[#E89BA5]'
+                : 'bg-transparent group-hover:bg-burgundy/40 dark:group-hover:bg-[#E89BA5]/40'
+            )}
+          />
+          {/* Centered visual grip handle */}
+          <div
+            className={clsx(
+              'absolute top-1/2 -translate-y-1/2 w-1.5 h-10 rounded-full transition-all duration-150 flex flex-col items-center justify-center gap-1 shadow-xs',
+              isDragging
+                ? 'bg-burgundy dark:bg-[#E89BA5] scale-y-125 shadow-md'
+                : 'bg-slate-300 dark:bg-[#3D1418] group-hover:bg-burgundy dark:group-hover:bg-[#E89BA5]'
+            )}
+          >
+            <div className="w-0.5 h-0.5 rounded-full bg-white dark:bg-black/60" />
+            <div className="w-0.5 h-0.5 rounded-full bg-white dark:bg-black/60" />
+            <div className="w-0.5 h-0.5 rounded-full bg-white dark:bg-black/60" />
+          </div>
+
+          {/* Quick collapse button */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleCollapse();
+            }}
+            title="Collapse Sidebar"
+            className="absolute top-4 -right-1 w-5 h-5 rounded-full bg-white dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] text-slate-400 hover:text-burgundy dark:hover:text-[#E89BA5] flex items-center justify-center shadow-xs cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity z-50"
+          >
+            <ChevronLeft className="w-3 h-3" />
+          </button>
+        </div>
+      )}
 
       {/* Floating expand button when sidebar is collapsed on desktop */}
       {isCollapsed && isMounted && (

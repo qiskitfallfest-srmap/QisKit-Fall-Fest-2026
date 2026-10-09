@@ -19,21 +19,15 @@ export default function LearningLayout({ children }: { children: React.ReactNode
           : 'flex flex-col min-h-screen font-sans bg-[#FAF7F4] text-[#181313] dark:bg-[#100405] dark:text-[#F8F4EF]'
       }
     >
-      {isCodingChallenge ? (
-        <main className="flex-1 min-w-0 bg-[#FAF7F4] dark:bg-[#100405] min-h-0 h-full overflow-hidden flex flex-col">
-          {children}
-        </main>
-      ) : (
-        <LearningShell
-          sidebar={
-            <Suspense fallback={<div className="p-4 font-mono text-xs text-slate-400 uppercase tracking-wider">Loading curriculum...</div>}>
-              <LearningSidebar />
-            </Suspense>
-          }
-        >
-          {children}
-        </LearningShell>
-      )}
+      <LearningShell
+        sidebar={
+          <Suspense fallback={<div className="p-4 font-mono text-xs text-slate-400 uppercase tracking-wider">Loading curriculum...</div>}>
+            <LearningSidebar />
+          </Suspense>
+        }
+      >
+        {children}
+      </LearningShell>
 
       {/* Global Shared Footer - Suppressed on Python Coding Challenge in Qiskit */}
       {!isCodingChallenge && <Footer />}
