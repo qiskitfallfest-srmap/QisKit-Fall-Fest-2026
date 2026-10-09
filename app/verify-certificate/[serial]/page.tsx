@@ -22,8 +22,8 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { serial } = await params;
   return {
-    title: `Credential Verification: ${serial} | Qiskit Fall Fest SRMAP 2026`,
-    description: `Official IBM Quantum × SRM University-AP verified credential record for ${serial}.`,
+    title: `Certificate Verification: ${serial} | Qiskit Fall Fest SRMAP 2026`,
+    description: `Official IBM Quantum × SRM University-AP verified certificate record for ${serial}.`,
   };
 }
 
@@ -45,9 +45,9 @@ export default async function VerifyCertificatePage({ params }: PageProps) {
             <XCircle className="w-8 h-8" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-slate-900">Credential Not Found</h1>
+            <h1 className="text-xl font-bold text-slate-900">Certificate Not Found</h1>
             <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-              No verified academic credential matching serial number <br />
+              No verified academic certificate matching serial number <br />
               <code className="bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded font-mono font-semibold">
                 {serial}
               </code>{' '}
@@ -99,7 +99,7 @@ export default async function VerifyCertificatePage({ params }: PageProps) {
                   <span className="text-xs text-slate-400">· Official Registry Record</span>
                 </div>
                 <h1 className="text-lg sm:text-xl font-bold text-slate-900 mt-1">
-                  IBM Quantum Masterclass Credential
+                  IBM Quantum Masterclass Certificate
                 </h1>
               </div>
             </div>
@@ -116,7 +116,7 @@ export default async function VerifyCertificatePage({ params }: PageProps) {
             </a>
           </div>
 
-          {/* Credential Details Grid */}
+          {/* Certificate Details Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6">
             <div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">

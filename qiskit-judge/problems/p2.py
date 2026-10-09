@@ -70,10 +70,48 @@ class P2Judge(BaseProblemJudge):
                         if anc_bit != expected_parity:
                             return TestResult(test_type, test_number, name, False, int((time.perf_counter() - start_t) * 1000),
                                               f"For data state {bin(val)}, expected parity {expected_parity}, measured {anc_bit}.")
+                        # Data bits check: qubit q is at bitstr[-1 - q]
+                        data_val = sum(int(bitstr[-1 - q]) << q for q in range(n))
+                        if data_val != val:
+                            return TestResult(test_type, test_number, name, False, int((time.perf_counter() - start_t) * 1000),
+                                              f"Data qubits were disturbed! Expected state |{val:0{n}b}>, got |{data_val:0{n}b}>.")
 
             exec_time = int((time.perf_counter() - start_t) * 1000)
             return TestResult(test_type, test_number, name, True, exec_time, None)
 
+        except Exception as e:
+            exec_time = int((time.perf_counter() - start_t) * 1000)
+            return TestResult(test_type, test_number, name, False, exec_time, str(e))
+
+    def _test_superposition(self, func, test_type: str, test_number: int, name: str) -> TestResult:
+        start_t = time.perf_counter()
+        try:
+            from qiskit import QuantumCircuit
+            from qiskit.quantum_info import Statevector, state_fidelity
+
+            n = 2
+            qc = func(n)
+            ok, err = validate_v0_circuit(qc, expected_qubits=3, expected_clbits=1, allow_synthesis=False)
+            if not ok:
+                return TestResult(test_type, test_number, name, False, int((time.perf_counter() - start_t) * 1000), err)
+
+            qc_unitary = qc.remove_final_measurements(inplace=False)
+
+            # Prepare Bell pair (|00> + |11>)/sqrt(2) on data qubits 0, 1 with ancilla in |0>
+            prep = QuantumCircuit(3)
+            prep.h(0)
+            prep.cx(0, 1)
+
+            expected_joint = Statevector(prep)
+            actual_joint = Statevector(prep.compose(qc_unitary))
+
+            fid = state_fidelity(actual_joint, expected_joint)
+            if fid < 1 - 1e-9:
+                return TestResult(test_type, test_number, name, False, int((time.perf_counter() - start_t) * 1000),
+                                  f"Superposition state was disturbed (fidelity {fid:.6f} < 1 - 1e-9).")
+
+            exec_time = int((time.perf_counter() - start_t) * 1000)
+            return TestResult(test_type, test_number, name, True, exec_time, None)
         except Exception as e:
             exec_time = int((time.perf_counter() - start_t) * 1000)
             return TestResult(test_type, test_number, name, False, exec_time, str(e))
@@ -83,10 +121,11 @@ class P2Judge(BaseProblemJudge):
         if not func:
             return [TestResult('public', 1, "Function Presence", False, 0, "Function 'parity_probe' not defined.")]
 
-        results = []
-        for idx, n in enumerate([1, 2, 3], 1):
-            name = f"Public Parity n={n}"
-            results.append(self._test_circuit(func, n, 'public', idx, name))
+        results = [
+            self._test_circuit(func, 1, 'public', 1, "Single Bit Parity"),
+            self._test_circuit(func, 2, 'public', 2, "Two Bits Parity"),
+            self._test_superposition(func, 'public', 3, "Preserves Superposition"),
+        ]
         return results
 
     def run_hidden_tests(self, user_module) -> List[TestResult]:

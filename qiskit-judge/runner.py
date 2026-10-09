@@ -16,6 +16,12 @@ from typing import Dict, Any
 # Ensure current dir is in Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# Ensure clean UTF-8 encoding across Windows pipes
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+if hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8')
+
 from sandbox import validate_source_security
 
 def run_evaluation(problem_id: str, source_code: str, mode: str = "run") -> Dict[str, Any]:

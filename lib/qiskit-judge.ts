@@ -259,7 +259,9 @@ function getPythonExecutable(): string {
   if (process.env.PYTHON_BIN) return process.env.PYTHON_BIN;
   if (process.platform === 'win32') {
     const knownPaths = [
-      'C:\\Users\\smsub\\AppData\\Local\\Programs\\Python\\Python310\\python.exe',
+      path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Python', 'Python314', 'python.exe'),
+      path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Python', 'Python312', 'python.exe'),
+      path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Python', 'Python311', 'python.exe'),
       path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Python', 'Python310', 'python.exe'),
     ];
     for (const p of knownPaths) {

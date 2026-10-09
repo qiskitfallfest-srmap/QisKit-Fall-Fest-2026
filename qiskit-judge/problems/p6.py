@@ -22,9 +22,9 @@ class P6Judge(BaseProblemJudge):
             call_count[0] += 1
             if getattr(bound_qc, 'num_parameters', 0) > 0:
                 raise ValueError("Evaluator called on unbound circuit!")
-            # Measure Z expectation on qubit 0 as default objective
+            # Measure Z expectation on qubit 0 as default objective (rightmost character in Qiskit convention)
             sv = Statevector(bound_qc)
-            z_op = Pauli('Z' + 'I' * (bound_qc.num_qubits - 1))
+            z_op = Pauli('I' * (bound_qc.num_qubits - 1) + 'Z')
             return float(np.real(sv.expectation_value(z_op)))
 
         try:
