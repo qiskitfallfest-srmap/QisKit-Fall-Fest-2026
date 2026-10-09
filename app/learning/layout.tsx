@@ -29,7 +29,7 @@ export default function LearningLayout({ children }: { children: React.ReactNode
         {children}
       </LearningShell>
 
-      {/* Global Shared Footer - Suppressed on Qiskit Coding Challenge */}
+      {/* Global Shared Footer - Suppressed on Python Coding Challenge in Qiskit */}
       {!isCodingChallenge && <Footer />}
     </div>
   );

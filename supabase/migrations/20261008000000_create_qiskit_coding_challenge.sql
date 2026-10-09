@@ -1,6 +1,6 @@
 -- Migration: 20261008000000_create_qiskit_coding_challenge.sql
 -- Description: Provision tables, indexes, constraints, RLS policies, and seed data
---              for the Qiskit Coding Challenge / Evaluation Playground (9 Problems, 100 pts total).
+--              for the Python Coding Challenge in Qiskit / Evaluation Playground (9 Problems, 100 pts total).
 
 -- ============================================================================
 -- 1. TABLE: coding_challenges (Problem Master)

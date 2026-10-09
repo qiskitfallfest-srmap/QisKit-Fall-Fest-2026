@@ -817,7 +817,7 @@ function LearningDashboardContent() {
         </div>
       </div>
 
-      {/* Qiskit Coding Challenge Feature Card */}
+      {/* Python Coding Challenge in Qiskit Feature Card */}
       <div className="p-5 bg-gradient-to-r from-burgundy/10 via-burgundy/5 to-transparent dark:from-burgundy/25 dark:via-burgundy/10 dark:to-transparent border border-burgundy/30 dark:border-burgundy/40 rounded-xl shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
@@ -829,7 +829,7 @@ function LearningDashboardContent() {
             </span>
           </div>
           <h2 className="font-serif text-base sm:text-lg font-bold text-slate-900 dark:text-[#FAF6F3]">
-            Qiskit Coding Challenge
+            Python Coding Challenge in Qiskit
           </h2>
           <p className="text-xs text-slate-600 dark:text-slate-300 font-sans max-w-xl">
             Solve quantum programming problems using Python and Qiskit. Run your code against public tests, pass hidden tests, and earn points on the live leaderboard.

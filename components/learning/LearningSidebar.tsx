@@ -192,7 +192,7 @@ export function LearningSidebar() {
   // Active Label for mobile header
   let activeMobileTitle = 'Curriculum Hub';
   if (isCodingChallenge) {
-    activeMobileTitle = 'Qiskit Coding Challenge';
+    activeMobileTitle = 'Python Coding Challenge in Qiskit';
   } else if (isHackathon) {
     activeMobileTitle = 'Hackathon Workspace';
   } else if (activeSessionObj) {
@@ -611,7 +611,7 @@ export function LearningSidebar() {
             )}
           />
           <div className="flex flex-col min-w-0">
-            <span className="truncate">Qiskit Coding Challenge</span>
+            <span className="truncate">Python Coding Challenge in Qiskit</span>
             <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono font-normal">
               9 Problems · 100 pts
             </span>

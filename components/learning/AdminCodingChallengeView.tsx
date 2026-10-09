@@ -75,12 +75,12 @@ export function AdminCodingChallengeView() {
         setIsLocked(nextLockedState);
         setLockMsg(
           nextLockedState
-            ? "Coding Challenge is now LOCKED! Regular participants see the 'Coming Soon' holding state. Admins retain full bypass access for testing."
-            : "Coding Challenge is now UNLOCKED! Live and open to all registered participants."
+            ? "Python Coding Challenge in Qiskit is now LOCKED! Regular participants see the 'Coming Soon' holding state. Admins retain full bypass access for testing."
+            : "Python Coding Challenge in Qiskit is now UNLOCKED! Live and open to all registered participants."
         );
         setLockMsgIsError(false);
       } else {
-        setLockMsg(json.error || 'Failed to toggle coding challenge lock state');
+        setLockMsg(json.error || 'Failed to toggle challenge lock state');
         setLockMsgIsError(true);
       }
     } catch (err: any) {
@@ -206,7 +206,7 @@ export function AdminCodingChallengeView() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418]">
         <div>
           <h2 className="font-serif text-lg font-bold text-slate-900 dark:text-[#FAF6F3]">
-            Qiskit Challenge Analytics & Submissions
+            Python Coding Challenge in Qiskit Analytics & Submissions
           </h2>
           <p className="text-xs text-slate-500">
             Real-time evaluation statistics, problem solve rates, and participant submission records.

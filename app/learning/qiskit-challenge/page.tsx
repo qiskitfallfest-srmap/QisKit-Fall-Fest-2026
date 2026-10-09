@@ -275,6 +275,10 @@ function QiskitChallengeWorkspace() {
 
   // 1. Fetch current user session
   useEffect(() => {
+    document.title = 'Python Coding Challenge in Qiskit | Qiskit Fall Fest 2026';
+  }, []);
+
+  useEffect(() => {
     async function loadUser() {
       try {
         const res = await fetch('/api/auth/session');
@@ -434,10 +438,10 @@ function QiskitChallengeWorkspace() {
                 Coming Soon · Arena Locked
               </div>
               <h1 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight">
-                Qiskit Quantum Coding Challenge
+                Python Coding Challenge in Qiskit
               </h1>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-sans max-w-lg mx-auto">
-                The competitive quantum coding challenge arena is currently locked by the organizers.
+                The Python Coding Challenge in Qiskit arena is currently locked by the organizers.
                 Problem statements, the Monaco code editor, and the quantum test-suite judge will unlock at the scheduled launch time.
               </p>
             </div>
@@ -652,7 +656,7 @@ function QiskitChallengeWorkspace() {
           <div className="flex items-center gap-2">
             <Lock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 animate-pulse" />
             <span>
-              <strong>Admin Testing Mode:</strong> Coding Challenge is currently <strong>LOCKED</strong> for participants (students see Coming Soon). You have administrator bypass access to test problems, run Python/TypeScript code, and verify submissions.
+              <strong>Admin Testing Mode:</strong> Python Coding Challenge in Qiskit is currently <strong>LOCKED</strong> for participants (students see Coming Soon). You have administrator bypass access to test problems, run Python/TypeScript code, and verify submissions.
             </span>
           </div>
           <Link
@@ -1240,7 +1244,7 @@ function QiskitChallengeWorkspace() {
               <div className="flex items-center gap-2.5">
                 <Trophy className="w-5 h-5 text-amber-500" />
                 <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-[#FAF6F3]">
-                  Qiskit Challenge Leaderboard
+                  Python Coding Challenge in Qiskit Leaderboard
                 </h3>
               </div>
               <button
