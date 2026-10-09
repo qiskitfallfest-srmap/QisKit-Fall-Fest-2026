@@ -19,7 +19,13 @@ import {
   Calendar,
   Layers,
   Sparkles,
+  Clock,
+  Sliders,
+  MessageSquare,
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { EvaluationDrawer } from './EvaluationDrawer';
+import { SubmissionEvaluation } from '@/types/evaluations';
 
 export interface CompetitionSubmissionItem {
   id: string;
@@ -33,6 +39,7 @@ export interface CompetitionSubmissionItem {
   submitted_at: string;
   isDocument: boolean;
   documentType: 'pdf' | 'docx' | 'link';
+  evaluation?: SubmissionEvaluation | null;
 }
 
 interface Stats {
@@ -41,6 +48,9 @@ interface Stats {
   poster: number;
   essay: number;
   documentsCount: number;
+  shortlistedCount?: number;
+  evaluatedCount?: number;
+  downloadedCount?: number;
 }
 
 export function AdminCompetitionsView() {
@@ -54,9 +64,14 @@ export function AdminCompetitionsView() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState<'all' | 'reels' | 'poster' | 'essay' | 'documents'>('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'reels' | 'poster' | 'essay' | 'documents' | 'shortlisted' | 'downloaded'>('all');
   const [feedbackMsg, setFeedbackMsg] = useState<{ text: string; isError: boolean } | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Evaluation drawer state
+  const [selectedSubForEvaluation, setSelectedSubForEvaluation] = useState<CompetitionSubmissionItem | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [actionInProgressId, setActionInProgressId] = useState<string | null>(null);
 
   const fetchSubmissions = useCallback(async () => {
     try {
@@ -79,7 +94,105 @@ export function AdminCompetitionsView() {
 
   useEffect(() => {
     fetchSubmissions();
+
+    // Listen to real-time evaluation updates across all admin sessions
+    const channel = supabase
+      .channel('competitions-evaluations-live')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'submission_evaluations' },
+        (payload) => {
+          const updated = (payload.new || {}) as SubmissionEvaluation;
+          if (['reels', 'poster', 'essay'].includes(updated.category)) {
+            setSubmissions((prev) =>
+              prev.map((sub) => (sub.id === updated.target_id ? { ...sub, evaluation: updated } : sub))
+            );
+            setSelectedSubForEvaluation((curr) =>
+              curr && curr.id === updated.target_id ? { ...curr, evaluation: updated } : curr
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [fetchSubmissions]);
+
+  // Quick Action: Download / Inspect & Auto-Tick in DB
+  const handleQuickDownload = async (sub: CompetitionSubmissionItem) => {
+    try {
+      setActionInProgressId(sub.id);
+      const link = document.createElement('a');
+      link.href = sub.submission_url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      if (sub.isDocument) link.download = '';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      const res = await fetch('/api/admin/evaluations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: sub.competition_type,
+          target_id: sub.id,
+          action: 'mark_download',
+        }),
+      });
+
+      const json = await res.json();
+      if (json.success && json.evaluation) {
+        setSubmissions((prev) =>
+          prev.map((s) => (s.id === sub.id ? { ...s, evaluation: json.evaluation } : s))
+        );
+      }
+    } catch (err) {
+      console.error('Error logging competition download:', err);
+    } finally {
+      setActionInProgressId(null);
+    }
+  };
+
+  // Quick Action: Toggle Next Round Shortlist
+  const handleQuickToggleNextRound = async (sub: CompetitionSubmissionItem) => {
+    try {
+      setActionInProgressId(sub.id);
+      const res = await fetch('/api/admin/evaluations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: sub.competition_type,
+          target_id: sub.id,
+          action: 'toggle_next_round',
+        }),
+      });
+
+      const json = await res.json();
+      if (json.success && json.evaluation) {
+        setSubmissions((prev) =>
+          prev.map((s) => (s.id === sub.id ? { ...s, evaluation: json.evaluation } : s))
+        );
+      }
+    } catch (err) {
+      console.error('Error toggling competition next round:', err);
+    } finally {
+      setActionInProgressId(null);
+    }
+  };
+
+  const openEvaluationDesk = (sub: CompetitionSubmissionItem) => {
+    setSelectedSubForEvaluation(sub);
+    setIsDrawerOpen(true);
+  };
+
+  const handleEvaluationUpdated = (updated: SubmissionEvaluation) => {
+    setSubmissions((prev) =>
+      prev.map((s) => (s.id === updated.target_id ? { ...s, evaluation: updated } : s))
+    );
+  };
 
   const handleDelete = async (sub: CompetitionSubmissionItem) => {
     const confirmDelete = window.confirm(
@@ -109,9 +222,17 @@ export function AdminCompetitionsView() {
 
   const filteredSubmissions = useMemo(() => {
     return submissions.filter((sub) => {
-      // Type filter
+      // Type and evaluation filter
       if (typeFilter === 'documents' && !sub.isDocument) return false;
-      if (typeFilter !== 'all' && typeFilter !== 'documents' && sub.competition_type !== typeFilter) {
+      if (typeFilter === 'shortlisted' && !sub.evaluation?.is_next_round) return false;
+      if (typeFilter === 'downloaded' && !sub.evaluation?.downloaded) return false;
+      if (
+        typeFilter !== 'all' &&
+        typeFilter !== 'documents' &&
+        typeFilter !== 'shortlisted' &&
+        typeFilter !== 'downloaded' &&
+        sub.competition_type !== typeFilter
+      ) {
         return false;
       }
 
@@ -143,6 +264,11 @@ export function AdminCompetitionsView() {
       'Submission / File URL',
       'Submission Title',
       'Notes / Abstract',
+      'Round 2 Shortlisted',
+      'Evaluation Status',
+      'Score',
+      'Downloaded',
+      'Downloaded By',
       'Submitted At (UTC)',
     ];
 
@@ -162,6 +288,11 @@ export function AdminCompetitionsView() {
         `"${sub.submission_url.replace(/"/g, '""')}"`,
         `"${(sub.submission_title || '').replace(/"/g, '""')}"`,
         `"${(sub.notes || '').replace(/"/g, '""')}"`,
+        sub.evaluation?.is_next_round ? 'YES (Round 2)' : 'NO',
+        sub.evaluation?.status || 'pending',
+        sub.evaluation?.score !== null && sub.evaluation?.score !== undefined ? String(sub.evaluation.score) : 'N/A',
+        sub.evaluation?.downloaded ? 'YES' : 'NO',
+        `"${(sub.evaluation?.downloaded_by || '').replace(/"/g, '""')}"`,
         `"${sub.submitted_at}"`,
       ];
     });
@@ -373,6 +504,30 @@ export function AdminCompetitionsView() {
           >
             Docs Only ({stats.documentsCount})
           </button>
+
+          <button
+            type="button"
+            onClick={() => setTypeFilter('shortlisted')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer shrink-0 ${
+              typeFilter === 'shortlisted'
+                ? 'bg-emerald-600 text-white'
+                : 'bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1E0B0E]'
+            }`}
+          >
+            Round 2 Shortlisted ({stats.shortlistedCount || 0})
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setTypeFilter('downloaded')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer shrink-0 ${
+              typeFilter === 'downloaded'
+                ? 'bg-sky-600 text-white'
+                : 'bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1E0B0E]'
+            }`}
+          >
+            Downloaded ({stats.downloadedCount || 0})
+          </button>
         </div>
       </div>
 
@@ -405,6 +560,7 @@ export function AdminCompetitionsView() {
                   <th className="py-3 px-4">Format</th>
                   <th className="py-3 px-4">Title & Details</th>
                   <th className="py-3 px-4">Submitted At</th>
+                  <th className="py-3 px-4">Evaluation & Audit</th>
                   <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
@@ -495,33 +651,97 @@ export function AdminCompetitionsView() {
                         {formattedDate}
                       </td>
 
+                      {/* Evaluation & Audit Status */}
+                      <td className="py-3 px-4">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {sub.evaluation?.downloaded ? (
+                              <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
+                                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                <span>Downloaded ({sub.evaluation.downloaded_by?.split(' ')[0] || 'Admin'})</span>
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500 flex items-center gap-1">
+                                <Clock className="w-3 h-3" /> Not inspected
+                              </span>
+                            )}
+
+                            {sub.evaluation?.is_next_round && (
+                              <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-300 dark:border-emerald-700">
+                                Round 2
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            {sub.evaluation?.score !== null && sub.evaluation?.score !== undefined && (
+                              <span className="text-2xs font-mono font-bold text-amber-700 dark:text-amber-300">
+                                {sub.evaluation.score}/100 pts
+                              </span>
+                            )}
+                            {sub.evaluation?.comments && sub.evaluation.comments.length > 0 && (
+                              <span className="text-2xs text-slate-500 flex items-center gap-0.5">
+                                <MessageSquare className="w-2.5 h-2.5 text-burgundy dark:text-[#E89BA5]" />
+                                <span>{sub.evaluation.comments.length} notes</span>
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+
                       {/* Actions */}
                       <td className="py-3 px-4 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1.5">
-                          <a
-                            href={sub.submission_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            download={sub.isDocument ? true : undefined}
+                          {/* Quick Download / View & Tick */}
+                          <button
+                            type="button"
+                            onClick={() => handleQuickDownload(sub)}
+                            disabled={actionInProgressId === sub.id}
                             className={`px-2.5 py-1.5 rounded-lg text-2xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
-                              sub.isDocument
-                                ? 'bg-burgundy text-white hover:bg-burgundy/90 dark:bg-[#E89BA5] dark:text-[#100405] dark:hover:bg-[#F2BAC2]'
-                                : 'bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200'
+                              sub.evaluation?.downloaded
+                                ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100'
+                                : 'bg-burgundy text-white hover:bg-burgundy/90 dark:bg-[#E89BA5] dark:text-[#100405]'
                             }`}
+                            title="Download / Inspect and register verification"
                           >
-                            {sub.isDocument ? (
-                              <>
-                                <Download className="w-3 h-3" />
-                                <span>Download</span>
-                              </>
+                            {actionInProgressId === sub.id ? (
+                              <RefreshCw className="w-3 h-3 animate-spin" />
+                            ) : sub.evaluation?.downloaded ? (
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                             ) : (
-                              <>
-                                <ExternalLink className="w-3 h-3" />
-                                <span>Open Link</span>
-                              </>
+                              <Download className="w-3 h-3" />
                             )}
-                          </a>
+                            <span>{sub.evaluation?.downloaded ? 'Inspected' : 'Download'}</span>
+                          </button>
 
+                          {/* Quick Toggle Next Round */}
+                          <button
+                            type="button"
+                            onClick={() => handleQuickToggleNextRound(sub)}
+                            disabled={actionInProgressId === sub.id}
+                            className={`px-2.5 py-1.5 rounded-lg text-2xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                              sub.evaluation?.is_next_round
+                                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200'
+                            }`}
+                            title="Toggle Round 2 Shortlist"
+                          >
+                            <CheckCircle2 className="w-3 h-3" />
+                            <span>{sub.evaluation?.is_next_round ? 'Shortlisted' : 'Shortlist'}</span>
+                          </button>
+
+                          {/* Open Review Desk Drawer */}
+                          <button
+                            type="button"
+                            onClick={() => openEvaluationDesk(sub)}
+                            className="px-2.5 py-1.5 rounded-lg bg-slate-900 dark:bg-[#250D11] hover:bg-slate-800 text-white text-2xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                            title="Open evaluation rubric and discussion notes"
+                          >
+                            <Sliders className="w-3 h-3" />
+                            <span>Review</span>
+                          </button>
+
+                          {/* Delete Button */}
                           <button
                             type="button"
                             onClick={() => handleDelete(sub)}
@@ -545,6 +765,24 @@ export function AdminCompetitionsView() {
           </div>
         )}
       </div>
+
+      {/* Evaluation Drawer Modal */}
+      {selectedSubForEvaluation && (
+        <EvaluationDrawer
+          isOpen={isDrawerOpen}
+          onClose={() => {
+            setIsDrawerOpen(false);
+            setSelectedSubForEvaluation(null);
+          }}
+          category={selectedSubForEvaluation.competition_type}
+          targetId={selectedSubForEvaluation.id}
+          targetTitle={`${selectedSubForEvaluation.fullName || selectedSubForEvaluation.email} (${selectedSubForEvaluation.competition_type.toUpperCase()})`}
+          targetSubtitle={selectedSubForEvaluation.submission_title || selectedSubForEvaluation.notes || 'Creative Competition Entry'}
+          targetUrl={selectedSubForEvaluation.submission_url}
+          initialEvaluation={selectedSubForEvaluation.evaluation}
+          onEvaluationUpdated={handleEvaluationUpdated}
+        />
+      )}
     </div>
   );
 }

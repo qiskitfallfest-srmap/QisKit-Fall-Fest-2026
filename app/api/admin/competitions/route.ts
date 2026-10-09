@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { invalidateCompetitionSubmissionsCache } from '@/lib/redis';
+import { SubmissionEvaluation } from '@/types/evaluations';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -46,6 +47,17 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // Fetch evaluations for creative competitions
+    const { data: rawEvals } = await supabaseAdmin
+      .from('submission_evaluations')
+      .select('*')
+      .in('category', ['reels', 'poster', 'essay']);
+
+    const evalMap: Record<string, SubmissionEvaluation> = {};
+    (rawEvals || []).forEach((ev: any) => {
+      evalMap[ev.target_id] = ev as SubmissionEvaluation;
+    });
+
     // Enrich submissions
     const enriched = (rawSubmissions || []).map((sub) => {
       const normalizedEmail = sub.email.toLowerCase();
@@ -65,11 +77,14 @@ export async function GET(request: NextRequest) {
         }
       }
 
+      const evalData = evalMap[sub.id] || null;
+
       return {
         ...sub,
         fullName,
         isDocument,
         documentType,
+        evaluation: evalData,
       };
     });
 
@@ -93,6 +108,9 @@ export async function GET(request: NextRequest) {
       poster: enriched.filter((s) => s.competition_type === 'poster').length,
       essay: enriched.filter((s) => s.competition_type === 'essay').length,
       documentsCount: enriched.filter((s) => s.isDocument).length,
+      shortlistedCount: enriched.filter((s) => s.evaluation?.is_next_round).length,
+      evaluatedCount: enriched.filter((s) => s.evaluation && s.evaluation.status !== 'pending').length,
+      downloadedCount: enriched.filter((s) => s.evaluation?.downloaded).length,
     };
 
     return NextResponse.json({

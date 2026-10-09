@@ -21,7 +21,9 @@ import {
   Shield,
   X,
   PlayCircle,
+  Sliders,
 } from 'lucide-react';
+import { EvaluationDrawer } from './EvaluationDrawer';
 
 export function AdminCodingChallengeView() {
   const [data, setData] = useState<any>(null);
@@ -29,6 +31,10 @@ export function AdminCodingChallengeView() {
   const [filterProblem, setFilterProblem] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchUser, setSearchUser] = useState<string>('');
+
+  // Evaluation drawer state
+  const [selectedSubForEvaluation, setSelectedSubForEvaluation] = useState<any>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Lock status management
   const [isLocked, setIsLocked] = useState<boolean>(true);
@@ -351,12 +357,13 @@ export function AdminCodingChallengeView() {
                 <th className="px-3.5 py-2.5">Tests</th>
                 <th className="px-3.5 py-2.5">Runtime</th>
                 <th className="px-3.5 py-2.5">Timestamp</th>
+                <th className="px-3.5 py-2.5 text-right">Review Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-[#3D1418]">
               {filteredSubmissions.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-3.5 py-8 text-center text-slate-400">
+                  <td colSpan={8} className="px-3.5 py-8 text-center text-slate-400">
                     No submissions found matching the criteria.
                   </td>
                 </tr>
@@ -404,6 +411,19 @@ export function AdminCodingChallengeView() {
                       <td className="px-3.5 py-2.5 text-slate-400 font-mono text-[11px]">
                         {sub.submitted_at ? new Date(sub.submitted_at).toLocaleTimeString() : '--'}
                       </td>
+                      <td className="px-3.5 py-2.5 text-right">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedSubForEvaluation(sub);
+                            setIsDrawerOpen(true);
+                          }}
+                          className="px-2.5 py-1 rounded bg-slate-900 dark:bg-[#250D11] hover:bg-slate-800 text-white font-mono text-[11px] inline-flex items-center gap-1 cursor-pointer transition-colors"
+                        >
+                          <Sliders className="w-3 h-3" />
+                          <span>Review</span>
+                        </button>
+                      </td>
                     </tr>
                   );
                 })
@@ -412,6 +432,25 @@ export function AdminCodingChallengeView() {
           </table>
         </div>
       </div>
+
+      {/* Evaluation Drawer Modal */}
+      {selectedSubForEvaluation && (
+        <EvaluationDrawer
+          isOpen={isDrawerOpen}
+          onClose={() => {
+            setIsDrawerOpen(false);
+            setSelectedSubForEvaluation(null);
+          }}
+          category="coding"
+          targetId={selectedSubForEvaluation.id}
+          targetTitle={`${selectedSubForEvaluation.user_email} (Problem ${selectedSubForEvaluation.challenge_id})`}
+          targetSubtitle={`Score: ${selectedSubForEvaluation.score}/${selectedSubForEvaluation.max_score} · Tests: ${selectedSubForEvaluation.passed_tests}/${selectedSubForEvaluation.total_tests} · Status: ${selectedSubForEvaluation.status}`}
+          initialEvaluation={null}
+          onEvaluationUpdated={() => {
+            fetchStats();
+          }}
+        />
+      )}
     </div>
   );
 }
