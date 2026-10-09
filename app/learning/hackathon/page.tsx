@@ -29,6 +29,7 @@ import {
   Trash2,
   RefreshCw,
   Trophy,
+  GraduationCap,
 } from 'lucide-react';
 
 const VERTICALS: VerticalType[] = [
@@ -56,13 +57,22 @@ export default function HackathonWorkspacePage() {
 
   // Team creation form state
   const [teamName, setTeamName] = useState('');
+  const [leadUniversity, setLeadUniversity] = useState('');
   const [selectedVertical, setSelectedVertical] = useState<VerticalType>('Quantum Chemistry');
   const [selectedPSId, setSelectedPSId] = useState('PS-C1');
-  const [teammates, setTeammates] = useState<Array<{ email: string; fullName: string; status?: any }>>([
-    { email: '', fullName: '', status: 'idle' },
+  const [teammates, setTeammates] = useState<Array<{ email: string; fullName: string; university?: string; status?: any }>>([
+    { email: '', fullName: '', university: '', status: 'idle' },
   ]);
   const [isSubmittingTeam, setIsSubmittingTeam] = useState(false);
   const [teamFormError, setTeamFormError] = useState('');
+
+  useEffect(() => {
+    if (sessionUser?.email && !leadUniversity) {
+      if (sessionUser.email.toLowerCase().endsWith('@srmap.edu.in')) {
+        setLeadUniversity('SRM University-AP');
+      }
+    }
+  }, [sessionUser, leadUniversity]);
 
   // GitHub submission state
   const [githubUrl, setGithubUrl] = useState('');
@@ -83,6 +93,7 @@ export default function HackathonWorkspacePage() {
   const [isAddingMember, setIsAddingMember] = useState(false);
   const [newMemberEmail, setNewMemberEmail] = useState('');
   const [newMemberName, setNewMemberName] = useState('');
+  const [newMemberUniversity, setNewMemberUniversity] = useState('');
   const [newMemberStatus, setNewMemberStatus] = useState<any>('idle');
   const [isSubmittingNewMember, setIsSubmittingNewMember] = useState(false);
   const [memberActionMsg, setMemberActionMsg] = useState('');
@@ -146,10 +157,10 @@ export default function HackathonWorkspacePage() {
   // Teammates row handlers
   function handleAddTeammate() {
     if (teammates.length >= 5) return; // 1 leader + 5 members = 6 max
-    setTeammates((prev) => [...prev, { email: '', fullName: '', status: 'idle' }]);
+    setTeammates((prev) => [...prev, { email: '', fullName: '', university: '', status: 'idle' }]);
   }
 
-  function handleTeammateChange(index: number, updated: { email: string; fullName: string; status?: any }) {
+  function handleTeammateChange(index: number, updated: { email: string; fullName: string; university?: string; status?: any }) {
     setTeammates((prev) => {
       const copy = [...prev];
       copy[index] = updated;
@@ -171,14 +182,23 @@ export default function HackathonWorkspacePage() {
       return;
     }
 
+    if (!leadUniversity.trim()) {
+      setTeamFormError('Please enter your University / Institution name as the team leader.');
+      return;
+    }
+
     const filledTeammates = teammates.filter((t) => t.email.trim());
     if (filledTeammates.length < 1) {
       setTeamFormError('A team must have at least 2 members. Please add at least 1 teammate (Team size: 2 to 6 members).');
       return;
     }
 
-    // Verify all teammate rows are valid
-    for (const m of teammates) {
+    // Verify all teammate rows have valid email and university
+    for (const m of filledTeammates) {
+      if (!m.university?.trim()) {
+        setTeamFormError(`Please specify the University / College name for teammate ${m.fullName || m.email}.`);
+        return;
+      }
       if (m.status === 'not_whitelisted') {
         setTeamFormError(`Teammate ${m.email} is not whitelisted. Remove or replace.`);
         return;
@@ -198,7 +218,12 @@ export default function HackathonWorkspacePage() {
           teamName: teamName.trim(),
           vertical: selectedVertical,
           problemStatementId: selectedPSId,
-          teammates: teammates.filter((t) => t.email.trim()),
+          leadUniversity: leadUniversity.trim(),
+          teammates: filledTeammates.map((t) => ({
+            email: t.email.trim(),
+            fullName: t.fullName.trim() || t.email.split('@')[0],
+            university: t.university?.trim() || leadUniversity.trim(),
+          })),
         }),
       });
 
@@ -317,6 +342,11 @@ export default function HackathonWorkspacePage() {
     e.preventDefault();
     if (!team?.id || !newMemberEmail.trim()) return;
 
+    if (!newMemberUniversity.trim()) {
+      setMemberActionErr('Please enter the teammate\'s University / Institution name.');
+      return;
+    }
+
     if (newMemberStatus === 'not_whitelisted') {
       setMemberActionErr(`Teammate ${newMemberEmail} is not authorized on the whitelist.`);
       return;
@@ -338,6 +368,7 @@ export default function HackathonWorkspacePage() {
           teamId: team.id,
           email: newMemberEmail.trim(),
           fullName: newMemberName.trim(),
+          university: newMemberUniversity.trim(),
         }),
       });
 
@@ -350,6 +381,7 @@ export default function HackathonWorkspacePage() {
       setMemberActionMsg(`Invitation dispatched to ${newMemberEmail.trim()}!`);
       setNewMemberEmail('');
       setNewMemberName('');
+      setNewMemberUniversity('');
       setNewMemberStatus('idle');
       setIsAddingMember(false);
       await fetchTeamData();
@@ -892,7 +924,7 @@ export default function HackathonWorkspacePage() {
                           <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                         <div>
                           <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                             Teammate Email (Registered Gmail):
@@ -915,6 +947,19 @@ export default function HackathonWorkspacePage() {
                             value={newMemberName}
                             onChange={(e) => setNewMemberName(e.target.value)}
                             placeholder="Teammate Full Name"
+                            className="w-full px-3 py-1.5 text-xs rounded border border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#150709] text-slate-900 dark:text-[#FAF6F3] focus:outline-none focus:ring-1 focus:ring-burgundy"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            University / College *:
+                          </label>
+                          <input
+                            type="text"
+                            value={newMemberUniversity}
+                            onChange={(e) => setNewMemberUniversity(e.target.value)}
+                            placeholder="e.g. SRM University-AP"
+                            required
                             className="w-full px-3 py-1.5 text-xs rounded border border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#150709] text-slate-900 dark:text-[#FAF6F3] focus:outline-none focus:ring-1 focus:ring-burgundy"
                           />
                         </div>
@@ -959,7 +1004,7 @@ export default function HackathonWorkspacePage() {
                           key={m.id}
                           className="p-3.5 rounded-xl border border-slate-200 dark:border-[#3D1418] bg-slate-50 dark:bg-[#1C0A0D] text-xs space-y-2 flex flex-col justify-between"
                         >
-                          <div className="space-y-1">
+                          <div className="space-y-1.5">
                             <div className="flex items-center justify-between gap-1">
                               <span className="font-bold text-slate-900 dark:text-[#FAF6F3] truncate text-sm">
                                 {m.full_name || m.email.split('@')[0]}
@@ -977,6 +1022,10 @@ export default function HackathonWorkspacePage() {
                             <span className="text-slate-500 dark:text-slate-400 truncate block font-mono text-[11px]">
                               {m.email}
                             </span>
+                            <div className="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-300 pt-0.5">
+                              <GraduationCap className="w-3.5 h-3.5 text-burgundy dark:text-[#E89BA5] shrink-0" />
+                              <span className="truncate font-medium">{m.university || 'SRM University-AP'}</span>
+                            </div>
                           </div>
 
                           <div className="pt-2 border-t border-slate-200/60 dark:border-[#3D1418] flex items-center justify-between gap-2">
@@ -1331,17 +1380,31 @@ export default function HackathonWorkspacePage() {
                       />
                     </div>
 
-                    {/* Team Leader Badge */}
-                    <div className="p-3.5 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-slate-50 dark:bg-[#1C0A0D] text-sm space-y-1">
+                    {/* Team Leader Badge & University Input */}
+                    <div className="p-3.5 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-slate-50 dark:bg-[#1C0A0D] text-sm space-y-2.5">
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-slate-900 dark:text-[#FAF6F3]">
                           Team Leader: {sessionUser?.fullName || 'You'}
                         </span>
-                        <span className="px-1.5 py-0.5 rounded text-sm font-bold bg-burgundy/10 dark:bg-burgundy/20 text-burgundy dark:text-[#E89BA5] uppercase">
+                        <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-burgundy/10 dark:bg-burgundy/20 text-burgundy dark:text-[#E89BA5] uppercase">
                           Leader (Confirmed)
                         </span>
                       </div>
-                      <span className="text-slate-500 dark:text-slate-400 font-mono">{sessionUser?.email}</span>
+                      <span className="text-slate-500 dark:text-slate-400 font-mono text-xs block">{sessionUser?.email}</span>
+                      
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                          Leader University / Institution Name *:
+                        </label>
+                        <input
+                          type="text"
+                          value={leadUniversity}
+                          onChange={(e) => setLeadUniversity(e.target.value)}
+                          placeholder="e.g. SRM University-AP, IIT Madras, etc."
+                          required
+                          className="w-full px-3 py-1.5 text-xs bg-white dark:bg-[#150709] border border-slate-300 dark:border-[#3D1418] text-slate-900 dark:text-[#FAF6F3] rounded focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy dark:placeholder-slate-500"
+                        />
+                      </div>
                     </div>
 
                     {/* Additional Teammates */}
