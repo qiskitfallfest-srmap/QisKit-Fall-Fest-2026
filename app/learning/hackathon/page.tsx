@@ -29,7 +29,6 @@ import {
   UserPlus,
   Trash2,
   RefreshCw,
-  FileCode,
 } from 'lucide-react';
 
 const VERTICALS: VerticalType[] = [
@@ -1089,8 +1088,6 @@ export default function HackathonWorkspacePage() {
                 </div>
                 <p className="text-base text-slate-600 dark:text-slate-300 leading-relaxed">
                   Provide your team&apos;s public GitHub, GitLab, or Hugging Face Space repository link.
-                  Ensure your repository includes `main.ipynb` (or `main.py`), `processors/` with
-                  `processor_D.json`, and benchmark plots in `results/`.
                 </p>
 
                 {repoSuccessMsg && (
@@ -1142,28 +1139,6 @@ export default function HackathonWorkspacePage() {
                     </div>
                   )}
                 </form>
-
-                {/* Deliverables Checklist for Evaluation */}
-                <div className="p-4 rounded-xl border border-slate-200 dark:border-[#3D1418] bg-slate-50/70 dark:bg-[#1A0A0D] space-y-2 text-xs">
-                  <span className="font-bold uppercase tracking-wider text-burgundy dark:text-[#E89BA5] flex items-center gap-1.5 text-[11px]">
-                    <FileCode className="w-3.5 h-3.5" />
-                    Required Deliverables Checklist for Judges
-                  </span>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-slate-600 dark:text-slate-300">
-                    <div className="p-2.5 rounded-lg bg-white dark:bg-[#120507] border border-slate-200/60 dark:border-[#3D1418]">
-                      <span className="font-bold text-slate-900 dark:text-[#FAF6F3] block mb-0.5">1. Algorithm Notebook</span>
-                      <span className="text-[11px] leading-relaxed block">`main.ipynb` with Qiskit 1.2+ VQE/QAOA/transpilation scripts and metrics.</span>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-white dark:bg-[#120507] border border-slate-200/60 dark:border-[#3D1418]">
-                      <span className="font-bold text-slate-900 dark:text-[#FAF6F3] block mb-0.5">2. Processor D Map</span>
-                      <span className="text-[11px] leading-relaxed block">`processors/processor_D.json` with 12-qubit coupling map and justification.</span>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-white dark:bg-[#120507] border border-slate-200/60 dark:border-[#3D1418]">
-                      <span className="font-bold text-slate-900 dark:text-[#FAF6F3] block mb-0.5">3. Benchmark Plots</span>
-                      <span className="text-[11px] leading-relaxed block">`results/` with depth, CX counts, and SWAP penalty across Processors A, B, and C.</span>
-                    </div>
-                  </div>
-                </div>
               </div>
 
               {/* UNLOCKED PROBLEM STATEMENT DOSSIER */}
