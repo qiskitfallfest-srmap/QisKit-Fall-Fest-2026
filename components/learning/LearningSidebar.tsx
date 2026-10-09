@@ -30,6 +30,7 @@ import { useCurriculumSessions } from '@/hooks/use-curriculum-sessions';
 import { useQuizzes } from '@/hooks/use-quizzes';
 import { useCodingChallengeStatus } from '@/hooks/use-coding-challenge';
 import { CertificateModal } from '@/components/learning/CertificateModal';
+import { useLearningSidebar } from '@/components/learning/LearningShell';
 
 const DAYS = [
   { id: 1, label: 'Day 1: Foundations' },
@@ -40,6 +41,14 @@ const DAYS = [
 export function LearningSidebar() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const sidebarContext = useLearningSidebar();
+  const handleToggleCollapse = React.useCallback(() => {
+    if (sidebarContext?.toggleCollapse) {
+      sidebarContext.toggleCollapse();
+    } else if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('qff_toggle_sidebar'));
+    }
+  }, [sidebarContext]);
   const { sessions } = useCurriculumSessions();
   const { quizzes } = useQuizzes();
   const { isLocked: isChallengeLocked } = useCodingChallengeStatus();
@@ -837,12 +846,23 @@ export function LearningSidebar() {
         {/* Header section */}
         <div className="p-4 border-b border-slate-100 dark:border-[#3D1418] bg-white dark:bg-[#150709] shrink-0 z-10">
           <div className="flex items-center justify-between gap-2 mb-1">
-            <span className="font-mono px-2 py-0.5 rounded bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] font-semibold text-[10px] uppercase tracking-[0.2em]">
-              Curriculum
-            </span>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <button
+                type="button"
+                onClick={handleToggleCollapse}
+                title="Collapse Curriculum Sidebar (Ctrl+B)"
+                aria-label="Collapse Curriculum Sidebar"
+                className="p-1 -ml-1 rounded-md text-slate-500 hover:text-burgundy dark:text-slate-400 dark:hover:text-[#E89BA5] hover:bg-slate-100 dark:hover:bg-[#1C0A0D] transition-colors cursor-pointer flex items-center justify-center shrink-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-burgundy/40"
+              >
+                <Menu className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              </button>
+              <span className="font-mono px-2 py-0.5 rounded bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] font-semibold text-[10px] uppercase tracking-[0.2em] truncate">
+                Curriculum
+              </span>
+            </div>
             <Link
               href="/"
-              className="inline-flex items-center gap-1 font-mono text-[10px] font-semibold text-slate-400 dark:text-slate-500 hover:text-burgundy dark:hover:text-[#E89BA5] transition-colors"
+              className="inline-flex items-center gap-1 font-mono text-[10px] font-semibold text-slate-400 dark:text-slate-500 hover:text-burgundy dark:hover:text-[#E89BA5] transition-colors shrink-0"
               title="Return to Main Event Website"
             >
               <ArrowLeft className="w-3 h-3" />
