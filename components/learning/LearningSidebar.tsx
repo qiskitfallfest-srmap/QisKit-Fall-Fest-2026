@@ -466,7 +466,7 @@ export function LearningSidebar() {
             )}
           />
           <div className="flex flex-col min-w-0">
-            <span className="truncate">Coding Challenge</span>
+            <span className="truncate">Python Coding Challenge in Qiskit</span>
             <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono font-normal">
               9 Problems · 100 pts
             </span>

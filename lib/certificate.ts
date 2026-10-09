@@ -17,7 +17,7 @@ export interface EligibilityResult {
   totalSessions: number;
   sessionsCompleted: number;
   quizzesPassed: number;
-  competitionsSubmitted: number;
+  competitionsSubmitted?: number;
   averageQuizScore: number;
   missingTasks: string[];
 }
@@ -87,7 +87,7 @@ export async function checkCertificateEligibility(
     }
   }
 
-  // 4. Evaluate sessions & quizzes
+  // 4. Evaluate sessions & quizzes (Strict Requirement: All Videos Watched + All Quizzes Passed)
   const missingTasks: string[] = [];
   let sessionsCompleted = 0;
   let quizzesPassed = 0;
@@ -96,12 +96,12 @@ export async function checkCertificateEligibility(
   for (const session of CURRICULUM_SESSIONS) {
     const prog = progressMap.get(session.id);
     const quizDone = prog?.quiz_passed === true;
-    const videoDone = prog?.video_completed === true || quizDone;
+    const videoDone = prog?.video_completed === true;
 
     if (videoDone) {
       sessionsCompleted++;
     } else {
-      missingTasks.push(`Session ${session.sessionNumber} Video Lecture incomplete`);
+      missingTasks.push(`Session ${session.sessionNumber} Video Lecture (${session.title}) not watched`);
     }
 
     if (quizDone) {
@@ -112,31 +112,13 @@ export async function checkCertificateEligibility(
     }
   }
 
-  // 5. Evaluate competitions (reels, poster, essay)
-  const requiredCompTypes = ['reels', 'poster', 'essay'] as const;
-  const compLabels: Record<string, string> = {
-    reels: 'Day 1 Quantum Tech Reels',
-    poster: 'Day 2 Digital Poster',
-    essay: 'Day 3 Essay Competition',
-  };
-
-  let competitionsSubmitted = 0;
-  for (const cType of requiredCompTypes) {
-    if (submittedTypes.has(cType)) {
-      competitionsSubmitted++;
-    } else {
-      missingTasks.push(`${compLabels[cType]} submission missing`);
-    }
-  }
-
   const totalSessions = CURRICULUM_SESSIONS.length;
   const averageQuizScore =
     quizzesPassed > 0 ? Math.round((totalScore / totalSessions) * 10) / 10 : 0;
 
   const eligible =
     sessionsCompleted === totalSessions &&
-    quizzesPassed === totalSessions &&
-    competitionsSubmitted === requiredCompTypes.length;
+    quizzesPassed === totalSessions;
 
   return {
     eligible,
@@ -144,7 +126,7 @@ export async function checkCertificateEligibility(
     totalSessions,
     sessionsCompleted,
     quizzesPassed,
-    competitionsSubmitted,
+    competitionsSubmitted: submittedTypes.size,
     averageQuizScore,
     missingTasks,
   };
