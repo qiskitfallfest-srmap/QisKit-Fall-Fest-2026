@@ -3,6 +3,7 @@ import { getServerSession } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { isEmailWhitelisted, invalidateHackathonTeamCache, invalidateEmailCache } from '@/lib/redis';
 import { isTeamFinalized } from '@/lib/finalized-teams';
+import { saveParticipantUniversities } from '@/lib/participant-universities';
 
 // Helper to invalidate all team member caches
 async function invalidateAllTeamCaches(teamId: string, additionalEmail?: string) {
@@ -38,14 +39,22 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { teamId, email, fullName } = body;
+    const { teamId, email, fullName, university } = body;
 
     const trimmedEmail = email?.trim().toLowerCase();
     const cleanFullName = fullName?.trim() || trimmedEmail?.split('@')[0] || '';
+    const cleanUniversity = university?.trim() || '';
 
     if (!teamId || !trimmedEmail || !trimmedEmail.includes('@')) {
       return NextResponse.json(
         { error: 'Team ID and valid teammate email are required.' },
+        { status: 400 }
+      );
+    }
+
+    if (!cleanUniversity) {
+      return NextResponse.json(
+        { error: 'Please provide the teammate\'s University / Institution name.' },
         { status: 400 }
       );
     }
@@ -185,13 +194,25 @@ export async function POST(request: NextRequest) {
       throw insertError || new Error('Failed to insert member');
     }
 
+    // 8. Persist university name
+    await saveParticipantUniversities([
+      {
+        email: trimmedEmail,
+        university: cleanUniversity,
+        fullName: cleanFullName || whitelistCheck.fullName || trimmedEmail.split('@')[0],
+      },
+    ]);
+
     // Invalidate caches
     await invalidateAllTeamCaches(teamId, trimmedEmail);
 
     return NextResponse.json({
       success: true,
       message: `Invitation successfully dispatched to ${trimmedEmail}.`,
-      member: newMember,
+      member: {
+        ...newMember,
+        university: cleanUniversity,
+      },
     });
   } catch (error: any) {
     console.error('Error adding team member:', error);

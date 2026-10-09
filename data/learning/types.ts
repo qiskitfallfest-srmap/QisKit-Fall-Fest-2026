@@ -106,6 +106,7 @@ export interface TeamMemberRecord {
   teamId: string;
   email: string;
   fullName: string;
+  university?: string;
   role: 'leader' | 'member';
   status: 'invited' | 'accepted' | 'declined';
   invitedAt: string;
@@ -117,6 +118,7 @@ export interface HackathonTeamRecord {
   name: string;
   leadEmail: string;
   leadName: string;
+  leadUniversity?: string;
   vertical: VerticalType;
   problemStatementId: string;
   githubRepoUrl?: string;
