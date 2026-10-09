@@ -8,6 +8,7 @@ import { AdminHackathonView } from '@/components/learning/AdminHackathonView';
 import { AdminSessionsManager } from '@/components/learning/AdminSessionsManager';
 import { AdminQuizzesManager } from '@/components/learning/AdminQuizzesManager';
 import { AdminCodingChallengeView } from '@/components/learning/AdminCodingChallengeView';
+import { AdminCompetitionsView } from '@/components/learning/AdminCompetitionsView';
 import {
   Shield,
   UserPlus,
@@ -34,7 +35,7 @@ import { extractParticipantsFromCSV, ParsedParticipant } from '@/lib/csv';
 
 export default function AdminConsolePage() {
   const [session, setSession] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'analytics' | 'hackathon' | 'whitelist' | 'overrides' | 'sessions' | 'quizzes' | 'coding'>('hackathon');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'hackathon' | 'competitions' | 'whitelist' | 'overrides' | 'sessions' | 'quizzes' | 'coding'>('hackathon');
 
   const [emails, setEmails] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -372,6 +373,9 @@ export default function AdminConsolePage() {
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] px-3 py-1.5 rounded-lg shadow-2xs">
                 Teams: <strong className="text-slate-900 dark:text-[#FAF6F3]">{stats.teamsFormed || 0}</strong>
               </span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] px-3 py-1.5 rounded-lg shadow-2xs">
+                Competitions: <strong className="text-slate-900 dark:text-[#FAF6F3]">{stats.competitionSubmissions || 0}</strong>
+              </span>
             </div>
           </div>
 
@@ -401,6 +405,19 @@ export default function AdminConsolePage() {
             >
               <Trophy className="w-4 h-4 text-amber-500" />
               <span>Hackathon Teams & Participants ({stats.teamsFormed || 0})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('competitions')}
+              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+                activeTab === 'competitions'
+                  ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
+                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
+              }`}
+            >
+              <Award className="w-4 h-4 text-rose-500" />
+              <span>Daily Competitions ({stats.competitionSubmissions || 0})</span>
             </button>
 
             <button
@@ -471,6 +488,9 @@ export default function AdminConsolePage() {
 
           {/* TAB: HACKATHON TEAMS & PARTICIPANTS */}
           {activeTab === 'hackathon' && <AdminHackathonView />}
+
+          {/* TAB: DAILY COMPETITIONS & JURY REGISTRY */}
+          {activeTab === 'competitions' && <AdminCompetitionsView />}
 
           {/* TAB: CONCEPT QUIZZES & LOCKING */}
           {activeTab === 'quizzes' && <AdminQuizzesManager />}
