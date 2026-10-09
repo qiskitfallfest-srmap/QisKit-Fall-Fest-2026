@@ -9,7 +9,6 @@ import {
   ExternalLink,
   ShieldCheck,
   CreditCard,
-  Sparkles,
   AlertCircle,
   X,
   ChevronRight,

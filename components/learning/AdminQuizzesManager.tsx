@@ -20,7 +20,6 @@ import {
   Eye,
   ArrowUp,
   ArrowDown,
-  Sparkles,
   Sliders,
   Check,
   X,
@@ -879,7 +878,7 @@ export function AdminQuizzesManager() {
         {/* Bottom Save Bar */}
         <div className="bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3 sticky bottom-4 z-20">
           <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-            <Sparkles className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
+            <HelpCircle className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
             <span>
               Editing {formData.questions.length} questions for{' '}
               <strong className="text-slate-800 dark:text-slate-200">

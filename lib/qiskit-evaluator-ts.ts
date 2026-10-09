@@ -132,7 +132,7 @@ function transpilePythonToJS(pyCode: string): string {
     trimmed = trimmed.replace(/^([a-zA-Z0-9_]+)\s*:\s*[a-zA-Z0-9_\[\],\s]+\s*=/, '$1 =');
 
     // Support slice [::-1]
-    trimmed = trimmed.replace(/\[::-1\]/g, '.split("").reverse().join("")');
+    trimmed = trimmed.replace(/\[::-1\]/g, '.split("").reverse().join("")\'');
 
     // def func(...) -> Ret:
     const defMatch = trimmed.match(/^def\s+([a-zA-Z0-9_]+)\s*\((.*?)\)(\s*->.*?)?:$/);
@@ -143,6 +143,21 @@ function transpilePythonToJS(pyCode: string): string {
       continue;
     }
 
+    // while ...:
+    const whileMatch = trimmed.match(/^while\s+(.*?):$/);
+    if (whileMatch) {
+      indentStack.push(indent + 4);
+      let cond = whileMatch[1]
+        .replace(/\bTrue\b/g, 'true')
+        .replace(/\bFalse\b/g, 'false')
+        .replace(/\bNone\b/g, 'null')
+        .replace(/\band\b/g, '&&')
+        .replace(/\bor\b/g, '||')
+        .replace(/\bnot\b/g, '!');
+      jsLines.push(' '.repeat(indent) + `while (${cond}) { if (Date.now() - __eval_start_time > 2000) throw new Error("Execution timed out (infinite loop detected)");`);
+      continue;
+    }
+
     // for ... in range(...):
     const forRangeMatch = trimmed.match(/^for\s+([a-zA-Z0-9_]+)\s+in\s+range\((.*?)\):$/);
     if (forRangeMatch) {
@@ -150,9 +165,9 @@ function transpilePythonToJS(pyCode: string): string {
       const varName = forRangeMatch[1];
       const rangeArgs = forRangeMatch[2].split(',').map((x) => x.trim());
       if (rangeArgs.length === 1) {
-        jsLines.push(' '.repeat(indent) + `for (let ${varName} = 0; ${varName} < ${rangeArgs[0]}; ${varName}++) {`);
+        jsLines.push(' '.repeat(indent) + `for (let ${varName} = 0; ${varName} < ${rangeArgs[0]}; ${varName}++) { if (Date.now() - __eval_start_time > 2000) throw new Error("Execution timed out");`);
       } else {
-        jsLines.push(' '.repeat(indent) + `for (let ${varName} = ${rangeArgs[0]}; ${varName} < ${rangeArgs[1]}; ${varName}++) {`);
+        jsLines.push(' '.repeat(indent) + `for (let ${varName} = ${rangeArgs[0]}; ${varName} < ${rangeArgs[1]}; ${varName}++) { if (Date.now() - __eval_start_time > 2000) throw new Error("Execution timed out");`);
       }
       continue;
     }
@@ -166,7 +181,7 @@ function transpilePythonToJS(pyCode: string): string {
       const listExpr = forEnumMatch[3];
       jsLines.push(' '.repeat(indent) + `const _raw_${idxVar} = ${listExpr};`);
       jsLines.push(' '.repeat(indent) + `const _list_${idxVar} = (typeof _raw_${idxVar} === 'string' ? _raw_${idxVar}.split('') : Array.from(_raw_${idxVar} || []));`);
-      jsLines.push(' '.repeat(indent) + `for (let ${idxVar} = 0; ${idxVar} < _list_${idxVar}.length; ${idxVar}++) { const ${valVar} = _list_${idxVar}[${idxVar}];`);
+      jsLines.push(' '.repeat(indent) + `for (let ${idxVar} = 0; ${idxVar} < _list_${idxVar}.length; ${idxVar}++) { if (Date.now() - __eval_start_time > 2000) throw new Error("Execution timed out"); const ${valVar} = _list_${idxVar}[${idxVar}];`);
       continue;
     }
 
@@ -174,7 +189,7 @@ function transpilePythonToJS(pyCode: string): string {
     const forInMatch = trimmed.match(/^for\s+([a-zA-Z0-9_,\s()]+)\s+in\s+(.*?):$/);
     if (forInMatch) {
       indentStack.push(indent + 4);
-      jsLines.push(' '.repeat(indent) + `for (const ${forInMatch[1]} of ${forInMatch[2]}) {`);
+      jsLines.push(' '.repeat(indent) + `for (const ${forInMatch[1]} of ${forInMatch[2]}) { if (Date.now() - __eval_start_time > 2000) throw new Error("Execution timed out");`);
       continue;
     }
 
@@ -243,6 +258,16 @@ function executeUserFunction(pyCode: string, targetFunctionName: string): any {
 
   const sandbox: Record<string, any> = {
     pass: undefined,
+    process: undefined,
+    require: undefined,
+    global: undefined,
+    globalThis: undefined,
+    console: undefined,
+    setTimeout: undefined,
+    setInterval: undefined,
+    fetch: undefined,
+    window: undefined,
+    document: undefined,
     QuantumCircuit: function (numQubits: number, numClbits: number = 0) {
       return new MockQuantumCircuit(numQubits, numClbits);
     },
@@ -316,7 +341,7 @@ function executeUserFunction(pyCode: string, targetFunctionName: string): any {
     },
   };
 
-  const fnBody = `${js}\nreturn typeof ${targetFunctionName} !== 'undefined' ? ${targetFunctionName} : null;`;
+  const fnBody = `const __eval_start_time = Date.now();\n${js}\nreturn typeof ${targetFunctionName} !== 'undefined' ? ${targetFunctionName} : null;`;
   const fn = new Function(...Object.keys(sandbox), fnBody);
   return fn(...Object.values(sandbox));
 }

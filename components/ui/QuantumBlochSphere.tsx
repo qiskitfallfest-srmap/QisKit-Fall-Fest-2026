@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useTheme } from 'next-themes';
-import { Rotate3D, Sparkles, Compass } from 'lucide-react';
+import { Rotate3D, Compass } from 'lucide-react';
 
 interface QuantumBlochSphereProps {
   className?: string;
@@ -373,7 +373,7 @@ export function QuantumBlochSphere({ className = '', size = 360 }: QuantumBlochS
       <div className="flex items-center justify-between pb-2.5 border-b border-[#3A0B10]/10 dark:border-white/10 z-10">
         <div className="flex items-center gap-2">
           <div className="p-1 rounded bg-[#6C151E]/10 dark:bg-white/10 text-[#6C151E] dark:text-[#B08D57]">
-            <Sparkles size={14} />
+            <Compass size={14} />
           </div>
           <div>
             <span className="font-mono text-[10px] sm:text-[11px] font-bold tracking-wider uppercase text-[#6C151E] dark:text-[#B08D57]">

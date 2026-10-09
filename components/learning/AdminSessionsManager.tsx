@@ -15,7 +15,6 @@ import {
   Clock,
   FileText,
   Calendar,
-  Sparkles,
   Link as LinkIcon,
   Play,
   Eye,
