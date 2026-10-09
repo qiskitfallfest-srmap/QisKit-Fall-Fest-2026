@@ -127,18 +127,18 @@ export function AdminHackathonView() {
     return data.teams.filter((t) => {
       // Search filter
       if (query) {
-        const matchesName = t.name.toLowerCase().includes(query);
+        const matchesName = (t.name || '').toLowerCase().includes(query);
         const matchesLead =
-          t.lead_name.toLowerCase().includes(query) ||
-          t.lead_email.toLowerCase().includes(query) ||
-          t.lead_university.toLowerCase().includes(query);
-        const matchesPS = t.problem_statement_id.toLowerCase().includes(query);
-        const matchesVertical = t.vertical.toLowerCase().includes(query);
-        const matchesMember = t.members.some(
+          (t.lead_name || '').toLowerCase().includes(query) ||
+          (t.lead_email || '').toLowerCase().includes(query) ||
+          (t.lead_university || '').toLowerCase().includes(query);
+        const matchesPS = (t.problem_statement_id || '').toLowerCase().includes(query);
+        const matchesVertical = (t.vertical || '').toLowerCase().includes(query);
+        const matchesMember = (t.members || []).some(
           (m) =>
-            m.full_name.toLowerCase().includes(query) ||
-            m.email.toLowerCase().includes(query) ||
-            m.university.toLowerCase().includes(query)
+            (m.full_name || '').toLowerCase().includes(query) ||
+            (m.email || '').toLowerCase().includes(query) ||
+            (m.university || '').toLowerCase().includes(query)
         );
 
         if (!matchesName && !matchesLead && !matchesPS && !matchesVertical && !matchesMember) {
@@ -175,12 +175,12 @@ export function AdminHackathonView() {
 
     return data.participants.filter((p) => {
       if (query) {
-        const matchesName = p.full_name.toLowerCase().includes(query);
-        const matchesEmail = p.email.toLowerCase().includes(query);
-        const matchesUni = p.university.toLowerCase().includes(query);
-        const matchesTeam = p.team_name.toLowerCase().includes(query);
-        const matchesPS = p.problem_statement_id.toLowerCase().includes(query);
-        const matchesVertical = p.vertical.toLowerCase().includes(query);
+        const matchesName = (p.full_name || '').toLowerCase().includes(query);
+        const matchesEmail = (p.email || '').toLowerCase().includes(query);
+        const matchesUni = (p.university || '').toLowerCase().includes(query);
+        const matchesTeam = (p.team_name || '').toLowerCase().includes(query);
+        const matchesPS = (p.problem_statement_id || '').toLowerCase().includes(query);
+        const matchesVertical = (p.vertical || '').toLowerCase().includes(query);
 
         if (!matchesName && !matchesEmail && !matchesUni && !matchesTeam && !matchesPS && !matchesVertical) {
           return false;
@@ -221,21 +221,21 @@ export function AdminHackathonView() {
 
     const rows: string[][] = [];
 
-    data.teams.forEach((team) => {
-      team.members.forEach((m) => {
+    (data.teams || []).forEach((team) => {
+      (team.members || []).forEach((m) => {
         rows.push([
-          `"${team.name.replace(/"/g, '""')}"`,
-          `"${team.vertical}"`,
-          `"${team.problem_statement_id}"`,
+          `"${(team.name || '').replace(/"/g, '""')}"`,
+          `"${team.vertical || ''}"`,
+          `"${team.problem_statement_id || ''}"`,
           team.is_finalized ? 'Finalized & Locked' : 'Draft',
           team.finalized_at ? `"${new Date(team.finalized_at).toLocaleString()}"` : 'N/A',
           team.github_repo_url ? `"${team.github_repo_url}"` : 'Not Submitted',
           team.submitted_at ? `"${new Date(team.submitted_at).toLocaleString()}"` : 'N/A',
           m.role === 'leader' ? 'Team Leader' : 'Team Member',
-          `"${m.full_name.replace(/"/g, '""')}"`,
-          `"${m.email}"`,
-          `"${m.university.replace(/"/g, '""')}"`,
-          m.status,
+          `"${(m.full_name || '').replace(/"/g, '""')}"`,
+          `"${m.email || ''}"`,
+          `"${(m.university || '').replace(/"/g, '""')}"`,
+          m.status || '',
           m.invited_at ? `"${new Date(m.invited_at).toLocaleString()}"` : '',
           m.responded_at ? `"${new Date(m.responded_at).toLocaleString()}"` : '',
         ]);

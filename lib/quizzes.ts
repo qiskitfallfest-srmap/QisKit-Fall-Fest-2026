@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import {
   getPlatformConfigCached,
   invalidatePlatformConfigCache,
@@ -51,18 +51,18 @@ export async function getQuizOverrides(): Promise<Record<string, Partial<Session
     return await getPlatformConfigCached<Record<string, Partial<SessionQuiz>>>(
       'quiz_overrides',
       async () => {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
           .from('platform_config')
           .select('value')
           .eq('key', 'quiz_overrides')
-          .maybeSingle();
+          .limit(1);
 
         if (error) {
           console.warn('[Quizzes] Error querying quiz_overrides:', error);
           return {};
         }
 
-        return (data?.value as Record<string, Partial<SessionQuiz>>) || {};
+        return (data?.[0]?.value as Record<string, Partial<SessionQuiz>>) || {};
       }
     );
   } catch (err) {
@@ -145,13 +145,13 @@ export async function saveQuizOverride(
   userEmail?: string
 ): Promise<{ success: boolean; overrides: Record<string, any> }> {
   // Direct fetch from Supabase to prevent concurrency race conditions
-  const { data: currentRecord } = await supabase
+  const { data: currentRecords } = await supabaseAdmin
     .from('platform_config')
     .select('value')
     .eq('key', 'quiz_overrides')
-    .maybeSingle();
+    .limit(1);
 
-  const currentOverrides: Record<string, any> = currentRecord?.value || {};
+  const currentOverrides: Record<string, any> = currentRecords?.[0]?.value || {};
 
   currentOverrides[sessionId] = {
     ...(currentOverrides[sessionId] || {}),
@@ -160,7 +160,7 @@ export async function saveQuizOverride(
     updatedBy: userEmail || 'admin',
   };
 
-  const { error: upsertError } = await supabase
+  const { error: upsertError } = await supabaseAdmin
     .from('platform_config')
     .upsert({
       key: 'quiz_overrides',
@@ -183,16 +183,16 @@ export async function saveQuizOverride(
 export async function resetQuizOverride(
   sessionId: string
 ): Promise<{ success: boolean; overrides: Record<string, any> }> {
-  const { data: currentRecord } = await supabase
+  const { data: currentRecords } = await supabaseAdmin
     .from('platform_config')
     .select('value')
     .eq('key', 'quiz_overrides')
-    .maybeSingle();
+    .limit(1);
 
-  const currentOverrides: Record<string, any> = currentRecord?.value || {};
+  const currentOverrides: Record<string, any> = currentRecords?.[0]?.value || {};
   delete currentOverrides[sessionId];
 
-  const { error: upsertError } = await supabase
+  const { error: upsertError } = await supabaseAdmin
     .from('platform_config')
     .upsert({
       key: 'quiz_overrides',

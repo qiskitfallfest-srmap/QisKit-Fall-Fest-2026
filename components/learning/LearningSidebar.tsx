@@ -54,9 +54,9 @@ export function LearningSidebar() {
     ? sessions.find((s) => s.id === activeSessionId) || CURRICULUM_SESSIONS.find((s) => s.id === activeSessionId)
     : null;
 
-  // Determine which days are open in the accordion. If a session is active, ensure that day is open.
+  // Determine which days are open in the accordion. Open Day 1 and Day 2 by default.
   const activeDay = activeSessionObj?.day ?? null;
-  const initialOpenDays = activeDay ? [activeDay] : [1];
+  const initialOpenDays = activeDay ? Array.from(new Set([1, 2, activeDay])) : [1, 2];
 
   const [openDays, setOpenDays] = useState<number[]>(initialOpenDays);
   const [isChallengesOpen, setIsChallengesOpen] = useState<boolean>(true);

@@ -265,7 +265,7 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
 
   if (isLoading) {
     return (
-      <div className="min-h-[50vh] flex items-center justify-center">
+      <div key="auth-gate-loading" className="min-h-[50vh] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-burgundy border-t-transparent rounded-full animate-spin" />
           <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Verifying authorized access...</p>
@@ -275,12 +275,12 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
   }
 
   if (session) {
-    return <>{children}</>;
+    return <React.Fragment key="auth-gate-authenticated">{children}</React.Fragment>;
   }
 
   // If not authenticated, render login gate + Toast
   return (
-    <div className="min-h-[70vh] flex items-center justify-center p-4 relative font-sans">
+    <div key="auth-gate-login" className="min-h-[70vh] flex items-center justify-center p-4 relative font-sans">
       {/* Toast Notification for Ineligible Participants */}
       {showToast && (
         <div className="fixed top-5 right-5 sm:right-6 z-50 max-w-md w-[calc(100%-2.5rem)] bg-white dark:bg-[#18080B] border-2 border-rose-300 dark:border-rose-800 rounded-xl shadow-xl p-4 transition-all">

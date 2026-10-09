@@ -96,7 +96,7 @@ export function AdminCodingChallengeView() {
   const filteredSubmissions = submissions.filter((sub: any) => {
     if (filterProblem !== 'all' && sub.challenge_id !== filterProblem) return false;
     if (filterStatus !== 'all' && sub.status !== filterStatus) return false;
-    if (searchUser && !sub.user_email.toLowerCase().includes(searchUser.toLowerCase())) return false;
+    if (searchUser && !(sub.user_email || '').toLowerCase().includes(searchUser.toLowerCase())) return false;
     return true;
   });
 

@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AuthGate } from '@/components/learning/AuthGate';
 import { CURRICULUM_SESSIONS } from '@/data/learning/curriculum';
+import { SESSION_TRANSCRIPTS } from '@/data/learning/transcripts';
 import { useCurriculumSession } from '@/hooks/use-curriculum-sessions';
 import { useQuiz } from '@/hooks/use-quizzes';
 import { trackLectureView } from '@/lib/analytics';
@@ -17,26 +18,62 @@ import {
   Award,
   Video,
   ChevronRight,
+  ChevronDown,
   Lock,
+  Play,
+  BookOpen,
+  Search,
+  Copy,
+  Check,
+  Code2,
+  ListVideo,
 } from 'lucide-react';
 import clsx from 'clsx';
 
 export default function SessionPlayerPage() {
   const params = useParams();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const sessionId = params.id as string;
 
   const { session: dynamicSession } = useCurriculumSession(sessionId);
-  const session = dynamicSession || CURRICULUM_SESSIONS.find((s) => s.id === sessionId);
+  const baseSession = CURRICULUM_SESSIONS.find((s) => s.id === sessionId);
+  const session = dynamicSession || baseSession;
   const { quiz, isLocked } = useQuiz(sessionId);
+  const transcriptData = SESSION_TRANSCRIPTS[sessionId];
   const hasReferenceMaterial = Boolean(session?.lectureNotesUrl?.trim() || session?.slidesUrl?.trim());
+
+  const videoContainerRef = useRef<HTMLDivElement>(null);
+  const transcriptSectionRef = useRef<HTMLDivElement>(null);
 
   const [videoCompleted, setVideoCompleted] = useState(false);
   const [quizPassed, setQuizPassed] = useState(false);
   const [quizScore, setQuizScore] = useState(0);
   const [isLoadingProgress, setIsLoadingProgress] = useState(true);
   const [isMarkingVideo, setIsMarkingVideo] = useState(false);
+
+  // Video timestamp & chapter jumper state
+  const defaultStart = session?.defaultStartSeconds ?? baseSession?.defaultStartSeconds ?? 0;
+  const [activeStartSeconds, setActiveStartSeconds] = useState<number>(defaultStart);
+  const [shouldAutoplay, setShouldAutoplay] = useState<boolean>(false);
+
+  // Transcript interactive state
+  const [transcriptSearch, setTranscriptSearch] = useState<string>('');
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+  const [copiedSnippetId, setCopiedSnippetId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const startSec = session?.defaultStartSeconds ?? baseSession?.defaultStartSeconds ?? 0;
+    setActiveStartSeconds(startSec);
+    setShouldAutoplay(false);
+    setTranscriptSearch('');
+    if (SESSION_TRANSCRIPTS[sessionId]?.sections) {
+      const initialExpanded: Record<string, boolean> = {};
+      SESSION_TRANSCRIPTS[sessionId].sections.forEach((sec) => {
+        initialExpanded[sec.id] = true;
+      });
+      setExpandedSections(initialExpanded);
+    }
+  }, [sessionId, session?.defaultStartSeconds, baseSession?.defaultStartSeconds]);
 
   const fetchSessionProgress = React.useCallback(async () => {
     try {
@@ -95,6 +132,40 @@ export default function SessionPlayerPage() {
     }
   }
 
+  function handleJumpToTimestamp(seconds: number) {
+    setActiveStartSeconds(seconds);
+    setShouldAutoplay(true);
+    if (videoContainerRef.current) {
+      videoContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
+  function toggleSection(secId: string) {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [secId]: !prev[secId],
+    }));
+  }
+
+  function handleExpandAll(expand: boolean) {
+    if (!transcriptData) return;
+    const next: Record<string, boolean> = {};
+    transcriptData.sections.forEach((s) => {
+      next[s.id] = expand;
+    });
+    setExpandedSections(next);
+  }
+
+  async function handleCopyCode(secId: string, code: string) {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopiedSnippetId(secId);
+      setTimeout(() => {
+        setCopiedSnippetId((prev) => (prev === secId ? null : prev));
+      }, 2000);
+    } catch (_) {}
+  }
+
   if (!session) {
     return (
       <div className="min-h-[50vh] flex flex-col items-center justify-center p-4">
@@ -116,6 +187,36 @@ export default function SessionPlayerPage() {
       : null;
 
   const isSessionFullyDone = videoCompleted && quizPassed;
+  const quizQuestionCount = quiz?.questions?.length || 0;
+
+  // Build YouTube Embed URL with start time & autoplay support
+  const embedParams = new URLSearchParams({
+    rel: '0',
+    modestbranding: '1',
+  });
+  if (activeStartSeconds > 0) {
+    embedParams.set('start', String(activeStartSeconds));
+  }
+  if (shouldAutoplay) {
+    embedParams.set('autoplay', '1');
+  }
+  const youtubeEmbedSrc = `https://www.youtube.com/embed/${session.youtubeId}?${embedParams.toString()}`;
+
+  // Filter transcript sections by search query
+  const filteredTranscriptSections = transcriptData
+    ? transcriptData.sections.filter((sec) => {
+        if (!transcriptSearch.trim()) return true;
+        const q = transcriptSearch.toLowerCase();
+        return (
+          sec.title.toLowerCase().includes(q) ||
+          sec.speaker.toLowerCase().includes(q) ||
+          sec.paragraphs.some((p) => p.toLowerCase().includes(q)) ||
+          sec.keyTakeaways.some((k) => k.toLowerCase().includes(q)) ||
+          (sec.equations && sec.equations.some((eq) => eq.toLowerCase().includes(q))) ||
+          (sec.codeSnippet && sec.codeSnippet.code.toLowerCase().includes(q))
+        );
+      })
+    : [];
 
   return (
     <AuthGate>
@@ -172,15 +273,99 @@ export default function SessionPlayerPage() {
             )}
 
             {/* Video Player */}
-            <div className="bg-black rounded-xl sm:rounded-2xl overflow-hidden shadow-sm aspect-video relative border border-slate-200 dark:border-[#3D1418]">
+            <div
+              ref={videoContainerRef}
+              className="bg-black rounded-xl sm:rounded-2xl overflow-hidden shadow-sm aspect-video relative border border-slate-200 dark:border-[#3D1418]"
+            >
               <iframe
+                key={`${session.youtubeId}-${activeStartSeconds}-${shouldAutoplay}`}
                 className="w-full h-full"
-                src={`https://www.youtube.com/embed/${session.youtubeId}?rel=0&modestbranding=1`}
+                src={youtubeEmbedSrc}
                 title={session.title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
             </div>
+
+            {/* Interactive Video Chapters & Timestamp Jump Bar */}
+            {transcriptData && transcriptData.chapters.length > 0 && (
+              <div className="bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl p-4 sm:p-5 shadow-xs space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <ListVideo className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
+                    <span className="font-mono text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-[#FAF6F3]">
+                      Interactive Lecture Chapters ({transcriptData.chapters.length})
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                      Click any chapter to jump video player
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        transcriptSectionRef.current?.scrollIntoView({
+                          behavior: 'smooth',
+                          block: 'start',
+                        })
+                      }
+                      className="font-mono text-[11px] font-semibold text-burgundy dark:text-[#E89BA5] hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <BookOpen className="w-3.5 h-3.5" />
+                      <span>Read Full Transcript</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                  {transcriptData.chapters.map((ch, idx) => {
+                    const nextCh = transcriptData.chapters[idx + 1];
+                    const isActiveChapter =
+                      activeStartSeconds >= ch.seconds &&
+                      (!nextCh || activeStartSeconds < nextCh.seconds);
+
+                    return (
+                      <button
+                        key={ch.id}
+                        type="button"
+                        onClick={() => handleJumpToTimestamp(ch.seconds)}
+                        className={clsx(
+                          'text-left p-2.5 rounded-lg border transition-all flex flex-col justify-between gap-1.5 cursor-pointer group',
+                          isActiveChapter
+                            ? 'bg-burgundy/10 dark:bg-burgundy/25 border-burgundy/40 dark:border-[#E89BA5]/50 ring-1 ring-burgundy/20'
+                            : 'bg-slate-50/70 dark:bg-[#1C0A0D]/70 border-slate-200/80 dark:border-[#3D1418] hover:bg-slate-100 dark:hover:bg-[#250D11] hover:border-burgundy/30'
+                        )}
+                      >
+                        <div className="flex items-center justify-between gap-1.5 w-full">
+                          <span
+                            className={clsx(
+                              'font-mono text-[10px] font-bold px-1.5 py-0.5 rounded inline-flex items-center gap-1',
+                              isActiveChapter
+                                ? 'bg-burgundy text-white'
+                                : 'bg-white dark:bg-[#150709] text-burgundy dark:text-[#E89BA5] border border-slate-200 dark:border-[#3D1418]'
+                            )}
+                          >
+                            <Play className="w-2.5 h-2.5 fill-current" />
+                            {ch.timestamp}
+                          </span>
+                          {ch.speaker && (
+                            <span className="font-mono text-[9px] text-slate-400 dark:text-slate-500 truncate">
+                              {ch.speaker.split(' ').slice(0, 2).join(' ')}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs font-semibold text-slate-800 dark:text-[#FAF6F3] group-hover:text-burgundy dark:group-hover:text-[#E89BA5] line-clamp-1">
+                          {ch.title}
+                        </p>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-snug">
+                          {ch.summary}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Title & Metadata Strip */}
             <div className="bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl p-5 sm:p-6 shadow-xs space-y-4">
@@ -193,6 +378,11 @@ export default function SessionPlayerPage() {
                     <Clock className="w-3.5 h-3.5" />
                     {session.duration}
                   </span>
+                  {transcriptData && (
+                    <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/70">
+                      Transcript & Study Notes Ready
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
@@ -212,10 +402,12 @@ export default function SessionPlayerPage() {
                   ) : (
                     <Link
                       href={`/learning/session/${session.id}/quiz`}
-                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-burgundy text-white hover:bg-burgundy-deep text-xs font-semibold transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-burgundy text-white hover:bg-burgundy-deep text-xs font-semibold transition-colors shadow-xs"
                     >
                       <Award className="w-3.5 h-3.5" />
-                      {quizPassed ? `Quiz Passed (${quizScore}%)` : 'Take Concept Quiz'}
+                      {quizPassed
+                        ? `Quiz Passed (${quizScore}%) · Review`
+                        : `Take Concept Quiz${quizQuestionCount > 0 ? ` (${quizQuestionCount} Qs)` : ''}`}
                     </Link>
                   )}
                 </div>
@@ -245,25 +437,259 @@ export default function SessionPlayerPage() {
               </div>
 
               {/* Attendance confirmation */}
-              <div className="pt-3 border-t border-slate-100 dark:border-[#3D1418] flex items-center justify-between gap-3">
+              <div className="pt-3 border-t border-slate-100 dark:border-[#3D1418] flex flex-wrap items-center justify-between gap-3">
                 <span className="text-xs text-slate-500 dark:text-slate-400">
                   Attendance Status
                 </span>
-                <button
-                  type="button"
-                  onClick={handleMarkVideoCompleted}
-                  disabled={videoCompleted || isMarkingVideo}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
-                    videoCompleted
-                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 cursor-default'
-                      : 'bg-slate-900 dark:bg-burgundy text-white hover:bg-slate-800 dark:hover:bg-burgundy-deep'
-                  }`}
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  {videoCompleted ? 'Watched' : 'Mark as Watched'}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleMarkVideoCompleted}
+                    disabled={videoCompleted || isMarkingVideo}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
+                      videoCompleted
+                        ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 cursor-default'
+                        : 'bg-slate-900 dark:bg-burgundy text-white hover:bg-slate-800 dark:hover:bg-burgundy-deep'
+                    }`}
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    {videoCompleted ? 'Watched' : 'Mark as Watched'}
+                  </button>
+                </div>
               </div>
             </div>
+
+            {/* Extracted Lecture Transcript & Comprehensive Technical Study Guide */}
+            {transcriptData && (
+              <div
+                ref={transcriptSectionRef}
+                className="bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl p-5 sm:p-6 shadow-xs space-y-5"
+              >
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 border-b border-slate-200 dark:border-[#3D1418]">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-mono text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-burgundy/10 text-burgundy dark:bg-burgundy/25 dark:text-[#E89BA5]">
+                        Verified Audio Transcript & Study Guide
+                      </span>
+                      <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                        Stream Window: {transcriptData.streamDuration}
+                      </span>
+                    </div>
+                    <h2 className="font-serif text-lg sm:text-xl font-bold text-slate-900 dark:text-[#FAF6F3]">
+                      Extracted Lecture Breakdown & Quiz Preparation Notes
+                    </h2>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                      {transcriptData.overview}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0 self-start md:self-center">
+                    <button
+                      type="button"
+                      onClick={() => handleExpandAll(true)}
+                      className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-slate-50 dark:bg-[#1C0A0D] hover:bg-slate-100 dark:hover:bg-[#250D11] text-[11px] font-mono font-semibold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+                    >
+                      Expand All
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleExpandAll(false)}
+                      className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-slate-50 dark:bg-[#1C0A0D] hover:bg-slate-100 dark:hover:bg-[#250D11] text-[11px] font-mono font-semibold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+                    >
+                      Collapse All
+                    </button>
+                  </div>
+                </div>
+
+                {/* Search Filter Bar */}
+                <div className="relative">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={transcriptSearch}
+                    onChange={(e) => setTranscriptSearch(e.target.value)}
+                    placeholder="Search lecture transcript, physics concepts, formulas, hardware platforms, or Qiskit code..."
+                    className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] rounded-lg text-slate-900 dark:text-[#FAF6F3] placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-burgundy"
+                  />
+                </div>
+
+                {/* Transcript Sections Accordion List */}
+                <div className="space-y-3.5">
+                  {filteredTranscriptSections.length === 0 ? (
+                    <div className="p-6 text-center text-xs text-slate-500 dark:text-slate-400 font-mono">
+                      No transcript sections matched &ldquo;{transcriptSearch}&rdquo;.
+                    </div>
+                  ) : (
+                    filteredTranscriptSections.map((sec, idx) => {
+                      const isExpanded = expandedSections[sec.id] !== false;
+                      const matchingChapter = transcriptData.chapters[idx];
+
+                      return (
+                        <div
+                          key={sec.id}
+                          className="rounded-xl border border-slate-200 dark:border-[#3D1418] bg-slate-50/40 dark:bg-[#1C0A0D]/40 overflow-hidden transition-all"
+                        >
+                          {/* Section Header */}
+                          <div className="px-4 py-3 bg-white dark:bg-[#150709] border-b border-slate-200/70 dark:border-[#3D1418] flex flex-wrap items-center justify-between gap-2">
+                            <button
+                              type="button"
+                              onClick={() => toggleSection(sec.id)}
+                              className="flex items-center gap-2.5 text-left flex-1 min-w-0 cursor-pointer"
+                            >
+                              {isExpanded ? (
+                                <ChevronDown className="w-4 h-4 text-burgundy dark:text-[#E89BA5] shrink-0" />
+                              ) : (
+                                <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+                              )}
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-mono text-[10px] font-bold text-burgundy dark:text-[#E89BA5] uppercase">
+                                    Part {idx + 1} · {sec.speaker}
+                                  </span>
+                                  <span className="font-mono text-[10px] text-slate-400 dark:text-slate-500">
+                                    ({sec.timestampRange})
+                                  </span>
+                                </div>
+                                <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-[#FAF6F3] mt-0.5">
+                                  {sec.title}
+                                </h3>
+                              </div>
+                            </button>
+
+                            {matchingChapter && (
+                              <button
+                                type="button"
+                                onClick={() => handleJumpToTimestamp(matchingChapter.seconds)}
+                                className="px-2.5 py-1 rounded-md bg-burgundy/10 dark:bg-burgundy/25 text-burgundy dark:text-[#E89BA5] hover:bg-burgundy hover:text-white font-mono text-[10px] font-bold inline-flex items-center gap-1 transition-colors shrink-0 cursor-pointer"
+                                title="Jump video player to this section"
+                              >
+                                <Play className="w-2.5 h-2.5 fill-current" />
+                                <span>Jump {matchingChapter.timestamp}</span>
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Section Body */}
+                          {isExpanded && (
+                            <div className="p-4 sm:p-5 space-y-4">
+                              {/* Detailed Narrative Paragraphs */}
+                              <div className="space-y-2.5">
+                                {sec.paragraphs.map((para, pIdx) => (
+                                  <p
+                                    key={pIdx}
+                                    className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed"
+                                  >
+                                    {para}
+                                  </p>
+                                ))}
+                              </div>
+
+                              {/* Key Takeaways Box */}
+                              {sec.keyTakeaways && sec.keyTakeaways.length > 0 && (
+                                <div className="p-3.5 rounded-lg bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] space-y-2">
+                                  <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-burgundy dark:text-[#E89BA5] block">
+                                    Key Concepts & Quiz Takeaways
+                                  </span>
+                                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    {sec.keyTakeaways.map((kt, kIdx) => (
+                                      <li
+                                        key={kIdx}
+                                        className="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-300"
+                                      >
+                                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                                        <span>{kt}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+
+                              {/* Equations / Mathematical Relations */}
+                              {sec.equations && sec.equations.length > 0 && (
+                                <div className="p-3.5 rounded-lg bg-slate-900 dark:bg-[#0D0304] border border-slate-800 dark:border-[#3D1418] space-y-1.5">
+                                  <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#E89BA5] block">
+                                    Formulas & Physical Relations
+                                  </span>
+                                  <div className="space-y-1">
+                                    {sec.equations.map((eq, eIdx) => (
+                                      <div
+                                        key={eIdx}
+                                        className="font-mono text-xs text-slate-100 bg-slate-800/70 dark:bg-[#180709] px-3 py-1.5 rounded border border-slate-700/70 dark:border-[#2D1014] overflow-x-auto"
+                                      >
+                                        {eq}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Live Code Snippet */}
+                              {sec.codeSnippet && (
+                                <div className="rounded-lg overflow-hidden border border-slate-800 dark:border-[#3D1418] bg-slate-950">
+                                  <div className="px-3.5 py-2 bg-slate-900 dark:bg-[#1C0A0D] border-b border-slate-800 dark:border-[#3D1418] flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2">
+                                      <Code2 className="w-3.5 h-3.5 text-[#E89BA5]" />
+                                      <span className="font-mono text-[11px] font-semibold text-slate-200">
+                                        {sec.codeSnippet.title}
+                                      </span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleCopyCode(sec.id, sec.codeSnippet!.code)
+                                      }
+                                      className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono text-[10px] flex items-center gap-1 transition-colors cursor-pointer"
+                                    >
+                                      {copiedSnippetId === sec.id ? (
+                                        <>
+                                          <Check className="w-3 h-3 text-emerald-400" />
+                                          <span>Copied</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Copy className="w-3 h-3" />
+                                          <span>Copy Code</span>
+                                        </>
+                                      )}
+                                    </button>
+                                  </div>
+                                  <pre className="p-3.5 text-xs font-mono text-slate-200 overflow-x-auto leading-relaxed">
+                                    <code>{sec.codeSnippet.code}</code>
+                                  </pre>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* Bottom Quiz Call-to-Action inside Transcript Card */}
+                {!isLocked && (
+                  <div className="pt-3 border-t border-slate-200 dark:border-[#3D1418] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="text-xs text-slate-600 dark:text-slate-300">
+                      <span className="font-semibold text-slate-900 dark:text-[#FAF6F3]">
+                        Ready to test your understanding?
+                      </span>{' '}
+                      All {quizQuestionCount || 20} quiz questions are directly grounded in the lecture transcript above.
+                    </div>
+                    <Link
+                      href={`/learning/session/${session.id}/quiz`}
+                      className="px-4 py-2 rounded-lg bg-burgundy hover:bg-burgundy-deep text-white text-xs font-semibold transition-colors inline-flex items-center justify-center gap-1.5 shrink-0"
+                    >
+                      <Award className="w-3.5 h-3.5" />
+                      <span>
+                        {quizPassed
+                          ? `Review Quiz (${quizScore}%)`
+                          : `Start Session ${session.sessionNumber} Quiz (${quizQuestionCount || 20} Qs)`}
+                      </span>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Resources and Lecturer Profile Grid */}
             <div

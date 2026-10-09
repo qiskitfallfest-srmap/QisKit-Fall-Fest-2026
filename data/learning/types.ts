@@ -29,6 +29,49 @@ export interface LectureSession {
   isLive?: boolean;
   liveNotice?: string;
   customEmbedUrl?: string;
+  defaultStartSeconds?: number;
+}
+
+export interface SessionChapter {
+  id: string;
+  timestamp: string;
+  startSeconds: number;
+  endTimestamp?: string;
+  title: string;
+  speaker: string;
+  tag?: string;
+  summary: string;
+}
+
+export interface TranscriptSection {
+  id: string;
+  timestampRange: string;
+  startSeconds: number;
+  speaker: string;
+  speakerRole: string;
+  title: string;
+  keyTakeaways: string[];
+  paragraphs: string[];
+  equations?: {
+    label: string;
+    formula: string;
+  }[];
+  codeSnippet?: {
+    language: string;
+    title: string;
+    code: string;
+  };
+}
+
+export interface SessionTranscriptData {
+  sessionId: string;
+  streamUrl: string;
+  youtubeId: string;
+  totalBroadcastDuration: string;
+  recordedDate: string;
+  overview: string;
+  chapters: SessionChapter[];
+  sections: TranscriptSection[];
 }
 
 export interface QuizQuestion {

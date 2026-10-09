@@ -252,19 +252,6 @@ export default function DedicatedQuizPage() {
         // Track quiz telemetry
         trackQuizAttempt(sessionId, data.scorePercent || 0, !!data.passed);
 
-        // Also mark video as attended automatically if passed
-        if (data.passed) {
-          try {
-            await fetch('/api/learning/progress', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ sessionId, action: 'mark_video' }),
-            });
-          } catch (e) {
-            console.warn('Auto mark video error:', e);
-          }
-        }
-
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new Event('learning-progress-updated'));
         }
@@ -433,8 +420,8 @@ export default function DedicatedQuizPage() {
                     <span className="font-mono text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
                       Review Answers
                     </span>
-                    {quiz.questions.map((q, idx) => {
-                      const isCorrect = results.questionResults[q.id];
+                    {(quiz.questions || []).map((q, idx) => {
+                      const isCorrect = results.questionResults?.[q.id];
                       const userChoice = selectedAnswers[q.id];
                       return (
                         <div
@@ -460,11 +447,11 @@ export default function DedicatedQuizPage() {
                           <div className="text-xs text-slate-600 dark:text-slate-300 space-y-1 bg-white dark:bg-[#150709] p-2.5 rounded border border-slate-200 dark:border-[#3D1418]">
                             <p>
                               <span className="text-slate-500">Your Answer:</span>{' '}
-                              {q.options[userChoice] || 'None'}
+                              {q.options?.[userChoice] || 'None'}
                             </p>
                             {!isCorrect && (
                               <p className="text-emerald-700 dark:text-emerald-400 font-medium">
-                                <span>Correct Answer:</span> {q.options[q.correctIndex]}
+                                <span>Correct Answer:</span> {q.options?.[q.correctIndex]}
                               </p>
                             )}
                           </div>
@@ -551,7 +538,7 @@ export default function DedicatedQuizPage() {
                       <div className="w-full h-1.5 bg-slate-200/80 dark:bg-[#250D11] rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all duration-300 ${
-                            allAnswered ? 'bg-emerald-600 dark:bg-emerald-400' : 'bg-burgundy dark:bg-[#E89BA5]'
+                            allAnswered ? 'bg-emerald-600 dark:bg-emerald-400' : 'bg-burgundy dark:text-[#E89BA5]'
                           }`}
                           style={{
                             width: `${Math.min(100, Math.round((answeredCount / totalQuestionsCount) * 100))}%`,
@@ -562,7 +549,7 @@ export default function DedicatedQuizPage() {
                   </div>
 
                   <div className="space-y-4">
-                    {quiz.questions.map((q, idx) => (
+                    {(quiz.questions || []).map((q, idx) => (
                       <div
                         key={q.id}
                         className="p-4 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-slate-50/50 dark:bg-[#1C0A0D]/60 space-y-3"
@@ -572,7 +559,7 @@ export default function DedicatedQuizPage() {
                           {q.question}
                         </p>
                         <div className="space-y-2">
-                          {q.options.map((opt, optIdx) => {
+                          {(q.options || []).map((opt, optIdx) => {
                             const isChecked = selectedAnswers[q.id] === optIdx;
                             return (
                               <label

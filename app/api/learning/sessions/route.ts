@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { CURRICULUM_SESSIONS } from '@/data/learning/curriculum';
 import { LectureSession } from '@/data/learning/types';
 import {
@@ -27,6 +27,10 @@ function mergeSessionWithOverride(
     description: override.description !== undefined && override.description.trim() !== '' ? override.description.trim() : base.description,
     youtubeId: ytId || base.youtubeId,
     youtubeUrl: override.youtubeUrl?.trim() || (ytId ? `https://www.youtube.com/watch?v=${ytId}` : base.youtubeUrl),
+    defaultStartSeconds:
+      typeof override.defaultStartSeconds === 'number'
+        ? override.defaultStartSeconds
+        : base.defaultStartSeconds,
     lectureNotesUrl:
       override.lectureNotesUrl !== undefined
         ? override.lectureNotesUrl?.trim() || undefined
@@ -43,6 +47,7 @@ function mergeSessionWithOverride(
       ...base.speaker,
       ...(override.speaker || {}),
     },
+    coSpeakers: Array.isArray(override.coSpeakers) ? override.coSpeakers : base.coSpeakers,
   };
 }
 
@@ -55,12 +60,12 @@ export async function GET(request: NextRequest) {
     const overrides = await getPlatformConfigCached<Record<string, any>>(
       'session_overrides',
       async () => {
-        const { data } = await supabase
+        const { data } = await supabaseAdmin
           .from('platform_config')
           .select('value')
           .eq('key', 'session_overrides')
-          .maybeSingle();
-        return data?.value ?? {};
+          .limit(1);
+        return data?.[0]?.value ?? {};
       }
     );
 
@@ -109,13 +114,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch existing overrides directly from Supabase to prevent stale concurrency
-    const { data: currentData } = await supabase
+    const { data: currentData } = await supabaseAdmin
       .from('platform_config')
       .select('value')
       .eq('key', 'session_overrides')
-      .maybeSingle();
+      .limit(1);
 
-    const currentOverrides: Record<string, any> = currentData?.value || {};
+    const currentOverrides: Record<string, any> = currentData?.[0]?.value || {};
 
     if (reset) {
       delete currentOverrides[sessionId];
@@ -133,7 +138,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Upsert into platform_config
-    const { error: upsertError } = await supabase
+    const { error: upsertError } = await supabaseAdmin
       .from('platform_config')
       .upsert({
         key: 'session_overrides',

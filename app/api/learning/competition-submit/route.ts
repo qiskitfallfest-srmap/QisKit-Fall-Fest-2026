@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import {
   getCompetitionSubmissionsCached,
   invalidateCompetitionSubmissionsCache,
@@ -21,7 +21,7 @@ export async function GET() {
     const submissionsMap = await getCompetitionSubmissionsCached(
       normalizedEmail,
       async () => {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
           .from('competition_submissions')
           .select('*')
           .ilike('email', normalizedEmail);
@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Upsert submission
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('competition_submissions')
       .upsert(
         {
@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
         { onConflict: 'email,competition_type' }
       )
       .select()
-      .single();
+      .limit(1);
 
     if (error) throw error;
 
@@ -181,7 +181,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Competition submission saved successfully',
-      submission: data,
+      submission: data?.[0] || null,
     });
   } catch (error) {
     console.error('Error saving competition submission:', error);

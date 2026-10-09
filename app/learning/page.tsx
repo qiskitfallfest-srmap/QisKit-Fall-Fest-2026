@@ -8,6 +8,7 @@ import { AuthGate } from '@/components/learning/AuthGate';
 import { CertificateModal } from '@/components/learning/CertificateModal';
 import { supabase } from '@/lib/supabase';
 import { CURRICULUM_SESSIONS, ONLINE_PROGRAMME_SCHEDULE } from '@/data/learning/curriculum';
+import { SESSION_TRANSCRIPTS } from '@/data/learning/transcripts';
 import { DAILY_COMPETITIONS } from '@/data/learning/competitions';
 import { useCurriculumSessions } from '@/hooks/use-curriculum-sessions';
 import { useQuizzes } from '@/hooks/use-quizzes';
@@ -89,8 +90,8 @@ function LearningDashboardContent() {
   const curriculumList = sessions && sessions.length > 0 ? sessions : CURRICULUM_SESSIONS;
   const { quizzes } = useQuizzes();
 
-  // Schedule timetable tab state
-  const [selectedScheduleDay, setSelectedScheduleDay] = useState<number>(1);
+  // Schedule timetable tab state (default to Day 2)
+  const [selectedScheduleDay, setSelectedScheduleDay] = useState<number>(2);
   const currentDayProgramme =
     ONLINE_PROGRAMME_SCHEDULE.find((d) => d.day === selectedScheduleDay) ||
     ONLINE_PROGRAMME_SCHEDULE[0];
@@ -144,9 +145,9 @@ function LearningDashboardContent() {
           essay: 'file',
         };
         Object.entries(data.submissions).forEach(([type, sub]: [string, any]) => {
-          const recordedUrl = sub.submission_url || '';
+          const recordedUrl = sub?.submission_url || '';
           const isUploadedDoc =
-            sub.notes === 'file_upload' ||
+            sub?.notes === 'file_upload' ||
             recordedUrl.includes('/storage/v1/object/public/media/competition-submissions/');
           if (!isUploadedDoc) {
             urls[type] = recordedUrl;
@@ -505,7 +506,7 @@ function LearningDashboardContent() {
               Guidelines
             </span>
             <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
-              {challenge.guidelines.map((g, idx) => (
+              {(challenge.guidelines || []).map((g, idx) => (
                 <li key={idx} className="flex items-start gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-burgundy dark:bg-[#E89BA5] mt-1.5 shrink-0" />
                   <span>{g}</span>
@@ -743,7 +744,7 @@ function LearningDashboardContent() {
             Learning Hub
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-            {sessionUser?.fullName ? `Welcome back, ${sessionUser.fullName.split(' ')[0]}.` : 'Complete sessions sequentially.'}
+            {sessionUser?.fullName ? `Welcome back, ${(sessionUser.fullName || '').split(' ')[0]}.` : 'Complete sessions sequentially.'}
           </p>
         </div>
 
@@ -856,7 +857,7 @@ function LearningDashboardContent() {
               Session {nextSession.sessionNumber}: {nextSession.title}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-sans">
-              {nextSession.duration} · {nextSession.speaker.name} ({nextSession.speaker.institution})
+              {nextSession.duration} · {nextSession.speaker?.name} ({nextSession.speaker?.institution})
             </p>
           </div>
 
@@ -887,7 +888,9 @@ function LearningDashboardContent() {
             const isVideoDone = Boolean(p?.videoCompleted);
             const isQuizDone = Boolean(p?.quizPassed);
             const isDone = isVideoDone && isQuizDone;
-            const isQuizLocked = Boolean(quizzes[s.id]?.isLocked);
+            const isQuizLocked = Boolean(quizzes?.[s.id]?.isLocked);
+            const hasTranscript = Boolean(SESSION_TRANSCRIPTS[s.id]);
+            const qCount = quizzes?.[s.id]?.questions?.length || 0;
 
             return (
               <div
@@ -896,14 +899,21 @@ function LearningDashboardContent() {
               >
                 <Link href={`/learning/session/${s.id}`} className="flex items-start justify-between gap-2 min-w-0">
                   <div className="min-w-0">
-                    <span className="font-mono text-[10px] font-bold text-burgundy dark:text-[#E89BA5] uppercase block">
-                      Day {s.day} · Session {s.sessionNumber}
-                    </span>
-                    <h4 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-[#FAF6F3] group-hover:text-burgundy dark:group-hover:text-[#E89BA5] transition-colors line-clamp-2 mt-0.5">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-mono text-[10px] font-bold text-burgundy dark:text-[#E89BA5] uppercase">
+                        Day {s.day} · Session {s.sessionNumber}
+                      </span>
+                      {hasTranscript && (
+                        <span className="font-mono text-[9px] font-semibold px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/70">
+                          Transcript & Study Guide
+                        </span>
+                      )}
+                    </div>
+                    <h4 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-[#FAF6F3] group-hover:text-burgundy dark:group-hover:text-[#E89BA5] transition-colors line-clamp-2 mt-1">
                       {s.title}
                     </h4>
                     <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-1 truncate">
-                      {s.duration} · {s.speaker.name}
+                      {s.duration} · {s.speaker?.name}
                     </span>
                   </div>
                   {isDone ? (
@@ -931,7 +941,7 @@ function LearningDashboardContent() {
                     ) : (
                       <>
                         <PlayCircle className="w-3 h-3" />
-                        <span>Watch Lecture</span>
+                        <span>{hasTranscript ? 'Watch + Transcript' : 'Watch Lecture'}</span>
                       </>
                     )}
                   </Link>
@@ -960,7 +970,7 @@ function LearningDashboardContent() {
                     ) : (
                       <>
                         <Award className="w-3 h-3" />
-                        <span>Take Quiz</span>
+                        <span>Take Quiz{qCount > 0 ? ` (${qCount} Qs)` : ''}</span>
                       </>
                     )}
                   </Link>

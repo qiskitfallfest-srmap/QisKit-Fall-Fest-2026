@@ -100,7 +100,7 @@ export function QiskitPlayground({
   const [submission, setSubmission] = useState<SubmissionDetails | null>(null);
 
   const editorRef = useRef<any>(null);
-  const localDraftKey = `qff_draft_${userEmail.toLowerCase()}_${challenge.id}`;
+  const localDraftKey = `qff_draft_${(userEmail || '').toLowerCase()}_${challenge.id}`;
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // 1. Load initial code from LocalStorage or server draft
@@ -662,7 +662,7 @@ export function QiskitPlayground({
             <div className="space-y-3 pb-8">
               {/* Case Chips */}
               <div className="flex items-center gap-2">
-                {challenge.publicTests.map((t, idx) => (
+                {(challenge.publicTests || []).map((t, idx) => (
                   <button
                     key={idx}
                     type="button"

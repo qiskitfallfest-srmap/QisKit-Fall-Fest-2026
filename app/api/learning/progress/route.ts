@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 import {
   getPlatformConfigCached,
   getUserProgressCached,
@@ -29,8 +29,8 @@ export async function GET() {
           .from('platform_config')
           .select('value')
           .eq('key', 'lecture_lock_override')
-          .maybeSingle();
-        return data?.value ?? null;
+          .limit(1);
+        return data?.[0]?.value ?? null;
       }
     );
 
@@ -135,14 +135,15 @@ export async function POST(request: NextRequest) {
 
     if (action === 'mark_video') {
       // Query existing progress to avoid regressing existing quiz state
-      const { data: existingProgress } = await supabase
+      const { data: existingRows } = await supabase
         .from('user_progress')
         .select('*')
         .ilike('email', normalizedEmail)
         .eq('session_id', sessionId)
-        .maybeSingle();
+        .limit(1);
+      const existingProgress = existingRows?.[0] || null;
 
-      const { data, error } = await supabase
+      const { data: upsertedRows, error } = await supabase
         .from('user_progress')
         .upsert(
           {
@@ -151,16 +152,17 @@ export async function POST(request: NextRequest) {
             video_completed: true,
             quiz_passed: existingProgress?.quiz_passed ?? false,
             quiz_score: existingProgress?.quiz_score ?? 0,
+            quiz_attempts: existingProgress?.quiz_attempts ?? 0,
             completed_at: existingProgress?.quiz_passed
               ? existingProgress?.completed_at || new Date().toISOString()
               : null,
           },
           { onConflict: 'email,session_id' }
         )
-        .select()
-        .single();
+        .select();
 
       if (error) throw error;
+      const data = upsertedRows?.[0] || null;
 
       // Invalidate cache-aside progress cache
       await invalidateUserProgressCache(normalizedEmail);
@@ -170,7 +172,7 @@ export async function POST(request: NextRequest) {
 
     if (action === 'submit_quiz') {
       const quiz = await getQuizForSession(sessionId, { admin: true });
-      if (!quiz) {
+      if (!quiz || !Array.isArray(quiz.questions) || quiz.questions.length === 0) {
         return NextResponse.json({ error: 'Quiz not found' }, { status: 404 });
       }
 
@@ -186,8 +188,9 @@ export async function POST(request: NextRequest) {
       const questionResults: Record<string, boolean> = {};
 
       quiz.questions.forEach((q) => {
-        const selected = userAnswers?.[q.id];
-        const isCorrect = selected === q.correctIndex;
+        const rawSelected = userAnswers?.[q.id];
+        const selected = rawSelected !== undefined && rawSelected !== null ? Number(rawSelected) : -1;
+        const isCorrect = selected === Number(q.correctIndex);
         if (isCorrect) correctCount++;
         questionResults[q.id] = isCorrect;
       });
@@ -198,12 +201,13 @@ export async function POST(request: NextRequest) {
       const passed = scorePercent >= quiz.passingScore;
 
       // Query existing progress to prevent regression of passing status
-      const { data: existingProgress } = await supabase
+      const { data: existingRows } = await supabase
         .from('user_progress')
         .select('*')
         .ilike('email', normalizedEmail)
         .eq('session_id', sessionId)
-        .maybeSingle();
+        .limit(1);
+      const existingProgress = existingRows?.[0] || null;
 
       const nextAttempts = (existingProgress?.quiz_attempts || 0) + 1;
       const finalPassed = passed || existingProgress?.quiz_passed === true;
@@ -211,7 +215,7 @@ export async function POST(request: NextRequest) {
         existingProgress?.video_completed === true || passed;
       const finalScore = Math.max(scorePercent, existingProgress?.quiz_score || 0);
 
-      const { data, error } = await supabase
+      const { data: upsertedRows, error } = await supabase
         .from('user_progress')
         .upsert(
           {
@@ -227,10 +231,10 @@ export async function POST(request: NextRequest) {
           },
           { onConflict: 'email,session_id' }
         )
-        .select()
-        .single();
+        .select();
 
       if (error) throw error;
+      const data = upsertedRows?.[0] || null;
 
       // Invalidate cache-aside progress cache
       await invalidateUserProgressCache(normalizedEmail);

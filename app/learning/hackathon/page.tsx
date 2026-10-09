@@ -220,8 +220,8 @@ export default function HackathonWorkspacePage() {
           problemStatementId: selectedPSId,
           leadUniversity: leadUniversity.trim(),
           teammates: filledTeammates.map((t) => ({
-            email: t.email.trim(),
-            fullName: t.fullName.trim() || t.email.split('@')[0],
+            email: (t.email || '').trim(),
+            fullName: (t.fullName || '').trim() || (t.email || '').split('@')[0],
             university: t.university?.trim() || leadUniversity.trim(),
           })),
         }),
@@ -1007,7 +1007,7 @@ export default function HackathonWorkspacePage() {
                           <div className="space-y-1.5">
                             <div className="flex items-center justify-between gap-1">
                               <span className="font-bold text-slate-900 dark:text-[#FAF6F3] truncate text-sm">
-                                {m.full_name || m.email.split('@')[0]}
+                                {m.full_name || (m.email || '').split('@')[0]}
                               </span>
                               <span
                                 className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ${
