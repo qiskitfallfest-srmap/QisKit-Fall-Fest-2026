@@ -8,6 +8,10 @@ import {
   invalidateHackathonTeamCache,
 } from '@/lib/redis';
 import { isTeamFinalized } from '@/lib/finalized-teams';
+import {
+  getParticipantUniversitiesMap,
+  saveParticipantUniversities,
+} from '@/lib/participant-universities';
 
 export async function GET() {
   const session = await getServerSession();
@@ -44,12 +48,28 @@ export async function GET() {
             .order('role', { ascending: true }); // leader first
 
           const finCheck = await isTeamFinalized(memberEntry.team_id);
+          const universitiesMap = await getParticipantUniversitiesMap();
+
+          const membersWithUni = (allMembers || []).map((m: any) => {
+            const cleanEmail = m.email?.toLowerCase();
+            return {
+              ...m,
+              university:
+                universitiesMap[cleanEmail] ||
+                (cleanEmail?.endsWith('@srmap.edu.in') ? 'SRM University-AP' : 'SRM University-AP'),
+            };
+          });
 
           team = {
             ...teamData,
             currentUserRole: memberEntry.role,
             currentUserStatus: memberEntry.status,
-            members: allMembers || [],
+            lead_university:
+              universitiesMap[teamData.lead_email?.toLowerCase()] ||
+              (teamData.lead_email?.toLowerCase()?.endsWith('@srmap.edu.in')
+                ? 'SRM University-AP'
+                : 'SRM University-AP'),
+            members: membersWithUni,
             is_finalized: finCheck.isFinalized,
             finalized_at: finCheck.finalizedAt || null,
           };
@@ -105,7 +125,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { teamName, vertical, problemStatementId, teammates } = body;
+    const { teamName, vertical, problemStatementId, leadUniversity, teammates } = body;
 
     const trimmedTeamName = teamName?.trim();
     if (!trimmedTeamName || trimmedTeamName.length < 3) {
@@ -118,6 +138,14 @@ export async function POST(request: NextRequest) {
     if (!vertical || !problemStatementId) {
       return NextResponse.json(
         { error: 'Vertical and Problem Statement selection are required.' },
+        { status: 400 }
+      );
+    }
+
+    const trimmedLeadUni = leadUniversity?.trim();
+    if (!trimmedLeadUni) {
+      return NextResponse.json(
+        { error: 'Please specify the Team Leader\'s University / Institution name.' },
         { status: 400 }
       );
     }
@@ -152,7 +180,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 3. Validate teammates list (1 to 5 additional members, total team size 2 to 6)
-    const rawMembers: Array<{ email: string; fullName: string }> = Array.isArray(
+    const rawMembers: Array<{ email: string; fullName: string; university?: string }> = Array.isArray(
       teammates
     )
       ? teammates
@@ -165,16 +193,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const cleanedMembers: Array<{ email: string; fullName: string }> = [];
+    const cleanedMembers: Array<{ email: string; fullName: string; university: string }> = [];
     const seenEmails = new Set<string>([session.email.toLowerCase()]);
 
     // First pass: deduplication and basic structure
-    const validMembers: Array<{ email: string; fullName: string }> = [];
+    const validMembers: Array<{ email: string; fullName: string; university: string }> = [];
     for (const m of rawMembers) {
       const email = m.email?.trim().toLowerCase();
       const fullName = m.fullName?.trim() || email.split('@')[0];
+      const university = m.university?.trim() || '';
 
       if (!email || !email.includes('@')) continue;
+
+      if (!university) {
+        return NextResponse.json(
+          { error: `Please provide the University / Institution name for teammate ${email}.` },
+          { status: 400 }
+        );
+      }
 
       if (seenEmails.has(email)) {
         return NextResponse.json(
@@ -183,7 +219,7 @@ export async function POST(request: NextRequest) {
         );
       }
       seenEmails.add(email);
-      validMembers.push({ email, fullName });
+      validMembers.push({ email, fullName, university });
     }
 
     if (validMembers.length < 1) {
@@ -291,6 +327,12 @@ export async function POST(request: NextRequest) {
       }
       throw membersError;
     }
+
+    // 6. Persist university affiliations for leader and all teammates
+    await saveParticipantUniversities([
+      { email: session.email, university: trimmedLeadUni, fullName: session.fullName },
+      ...cleanedMembers.map((m) => ({ email: m.email, university: m.university, fullName: m.fullName })),
+    ]);
 
     // Invalidate caches
     await invalidateEmailCache(session.email);

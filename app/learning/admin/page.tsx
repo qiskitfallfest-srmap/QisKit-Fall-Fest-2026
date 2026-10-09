@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { AuthGate } from '@/components/learning/AuthGate';
 import { AdminAnalyticsView } from '@/components/learning/AdminAnalyticsView';
+import { AdminHackathonView } from '@/components/learning/AdminHackathonView';
 import { AdminSessionsManager } from '@/components/learning/AdminSessionsManager';
 import { AdminQuizzesManager } from '@/components/learning/AdminQuizzesManager';
 import { AdminCodingChallengeView } from '@/components/learning/AdminCodingChallengeView';
@@ -27,12 +28,13 @@ import {
   X,
   Terminal,
   Award,
+  Trophy,
 } from 'lucide-react';
 import { extractParticipantsFromCSV, ParsedParticipant } from '@/lib/csv';
 
 export default function AdminConsolePage() {
   const [session, setSession] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'analytics' | 'whitelist' | 'overrides' | 'sessions' | 'quizzes' | 'coding'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'hackathon' | 'whitelist' | 'overrides' | 'sessions' | 'quizzes' | 'coding'>('hackathon');
 
   const [emails, setEmails] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -390,6 +392,19 @@ export default function AdminConsolePage() {
 
             <button
               type="button"
+              onClick={() => setActiveTab('hackathon')}
+              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+                activeTab === 'hackathon'
+                  ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
+                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
+              }`}
+            >
+              <Trophy className="w-4 h-4 text-amber-500" />
+              <span>Hackathon Teams & Participants ({stats.teamsFormed || 0})</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setActiveTab('whitelist')}
               className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
                 activeTab === 'whitelist'
@@ -453,6 +468,9 @@ export default function AdminConsolePage() {
               <span>System & Release Overrides</span>
             </button>
           </div>
+
+          {/* TAB: HACKATHON TEAMS & PARTICIPANTS */}
+          {activeTab === 'hackathon' && <AdminHackathonView />}
 
           {/* TAB: CONCEPT QUIZZES & LOCKING */}
           {activeTab === 'quizzes' && <AdminQuizzesManager />}

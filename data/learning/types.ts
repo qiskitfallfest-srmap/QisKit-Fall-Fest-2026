@@ -56,7 +56,9 @@ export interface DailyCompetition {
   subtitle: string;
   description: string;
   guidelines: string[];
-  submissionType: 'url' | 'document';
+  submissionType: 'url' | 'document' | 'url_or_document';
+  acceptedFileTypes?: string[];
+  maxFileSizeMb?: number;
   urlPlaceholder: string;
   submissionDeadline: string;
   prize: string;
@@ -106,6 +108,7 @@ export interface TeamMemberRecord {
   teamId: string;
   email: string;
   fullName: string;
+  university?: string;
   role: 'leader' | 'member';
   status: 'invited' | 'accepted' | 'declined';
   invitedAt: string;
@@ -117,6 +120,7 @@ export interface HackathonTeamRecord {
   name: string;
   leadEmail: string;
   leadName: string;
+  leadUniversity?: string;
   vertical: VerticalType;
   problemStatementId: string;
   githubRepoUrl?: string;

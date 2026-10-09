@@ -396,10 +396,28 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
           )}
         </button>
 
-        <div className="mt-6 pt-5 border-t border-slate-100 dark:border-[#3D1418] text-center">
+        <div className="mt-6 pt-5 border-t border-slate-100 dark:border-[#3D1418] text-center space-y-3">
           <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
             Please sign in using your registered Gmail account. Access is restricted to registered Unstop participants and event organizers.
           </p>
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-1 text-xs font-mono font-semibold">
+            <a
+              href={UNSTOP_REGISTRATION_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-burgundy dark:text-[#E89BA5] hover:underline inline-flex items-center gap-1"
+            >
+              <span>Register on Unstop</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+            <span className="text-slate-300 dark:text-slate-700">·</span>
+            <a
+              href="/"
+              className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
+            >
+              Return to Main Site
+            </a>
+          </div>
         </div>
       </div>
     </div>

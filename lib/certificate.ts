@@ -258,7 +258,7 @@ export function generateCertificateSVG({
 
   <!-- Course description -->
   <text x="960" y="580" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="500" fill="#334155">
-    for rigorous completion of the 6-part progressive curriculum in Quantum Circuit Synthesis,
+    for rigorous completion of the ${CURRICULUM_SESSIONS.length}-part progressive curriculum in Quantum Circuit Synthesis,
   </text>
   <text x="960" y="612" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="500" fill="#334155">
     Hardware Architectures, Quantum Sensing, QML, and Post-Quantum Cryptography,
@@ -270,7 +270,7 @@ export function generateCertificateSVG({
   <!-- Distinction Badge Box -->
   <rect x="760" y="685" width="400" height="42" rx="21" fill="#f8fafc" stroke="#d4af37" stroke-width="1.5"/>
   <text x="960" y="712" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" letter-spacing="1" fill="#800020">
-    ★ ${distinction.toUpperCase()} (${averageScore}%) ★
+    ${distinction.toUpperCase()} (${averageScore}%)
   </text>
 
   <!-- Signatures Section -->

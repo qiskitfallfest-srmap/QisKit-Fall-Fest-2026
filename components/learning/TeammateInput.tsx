@@ -6,6 +6,7 @@ import { CheckCircle2, AlertCircle, XCircle, Loader2, Trash2, Plus } from 'lucid
 interface TeammateData {
   email: string;
   fullName: string;
+  university?: string;
   status?: 'valid' | 'not_whitelisted' | 'already_in_team' | 'checking' | 'idle';
   teamName?: string;
 }
@@ -29,6 +30,7 @@ export function TeammateInput({
 }: TeammateInputProps) {
   const [emailInput, setEmailInput] = useState(member.email || '');
   const [nameInput, setNameInput] = useState(member.fullName || '');
+  const [universityInput, setUniversityInput] = useState(member.university || '');
   const [validationState, setValidationState] = useState<{
     status: 'valid' | 'not_whitelisted' | 'already_in_team' | 'checking' | 'idle';
     message?: string;
@@ -39,7 +41,7 @@ export function TeammateInput({
     const trimmed = emailInput.trim().toLowerCase();
     if (!trimmed || !trimmed.includes('@')) {
       setValidationState({ status: 'idle' });
-      onChange(index, { email: trimmed, fullName: nameInput, status: 'idle' });
+      onChange(index, { email: trimmed, fullName: nameInput, university: universityInput, status: 'idle' });
       return;
     }
 
@@ -49,6 +51,11 @@ export function TeammateInput({
         const res = await fetch(`/api/auth/verify-email?email=${encodeURIComponent(trimmed)}`);
         const data = await res.json();
 
+        const defaultUni = universityInput || (trimmed.endsWith('@srmap.edu.in') ? 'SRM University-AP' : '');
+        if (defaultUni && !universityInput) {
+          setUniversityInput(defaultUni);
+        }
+
         if (!data.whitelisted) {
           setValidationState({
             status: 'not_whitelisted',
@@ -57,6 +64,7 @@ export function TeammateInput({
           onChange(index, {
             email: trimmed,
             fullName: nameInput,
+            university: defaultUni,
             status: 'not_whitelisted',
           });
         } else if (data.inTeam) {
@@ -67,6 +75,7 @@ export function TeammateInput({
           onChange(index, {
             email: trimmed,
             fullName: nameInput || data.fullName || '',
+            university: defaultUni,
             status: 'already_in_team',
             teamName: data.teamName,
           });
@@ -78,6 +87,7 @@ export function TeammateInput({
           onChange(index, {
             email: trimmed,
             fullName: nameInput || data.fullName || '',
+            university: defaultUni,
             status: 'valid',
           });
         }
@@ -116,13 +126,13 @@ export function TeammateInput({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         <div>
           <input
             type="email"
             value={emailInput}
             onChange={(e) => setEmailInput(e.target.value)}
-            placeholder="Teammate's registered Gmail"
+            placeholder="Teammate's Gmail"
             className="w-full px-3 py-1.5 text-xs bg-white dark:bg-[#150709] border border-slate-300 dark:border-[#3D1418] text-slate-900 dark:text-[#FAF6F3] rounded focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy dark:placeholder-slate-500"
             required
           />
@@ -136,6 +146,19 @@ export function TeammateInput({
               onChange(index, { ...member, fullName: e.target.value });
             }}
             placeholder="Teammate Full Name"
+            className="w-full px-3 py-1.5 text-xs bg-white dark:bg-[#150709] border border-slate-300 dark:border-[#3D1418] text-slate-900 dark:text-[#FAF6F3] rounded focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy dark:placeholder-slate-500"
+          />
+        </div>
+        <div>
+          <input
+            type="text"
+            value={universityInput}
+            onChange={(e) => {
+              setUniversityInput(e.target.value);
+              onChange(index, { ...member, university: e.target.value });
+            }}
+            placeholder="University / College Name *"
+            required
             className="w-full px-3 py-1.5 text-xs bg-white dark:bg-[#150709] border border-slate-300 dark:border-[#3D1418] text-slate-900 dark:text-[#FAF6F3] rounded focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy dark:placeholder-slate-500"
           />
         </div>

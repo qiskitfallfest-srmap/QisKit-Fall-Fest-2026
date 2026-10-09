@@ -221,10 +221,11 @@ export function CertificateModal({
 
   if (!isOpen) return null;
 
-  const totalTasks = 9; // 6 sessions + 3 competitions
+  const totalSessionsCount = data?.totalSessions || 5;
+  const totalTasks = totalSessionsCount + 3; // 5 sessions + 3 competitions
   const completedTasks =
     (data?.sessionsCompleted || 0) + (data?.competitionsSubmitted || 0);
-  const progressPercent = Math.round((completedTasks / totalTasks) * 100);
+  const progressPercent = Math.min(100, Math.round((completedTasks / totalTasks) * 100));
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/70 backdrop-blur-xs font-sans">
@@ -268,8 +269,9 @@ export function CertificateModal({
                 <CheckCircle2 className="w-8 h-8" />
               </div>
               <div>
-                <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold border border-emerald-200 dark:border-emerald-800 inline-block mb-1.5">
-                  ★ Official Certificate Minted
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold border border-emerald-200 dark:border-emerald-800 inline-flex items-center gap-1 mb-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  Official Certificate Minted
                 </span>
                 <h3 className="text-xl font-bold text-slate-900 dark:text-[#FAF6F3]">
                   Congratulations, {userName}!
@@ -407,7 +409,7 @@ export function CertificateModal({
                     Academic Eligibility Verified!
                   </div>
                   <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    You have passed all 6 masterclass sessions and completed every daily challenge.
+                    You have passed all {totalSessionsCount} masterclass sessions and completed every daily challenge.
                     Proceed below to claim your official co-certified digital credential.
                   </p>
 
@@ -446,7 +448,7 @@ export function CertificateModal({
                   <div className="flex items-center gap-2.5">
                     <Lock className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
                     <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">
-                      Complete all 9 requirements above to unlock certificate issuance.
+                      Complete all {totalTasks} requirements above to unlock certificate issuance.
                     </span>
                   </div>
                   <button

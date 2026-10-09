@@ -105,7 +105,7 @@ export function LearningShell({ children, sidebar }: LearningShellProps) {
         className={`w-full md:shrink-0 bg-white dark:bg-[#150709] border-b md:border-b-0 md:border-r border-slate-200 dark:border-[#3D1418] ${
           isCodingChallenge
             ? 'md:static md:top-auto md:h-full'
-            : 'md:sticky md:top-[78px] sm:md:top-[84px] xl:md:top-[90px] md:h-[calc(100vh-78px)] sm:md:h-[calc(100vh-84px)] xl:md:h-[calc(100vh-90px)]'
+            : 'md:sticky md:top-0 md:h-screen'
         } md:flex md:flex-col md:overflow-hidden z-30 overscroll-contain relative ${
           isDragging ? 'select-none pointer-events-auto' : ''
         }`}

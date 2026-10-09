@@ -84,6 +84,9 @@ export default function SessionPlayerPage() {
       if (data.success) {
         setVideoCompleted(true);
         fetchSessionProgress();
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('learning-progress-updated'));
+        }
       }
     } catch (err) {
       console.error('Error marking video completed:', err);
@@ -103,8 +106,10 @@ export default function SessionPlayerPage() {
     );
   }
 
-  // Find next session in curriculum
+  // Find previous and next session in curriculum
   const currentIndex = CURRICULUM_SESSIONS.findIndex((s) => s.id === sessionId);
+  const prevSession =
+    currentIndex > 0 ? CURRICULUM_SESSIONS[currentIndex - 1] : null;
   const nextSession =
     currentIndex !== -1 && currentIndex < CURRICULUM_SESSIONS.length - 1
       ? CURRICULUM_SESSIONS[currentIndex + 1]
@@ -338,28 +343,74 @@ export default function SessionPlayerPage() {
               )}
             </div>
 
-            {/* Next session pointer */}
-            {isSessionFullyDone && nextSession && (
-              <div className="p-4 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl shadow-xs">
-                <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5">
-                  Up Next
-                </span>
+            {/* Session Navigation Footer */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              {prevSession ? (
+                <Link
+                  href={`/learning/session/${prevSession.id}`}
+                  className="p-4 rounded-xl bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] hover:border-burgundy/40 dark:hover:border-[#E89BA5]/40 transition-all flex items-center gap-3 group shadow-xs"
+                >
+                  <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-burgundy dark:group-hover:text-[#E89BA5] shrink-0" />
+                  <div className="min-w-0">
+                    <span className="font-mono text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 block">
+                      Previous · Session {prevSession.sessionNumber}
+                    </span>
+                    <span className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-[#FAF6F3] group-hover:text-burgundy dark:group-hover:text-[#E89BA5] truncate block mt-0.5">
+                      {prevSession.title}
+                    </span>
+                  </div>
+                </Link>
+              ) : (
+                <div className="hidden sm:block" />
+              )}
+
+              {!quizPassed && !isLocked ? (
+                <Link
+                  href={`/learning/session/${session.id}/quiz`}
+                  className="p-4 rounded-xl bg-burgundy/5 dark:bg-[#1C0A0D] border border-burgundy/30 dark:border-burgundy/50 hover:border-burgundy transition-all flex items-center justify-between gap-3 group shadow-xs"
+                >
+                  <div className="min-w-0">
+                    <span className="font-mono text-[10px] uppercase font-bold text-burgundy dark:text-[#E89BA5] block">
+                      Required Next Step
+                    </span>
+                    <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-[#FAF6F3] group-hover:text-burgundy dark:group-hover:text-[#E89BA5] truncate block mt-0.5">
+                      Take Session {session.sessionNumber} Concept Quiz
+                    </span>
+                  </div>
+                  <Award className="w-4 h-4 text-burgundy dark:text-[#E89BA5] shrink-0" />
+                </Link>
+              ) : nextSession ? (
                 <Link
                   href={`/learning/session/${nextSession.id}`}
-                  className="p-3 rounded-lg border border-slate-200 dark:border-[#3D1418] hover:border-burgundy/40 dark:hover:border-[#E89BA5]/40 bg-slate-50 dark:bg-[#1C0A0D] hover:bg-white dark:hover:bg-[#250D11] transition-all flex items-center justify-between group"
+                  className="p-4 rounded-xl bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] hover:border-burgundy/40 dark:hover:border-[#E89BA5]/40 transition-all flex items-center justify-between gap-3 group shadow-xs"
                 >
-                  <div className="truncate pr-2">
+                  <div className="min-w-0">
                     <span className="font-mono text-[10px] uppercase font-bold text-burgundy dark:text-[#E89BA5] block">
-                      Session {nextSession.sessionNumber}
+                      Up Next · Session {nextSession.sessionNumber}
                     </span>
-                    <span className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-[#FAF6F3] group-hover:text-burgundy dark:group-hover:text-[#E89BA5] truncate block">
+                    <span className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-[#FAF6F3] group-hover:text-burgundy dark:group-hover:text-[#E89BA5] truncate block mt-0.5">
                       {nextSession.title}
                     </span>
                   </div>
                   <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-burgundy dark:group-hover:text-[#E89BA5] shrink-0" />
                 </Link>
-              </div>
-            )}
+              ) : (
+                <Link
+                  href={`/learning?challenge=${session.day}`}
+                  className="p-4 rounded-xl bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] hover:border-burgundy/40 dark:hover:border-[#E89BA5]/40 transition-all flex items-center justify-between gap-3 group shadow-xs"
+                >
+                  <div className="min-w-0">
+                    <span className="font-mono text-[10px] uppercase font-bold text-burgundy dark:text-[#E89BA5] block">
+                      Up Next · Daily Challenge
+                    </span>
+                    <span className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-[#FAF6F3] group-hover:text-burgundy dark:group-hover:text-[#E89BA5] truncate block mt-0.5">
+                      Submit Day 0{session.day} Creative Entry
+                    </span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-burgundy dark:group-hover:text-[#E89BA5] shrink-0" />
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       </div>
