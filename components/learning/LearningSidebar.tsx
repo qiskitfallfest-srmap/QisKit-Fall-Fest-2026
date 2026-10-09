@@ -18,6 +18,7 @@ import {
   Code2,
   Terminal,
   Lock,
+  Trophy,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { supabase } from '@/lib/supabase';
@@ -51,11 +52,12 @@ export function LearningSidebar() {
     ? sessions.find((s) => s.id === activeSessionId) || CURRICULUM_SESSIONS.find((s) => s.id === activeSessionId)
     : null;
 
-  // Determine which days are open in the accordion. If a session or challenge is active, ensure that day is open.
-  const activeDay = activeSessionObj?.day ?? (activeChallengeDay ? Number(activeChallengeDay) : null);
+  // Determine which days are open in the accordion. If a session is active, ensure that day is open.
+  const activeDay = activeSessionObj?.day ?? null;
   const initialOpenDays = activeDay ? [activeDay] : [1];
 
   const [openDays, setOpenDays] = useState<number[]>(initialOpenDays);
+  const [isChallengesOpen, setIsChallengesOpen] = useState<boolean>(true);
 
   // Keep newly active day open without collapsing already opened days
   useEffect(() => {
@@ -63,6 +65,13 @@ export function LearningSidebar() {
       setOpenDays((prev) => (prev.includes(activeDay) ? prev : [...prev, activeDay]));
     }
   }, [activeDay]);
+
+  // Keep challenges open when a challenge is active
+  useEffect(() => {
+    if (activeChallengeDay) {
+      setIsChallengesOpen(true);
+    }
+  }, [activeChallengeDay]);
 
   const toggleDay = (dayId: number) => {
     setOpenDays((prev) =>
@@ -149,7 +158,8 @@ export function LearningSidebar() {
   } else if (activeSessionObj) {
     activeMobileTitle = `Day ${activeSessionObj.day} · Session ${activeSessionObj.sessionNumber}`;
   } else if (activeChallengeDay) {
-    activeMobileTitle = `Day ${activeChallengeDay} Daily Challenge`;
+    const comp = DAILY_COMPETITIONS[Number(activeChallengeDay)];
+    activeMobileTitle = comp ? comp.title : `Day ${activeChallengeDay} Challenge`;
   }
 
   // Navigation Items Renderer
@@ -199,7 +209,6 @@ export function LearningSidebar() {
       {DAYS.map((day) => {
         const isDayOpen = openDays.includes(day.id);
         const daySessions = sessions.filter((s) => s.day === day.id);
-        const dayChallenge = DAILY_COMPETITIONS[day.id];
 
         return (
           <div key={day.id} className="mb-2">
@@ -336,45 +345,111 @@ export function LearningSidebar() {
                   );
                 })}
 
-                {/* Daily Challenge inside the day */}
-                {dayChallenge && (
-                  <div className="pt-2 mt-1 border-t border-slate-200/70 dark:border-[#3D1418]">
-                    <Link
-                      href={`/learning?challenge=${day.id}`}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={clsx(
-                        'group flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border',
-                        activeChallengeDay === String(day.id)
-                          ? 'bg-purple-500/10 text-purple-700 dark:text-purple-300 dark:bg-purple-500/20 border-purple-500/30 font-semibold'
-                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1C0A0D] border-slate-200/60 dark:border-[#3D1418]/60 hover:border-slate-300 dark:hover:border-[#521C23]'
-                      )}
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <Award
-                          className={clsx(
-                            'w-3.5 h-3.5 shrink-0',
-                            activeChallengeDay === String(day.id)
-                              ? 'text-purple-600 dark:text-purple-400'
-                              : 'text-purple-500'
-                          )}
-                        />
-                        <span className="font-medium text-[11px] sm:text-xs truncate">
-                          Challenge: {dayChallenge.title}
-                        </span>
-                      </div>
-                      <span className="shrink-0 px-1.5 py-0.5 rounded font-mono text-[9px] font-bold bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20 uppercase tracking-wider">
-                        Daily
-                      </span>
-                    </Link>
-                  </div>
-                )}
               </div>
             )}
           </div>
         );
       })}
 
-      {/* Section 2: Hackathon Phase Header */}
+      {/* Section 2: Challenges Category */}
+      <div className="pt-3 pb-1 px-1">
+        <div className="flex items-center gap-2 px-2">
+          <span className="font-mono text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
+            Challenges
+          </span>
+          <div className="flex-1 h-px bg-slate-200/80 dark:bg-[#3D1418]" />
+        </div>
+      </div>
+
+      <div className="mb-2">
+        {/* Expandable Challenges Accordion Button */}
+        <button
+          type="button"
+          onClick={() => setIsChallengesOpen((prev) => !prev)}
+          className={clsx(
+            'w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors text-xs sm:text-sm font-semibold group cursor-pointer border',
+            isChallengesOpen
+              ? 'bg-slate-100/90 dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] border-slate-200/60 dark:border-[#3D1418]'
+              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1C0A0D] border-transparent'
+          )}
+        >
+          <div className="flex items-center gap-2 min-w-0 pr-2">
+            <Trophy
+              className={clsx(
+                'w-3.5 h-3.5 shrink-0',
+                isChallengesOpen
+                  ? 'text-burgundy dark:text-[#E89BA5]'
+                  : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
+              )}
+            />
+            <span className="truncate">Challenges</span>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-bold border border-purple-200/50 dark:border-purple-850/50">
+              3 Tasks
+            </span>
+            {isChallengesOpen ? (
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            ) : (
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 shrink-0" />
+            )}
+          </div>
+        </button>
+
+        {/* Expandable Challenges Sub-items */}
+        {isChallengesOpen && (
+          <div className="mt-1.5 ml-3 pl-3 border-l-2 border-slate-200/80 dark:border-[#3D1418] space-y-1.5 py-1">
+            {Object.values(DAILY_COMPETITIONS).map((comp) => {
+              const isCompActive =
+                pathname === '/learning' && activeChallengeDay === String(comp.day);
+              return (
+                <Link
+                  key={comp.day}
+                  href={`/learning?challenge=${comp.day}`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={clsx(
+                    'group flex items-start justify-between gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border shadow-2xs',
+                    isCompActive
+                      ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/25 dark:text-[#E89BA5] border-burgundy/30 dark:border-burgundy/50 font-semibold ring-1 ring-burgundy/20'
+                      : 'bg-white/80 dark:bg-[#150709] text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-[#3D1418] hover:bg-slate-50 dark:hover:bg-[#1F0A0E] hover:border-slate-300 dark:hover:border-[#521C23]'
+                  )}
+                >
+                  <div className="flex items-start gap-2 min-w-0">
+                    <Award
+                      className={clsx(
+                        'w-3.5 h-3.5 shrink-0 mt-0.5',
+                        isCompActive
+                          ? 'text-burgundy dark:text-[#E89BA5]'
+                          : 'text-amber-500 dark:text-amber-400'
+                      )}
+                    />
+                    <div className="flex flex-col min-w-0">
+                      <span className="truncate text-xs leading-snug font-semibold text-slate-800 dark:text-[#FAF6F3]">
+                        {comp.title}
+                      </span>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
+                        Day 0{comp.day} · Due 12 Oct
+                      </span>
+                    </div>
+                  </div>
+                  <span
+                    className={clsx(
+                      'shrink-0 px-1.5 py-0.5 rounded font-mono text-[9px] font-bold uppercase tracking-wider',
+                      isCompActive
+                        ? 'bg-burgundy text-white'
+                        : 'bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20'
+                    )}
+                  >
+                    12 Oct
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Section 3: Hackathon Phase Header */}
       <div className="pt-4 pb-2 px-1">
         <div className="flex items-center gap-2 px-2">
           <span className="font-mono text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">

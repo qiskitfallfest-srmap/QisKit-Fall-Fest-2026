@@ -171,7 +171,7 @@ function LearningDashboardContent() {
         <div className="bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl shadow-xs p-5 sm:p-7 space-y-6">
           <div className="border-b border-slate-100 dark:border-[#3D1418] pb-4">
             <span className="font-mono text-[10px] font-bold text-burgundy dark:text-[#E89BA5] uppercase tracking-wider block mb-1">
-              Day {day} Daily Challenge
+              Challenge · Day 0{day} · Deadline: 12 October 2026
             </span>
             <h1 className="font-serif text-xl sm:text-2xl font-bold text-[#181313] dark:text-[#FAF6F3] tracking-tight">
               {challenge.title}

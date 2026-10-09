@@ -1164,10 +1164,8 @@ export default function HackathonWorkspacePage() {
             </div>
           ) : (
             /* TEAM FORMATION & PROBLEM SELECTION FORM */
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Left 2 Cols: Form */}
-              <div className="lg:col-span-2 space-y-6">
-                <div className="bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl p-6 shadow-xs space-y-6">
+            <div className="max-w-4xl mx-auto space-y-6">
+              <div className="bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl p-6 shadow-xs space-y-6">
                   <div>
                     <h2 className="text-lg font-bold text-slate-900 dark:text-[#FAF6F3]">
                       Step 1: Choose Domain Track & Problem Statement
@@ -1350,42 +1348,6 @@ export default function HackathonWorkspacePage() {
                     </button>
                   </div>
                 </div>
-              </div>
-
-              {/* Right 1 Col: Challenge Framework Preview */}
-              <div className="space-y-6">
-                <div className="p-5 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl shadow-xs space-y-4 text-sm text-slate-700 dark:text-slate-300">
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-[#FAF6F3] flex items-center gap-1.5">
-                    <Shield className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
-                    Challenge Framework Rules
-                  </h3>
-
-                  <div className="space-y-2 leading-relaxed">
-                    <p>
-                      • <strong>Universal Rubric:</strong> 40 Pts Core Implementation, 30 Pts Hardware
-                      Benchmarking on Processors A, B, and C, and 30 Pts Custom 12-Qubit Processor D.
-                    </p>
-                    <p>
-                      • <strong>Confidentiality:</strong> Once your team is created, your workspace
-                      unlocks the full technical dossier for your selected problem statement.
-                    </p>
-                    <p>
-                      • <strong>Teammate Acceptance:</strong> Invited teammates will receive an
-                      invitation card on their portal dashboard to accept before joining.
-                    </p>
-                    <p>
-                      • <strong>Exclusivity:</strong> A student cannot belong to more than one team.
-                    </p>
-                  </div>
-
-                  <div className="p-3 rounded-lg bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] space-y-1 text-sm">
-                    <span className="font-bold text-slate-900 dark:text-[#FAF6F3] block">Deliverables Required:</span>
-                    <span>1. Executable Jupyter notebook (`main.ipynb`)</span>
-                    <span>2. `processors/` with `processor_D.json`</span>
-                    <span>3. Hardware trade-off justification report</span>
-                  </div>
-                </div>
-              </div>
             </div>
           )}
           </>
