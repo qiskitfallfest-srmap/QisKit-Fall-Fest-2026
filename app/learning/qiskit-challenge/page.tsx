@@ -12,7 +12,6 @@ import {
   CheckCircle2,
   Circle,
   Play,
-  Send,
   RotateCcw,
   ChevronLeft,
   ChevronRight,
@@ -267,13 +266,11 @@ function QiskitChallengeWorkspace() {
   const [problemSubmissions, setProblemSubmissions] = useState<UserSubmissionSummary[]>([]);
   const [isLoadingSubmissions, setIsLoadingSubmissions] = useState<boolean>(false);
 
-  // Playground execution state
-  const [engineState, setEngineState] = useState<{ isRunning: boolean; isSubmitting: boolean }>({
-    isRunning: false,
-    isSubmitting: false,
-  });
-
   // 1. Fetch current user session
+  useEffect(() => {
+    document.title = 'Python Coding Challenge in Qiskit | Qiskit Fall Fest 2026';
+  }, []);
+
   useEffect(() => {
     async function loadUser() {
       try {
@@ -340,16 +337,7 @@ function QiskitChallengeWorkspace() {
     loadSubmissions(selectedProblemId);
   }, [selectedProblemId, loadSubmissions]);
 
-  // 4. Synchronize engine run/submit state from QiskitPlayground
-  useEffect(() => {
-    const handleStateChange = (e: any) => {
-      if (e.detail) {
-        setEngineState(e.detail);
-      }
-    };
-    window.addEventListener('qiskit:state', handleStateChange);
-    return () => window.removeEventListener('qiskit:state', handleStateChange);
-  }, []);
+
 
   // 5. Server-authoritative timer countdown
   useEffect(() => {
@@ -434,10 +422,10 @@ function QiskitChallengeWorkspace() {
                 Coming Soon · Arena Locked
               </div>
               <h1 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight">
-                Qiskit Quantum Coding Challenge
+                Python Coding Challenge in Qiskit
               </h1>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-sans max-w-lg mx-auto">
-                The competitive quantum coding challenge arena is currently locked by the organizers.
+                The Python Coding Challenge in Qiskit arena is currently locked by the organizers.
                 Problem statements, the Monaco code editor, and the quantum test-suite judge will unlock at the scheduled launch time.
               </p>
             </div>
@@ -504,15 +492,6 @@ function QiskitChallengeWorkspace() {
   );
   const solvedCount = challenges.filter((c) => c.userState === 'solved').length;
 
-  // Global action triggers
-  const triggerRun = () => {
-    window.dispatchEvent(new CustomEvent('qiskit:run'));
-  };
-
-  const triggerSubmit = () => {
-    window.dispatchEvent(new CustomEvent('qiskit:submit'));
-  };
-
   // Fullscreen management
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const challengeContainerRef = useRef<HTMLDivElement>(null);
@@ -564,7 +543,7 @@ function QiskitChallengeWorkspace() {
   useEffect(() => {
     setIsMounted(true);
     document.documentElement.classList.remove('has-custom-cursor');
-    const checkDesktop = () => setIsDesktop(window.innerWidth >= 1024);
+    const checkDesktop = () => setIsDesktop(window.innerWidth >= 768);
     checkDesktop();
     window.addEventListener('resize', checkDesktop);
 
@@ -572,7 +551,7 @@ function QiskitChallengeWorkspace() {
       const saved = localStorage.getItem('qff_challenge_split_ratio');
       if (saved) {
         const parsed = parseFloat(saved);
-        if (!isNaN(parsed) && parsed >= 25 && parsed <= 75) {
+        if (!isNaN(parsed) && parsed >= 20 && parsed <= 80) {
           setSplitRatio(parsed);
         }
       }
@@ -590,8 +569,8 @@ function QiskitChallengeWorkspace() {
       if (!splitContainerRef.current) return;
       const rect = splitContainerRef.current.getBoundingClientRect();
       const newRatio = ((moveEvent.clientX - rect.left) / rect.width) * 100;
-      // Clamp between 25% and 75%
-      const clamped = Math.min(Math.max(newRatio, 25), 75);
+      // Clamp between 20% and 80%
+      const clamped = Math.min(Math.max(newRatio, 20), 80);
       setSplitRatio(clamped);
     };
 
@@ -606,6 +585,10 @@ function QiskitChallengeWorkspace() {
         } catch {}
         return finalRatio;
       });
+
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+      }, 50);
     };
 
     window.addEventListener('mousemove', onMouseMove);
@@ -652,7 +635,7 @@ function QiskitChallengeWorkspace() {
           <div className="flex items-center gap-2">
             <Lock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 animate-pulse" />
             <span>
-              <strong>Admin Testing Mode:</strong> Coding Challenge is currently <strong>LOCKED</strong> for participants (students see Coming Soon). You have administrator bypass access to test problems, run Python/TypeScript code, and verify submissions.
+              <strong>Admin Testing Mode:</strong> Python Coding Challenge in Qiskit is currently <strong>LOCKED</strong> for participants (students see Coming Soon). You have administrator bypass access to test problems, run Python/TypeScript code, and verify submissions.
             </span>
           </div>
           <Link
@@ -668,18 +651,19 @@ function QiskitChallengeWorkspace() {
       {/* ─────────────────────────────────────────────────────────────
           1. LEETCODE TOP NAVIGATION BAR
          ───────────────────────────────────────────────────────────── */}
-      <header className="shrink-0 z-40 bg-white dark:bg-[#160608] border-b border-slate-200 dark:border-[#3D1418] px-3 sm:px-6 py-2.5 flex items-center justify-between gap-3 shadow-xs">
-        {/* Left: Hub Link, Problem List Modal Button, Prev/Next Navigation */}
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+      <header className="shrink-0 z-40 bg-white dark:bg-[#160608] border-b border-slate-200 dark:border-[#3D1418] px-3 sm:px-5 py-2 flex items-center justify-between gap-2.5 sm:gap-3 shadow-xs">
+        {/* Left: Hub Link, Problem List Modal Button, Prev/Next Navigation, Active Problem */}
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <Link
             href="/learning"
             className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-burgundy dark:hover:text-[#E89BA5] transition-colors shrink-0"
+            title="Return to Curriculum Hub"
           >
             <ArrowLeft className="w-4 h-4" />
             <span className="hidden md:inline">Learning Hub</span>
           </Link>
 
-          <span className="text-slate-300 dark:text-slate-700 hidden sm:inline">•</span>
+          <span className="text-slate-300 dark:text-slate-700 hidden sm:inline shrink-0">•</span>
 
           {/* Problem List Drawer Button */}
           <button
@@ -689,7 +673,7 @@ function QiskitChallengeWorkspace() {
             title="Open Problem Set Catalog"
           >
             <List className="w-3.5 h-3.5 text-slate-500" />
-            <span className="hidden sm:inline">Problem List</span>
+            <span className="hidden sm:inline">Problems</span>
             <span className="font-mono text-[10px] text-slate-400">({currentIndex + 1}/9)</span>
           </button>
 
@@ -716,7 +700,10 @@ function QiskitChallengeWorkspace() {
           </div>
 
           {/* Active Problem Title */}
-          <div className="flex items-center gap-2 truncate">
+          <div
+            className="flex items-center gap-1.5 min-w-0 truncate"
+            title={`${selectedChallenge.problemCode}. ${selectedChallenge.title}`}
+          >
             <span className="font-mono font-bold text-xs text-burgundy dark:text-[#E89BA5] shrink-0">
               {selectedChallenge.problemCode}.
             </span>
@@ -726,42 +713,10 @@ function QiskitChallengeWorkspace() {
           </div>
         </div>
 
-        {/* Center: Action Buttons (Run & Submit) */}
-        <div className="hidden md:flex items-center gap-2">
-          <button
-            onClick={triggerRun}
-            disabled={engineState.isRunning || engineState.isSubmitting}
-            type="button"
-            className="px-3.5 py-1.5 rounded-lg border border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#1C0A0D] hover:bg-slate-50 dark:hover:bg-[#250D11] text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors flex items-center gap-1.5 shadow-xs disabled:opacity-50 cursor-pointer"
-          >
-            {engineState.isRunning ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Play className="w-3.5 h-3.5 fill-current text-slate-500" />
-            )}
-            <span>Run Code</span>
-          </button>
-
-          <button
-            onClick={triggerSubmit}
-            disabled={engineState.isRunning || engineState.isSubmitting}
-            type="button"
-            className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-xs disabled:opacity-50 cursor-pointer"
-          >
-            {engineState.isSubmitting ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Send className="w-3.5 h-3.5" />
-            )}
-            <span>Submit</span>
-          </button>
-        </div>
-
         {/* Right: Score, Leaderboard Toggle, and Fullscreen */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 ml-auto">
           {/* User Score Pill */}
-          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-burgundy/10 dark:bg-burgundy/25 border border-burgundy/30">
+          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-burgundy/10 dark:bg-burgundy/25 border border-burgundy/30 shrink-0">
             <Award className="w-3.5 h-3.5 text-burgundy dark:text-[#E89BA5]" />
             <span className="font-mono text-xs font-bold text-burgundy dark:text-[#FAF6F3]">
               {totalEarnedPoints}/100 pts ({solvedCount}/9)
@@ -775,7 +730,8 @@ function QiskitChallengeWorkspace() {
               fetchLeaderboard();
             }}
             type="button"
-            className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#3D1418] hover:bg-slate-50 dark:hover:bg-[#1C0A0D] text-slate-700 dark:text-slate-300 font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+            className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#3D1418] hover:bg-slate-50 dark:hover:bg-[#1C0A0D] text-slate-700 dark:text-slate-300 font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs shrink-0"
+            title="View Live Leaderboard"
           >
             <Trophy className="w-3.5 h-3.5 text-amber-500" />
             <span className="hidden sm:inline">Leaderboard</span>
@@ -786,7 +742,7 @@ function QiskitChallengeWorkspace() {
             onClick={toggleFullscreen}
             type="button"
             title={isFullscreen ? 'Exit Full Screen (Esc)' : 'Enter Full Screen'}
-            className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#3D1418] hover:bg-slate-50 dark:hover:bg-[#1C0A0D] text-slate-700 dark:text-slate-300 font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+            className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#3D1418] hover:bg-slate-50 dark:hover:bg-[#1C0A0D] text-slate-700 dark:text-slate-300 font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs shrink-0"
           >
             {isFullscreen ? (
               <>
@@ -809,19 +765,30 @@ function QiskitChallengeWorkspace() {
       <div
         ref={splitContainerRef}
         className={clsx(
-          'flex-1 min-h-0 p-2.5 sm:p-3 pb-3 sm:pb-3.5 flex flex-col lg:flex-row items-stretch gap-0 max-w-[1920px] mx-auto w-full overflow-hidden relative',
+          'flex-1 min-h-0 p-2 sm:p-2.5 pb-2.5 sm:pb-3 flex flex-col md:flex-row items-stretch gap-0 max-w-[1920px] mx-auto w-full overflow-hidden relative',
           isResizing && 'select-none pointer-events-auto'
         )}
       >
+        {/* Full-screen transparent drag overlay when resizing */}
+        {isResizing && (
+          <div
+            className="fixed inset-0 z-50 cursor-col-resize select-none bg-transparent"
+            style={{ cursor: 'col-resize' }}
+          />
+        )}
+
         {/* ───────────────────────────────────────────────────────────
             LEFT PANE: PROBLEM STATEMENT & SUBMISSIONS TABS
            ─────────────────────────────────────────────────────────── */}
         <div
           data-lenis-prevent="true"
           style={{
-            width: isMounted && isDesktop ? `calc(${splitRatio}% - 6px)` : undefined,
+            width: isMounted && isDesktop ? `calc(${splitRatio}% - 8px)` : undefined,
           }}
-          className="flex flex-col h-full min-h-0 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl overflow-hidden shadow-xs shrink-0 w-full lg:w-auto"
+          className={clsx(
+            'flex flex-col h-full min-h-0 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl overflow-hidden shadow-xs shrink-0 w-full md:w-auto',
+            isResizing && 'pointer-events-none select-none'
+          )}
         >
           {/* Left Pane Navigation Tabs */}
           <div className="shrink-0 flex items-center px-4 bg-slate-50 dark:bg-[#1C0A0D] border-b border-slate-200 dark:border-[#3D1418]">
@@ -1080,10 +1047,10 @@ function QiskitChallengeWorkspace() {
           role="separator"
           aria-orientation="vertical"
           aria-valuenow={splitRatio}
-          aria-valuemin={25}
-          aria-valuemax={75}
+          aria-valuemin={20}
+          aria-valuemax={80}
           title="Drag to resize problem and editor · Double-click to reset (50%)"
-          className="hidden lg:flex flex-col items-center justify-center w-3 h-full cursor-col-resize z-30 group select-none shrink-0 relative transition-colors px-0.5"
+          className="hidden md:flex flex-col items-center justify-center w-4 h-full cursor-col-resize z-30 group select-none shrink-0 relative transition-colors -mx-1 px-1"
         >
           {/* Subtle background line on hover or drag */}
           <div
@@ -1115,11 +1082,11 @@ function QiskitChallengeWorkspace() {
         <div
           data-lenis-prevent="true"
           style={{
-            width: isMounted && isDesktop ? `calc(${100 - splitRatio}% - 6px)` : undefined,
+            width: isMounted && isDesktop ? `calc(${100 - splitRatio}% - 8px)` : undefined,
           }}
           className={clsx(
-            'flex flex-col h-full min-h-0 overflow-hidden flex-1 min-w-0 w-full lg:w-auto',
-            isResizing && 'pointer-events-none'
+            'flex flex-col h-full min-h-0 overflow-hidden flex-1 min-w-0 w-full md:w-auto',
+            isResizing && 'pointer-events-none select-none'
           )}
         >
           <QiskitPlayground
@@ -1240,7 +1207,7 @@ function QiskitChallengeWorkspace() {
               <div className="flex items-center gap-2.5">
                 <Trophy className="w-5 h-5 text-amber-500" />
                 <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-[#FAF6F3]">
-                  Qiskit Challenge Leaderboard
+                  Python Coding Challenge in Qiskit Leaderboard
                 </h3>
               </div>
               <button
@@ -1283,10 +1250,21 @@ function QiskitChallengeWorkspace() {
                       )}
                     >
                       <div className="col-span-2 flex items-center gap-1.5 font-bold">
-                        {entry.rank === 1 && <span className="text-amber-500">🥇</span>}
-                        {entry.rank === 2 && <span className="text-slate-400">🥈</span>}
-                        {entry.rank === 3 && <span className="text-amber-700">🥉</span>}
-                        <span>#{entry.rank}</span>
+                        {entry.rank === 1 ? (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                            #1
+                          </span>
+                        ) : entry.rank === 2 ? (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-300/30 text-slate-600 dark:text-slate-300 border border-slate-400/30">
+                            #2
+                          </span>
+                        ) : entry.rank === 3 ? (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-800/20 text-amber-700 dark:text-amber-400 border border-amber-700/30">
+                            #3
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 font-mono text-xs">#{entry.rank}</span>
+                        )}
                       </div>
 
                       <div className="col-span-6 font-semibold text-slate-800 dark:text-slate-200 truncate pr-2">

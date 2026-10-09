@@ -342,29 +342,6 @@ export function QiskitPlayground({
   }, [isRunning, isSubmitting, challenge.id, code]);
 
 
-  // Global event integration with top-navbar Run / Submit buttons
-  useEffect(() => {
-    const onRun = () => handleRunCode();
-    const onSubmit = () => handleSubmitCode();
-
-    window.addEventListener('qiskit:run', onRun);
-    window.addEventListener('qiskit:submit', onSubmit);
-
-    return () => {
-      window.removeEventListener('qiskit:run', onRun);
-      window.removeEventListener('qiskit:submit', onSubmit);
-    };
-  }, [handleRunCode, handleSubmitCode]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(
-        new CustomEvent('qiskit:state', {
-          detail: { isRunning, isSubmitting },
-        })
-      );
-    }
-  }, [isRunning, isSubmitting]);
 
 
 
@@ -432,28 +409,28 @@ export function QiskitPlayground({
       {/* ─────────────────────────────────────────────────────────────
           1. LEETCODE-STYLE EDITOR TOOLBAR
          ───────────────────────────────────────────────────────────── */}
-      <div className="shrink-0 flex items-center justify-between px-4 py-2 bg-[#252526] border-b border-[#333333] select-none">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-[#1e1e1e] text-xs font-mono font-medium text-slate-200 border border-[#3e3e42]">
+      <div className="shrink-0 flex items-center justify-between px-3 sm:px-4 py-2 bg-[#252526] border-b border-[#333333] select-none gap-2 overflow-hidden">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-[#1e1e1e] text-xs font-mono font-medium text-slate-200 border border-[#3e3e42] shrink-0">
             <Code2 className="w-3.5 h-3.5 text-emerald-400" />
             <span>Python 3 (Qiskit 2.x)</span>
           </div>
 
           {saveStatus === 'saving' && (
-            <span className="flex items-center gap-1 text-[11px] font-mono text-slate-400">
-              <Loader2 className="w-3 h-3 animate-spin text-burgundy" />
-              Saving draft...
+            <span className="flex items-center gap-1 text-[11px] font-mono text-slate-400 truncate">
+              <Loader2 className="w-3 h-3 animate-spin text-burgundy shrink-0" />
+              <span className="hidden sm:inline">Saving draft...</span>
             </span>
           )}
           {saveStatus === 'saved' && (
-            <span className="flex items-center gap-1 text-[11px] font-mono text-emerald-400">
-              <Check className="w-3 h-3" />
-              Draft saved
+            <span className="flex items-center gap-1 text-[11px] font-mono text-emerald-400 truncate">
+              <Check className="w-3 h-3 shrink-0" />
+              <span className="hidden sm:inline">Draft saved</span>
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 shrink-0">
           {/* Full Screen Toggle */}
           <button
             onClick={() => {
@@ -465,7 +442,7 @@ export function QiskitPlayground({
             }}
             type="button"
             title={isFullscreen ? 'Exit Full Screen' : 'Full Screen Playground'}
-            className="p-1.5 rounded hover:bg-[#333333] text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+            className="p-1.5 rounded hover:bg-[#333333] text-slate-400 hover:text-slate-200 transition-colors cursor-pointer shrink-0"
           >
             {isFullscreen ? (
               <Minimize2 className="w-3.5 h-3.5 text-emerald-400" />
@@ -479,7 +456,7 @@ export function QiskitPlayground({
             onClick={handleReset}
             type="button"
             title="Reset code to starter template"
-            className="p-1.5 rounded hover:bg-[#333333] text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+            className="p-1.5 rounded hover:bg-[#333333] text-slate-400 hover:text-slate-200 transition-colors cursor-pointer shrink-0"
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
@@ -538,8 +515,8 @@ export function QiskitPlayground({
          ───────────────────────────────────────────────────────────── */}
       <div className="shrink-0 flex flex-col bg-[#1e1e1e] border-t border-[#333333]">
         {/* Tab Headers */}
-        <div className="shrink-0 flex items-center justify-between px-3 bg-[#252526] border-b border-[#333333]">
-          <div className="flex items-center gap-1">
+        <div className="shrink-0 flex items-center justify-between px-2.5 sm:px-3 bg-[#252526] border-b border-[#333333] gap-2 overflow-hidden">
+          <div className="flex items-center gap-1 min-w-0 overflow-x-auto no-scrollbar py-1 shrink">
             <button
               onClick={() => {
                 setActiveBottomTab('testcase');
@@ -547,13 +524,13 @@ export function QiskitPlayground({
               }}
               type="button"
               className={clsx(
-                'px-3 py-2 text-xs font-mono font-medium border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer',
+                'px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-mono font-medium border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer shrink-0',
                 activeBottomTab === 'testcase' && !isConsoleCollapsed
                   ? 'border-emerald-500 text-white font-semibold'
                   : 'border-transparent text-slate-400 hover:text-slate-200'
               )}
             >
-              <CheckCircle2 className="w-3.5 h-3.5" />
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
               <span>Testcase</span>
             </button>
 
@@ -564,17 +541,18 @@ export function QiskitPlayground({
               }}
               type="button"
               className={clsx(
-                'px-3 py-2 text-xs font-mono font-medium border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer',
+                'px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-mono font-medium border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer shrink-0',
                 activeBottomTab === 'result' && !isConsoleCollapsed
                   ? 'border-emerald-500 text-white font-semibold'
                   : 'border-transparent text-slate-400 hover:text-slate-200'
               )}
             >
-              <TerminalIcon className="w-3.5 h-3.5" />
-              <span>Test Result</span>
+              <TerminalIcon className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden sm:inline">Test Result</span>
+              <span className="sm:hidden">Result</span>
               {publicTestResults.length > 0 && (
                 <span className={clsx(
-                  'px-1.5 py-0.2 rounded text-[10px] font-bold',
+                  'px-1.5 py-0.2 rounded text-[10px] font-bold shrink-0',
                   lastRunSuccess ? 'bg-emerald-950 text-emerald-400' : 'bg-rose-950 text-rose-400'
                 )}>
                   {publicTestResults.filter(t => t.passed).length}/{publicTestResults.length}
@@ -589,16 +567,17 @@ export function QiskitPlayground({
               }}
               type="button"
               className={clsx(
-                'px-3 py-2 text-xs font-mono font-medium border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer',
+                'px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-mono font-medium border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer shrink-0',
                 activeBottomTab === 'submission' && !isConsoleCollapsed
                   ? 'border-emerald-500 text-white font-semibold'
                   : 'border-transparent text-slate-400 hover:text-slate-200'
               )}
             >
-              <Award className="w-3.5 h-3.5" />
-              <span>Submission</span>
+              <Award className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden sm:inline">Submission</span>
+              <span className="sm:hidden">Submit</span>
               {submission?.score !== undefined && (
-                <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-950 text-amber-300">
+                <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-950 text-amber-300 shrink-0">
                   {submission.score}/{challenge.points} pts
                 </span>
               )}
@@ -606,13 +585,13 @@ export function QiskitPlayground({
           </div>
 
           {/* Action Buttons: Run & Submit & Minimize Toggle */}
-          <div className="flex items-center gap-2 py-1.5">
+          <div className="flex items-center gap-1.5 sm:gap-2 py-1.5 shrink-0 ml-auto">
             <button
               onClick={handleRunCode}
               disabled={isRunning || isSubmitting}
               type="button"
               title="Run code against public tests (Cmd/Ctrl + Enter)"
-              className="px-3 py-1.5 rounded-md bg-[#333333] hover:bg-[#3e3e42] text-white text-xs font-medium transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-xs"
+              className="px-2.5 sm:px-3 py-1.5 rounded-md bg-[#333333] hover:bg-[#3e3e42] text-white text-xs font-medium transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-xs shrink-0"
             >
               {isRunning ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -620,7 +599,7 @@ export function QiskitPlayground({
                 <Play className="w-3.5 h-3.5 fill-current text-slate-300" />
               )}
               <span>Run</span>
-              <span className="text-[10px] font-mono text-slate-400 ml-0.5">⌘↵</span>
+              <span className="hidden md:inline text-[10px] font-mono text-slate-400 ml-0.5">⌘↵</span>
             </button>
 
             <button
@@ -628,7 +607,7 @@ export function QiskitPlayground({
               disabled={isRunning || isSubmitting}
               type="button"
               title="Submit solution for official judging"
-              className="px-4 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-xs"
+              className="px-3 sm:px-4 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-xs shrink-0"
             >
               {isSubmitting ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -643,7 +622,7 @@ export function QiskitPlayground({
               onClick={() => setIsConsoleCollapsed((prev) => !prev)}
               type="button"
               title={isConsoleCollapsed ? 'Expand test panel' : 'Collapse test panel'}
-              className="p-1.5 rounded hover:bg-[#333333] text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+              className="p-1.5 rounded hover:bg-[#333333] text-slate-400 hover:text-slate-200 transition-colors cursor-pointer shrink-0"
             >
               {isConsoleCollapsed ? (
                 <ChevronUp className="w-4 h-4" />
@@ -661,7 +640,7 @@ export function QiskitPlayground({
           {activeBottomTab === 'testcase' && (
             <div className="space-y-3 pb-8">
               {/* Case Chips */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
                 {(challenge.publicTests || []).map((t, idx) => (
                   <button
                     key={idx}

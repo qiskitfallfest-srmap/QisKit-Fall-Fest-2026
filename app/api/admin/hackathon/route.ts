@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { cacheAside, CACHE_TTL, invalidateCache } from '@/lib/redis';
 import { getFinalizedTeamsMap } from '@/lib/finalized-teams';
 import { getParticipantUniversitiesMap } from '@/lib/participant-universities';
+import { SubmissionEvaluation } from '@/types/evaluations';
 
 export interface AdminHackathonMember {
   id: string;
@@ -38,6 +40,7 @@ export interface AdminHackathonTeam {
   pending_count: number;
   declined_count: number;
   total_members_count: number;
+  evaluation?: SubmissionEvaluation | null;
 }
 
 export interface AdminHackathonParticipant {
@@ -66,6 +69,9 @@ export interface AdminHackathonData {
     finalizedTeams: number;
     draftTeams: number;
     teamsWithSubmissions: number;
+    downloadedSubmissionsCount: number;
+    shortlistedTeamsCount: number;
+    evaluatedTeamsCount: number;
     totalParticipants: number;
     confirmedParticipants: number;
     pendingParticipants: number;
@@ -99,9 +105,19 @@ async function fetchHackathonAdminData(): Promise<AdminHackathonData> {
     throw membersErr;
   }
 
-  // 3. Fetch finalized teams map & participant universities map
+  // 3. Fetch finalized teams map, participant universities map & evaluations
   const finalizedMap = await getFinalizedTeamsMap();
   const universitiesMap = await getParticipantUniversitiesMap();
+
+  const { data: rawEvals } = await supabaseAdmin
+    .from('submission_evaluations')
+    .select('*')
+    .eq('category', 'hackathon');
+
+  const evaluationsByTeam: Record<string, SubmissionEvaluation> = {};
+  (rawEvals || []).forEach((ev: any) => {
+    evaluationsByTeam[ev.target_id] = ev as SubmissionEvaluation;
+  });
 
   // Group members by team_id
   const membersByTeam: Record<string, AdminHackathonMember[]> = {};
@@ -181,12 +197,20 @@ async function fetchHackathonAdminData(): Promise<AdminHackathonData> {
 
   let finalizedTeamsCount = 0;
   let teamsWithSubmissionsCount = 0;
+  let downloadedSubmissionsCount = 0;
+  let shortlistedTeamsCount = 0;
+  let evaluatedTeamsCount = 0;
 
   const enrichedTeams: AdminHackathonTeam[] = (rawTeams || []).map((t) => {
     const finInfo = finalizedMap[t.id];
     const isFinalized = !!finInfo;
     if (isFinalized) finalizedTeamsCount++;
     if (t.github_repo_url) teamsWithSubmissionsCount++;
+
+    const evalData = evaluationsByTeam[t.id] || null;
+    if (evalData?.downloaded) downloadedSubmissionsCount++;
+    if (evalData?.is_next_round) shortlistedTeamsCount++;
+    if (evalData?.status && evalData.status !== 'pending') evaluatedTeamsCount++;
 
     const teamMembers = membersByTeam[t.id] || [];
     const confirmedCount = teamMembers.filter((m) => m.status === 'accepted' || m.role === 'leader').length;
@@ -227,6 +251,7 @@ async function fetchHackathonAdminData(): Promise<AdminHackathonData> {
       pending_count: pendingCount,
       declined_count: declinedCount,
       total_members_count: teamMembers.length,
+      evaluation: evalData,
     };
   });
 
@@ -242,6 +267,9 @@ async function fetchHackathonAdminData(): Promise<AdminHackathonData> {
       finalizedTeams: finalizedTeamsCount,
       draftTeams,
       teamsWithSubmissions: teamsWithSubmissionsCount,
+      downloadedSubmissionsCount,
+      shortlistedTeamsCount,
+      evaluatedTeamsCount,
       totalParticipants: rawMembers?.length || 0,
       confirmedParticipants,
       pendingParticipants,

@@ -469,7 +469,7 @@ export default function AdminConsolePage() {
               }`}
             >
               <Terminal className="w-4 h-4" />
-              <span>Qiskit Coding Challenge</span>
+              <span>Python Coding Challenge in Qiskit</span>
             </button>
 
             <button

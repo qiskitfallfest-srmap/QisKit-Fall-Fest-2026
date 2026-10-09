@@ -86,13 +86,13 @@ export async function checkCompetitionStatus(): Promise<{ allowed: boolean; reas
   if (config.is_locked) {
     return {
       allowed: false,
-      reason: 'The Qiskit Coding Challenge is currently locked by organizers. Coming Soon!',
+      reason: 'The Python Coding Challenge in Qiskit is currently locked by organizers. Coming Soon!',
       config,
     };
   }
 
   if (!config.enabled) {
-    return { allowed: false, reason: 'The Qiskit Coding Challenge is currently disabled by organizers.', config };
+    return { allowed: false, reason: 'The Python Coding Challenge in Qiskit is currently disabled by organizers.', config };
   }
 
   const now = new Date().getTime();

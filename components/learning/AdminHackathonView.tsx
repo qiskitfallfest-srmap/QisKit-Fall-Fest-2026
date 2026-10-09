@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Trophy,
@@ -23,12 +23,19 @@ import {
   Layers,
   Sparkles,
   Zap,
+  Sliders,
+  MessageSquare,
+  Copy,
+  Check,
 } from 'lucide-react';
 import type {
   AdminHackathonData,
   AdminHackathonTeam,
   AdminHackathonParticipant,
 } from '@/app/api/admin/hackathon/route';
+import { supabase } from '@/lib/supabase';
+import { EvaluationDrawer } from './EvaluationDrawer';
+import { SubmissionEvaluation } from '@/types/evaluations';
 
 export function AdminHackathonView() {
   const [data, setData] = useState<AdminHackathonData | null>(null);
@@ -39,6 +46,9 @@ export function AdminHackathonView() {
   // View mode
   const [viewMode, setViewMode] = useState<'teams' | 'participants' | 'insights'>('teams');
 
+  // Pipeline Filter (Teams view)
+  const [pipelineFilter, setPipelineFilter] = useState<'all' | 'ready' | 'shortlisted' | 'downloaded' | 'draft'>('all');
+
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedVertical, setSelectedVertical] = useState<string>('all');
@@ -48,6 +58,12 @@ export function AdminHackathonView() {
 
   // Expanded team IDs
   const [expandedTeamIds, setExpandedTeamIds] = useState<Set<string>>(new Set());
+
+  // Evaluation Drawer State
+  const [selectedTeamForEvaluation, setSelectedTeamForEvaluation] = useState<AdminHackathonTeam | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [actionInProgressId, setActionInProgressId] = useState<string | null>(null);
+  const [copiedRepoId, setCopiedRepoId] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
@@ -94,9 +110,169 @@ export function AdminHackathonView() {
     }
   };
 
+  // Real-time synchronization via Supabase Postgres Changes
   useEffect(() => {
     fetchData();
+
+    // Listen to real-time evaluation updates across all admin sessions
+    const channel = supabase
+      .channel('hackathon-evaluations-live')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'submission_evaluations' },
+        (payload) => {
+          const updated = (payload.new || {}) as SubmissionEvaluation;
+          if (updated && updated.category === 'hackathon') {
+            setData((prev) => {
+              if (!prev) return prev;
+              const nextTeams = prev.teams.map((t) => {
+                if (t.id === updated.target_id) {
+                  return { ...t, evaluation: updated };
+                }
+                return t;
+              });
+
+              let downloadedCount = 0;
+              let shortlistedCount = 0;
+              let evaluatedCount = 0;
+              nextTeams.forEach((t) => {
+                if (t.evaluation?.downloaded) downloadedCount++;
+                if (t.evaluation?.is_next_round) shortlistedCount++;
+                if (t.evaluation?.status && t.evaluation.status !== 'pending') evaluatedCount++;
+              });
+
+              return {
+                ...prev,
+                teams: nextTeams,
+                stats: {
+                  ...prev.stats,
+                  downloadedSubmissionsCount: downloadedCount,
+                  shortlistedTeamsCount: shortlistedCount,
+                  evaluatedTeamsCount: evaluatedCount,
+                },
+              };
+            });
+
+            // Also update active drawer if currently inspecting this team
+            setSelectedTeamForEvaluation((current) => {
+              if (current && current.id === updated.target_id) {
+                return { ...current, evaluation: updated };
+              }
+              return current;
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
+
+  // Quick Action: Download Repo ZIP + Auto-Tick in DB
+  const handleQuickDownload = async (team: AdminHackathonTeam) => {
+    if (!team.github_repo_url) return;
+
+    try {
+      setActionInProgressId(team.id);
+
+      // Trigger ZIP download
+      const cleanRepo = team.github_repo_url.replace(/\/+$/, '');
+      const zipUrl = `${cleanRepo}/archive/refs/heads/main.zip`;
+
+      const link = document.createElement('a');
+      link.href = zipUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Call API to register download audit
+      const res = await fetch('/api/admin/evaluations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: 'hackathon',
+          target_id: team.id,
+          action: 'mark_download',
+        }),
+      });
+
+      const json = await res.json();
+      if (json.success && json.evaluation) {
+        // Optimistic local update
+        setData((prev) => {
+          if (!prev) return prev;
+          const nextTeams = prev.teams.map((t) =>
+            t.id === team.id ? { ...t, evaluation: json.evaluation } : t
+          );
+          return { ...prev, teams: nextTeams };
+        });
+      }
+    } catch (err) {
+      console.error('Error during quick download:', err);
+    } finally {
+      setActionInProgressId(null);
+    }
+  };
+
+  // Quick Action: Toggle Next Round Shortlist
+  const handleQuickToggleNextRound = async (team: AdminHackathonTeam) => {
+    try {
+      setActionInProgressId(team.id);
+
+      const res = await fetch('/api/admin/evaluations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: 'hackathon',
+          target_id: team.id,
+          action: 'toggle_next_round',
+        }),
+      });
+
+      const json = await res.json();
+      if (json.success && json.evaluation) {
+        setData((prev) => {
+          if (!prev) return prev;
+          const nextTeams = prev.teams.map((t) =>
+            t.id === team.id ? { ...t, evaluation: json.evaluation } : t
+          );
+          return { ...prev, teams: nextTeams };
+        });
+      }
+    } catch (err) {
+      console.error('Error toggling next round:', err);
+    } finally {
+      setActionInProgressId(null);
+    }
+  };
+
+  // Quick Action: Copy git clone command
+  const handleCopyClone = (team: AdminHackathonTeam) => {
+    if (!team.github_repo_url) return;
+    const cmd = `git clone ${team.github_repo_url}.git`;
+    navigator.clipboard.writeText(cmd);
+    setCopiedRepoId(team.id);
+    setTimeout(() => setCopiedRepoId(null), 2500);
+  };
+
+  const openEvaluationDesk = (team: AdminHackathonTeam) => {
+    setSelectedTeamForEvaluation(team);
+    setIsDrawerOpen(true);
+  };
+
+  const handleEvaluationUpdated = (updated: SubmissionEvaluation) => {
+    setData((prev) => {
+      if (!prev) return prev;
+      const nextTeams = prev.teams.map((t) =>
+        t.id === updated.target_id ? { ...t, evaluation: updated } : t
+      );
+      return { ...prev, teams: nextTeams };
+    });
+  };
 
   const toggleExpandTeam = (teamId: string) => {
     setExpandedTeamIds((prev) => {
@@ -146,6 +322,12 @@ export function AdminHackathonView() {
         }
       }
 
+      // Pipeline filter
+      if (pipelineFilter === 'ready' && !t.github_repo_url) return false;
+      if (pipelineFilter === 'shortlisted' && !t.evaluation?.is_next_round) return false;
+      if (pipelineFilter === 'downloaded' && !t.evaluation?.downloaded) return false;
+      if (pipelineFilter === 'draft' && t.github_repo_url) return false;
+
       // Vertical filter
       if (selectedVertical !== 'all' && t.vertical !== selectedVertical) {
         return false;
@@ -166,7 +348,7 @@ export function AdminHackathonView() {
 
       return true;
     });
-  }, [data?.teams, searchQuery, selectedVertical, selectedPS, selectedFinalized, selectedSubmission]);
+  }, [data?.teams, searchQuery, pipelineFilter, selectedVertical, selectedPS, selectedFinalized, selectedSubmission]);
 
   // Filtered Participants
   const filteredParticipants = useMemo(() => {
@@ -210,6 +392,11 @@ export function AdminHackathonView() {
       'Finalized At',
       'GitHub Submission URL',
       'Submitted At',
+      'Round 2 Shortlisted',
+      'Evaluation Status',
+      'Score',
+      'Downloaded',
+      'Downloaded By',
       'Participant Role',
       'Participant Name',
       'Participant Email',
@@ -231,6 +418,11 @@ export function AdminHackathonView() {
           team.finalized_at ? `"${new Date(team.finalized_at).toLocaleString()}"` : 'N/A',
           team.github_repo_url ? `"${team.github_repo_url}"` : 'Not Submitted',
           team.submitted_at ? `"${new Date(team.submitted_at).toLocaleString()}"` : 'N/A',
+          team.evaluation?.is_next_round ? 'YES (Round 2)' : 'NO',
+          team.evaluation?.status || 'pending',
+          team.evaluation?.score !== null && team.evaluation?.score !== undefined ? String(team.evaluation.score) : 'N/A',
+          team.evaluation?.downloaded ? 'YES' : 'NO',
+          `"${(team.evaluation?.downloaded_by || '').replace(/"/g, '""')}"`,
           m.role === 'leader' ? 'Team Leader' : 'Team Member',
           `"${(m.full_name || '').replace(/"/g, '""')}"`,
           `"${m.email || ''}"`,
@@ -325,99 +517,142 @@ export function AdminHackathonView() {
       )}
 
       {/* KPI Highlight Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4">
         {/* Total Teams Formed */}
-        <div className="p-5 rounded-xl bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] shadow-xs relative overflow-hidden">
+        <div className="p-4 rounded-xl bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] shadow-xs relative overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              Total Teams Formed
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Total Teams
             </span>
-            <div className="p-2 rounded-lg bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5]">
-              <Trophy className="w-4 h-4" />
+            <div className="p-1.5 rounded-lg bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5]">
+              <Trophy className="w-3.5 h-3.5" />
             </div>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-[#FAF6F3]">
+            <span className="text-2xl font-bold text-slate-900 dark:text-[#FAF6F3]">
               {data?.stats?.totalTeams || 0}
             </span>
-            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded">
+            <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1 py-0.5 rounded">
               {data?.stats?.finalizedTeams || 0} locked
             </span>
           </div>
-          <span className="text-[11px] text-slate-400 dark:text-slate-500 block mt-1">
-            {data?.stats?.draftTeams || 0} teams in draft mode
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-0.5">
+            {data?.stats?.draftTeams || 0} in draft
+          </span>
+        </div>
+
+        {/* Ready for Review (Repo Submitted) */}
+        <div className="p-4 rounded-xl bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] shadow-xs relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Ready for Review
+            </span>
+            <div className="p-1.5 rounded-lg bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400">
+              <Github className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-slate-900 dark:text-[#FAF6F3]">
+              {data?.stats?.teamsWithSubmissions || 0}
+            </span>
+            <span className="text-[10px] font-semibold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 px-1 py-0.5 rounded">
+              Repos Live
+            </span>
+          </div>
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-0.5">
+            Code available
+          </span>
+        </div>
+
+        {/* Round 2 Shortlisted */}
+        <div className="p-4 rounded-xl bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] shadow-xs relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Round 2 Shortlist
+            </span>
+            <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">
+              {data?.stats?.shortlistedTeamsCount || 0}
+            </span>
+            <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-1 py-0.5 rounded">
+              Advanced
+            </span>
+          </div>
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-0.5">
+            Selected teams
+          </span>
+        </div>
+
+        {/* Downloaded & Inspected */}
+        <div className="p-4 rounded-xl bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] shadow-xs relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Downloaded
+            </span>
+            <div className="p-1.5 rounded-lg bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400">
+              <Download className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-sky-700 dark:text-sky-400">
+              {data?.stats?.downloadedSubmissionsCount || 0}
+            </span>
+            <span className="text-[10px] font-semibold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/40 px-1 py-0.5 rounded">
+              Audited
+            </span>
+          </div>
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-0.5">
+            Verified by evaluators
           </span>
         </div>
 
         {/* Total Participants */}
-        <div className="p-5 rounded-xl bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] shadow-xs relative overflow-hidden">
+        <div className="p-4 rounded-xl bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] shadow-xs relative overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              Total Participants
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Participants
             </span>
-            <div className="p-2 rounded-lg bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400">
-              <Users className="w-4 h-4" />
+            <div className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400">
+              <Users className="w-3.5 h-3.5" />
             </div>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-[#FAF6F3]">
+            <span className="text-2xl font-bold text-slate-900 dark:text-[#FAF6F3]">
               {data?.stats?.totalParticipants || 0}
             </span>
-            <span className="text-[11px] font-semibold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/40 px-1.5 py-0.5 rounded">
+            <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-1 py-0.5 rounded">
               {data?.stats?.confirmedParticipants || 0} confirmed
             </span>
           </div>
-          <span className="text-[11px] text-slate-400 dark:text-slate-500 block mt-1">
-            {data?.stats?.pendingParticipants || 0} pending invites
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-0.5">
+            {data?.stats?.pendingParticipants || 0} pending
           </span>
         </div>
 
         {/* Universities Represented */}
-        <div className="p-5 rounded-xl bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] shadow-xs relative overflow-hidden">
+        <div className="p-4 rounded-xl bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] shadow-xs relative overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              Universities / Colleges
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Colleges
             </span>
-            <div className="p-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400">
-              <GraduationCap className="w-4 h-4" />
+            <div className="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400">
+              <GraduationCap className="w-3.5 h-3.5" />
             </div>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-[#FAF6F3]">
+            <span className="text-2xl font-bold text-slate-900 dark:text-[#FAF6F3]">
               {data?.stats?.uniqueUniversitiesCount || 0}
             </span>
-            <span className="text-[11px] font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 rounded">
-              Institutions
+            <span className="text-[10px] font-medium text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/40 px-1 py-0.5 rounded">
+              Institutes
             </span>
           </div>
-          <span className="text-[11px] text-slate-400 dark:text-slate-500 block mt-1">
-            Across India & International
-          </span>
-        </div>
-
-        {/* Code Submissions */}
-        <div className="p-5 rounded-xl bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] shadow-xs relative overflow-hidden">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              GitHub Submissions
-            </span>
-            <div className="p-2 rounded-lg bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400">
-              <Github className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-[#FAF6F3]">
-              {data?.stats?.teamsWithSubmissions || 0}
-            </span>
-            <span className="text-[11px] font-semibold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 px-1.5 py-0.5 rounded">
-              {Math.round(
-                ((data?.stats?.teamsWithSubmissions || 0) / Math.max(1, data?.stats?.totalTeams || 1)) * 100
-              )}
-              % rate
-            </span>
-          </div>
-          <span className="text-[11px] text-slate-400 dark:text-slate-500 block mt-1">
-            Repositories connected
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-0.5">
+            Pan-India representation
           </span>
         </div>
       </div>
@@ -481,6 +716,70 @@ export function AdminHackathonView() {
             </div>
           )}
         </div>
+
+        {/* Review Pipeline Sub-Tabs */}
+        {viewMode === 'teams' && (
+          <div className="flex flex-wrap items-center gap-1.5 p-2 bg-slate-50 dark:bg-[#1C0A0D]/70 rounded-lg border border-slate-200 dark:border-[#3D1418]">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-2">
+              Review Pipeline:
+            </span>
+            <button
+              type="button"
+              onClick={() => setPipelineFilter('all')}
+              className={`px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                pipelineFilter === 'all'
+                  ? 'bg-white dark:bg-[#250D11] text-burgundy dark:text-[#E89BA5] shadow-xs border border-slate-200 dark:border-[#3D1418]'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+            >
+              All Teams ({data?.stats?.totalTeams || 0})
+            </button>
+            <button
+              type="button"
+              onClick={() => setPipelineFilter('ready')}
+              className={`px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                pipelineFilter === 'ready'
+                  ? 'bg-white dark:bg-[#250D11] text-purple-700 dark:text-purple-300 shadow-xs border border-purple-200 dark:border-purple-800'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+            >
+              Ready for Review ({data?.stats?.teamsWithSubmissions || 0})
+            </button>
+            <button
+              type="button"
+              onClick={() => setPipelineFilter('shortlisted')}
+              className={`px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                pipelineFilter === 'shortlisted'
+                  ? 'bg-white dark:bg-[#250D11] text-emerald-700 dark:text-emerald-300 shadow-xs border border-emerald-200 dark:border-emerald-800'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+            >
+              Round 2 Shortlisted ({data?.stats?.shortlistedTeamsCount || 0})
+            </button>
+            <button
+              type="button"
+              onClick={() => setPipelineFilter('downloaded')}
+              className={`px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                pipelineFilter === 'downloaded'
+                  ? 'bg-white dark:bg-[#250D11] text-sky-700 dark:text-sky-300 shadow-xs border border-sky-200 dark:border-sky-800'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+            >
+              Downloaded & Inspected ({data?.stats?.downloadedSubmissionsCount || 0})
+            </button>
+            <button
+              type="button"
+              onClick={() => setPipelineFilter('draft')}
+              className={`px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                pipelineFilter === 'draft'
+                  ? 'bg-white dark:bg-[#250D11] text-amber-700 dark:text-amber-300 shadow-xs border border-amber-200 dark:border-amber-800'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+            >
+              Awaiting Repo ({data?.stats?.draftTeams || 0})
+            </button>
+          </div>
+        )}
 
         {/* Filter Controls Bar */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
@@ -617,6 +916,117 @@ export function AdminHackathonView() {
                       className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                     >
                       {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Evaluation & Review Strip */}
+                <div className="border-t border-slate-100 dark:border-[#3D1418] bg-slate-50/70 dark:bg-[#180709] px-4 py-2.5 sm:px-5 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+                  {/* Left: Download Action & Audit Status */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {team.github_repo_url ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleQuickDownload(team);
+                          }}
+                          disabled={actionInProgressId === team.id}
+                          className={`px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer disabled:opacity-50 ${
+                            team.evaluation?.downloaded
+                              ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100'
+                              : 'bg-burgundy hover:bg-burgundy-deep text-white'
+                          }`}
+                          title="Download repository ZIP archive and register inspection audit"
+                        >
+                          {actionInProgressId === team.id ? (
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          ) : team.evaluation?.downloaded ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                          ) : (
+                            <Download className="w-3.5 h-3.5" />
+                          )}
+                          <span>
+                            {team.evaluation?.downloaded
+                              ? `Downloaded (${team.evaluation.downloaded_by?.split(' ')[0] || 'Admin'})`
+                              : 'Download Submission ZIP'}
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCopyClone(team);
+                          }}
+                          className="p-1.5 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#1C0A0D] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                          title="Copy git clone command"
+                        >
+                          {copiedRepoId === team.id ? (
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+
+                        {team.evaluation?.downloaded && team.evaluation.downloaded_at && (
+                          <span className="text-[11px] text-slate-400 dark:text-slate-500 hidden md:inline">
+                            Verified {new Date(team.evaluation.downloaded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-[11px] text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-1 rounded border border-amber-200 dark:border-amber-800 flex items-center gap-1.5 font-medium">
+                        <Clock className="w-3 h-3 text-amber-600" />
+                        <span>Pending Repository Submission</span>
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Right: Round 2 Shortlist, Score Pill, Notes & Drawer Desk */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleQuickToggleNextRound(team);
+                      }}
+                      disabled={actionInProgressId === team.id}
+                      className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer disabled:opacity-50 ${
+                        team.evaluation?.is_next_round
+                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-500'
+                          : 'bg-white dark:bg-[#1C0A0D] hover:bg-slate-100 dark:hover:bg-[#250D11] text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-[#3D1418]'
+                      }`}
+                      title="Toggle Round 2 Shortlist"
+                    >
+                      <CheckCircle2 className={`w-3.5 h-3.5 ${team.evaluation?.is_next_round ? 'text-white' : 'text-slate-400'}`} />
+                      <span>{team.evaluation?.is_next_round ? 'Round 2 Shortlisted' : 'Mark Next Round'}</span>
+                    </button>
+
+                    {team.evaluation?.score !== null && team.evaluation?.score !== undefined && (
+                      <span className="px-2.5 py-1 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 font-mono font-bold">
+                        {team.evaluation.score}/100 pts
+                      </span>
+                    )}
+
+                    {team.evaluation?.comments && team.evaluation.comments.length > 0 && (
+                      <span className="px-2 py-1 rounded-md bg-slate-100 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                        <MessageSquare className="w-3 h-3 text-burgundy dark:text-[#E89BA5]" />
+                        <span>{team.evaluation.comments.length}</span>
+                      </span>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEvaluationDesk(team);
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-slate-900 dark:bg-[#250D11] hover:bg-slate-800 text-white font-semibold flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                    >
+                      <Sliders className="w-3.5 h-3.5" />
+                      <span>Review Desk</span>
                     </button>
                   </div>
                 </div>
@@ -922,6 +1332,24 @@ export function AdminHackathonView() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Evaluation Drawer Modal */}
+      {selectedTeamForEvaluation && (
+        <EvaluationDrawer
+          isOpen={isDrawerOpen}
+          onClose={() => {
+            setIsDrawerOpen(false);
+            setSelectedTeamForEvaluation(null);
+          }}
+          category="hackathon"
+          targetId={selectedTeamForEvaluation.id}
+          targetTitle={selectedTeamForEvaluation.name}
+          targetSubtitle={`Track: ${selectedTeamForEvaluation.vertical} · Problem: ${selectedTeamForEvaluation.problem_statement_id} · Lead: ${selectedTeamForEvaluation.lead_name} (${selectedTeamForEvaluation.lead_university})`}
+          targetUrl={selectedTeamForEvaluation.github_repo_url}
+          initialEvaluation={selectedTeamForEvaluation.evaluation}
+          onEvaluationUpdated={handleEvaluationUpdated}
+        />
       )}
     </div>
   );

@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
       success: true,
       config: updatedConfig,
       isLocked: Boolean(updatedConfig.is_locked),
-      message: `Qiskit Coding Challenge is now ${
+      message: `Python Coding Challenge in Qiskit is now ${
         updatedConfig.is_locked ? 'LOCKED (Coming Soon mode active)' : 'UNLOCKED (Live & Open to participants)'
       }.`,
     });
