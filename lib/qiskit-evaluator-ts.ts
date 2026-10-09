@@ -40,6 +40,11 @@ export class MockQuantumCircuit {
     this.numClbits = numClbits;
   }
 
+  get num_qubits(): number { return this.numQubits; }
+  set num_qubits(v: number) { this.numQubits = v; }
+  get num_clbits(): number { return this.numClbits; }
+  set num_clbits(v: number) { this.numClbits = v; }
+
   x(q: number) { this.gates.push({ name: 'x', qubits: [q] }); return this; }
   y(q: number) { this.gates.push({ name: 'y', qubits: [q] }); return this; }
   z(q: number) { this.gates.push({ name: 'z', qubits: [q] }); return this; }
@@ -105,6 +110,30 @@ export class MockQuantumCircuit {
   find_bit(bit: any) {
     return { index: typeof bit === 'number' ? bit : (bit?.index ?? 0) };
   }
+  get qubits() {
+    return Array.from({ length: this.numQubits }, (_, i) => ({ index: i }));
+  }
+  get data() {
+    return this.gates.map((g) => ({
+      operation: {
+        name: g.name,
+        params: g.params || [],
+        copy: () => ({ name: g.name, params: [...(g.params || [])] }),
+      },
+      qubits: g.qubits.map((q) => ({ index: q })),
+      clbits: (g.clbits || []).map((c) => ({ index: c })),
+      replace: (opts?: any) => {
+        const opName = opts?.operation?.name || g.name;
+        const opParams = opts?.operation?.params || g.params;
+        const qList = opts?.qubits ? opts.qubits.map((q: any) => (typeof q === 'number' ? q : (q.index ?? 0))) : g.qubits;
+        return {
+          operation: { name: opName, params: opParams || [], copy: () => ({ name: opName, params: [...(opParams || [])] }) },
+          qubits: qList.map((q: number) => ({ index: q })),
+          clbits: (g.clbits || []).map((c: any) => ({ index: typeof c === 'number' ? c : (c.index ?? 0) })),
+        };
+      },
+    }));
+  }
   size() { return this.gates.length; }
 }
 
@@ -124,18 +153,75 @@ function stripLineComment(line: string): string {
   return line;
 }
 
+function mergePythonParenLines(lines: string[]): string[] {
+  const merged: string[] = [];
+  let buffer = '';
+  let parenDepth = 0;
+  let bracketDepth = 0;
+
+  for (const raw of lines) {
+    const stripped = stripLineComment(raw);
+    if (!stripped.trim()) {
+      if (!buffer) continue;
+    }
+
+    if (!buffer) {
+      buffer = raw;
+    } else {
+      buffer += ' ' + raw.trim();
+    }
+
+    let inSingle = false;
+    let inDouble = false;
+    for (let i = 0; i < stripped.length; i++) {
+      const ch = stripped[i];
+      if (ch === "'" && !inDouble && (i === 0 || stripped[i - 1] !== '\\')) inSingle = !inSingle;
+      else if (ch === '"' && !inSingle && (i === 0 || stripped[i - 1] !== '\\')) inDouble = !inDouble;
+      else if (!inSingle && !inDouble) {
+        if (ch === '(') parenDepth++;
+        else if (ch === ')') parenDepth = Math.max(0, parenDepth - 1);
+        else if (ch === '[') bracketDepth++;
+        else if (ch === ']') bracketDepth = Math.max(0, bracketDepth - 1);
+      }
+    }
+
+    if (parenDepth === 0 && bracketDepth === 0) {
+      merged.push(buffer);
+      buffer = '';
+    }
+  }
+
+  if (buffer) merged.push(buffer);
+  return merged;
+}
+
+function transformPyCondition(cond: string): string {
+  return cond
+    .replace(/\bis\s+not\s+None\b/g, '!= null')
+    .replace(/\bis\s+None\b/g, '== null')
+    .replace(/\bTrue\b/g, 'true')
+    .replace(/\bFalse\b/g, 'false')
+    .replace(/\bNone\b/g, 'null')
+    .replace(/\band\b/g, '&&')
+    .replace(/\bor\b/g, '||')
+    .replace(/\bnot\b/g, '!')
+    .trim();
+}
+
 /**
  * Transpiles Python function body into valid JavaScript for sandboxed evaluation.
  */
-function transpilePythonToJS(pyCode: string): string {
+export function transpilePythonToJS(pyCode: string): string {
   // Strip multiline docstrings: """ ... """ and ''' ... '''
   const cleanedPyCode = pyCode
     .replace(/"""[\s\S]*?"""/g, '')
     .replace(/'''[\s\S]*?'''/g, '');
 
-  const lines = cleanedPyCode.split('\n');
+  const rawLines = cleanedPyCode.split('\n');
+  const lines = mergePythonParenLines(rawLines);
   const jsLines: string[] = [];
   const indentStack = [0];
+  const declaredVars = new Set<string>();
 
   for (const rawLine of lines) {
     let line = stripLineComment(rawLine);
@@ -161,8 +247,9 @@ function transpilePythonToJS(pyCode: string): string {
     const defMatch = trimmed.match(/^def\s+([a-zA-Z0-9_]+)\s*\((.*?)\)(\s*->.*?)?:$/);
     if (defMatch) {
       indentStack.push(indent + 4);
-      const cleanArgs = defMatch[2].split(',').map((a) => a.split(':')[0].trim()).filter(Boolean).join(', ');
-      jsLines.push(' '.repeat(indent) + `function ${defMatch[1]}(${cleanArgs}) {`);
+      const cleanArgs = defMatch[2].split(',').map((a) => a.split(':')[0].split('=')[0].trim()).filter(Boolean);
+      for (const arg of cleanArgs) declaredVars.add(arg);
+      jsLines.push(' '.repeat(indent) + `function ${defMatch[1]}(${cleanArgs.join(', ')}) {`);
       continue;
     }
 
@@ -170,13 +257,7 @@ function transpilePythonToJS(pyCode: string): string {
     const whileMatch = trimmed.match(/^while\s+(.*?):$/);
     if (whileMatch) {
       indentStack.push(indent + 4);
-      let cond = whileMatch[1]
-        .replace(/\bTrue\b/g, 'true')
-        .replace(/\bFalse\b/g, 'false')
-        .replace(/\bNone\b/g, 'null')
-        .replace(/\band\b/g, '&&')
-        .replace(/\bor\b/g, '||')
-        .replace(/\bnot\b/g, '!');
+      const cond = transformPyCondition(whileMatch[1]);
       jsLines.push(' '.repeat(indent) + `while (${cond}) { if (Date.now() - __eval_start_time > 2000) throw new Error("Execution timed out (infinite loop detected)");`);
       continue;
     }
@@ -212,21 +293,22 @@ function transpilePythonToJS(pyCode: string): string {
     const forInMatch = trimmed.match(/^for\s+([a-zA-Z0-9_,\s()]+)\s+in\s+(.*?):$/);
     if (forInMatch) {
       indentStack.push(indent + 4);
-      jsLines.push(' '.repeat(indent) + `for (const ${forInMatch[1]} of ${forInMatch[2]}) { if (Date.now() - __eval_start_time > 2000) throw new Error("Execution timed out");`);
+      let targetVars = forInMatch[1].trim();
+      if (targetVars.includes(',')) {
+        if (!targetVars.startsWith('[') && !targetVars.startsWith('(')) {
+          targetVars = `[${targetVars}]`;
+        } else if (targetVars.startsWith('(') && targetVars.endsWith(')')) {
+          targetVars = `[${targetVars.slice(1, -1)}]`;
+        }
+      }
+      jsLines.push(' '.repeat(indent) + `for (const ${targetVars} of ${forInMatch[2]}) { if (Date.now() - __eval_start_time > 2000) throw new Error("Execution timed out");`);
       continue;
     }
 
     // single-line if statement: if <cond>: <stmt>
     const singleIfMatch = trimmed.match(/^if\s+(.*?):\s*(.+)$/);
     if (singleIfMatch) {
-      const cond = singleIfMatch[1]
-        .replace(/\bTrue\b/g, 'true')
-        .replace(/\bFalse\b/g, 'false')
-        .replace(/\bNone\b/g, 'null')
-        .replace(/\band\b/g, '&&')
-        .replace(/\bor\b/g, '||')
-        .replace(/\bnot\b/g, '!')
-        .trim();
+      const cond = transformPyCondition(singleIfMatch[1]);
       let stmt = singleIfMatch[2].trim();
       if (!stmt.endsWith(';')) stmt += ';';
       jsLines.push(' '.repeat(indent) + `if (${cond}) { ${stmt} }`);
@@ -236,11 +318,14 @@ function transpilePythonToJS(pyCode: string): string {
     // if / elif / else:
     if (trimmed.startsWith('if ') && trimmed.endsWith(':')) {
       indentStack.push(indent + 4);
-      jsLines.push(' '.repeat(indent) + `if (${trimmed.slice(3, -1).trim()}) {`);
+      const cond = transformPyCondition(trimmed.slice(3, -1));
+      jsLines.push(' '.repeat(indent) + `if (${cond}) {`);
       continue;
     }
     if (trimmed.startsWith('elif ') && trimmed.endsWith(':')) {
-      jsLines.push(' '.repeat(indent) + `else if (${trimmed.slice(5, -1).trim()}) {`);
+      indentStack.push(indent + 4);
+      const cond = transformPyCondition(trimmed.slice(5, -1));
+      jsLines.push(' '.repeat(indent) + `else if (${cond}) {`);
       continue;
     }
     if (trimmed === 'else:') {
@@ -250,19 +335,59 @@ function transpilePythonToJS(pyCode: string): string {
     }
 
     let transformed = trimmed
+      .replace(/\bis\s+not\s+None\b/g, '!= null')
+      .replace(/\bis\s+None\b/g, '== null')
       .replace(/\bTrue\b/g, 'true')
       .replace(/\bFalse\b/g, 'false')
       .replace(/\bNone\b/g, 'null')
       .replace(/\band\b/g, '&&')
       .replace(/\bor\b/g, '||')
       .replace(/\bnot\b/g, '!')
-      .replace(/\.append\(/g, '.push(');
+      .replace(/\.append\(/g, '.push(')
+      .replace(/\.lower\(\)/g, '.toLowerCase()')
+      .replace(/\.upper\(\)/g, '.toUpperCase()')
+      .replace(/\.strip\(\)/g, '.trim()')
+      .replace(/\.startswith\(/g, '.startsWith(')
+      .replace(/\.endswith\(/g, '.endsWith(');
 
-    if (transformed.match(/^[a-zA-Z0-9_]+\s*=/)) {
-      transformed = 'let ' + transformed;
+    // Support list comprehensions: [expr for var in iterable]
+    transformed = transformed.replace(
+      /\[\s*(.+?)\s+for\s+([a-zA-Z0-9_,\s()]+)\s+in\s+([^\]]+?)\s*\]/g,
+      (_, expr, varName, iter) => {
+        let v = varName.trim();
+        if (v.includes(',')) {
+          if (!v.startsWith('[') && !v.startsWith('(')) v = `[${v}]`;
+        }
+        return `Array.from(${iter}).map((${v}) => ${expr})`;
+      }
+    );
+
+    // Python inline ternary: <var> = <expr1> if <cond> else <expr2>
+    const ternaryMatch = transformed.match(/^([a-zA-Z0-9_]+)\s*=\s*(.+?)\s+if\s+(.+?)\s+else\s+(.+)$/);
+    if (ternaryMatch) {
+      const varName = ternaryMatch[1];
+      const expr1 = ternaryMatch[2].trim();
+      const cond = transformPyCondition(ternaryMatch[3]);
+      const expr2 = ternaryMatch[4].trim();
+      const prefix = declaredVars.has(varName) ? '' : 'let ';
+      declaredVars.add(varName);
+      transformed = `${prefix}${varName} = (${cond}) ? (${expr1}) : (${expr2})`;
+    } else {
+      const assignMatch = transformed.match(/^([a-zA-Z0-9_]+)\s*=/);
+      if (assignMatch) {
+        const vName = assignMatch[1];
+        if (!declaredVars.has(vName)) {
+          declaredVars.add(vName);
+          transformed = 'let ' + transformed;
+        }
+      }
     }
 
-    jsLines.push(' '.repeat(indent) + transformed + ';');
+    if (!transformed.endsWith('{') && !transformed.endsWith(';') && !transformed.endsWith(',') && !transformed.endsWith(':')) {
+      transformed += ';';
+    }
+
+    jsLines.push(' '.repeat(indent) + transformed);
   }
 
   while (indentStack.length > 1) {
@@ -344,6 +469,18 @@ function executeUserFunction(pyCode: string, targetFunctionName: string): any {
     max: Math.max,
     sum: (arr: number[]) => (arr || []).reduce((a, b) => a + b, 0),
     print: (...args: any[]) => {},
+    hasattr: (obj: any, prop: string) => obj !== null && obj !== undefined && (prop in obj || (typeof obj === 'object' && obj[prop] !== undefined)),
+    isinstance: (obj: any, cls: any) => {
+      if (obj === null || obj === undefined) return false;
+      if (cls === String) return typeof obj === 'string';
+      if (cls === Number) return typeof obj === 'number';
+      if (cls === Boolean) return typeof obj === 'boolean';
+      if (cls === Array) return Array.isArray(obj);
+      if (cls === Object) return typeof obj === 'object';
+      if (typeof cls === 'function') return obj instanceof cls || obj?.constructor === cls;
+      return true;
+    },
+    state_fidelity: (sv1: any, sv2: any) => 1.0,
     np: {
       array: (arr: any) => arr,
       zeros: (n: number) => new Array(n).fill(0),
@@ -352,6 +489,7 @@ function executeUserFunction(pyCode: string, targetFunctionName: string): any {
       cos: Math.cos,
       exp: Math.exp,
       sqrt: Math.sqrt,
+      number: Number,
     },
     numpy: {
       array: (arr: any) => arr,
@@ -361,14 +499,32 @@ function executeUserFunction(pyCode: string, targetFunctionName: string): any {
       cos: Math.cos,
       exp: Math.exp,
       sqrt: Math.sqrt,
+      number: Number,
     },
     Parameter: function (name: string) { return { name }; },
-    Statevector: function (qc: any) {
-      return {
-        probabilities_dict: () => ({ '0': 1.0 }),
-        probabilities: () => [1.0, 0.0],
-      };
-    },
+    Statevector: Object.assign(
+      function (qc: any) {
+        return {
+          data: [],
+          probabilities_dict: () => ({ '0': 1.0 }),
+          probabilities: () => [1.0, 0.0],
+        };
+      },
+      {
+        from_instruction: (qc: any) => ({
+          data: [],
+          probabilities_dict: () => ({ '0': 1.0 }),
+          probabilities: () => [1.0, 0.0],
+        }),
+      }
+    ),
+    SGate: function () { return { name: 's' }; },
+    SdgGate: function () { return { name: 'sdg' }; },
+    TGate: function () { return { name: 't' }; },
+    TdgGate: function () { return { name: 'tdg' }; },
+    XGate: function () { return { name: 'x' }; },
+    ZGate: function () { return { name: 'z' }; },
+    HGate: function () { return { name: 'h' }; },
   };
 
   const fnBody = `const __eval_start_time = Date.now();\n${js}\nreturn typeof ${targetFunctionName} !== 'undefined' ? ${targetFunctionName} : null;`;
@@ -724,7 +880,13 @@ function evaluateP3(userCode: string, mode: 'run' | 'submit'): JudgeEvaluationRe
     const t0 = Date.now();
     try {
       const buggy = c.buildBuggy();
-      const rep = func(buggy, null);
+      const mockTarget = {
+        data: buggy.data,
+        numQubits: buggy.numQubits,
+        gates: buggy.gates,
+        copy: () => buggy.copy(),
+      };
+      const rep = func(buggy, mockTarget);
       if (!rep || typeof rep !== 'object') {
         return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: "Expected return type QuantumCircuit, received NoneType or invalid object." };
       }
