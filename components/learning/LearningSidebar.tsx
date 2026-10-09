@@ -385,7 +385,7 @@ export function LearningSidebar() {
             <span className="truncate">Challenges</span>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
-            <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-bold border border-purple-200/50 dark:border-purple-850/50">
+            <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-burgundy/10 dark:bg-burgundy/25 text-burgundy dark:text-[#E89BA5] font-bold border border-burgundy/20 dark:border-burgundy/40">
               3 Tasks
             </span>
             {isChallengesOpen ? (
@@ -408,40 +408,31 @@ export function LearningSidebar() {
                   href={`/learning?challenge=${comp.day}`}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={clsx(
-                    'group flex items-start justify-between gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border shadow-2xs',
+                    'group flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg text-xs transition-colors border shadow-2xs',
                     isCompActive
                       ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/25 dark:text-[#E89BA5] border-burgundy/30 dark:border-burgundy/50 font-semibold ring-1 ring-burgundy/20'
                       : 'bg-white/80 dark:bg-[#150709] text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-[#3D1418] hover:bg-slate-50 dark:hover:bg-[#1F0A0E] hover:border-slate-300 dark:hover:border-[#521C23]'
                   )}
                 >
-                  <div className="flex items-start gap-2 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0">
                     <Award
                       className={clsx(
-                        'w-3.5 h-3.5 shrink-0 mt-0.5',
+                        'w-3.5 h-3.5 shrink-0',
                         isCompActive
                           ? 'text-burgundy dark:text-[#E89BA5]'
-                          : 'text-amber-500 dark:text-amber-400'
+                          : 'text-burgundy/80 dark:text-[#E89BA5]/80 group-hover:text-burgundy'
                       )}
                     />
-                    <div className="flex flex-col min-w-0">
-                      <span className="truncate text-xs leading-snug font-semibold text-slate-800 dark:text-[#FAF6F3]">
-                        {comp.title}
-                      </span>
-                      <div className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500 font-mono">
-                        <span>Day 0{comp.day}</span>
-                        <span>·</span>
-                        <span className="text-amber-600 dark:text-amber-400 font-bold">
-                          {comp.prize}
-                        </span>
-                      </div>
-                    </div>
+                    <span className="truncate text-xs leading-snug font-semibold text-slate-800 dark:text-[#FAF6F3]">
+                      {comp.title}
+                    </span>
                   </div>
                   <span
                     className={clsx(
                       'shrink-0 px-1.5 py-0.5 rounded font-mono text-[9px] font-bold uppercase tracking-wider',
                       isCompActive
                         ? 'bg-burgundy text-white'
-                        : 'bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20'
+                        : 'bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] border border-burgundy/20 dark:border-burgundy/40'
                     )}
                   >
                     12 Oct

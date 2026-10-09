@@ -182,28 +182,31 @@ function LearningDashboardContent() {
             </p>
           </div>
 
-          {/* Highlighted Prize Banner */}
-          <div className="relative overflow-hidden p-4 rounded-xl border-2 border-amber-400/90 dark:border-amber-600/90 bg-linear-to-r from-amber-50 via-amber-100/40 to-orange-50 dark:from-amber-950/50 dark:via-amber-900/30 dark:to-orange-950/40 shadow-xs flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5">
-              <div className="w-11 h-11 rounded-xl bg-linear-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center shrink-0 shadow-sm ring-2 ring-amber-300 dark:ring-amber-500/40">
-                <Trophy className="w-6 h-6 animate-pulse" />
+          {/* Highlighted Prize Banner - Styled in Burgundy Shades */}
+          <div className="relative overflow-hidden p-4 sm:p-5 rounded-2xl border-2 border-burgundy/30 dark:border-burgundy/60 bg-linear-to-r from-burgundy/10 via-burgundy/[0.04] to-transparent dark:from-[#260C11] dark:via-[#1A080C] dark:to-[#120507] shadow-sm flex items-center justify-between gap-4">
+            <div className="absolute top-0 right-0 -mt-6 -mr-6 w-32 h-32 bg-burgundy/15 dark:bg-burgundy/25 rounded-full blur-2xl pointer-events-none" />
+
+            <div className="relative z-10 flex items-center gap-3.5 sm:gap-4">
+              <div className="w-12 h-12 rounded-xl bg-linear-to-br from-burgundy via-burgundy-deep to-[#3D0A12] text-white flex items-center justify-center shrink-0 shadow-md ring-2 ring-burgundy/20 dark:ring-burgundy/50">
+                <Trophy className="w-6 h-6 text-white" />
               </div>
               <div>
-                <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300 block">
+                <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-burgundy dark:text-[#E89BA5] block">
                   Award & Cash Prize
                 </span>
                 <div className="flex flex-wrap items-baseline gap-2 mt-0.5">
-                  <span className="font-serif text-xl sm:text-2xl font-black text-amber-950 dark:text-amber-200 tracking-tight">
+                  <span className="font-serif text-2xl sm:text-3xl font-black text-burgundy dark:text-[#FAF6F3] tracking-tight">
                     {challenge.prize || 'Up to ₹5,000'}
                   </span>
-                  <span className="text-xs font-semibold text-amber-800 dark:text-amber-300 font-mono">
+                  <span className="text-xs font-semibold text-burgundy/80 dark:text-[#E89BA5]/80 font-mono">
                     (Top Performing Entries)
                   </span>
                 </div>
               </div>
             </div>
-            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/20 dark:bg-amber-400/10 border border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-300 text-xs font-bold font-mono">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+
+            <div className="relative z-10 hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-burgundy/10 dark:bg-burgundy/25 border border-burgundy/25 dark:border-burgundy/50 text-burgundy dark:text-[#E89BA5] text-xs font-bold font-mono shadow-2xs">
+              <Sparkles className="w-3.5 h-3.5 text-burgundy dark:text-[#E89BA5]" />
               <span>Prize Award</span>
             </div>
           </div>
