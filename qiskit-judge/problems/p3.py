@@ -52,10 +52,12 @@ class P3Judge(BaseProblemJudge):
         # Hidden 1: Missing Gate
         target_h1 = QuantumCircuit(3)
         target_h1.h(0)
+        target_h1.h(1)
         target_h1.s(1)
         target_h1.cx(0, 2)
         buggy_h1 = QuantumCircuit(3)
         buggy_h1.h(0)
+        buggy_h1.h(1)
         buggy_h1.cx(0, 2) # Missing s(1)
         cases.append(('hidden', 1, "Hidden Missing Gate", buggy_h1, Statevector(target_h1)))
 

@@ -84,6 +84,27 @@ export class MockQuantumCircuit {
     }
     return this;
   }
+  append(gate: any, qubits?: number[], clbits?: number[]) {
+    if (gate && gate.gates) {
+      for (const g of gate.gates) {
+        this.gates.push({ ...g });
+      }
+    } else {
+      this.gates.push({ name: gate?.name || 'custom_gate', qubits: qubits || [0], clbits: clbits || [] });
+    }
+    return this;
+  }
+  to_gate(options?: any) {
+    return { name: options?.label || 'custom_gate', gates: this.gates.map((g) => ({ ...g })) };
+  }
+  remove_final_measurements(inplace: boolean = false) {
+    const c = inplace ? this : this.copy();
+    c.gates = c.gates.filter((g) => g.name !== 'measure');
+    return c;
+  }
+  find_bit(bit: any) {
+    return { index: typeof bit === 'number' ? bit : (bit?.index ?? 0) };
+  }
   size() { return this.gates.length; }
 }
 
@@ -341,6 +362,13 @@ function executeUserFunction(pyCode: string, targetFunctionName: string): any {
       exp: Math.exp,
       sqrt: Math.sqrt,
     },
+    Parameter: function (name: string) { return { name }; },
+    Statevector: function (qc: any) {
+      return {
+        probabilities_dict: () => ({ '0': 1.0 }),
+        probabilities: () => [1.0, 0.0],
+      };
+    },
   };
 
   const fnBody = `const __eval_start_time = Date.now();\n${js}\nreturn typeof ${targetFunctionName} !== 'undefined' ? ${targetFunctionName} : null;`;
@@ -579,166 +607,834 @@ function evaluateP2(userCode: string, mode: 'run' | 'submit'): JudgeEvaluationRe
   };
 }
 
-// Fallback generic evaluator for problems P3-P9 on Vercel Serverless
-function evaluateGeneric(problemId: string, userCode: string, mode: 'run' | 'submit', maxScore: number, fnName: string): JudgeEvaluationResult {
+// Generic failure helper
+function makeFailResult(mode: 'run' | 'submit', maxScore: number, errorMsg: string, testName: string = 'Verification'): JudgeEvaluationResult {
+  return {
+    success: false,
+    mode,
+    score: 0,
+    max_score: maxScore,
+    passed_tests: 0,
+    total_tests: 1,
+    execution_time_ms: 1,
+    stdout: '',
+    stderr: errorMsg,
+    error_message: errorMsg,
+    public_results: [
+      {
+        test_type: 'public',
+        test_number: 1,
+        test_name: testName,
+        passed: false,
+        execution_time_ms: 1,
+        error_message: errorMsg,
+      },
+    ],
+    hidden_results: [],
+  };
+}
+
+// P3: Repair Shop
+function evaluateP3(userCode: string, mode: 'run' | 'submit'): JudgeEvaluationResult {
   const start = Date.now();
-
-  // 1. Verify that function is defined in Python code
-  const fnRegex = new RegExp(`def\\s+${fnName}\\s*\\(`, 'm');
-  if (!fnRegex.test(userCode)) {
-    return {
-      success: false,
-      mode,
-      score: 0,
-      max_score: maxScore,
-      passed_tests: 0,
-      total_tests: 1,
-      execution_time_ms: Date.now() - start,
-      stdout: '',
-      stderr: `Function '${fnName}' not found in submission.`,
-      error_message: `Function '${fnName}' is not defined in submission.`,
-      public_results: [{
-        test_type: 'public',
-        test_number: 1,
-        test_name: `Function '${fnName}' Presence`,
-        passed: false,
-        execution_time_ms: 0,
-        error_message: `Function '${fnName}' not defined.`,
-      }],
-      hidden_results: [],
-    };
+  let func: any = null;
+  try {
+    func = executeUserFunction(userCode, 'repair_circuit');
+  } catch (err: any) {
+    return makeFailResult(mode, 10, `Compilation error: ${err.message}`, "Syntax Verification");
   }
 
-  // 2. Check basic structural validity of Python submission
-  const lines = userCode.split('\n');
-  const bodyLines = lines.filter((l) => {
-    const t = l.trim();
-    return t && !t.startsWith('#') && !t.startsWith('import ') && !t.startsWith('from ') && !t.startsWith('def ');
-  });
-
-  const isTrivialStub = bodyLines.length === 0 || bodyLines.every((l) => ['pass', '...', 'return', 'return None', 'return circuit'].includes(l.trim()));
-  if (isTrivialStub) {
-    return {
-      success: false,
-      mode,
-      score: 0,
-      max_score: maxScore,
-      passed_tests: 0,
-      total_tests: 1,
-      execution_time_ms: Date.now() - start,
-      stdout: '',
-      stderr: "Implementation is incomplete or contains only a placeholder stub ('pass').",
-      error_message: "Function implementation is incomplete.",
-      public_results: [{
-        test_type: 'public',
-        test_number: 1,
-        test_name: `Function '${fnName}' Implementation`,
-        passed: false,
-        execution_time_ms: 0,
-        error_message: "Placeholder or stub implementation ('pass').",
-      }],
-      hidden_results: [],
-    };
+  if (!func || typeof func !== 'function') {
+    return makeFailResult(mode, 10, "Function 'repair_circuit' is not defined in submission.", "Function Presence");
   }
 
-  // 3. Check bracket balance to reject obvious syntax errors
-  let openParens = 0, openBrackets = 0, openBraces = 0;
-  for (const ch of userCode) {
-    if (ch === '(') openParens++;
-    else if (ch === ')') openParens--;
-    else if (ch === '[') openBrackets++;
-    else if (ch === ']') openBrackets--;
-    else if (ch === '{') openBraces++;
-    else if (ch === '}') openBraces--;
-    if (openParens < 0 || openBrackets < 0 || openBraces < 0) break;
-  }
-  if (openParens !== 0 || openBrackets !== 0 || openBraces !== 0) {
-    return {
-      success: false,
-      mode,
-      score: 0,
-      max_score: maxScore,
-      passed_tests: 0,
-      total_tests: 1,
-      execution_time_ms: Date.now() - start,
-      stdout: '',
-      stderr: 'SyntaxError: unmatched or unclosed parentheses/brackets in Python source.',
-      error_message: 'SyntaxError: unbalanced parentheses or brackets.',
-      public_results: [{
-        test_type: 'public',
-        test_number: 1,
-        test_name: `Syntax Verification`,
-        passed: false,
-        execution_time_ms: 0,
-        error_message: 'SyntaxError: unmatched parentheses/brackets.',
-      }],
-      hidden_results: [],
-    };
+  const ALLOWED_GATES = new Set(['h', 'x', 'y', 'z', 's', 'sdg', 't', 'tdg', 'sx', 'rx', 'ry', 'rz', 'cx', 'cz', 'swap']);
+
+  const publicCases = [
+    {
+      num: 1,
+      name: "Identity / No Fault Case",
+      buildBuggy: () => new MockQuantumCircuit(3).h(0).cx(0, 1).cx(1, 2),
+      verify: (rep: MockQuantumCircuit) => {
+        return rep.gates.some(g => g.name === 'cx' && g.qubits[0] === 0 && g.qubits[1] === 1);
+      },
+    },
+    {
+      num: 2,
+      name: "Reversed CX Fault",
+      buildBuggy: () => new MockQuantumCircuit(3).h(0).cx(1, 0).x(2),
+      verify: (rep: MockQuantumCircuit) => {
+        const hasReversed = rep.gates.some(g => g.name === 'cx' && g.qubits[0] === 1 && g.qubits[1] === 0);
+        const hasCorrect = rep.gates.some(g => g.name === 'cx' && g.qubits[0] === 0 && g.qubits[1] === 1);
+        if (hasReversed && !hasCorrect) return "Reversed CX(1, 0) fault was not corrected to CX(0, 1).";
+        return hasCorrect;
+      },
+    },
+    {
+      num: 3,
+      name: "Inverted Rotation Sign",
+      buildBuggy: () => new MockQuantumCircuit(3).rx(-Math.PI / 4, 0).cz(0, 1),
+      verify: (rep: MockQuantumCircuit) => {
+        const rxGate = rep.gates.find(g => g.name === 'rx' && g.qubits[0] === 0);
+        if (!rxGate) return "Missing rx gate on qubit 0.";
+        const angle = rxGate.params?.[0] ?? 0;
+        if (angle <= 0) return `Inverted rotation sign not corrected: angle is ${angle} (expected > 0).`;
+        return true;
+      },
+    },
+  ];
+
+  const hiddenCases = [
+    {
+      num: 1,
+      name: "Hidden Missing Gate",
+      buildBuggy: () => new MockQuantumCircuit(3).h(0).h(1).cx(0, 2),
+      verify: (rep: MockQuantumCircuit) => {
+        const hasS = rep.gates.some(g => (g.name === 's' || g.name === 'rz') && g.qubits[0] === 1);
+        if (!hasS) return "Missing S gate on qubit 1 was not added.";
+        return true;
+      },
+    },
+    {
+      num: 2,
+      name: "Hidden S/Sdg Phase Fault",
+      buildBuggy: () => new MockQuantumCircuit(3).h(0).sdg(0),
+      verify: (rep: MockQuantumCircuit) => {
+        const hasSdg = rep.gates.some(g => g.name === 'sdg' && g.qubits[0] === 0);
+        const hasS = rep.gates.some(g => g.name === 's' && g.qubits[0] === 0);
+        if (hasSdg && !hasS) return "Sdg gate on qubit 0 was not replaced with S gate.";
+        return true;
+      },
+    },
+    {
+      num: 3,
+      name: "Hidden 2-Fault 4-Qubit",
+      buildBuggy: () => new MockQuantumCircuit(4).h(0).cx(1, 0).cx(1, 2).z(3),
+      verify: (rep: MockQuantumCircuit) => {
+        const hasReversed = rep.gates.some(g => g.name === 'cx' && g.qubits[0] === 1 && g.qubits[1] === 0);
+        const hasWrongZ = rep.gates.some(g => g.name === 'z' && g.qubits[0] === 3);
+        if (hasReversed) return "Fault 1 (reversed CX(1, 0)) not corrected.";
+        if (hasWrongZ) return "Fault 2 (Z(3) instead of X(3)) not corrected.";
+        return true;
+      },
+    },
+  ];
+
+  function runCase(c: any, type: 'public' | 'hidden'): TestResultItem {
+    const t0 = Date.now();
+    try {
+      const buggy = c.buildBuggy();
+      const rep = func(buggy, null);
+      if (!rep || typeof rep !== 'object') {
+        return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: "Expected return type QuantumCircuit, received NoneType or invalid object." };
+      }
+      if (rep.numQubits !== buggy.numQubits) {
+        return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: `Expected ${buggy.numQubits} qubits, got ${rep.numQubits}.` };
+      }
+      if (rep.size() > buggy.size() + 3) {
+        return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: `Repaired circuit size exceeds buggy.size()+3 limit.` };
+      }
+      for (const g of rep.gates || []) {
+        if (!ALLOWED_GATES.has(g.name.toLowerCase())) {
+          return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: `Gate '${g.name}' not in allowed gate set.` };
+        }
+      }
+      const v = c.verify(rep, buggy);
+      if (v !== true) {
+        return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: typeof v === 'string' ? v : "State fidelity below threshold 1 - 1e-9." };
+      }
+      return { test_type: type, test_number: c.num, test_name: c.name, passed: true, execution_time_ms: Date.now() - t0, error_message: null };
+    } catch (e: any) {
+      return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: e.message || "Execution error in repair_circuit." };
+    }
   }
 
-  // 4. Problem-specific sanity check
-  if (fnName === 'route_to_coupling' && !userCode.includes('transpile') && !userCode.includes('swap') && !userCode.includes('CouplingMap')) {
-    return {
-      success: false,
-      mode,
-      score: 0,
-      max_score: maxScore,
-      passed_tests: 0,
-      total_tests: 1,
-      execution_time_ms: Date.now() - start,
-      stdout: '',
-      stderr: "Circuit violated directed coupling map: gates must be routed to target topology.",
-      error_message: "Routing logic missing: circuit must satisfy coupling map.",
-      public_results: [{
-        test_type: 'public',
-        test_number: 1,
-        test_name: `4-Qubit Distant CX`,
-        passed: false,
-        execution_time_ms: 2,
-        error_message: "CX gate violates coupling map. Routing required.",
-      }],
-      hidden_results: [],
-    };
-  }
-
-  const challenge = QISKIT_CHALLENGES.find((c) => c.id.toUpperCase() === problemId.toUpperCase());
-  const publicTests = challenge?.publicTests || [];
-  const pubResults: TestResultItem[] = publicTests.length > 0
-    ? publicTests.map((pt, idx) => ({
-        test_type: 'public' as const,
-        test_number: idx + 1,
-        test_name: pt.name,
-        passed: true,
-        execution_time_ms: 2,
-        error_message: null,
-      }))
-    : [
-        {
-          test_type: 'public' as const,
-          test_number: 1,
-          test_name: `Interface & Function Signature Check (${fnName})`,
-          passed: true,
-          execution_time_ms: 2,
-          error_message: null,
-        },
-      ];
-
-  const hidResults: TestResultItem[] = mode === 'submit' ? [
-    { test_type: 'hidden' as const, test_number: 1, test_name: 'Hidden Edge Case 1', passed: true, execution_time_ms: 2, error_message: null },
-    { test_type: 'hidden' as const, test_number: 2, test_name: 'Hidden Scale Case 2', passed: true, execution_time_ms: 3, error_message: null },
-  ] : [];
+  const pubResults = publicCases.map((c) => runCase(c, 'public'));
+  const hidResults = mode === 'submit' ? hiddenCases.map((c) => runCase(c, 'hidden')) : [];
+  const allTests = [...pubResults, ...hidResults];
+  const passedCount = allTests.filter((t) => t.passed).length;
+  const isFull = passedCount === allTests.length;
+  const score = Math.round((passedCount / allTests.length) * 10);
 
   return {
-    success: true,
+    success: isFull && (mode === 'run' || score === 10),
     mode,
-    score: maxScore,
-    max_score: maxScore,
-    passed_tests: pubResults.length + hidResults.length,
-    total_tests: pubResults.length + hidResults.length,
+    score: mode === 'submit' ? score : 0,
+    max_score: 10,
+    passed_tests: passedCount,
+    total_tests: allTests.length,
     execution_time_ms: Date.now() - start,
-    stdout: `[Evaluator] Solution accepted. Function '${fnName}' verified successfully.`,
+    stdout: `[Evaluator] Passed ${passedCount}/${allTests.length} tests.`,
     stderr: '',
-    error_message: null,
+    error_message: isFull ? null : allTests.find(t => !t.passed)?.error_message || "Not all tests passed.",
+    public_results: pubResults,
+    hidden_results: hidResults,
+  };
+}
+
+// P4: Floating-Ancilla Bernstein–Vazirani
+function evaluateP4(userCode: string, mode: 'run' | 'submit'): JudgeEvaluationResult {
+  const start = Date.now();
+  let func: any = null;
+  try {
+    func = executeUserFunction(userCode, 'bernstein_vazirani');
+  } catch (err: any) {
+    return makeFailResult(mode, 10, `Compilation error: ${err.message}`, "Syntax Verification");
+  }
+
+  if (!func || typeof func !== 'function') {
+    return makeFailResult(mode, 10, "Function 'bernstein_vazirani' is not defined in submission.", "Function Presence");
+  }
+
+  const publicCases = [
+    { num: 1, name: "Standard Ancilla (Last) n=2", n: 2, anc: 2, s: "10", b: 0 },
+    { num: 2, name: "First Qubit Ancilla n=3 with Bias", n: 3, anc: 0, s: "110", b: 1 },
+    { num: 3, name: "Middle Qubit Ancilla n=3", n: 3, anc: 1, s: "011", b: 0 },
+  ];
+
+  const hiddenCases = [
+    { num: 1, name: "Hidden n=4 Anc=0", n: 4, anc: 0, s: "1011", b: 0 },
+    { num: 2, name: "Hidden n=4 Anc=2 with Bias", n: 4, anc: 2, s: "0110", b: 1 },
+    { num: 3, name: "Hidden n=4 Anc=4", n: 4, anc: 4, s: "1111", b: 0 },
+    { num: 4, name: "Hidden n=5 Anc=3 with Bias", n: 5, anc: 3, s: "10011", b: 1 },
+    { num: 5, name: "Hidden n=5 Anc=0 Single Bit", n: 5, anc: 0, s: "00001", b: 0 },
+  ];
+
+  function runCase(c: any, type: 'public' | 'hidden'): TestResultItem {
+    const t0 = Date.now();
+    try {
+      const mockOracle = {
+        name: `U_f(s=${c.s},b=${c.b})`,
+        to_gate: () => ({ name: `U_f` }),
+      };
+
+      const qc = func(mockOracle, c.n, c.anc);
+      if (!qc || typeof qc !== 'object') {
+        return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: "Expected return type QuantumCircuit, received NoneType or invalid object." };
+      }
+      if (qc.numQubits !== c.n + 1) {
+        return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: `Expected ${c.n + 1} qubits, got ${qc.numQubits}.` };
+      }
+      if (qc.numClbits !== c.n) {
+        return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: `Expected ${c.n} classical bits, got ${qc.numClbits}.` };
+      }
+
+      const hasAncX = (qc.gates || []).some((g: any) => g.name === 'x' && g.qubits.includes(c.anc));
+      if (!hasAncX) {
+        return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: `Missing X gate on ancilla qubit (qubit ${c.anc}) for phase kickback.` };
+      }
+
+      const hasAncH = (qc.gates || []).some((g: any) => g.name === 'h' && g.qubits.includes(c.anc));
+      if (!hasAncH) {
+        return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: `Missing H gate on ancilla qubit (qubit ${c.anc}).` };
+      }
+
+      const dataQubits = Array.from({ length: c.n + 1 }, (_, i) => i).filter((q) => q !== c.anc);
+      for (const dq of dataQubits) {
+        const hCount = (qc.gates || []).filter((g: any) => g.name === 'h' && g.qubits.includes(dq)).length;
+        if (hCount < 2) {
+          return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: `Data qubit ${dq} must have Hadamard gates before and after the oracle query (found ${hCount}).` };
+        }
+      }
+
+      const measures = (qc.gates || []).filter((g: any) => g.name === 'measure');
+      if (measures.length < c.n) {
+        return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: `Circuit must measure all ${c.n} data qubits.` };
+      }
+
+      return { test_type: type, test_number: c.num, test_name: c.name, passed: true, execution_time_ms: Date.now() - t0, error_message: null };
+    } catch (e: any) {
+      return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: e.message || "Execution error in bernstein_vazirani." };
+    }
+  }
+
+  const pubResults = publicCases.map((c) => runCase(c, 'public'));
+  const hidResults = mode === 'submit' ? hiddenCases.map((c) => runCase(c, 'hidden')) : [];
+  const allTests = [...pubResults, ...hidResults];
+  const passedCount = allTests.filter((t) => t.passed).length;
+  const isFull = passedCount === allTests.length;
+  const score = Math.round((passedCount / allTests.length) * 10);
+
+  return {
+    success: isFull && (mode === 'run' || score === 10),
+    mode,
+    score: mode === 'submit' ? score : 0,
+    max_score: 10,
+    passed_tests: passedCount,
+    total_tests: allTests.length,
+    execution_time_ms: Date.now() - start,
+    stdout: `[Evaluator] Passed ${passedCount}/${allTests.length} tests.`,
+    stderr: '',
+    error_message: isFull ? null : allTests.find(t => !t.passed)?.error_message || "Not all tests passed.",
+    public_results: pubResults,
+    hidden_results: hidResults,
+  };
+}
+
+// P5: Any-Pauli Estimator
+function evaluateP5(userCode: string, mode: 'run' | 'submit'): JudgeEvaluationResult {
+  const start = Date.now();
+  let circuitFn: any = null;
+  let expectFn: any = null;
+  try {
+    circuitFn = executeUserFunction(userCode, 'pauli_measurement_circuit');
+  } catch {}
+  try {
+    expectFn = executeUserFunction(userCode, 'expectation_from_counts');
+  } catch {}
+
+  const publicCases = [
+    {
+      num: 1,
+      name: "Circuit Basis Rotation for X",
+      run: () => {
+        if (!circuitFn || typeof circuitFn !== 'function') return "Function 'pauli_measurement_circuit' not defined.";
+        const qc = new MockQuantumCircuit(1).h(0);
+        const measQc = circuitFn(qc, 'X');
+        if (!measQc || measQc.numQubits !== 1 || measQc.numClbits !== 1) return "Circuit must have 1 qubit and 1 classical bit.";
+        const hasH = (measQc.gates || []).some((g: any) => g.name === 'h' && g.qubits.includes(0));
+        if (!hasH) return "X-basis rotation requires applying Hadamard before measurement.";
+        return true;
+      },
+    },
+    {
+      num: 2,
+      name: "Expectation from Counts for Z",
+      run: () => {
+        if (!expectFn || typeof expectFn !== 'function') return "Function 'expectation_from_counts' not defined.";
+        const v1 = expectFn({ "0": 750, "1": 250 }, "Z");
+        const v2 = expectFn({ "0": 100, "1": 900 }, "Z");
+        if (typeof v1 !== 'number' || typeof v2 !== 'number') return "Expectation function must return float numbers.";
+        if (Math.abs(v1 - 0.5) > 1e-3 || Math.abs(v2 - (-0.8)) > 1e-3) {
+          return `Expected 0.5 and -0.8, received ${v1} and ${v2}.`;
+        }
+        return true;
+      },
+    },
+    {
+      num: 3,
+      name: "All-Identity Expectation",
+      run: () => {
+        if (!expectFn || typeof expectFn !== 'function') return "Function 'expectation_from_counts' not defined.";
+        const v1 = expectFn({ "01": 500, "10": 500 }, "II");
+        const v2 = expectFn({ "00": 300, "11": 700 }, "II");
+        if (Math.abs(v1 - 1.0) > 1e-3 || Math.abs(v2 - 1.0) > 1e-3) {
+          return `Expected 1.0 for all-I expectation, received ${v1} and ${v2}.`;
+        }
+        return true;
+      },
+    },
+  ];
+
+  const hiddenCases = [
+    {
+      num: 1,
+      name: "Hidden Y Rotation",
+      run: () => {
+        if (!circuitFn || typeof circuitFn !== 'function') return "Function 'pauli_measurement_circuit' not defined.";
+        const qc = new MockQuantumCircuit(1);
+        const measQc = circuitFn(qc, 'Y');
+        const hasSdgOrRz = (measQc.gates || []).some((g: any) => (g.name === 'sdg' || g.name === 'rz') && g.qubits.includes(0));
+        const hasH = (measQc.gates || []).some((g: any) => g.name === 'h' && g.qubits.includes(0));
+        if (!hasSdgOrRz || !hasH) return "Y-basis rotation requires applying Sdg followed by Hadamard before measurement.";
+        return true;
+      },
+    },
+    {
+      num: 2,
+      name: "Hidden 2-Qubit Expectation XZ",
+      run: () => {
+        if (!expectFn || typeof expectFn !== 'function') return "Function 'expectation_from_counts' not defined.";
+        const v = expectFn({ "00": 300, "01": 200, "10": 100, "11": 400 }, "XZ");
+        if (Math.abs(v - 0.4) > 1e-3) return `Expected 0.4 for XZ, received ${v}.`;
+        return true;
+      },
+    },
+    {
+      num: 3,
+      name: "Hidden 3-Qubit Expectation ZIZ",
+      run: () => {
+        if (!expectFn || typeof expectFn !== 'function') return "Function 'expectation_from_counts' not defined.";
+        const v = expectFn({ "000": 500, "101": 500 }, "ZIZ");
+        if (Math.abs(v - 1.0) > 1e-3) return `Expected 1.0 for ZIZ, received ${v}.`;
+        return true;
+      },
+    },
+  ];
+
+  function runCase(c: any, type: 'public' | 'hidden'): TestResultItem {
+    const t0 = Date.now();
+    try {
+      const res = c.run();
+      if (res !== true) {
+        return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: typeof res === 'string' ? res : "Test assertion failed." };
+      }
+      return { test_type: type, test_number: c.num, test_name: c.name, passed: true, execution_time_ms: Date.now() - t0, error_message: null };
+    } catch (e: any) {
+      return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: e.message || "Execution error in P5." };
+    }
+  }
+
+  const pubResults = publicCases.map((c) => runCase(c, 'public'));
+  const hidResults = mode === 'submit' ? hiddenCases.map((c) => runCase(c, 'hidden')) : [];
+  const allTests = [...pubResults, ...hidResults];
+  const passedCount = allTests.filter((t) => t.passed).length;
+  const isFull = passedCount === allTests.length;
+  const score = Math.round((passedCount / allTests.length) * 10);
+
+  return {
+    success: isFull && (mode === 'run' || score === 10),
+    mode,
+    score: mode === 'submit' ? score : 0,
+    max_score: 10,
+    passed_tests: passedCount,
+    total_tests: allTests.length,
+    execution_time_ms: Date.now() - start,
+    stdout: `[Evaluator] Passed ${passedCount}/${allTests.length} tests.`,
+    stderr: '',
+    error_message: isFull ? null : allTests.find(t => !t.passed)?.error_message || "Not all tests passed.",
+    public_results: pubResults,
+    hidden_results: hidResults,
+  };
+}
+
+// P6: Shift-Rule Gradient
+function evaluateP6(userCode: string, mode: 'run' | 'submit'): JudgeEvaluationResult {
+  const start = Date.now();
+  let func: any = null;
+  try {
+    func = executeUserFunction(userCode, 'param_shift_gradient');
+  } catch (err: any) {
+    return makeFailResult(mode, 11, `Compilation error: ${err.message}`, "Syntax Verification");
+  }
+
+  if (!func || typeof func !== 'function') {
+    return makeFailResult(mode, 11, "Function 'param_shift_gradient' is not defined in submission.", "Function Presence");
+  }
+
+  const publicCases = [
+    {
+      num: 1,
+      name: "Single Parameter RX",
+      run: () => {
+        let calls = 0;
+        const nominal = Math.PI / 4;
+        const evalFn = (c: any) => {
+          calls++;
+          // Expect objective f(θ) = cos(θ)
+          const theta = c?.params?.[0] ?? nominal;
+          return Math.cos(theta);
+        };
+        const grad = func(new MockQuantumCircuit(1).rx(nominal, 0), [nominal], evalFn);
+        if (!Array.isArray(grad) || grad.length !== 1) return "Gradient output must be a 1D array matching parameter count.";
+        if (calls < 2) return "Parameter shift rule requires evaluating circuit at shifted parameter angles (+/- pi/2).";
+        const ref = -Math.sin(nominal);
+        if (Math.abs(grad[0] - ref) > 1e-4) return `Gradient error: expected ${ref.toFixed(6)}, got ${grad[0]}.`;
+        return true;
+      },
+    },
+    {
+      num: 2,
+      name: "Two Parameters (RY, RZ)",
+      run: () => {
+        let calls = 0;
+        const vals = [0.6, 1.2];
+        const evalFn = (c: any) => {
+          calls++;
+          const t1 = c?.params?.[0] ?? vals[0];
+          return Math.cos(t1);
+        };
+        const grad = func(new MockQuantumCircuit(1).ry(vals[0], 0).rz(vals[1], 0), vals, evalFn);
+        if (!Array.isArray(grad) || grad.length !== 2) return "Gradient output must be array of length 2.";
+        if (calls < 4) return "Parameter shift rule requires evaluating each parameter (+/- pi/2).";
+        const ref0 = -Math.sin(vals[0]);
+        const ref1 = 0.0;
+        if (Math.abs(grad[0] - ref0) > 1e-4 || Math.abs(grad[1] - ref1) > 1e-4) {
+          return `Gradient error: expected [${ref0.toFixed(4)}, ${ref1.toFixed(4)}], got [${grad[0]}, ${grad[1]}].`;
+        }
+        return true;
+      },
+    },
+  ];
+
+  const hiddenCases = [
+    {
+      num: 1,
+      name: "Hidden Repeated Parameter",
+      run: () => {
+        let calls = 0;
+        const vals = [0.4];
+        const evalFn = (c: any) => {
+          calls++;
+          const t = c?.params?.[0] ?? vals[0];
+          return Math.cos(2 * t);
+        };
+        const grad = func(new MockQuantumCircuit(1).rx(0.4, 0).rx(0.4, 0), vals, evalFn);
+        if (!Array.isArray(grad) || grad.length !== 1) return "Gradient shape mismatch: expected 1D array of length 1.";
+        if (calls < 2) return "Parameter shift rule requires evaluating circuit at shifted parameter angles (+/- pi/2).";
+        const ref = -2 * Math.sin(0.8);
+        if (Math.abs(grad[0] - ref) > 1e-4) return `Gradient error: expected ${ref.toFixed(4)}, got ${grad[0]}.`;
+        return true;
+      },
+    },
+  ];
+
+  function runCase(c: any, type: 'public' | 'hidden'): TestResultItem {
+    const t0 = Date.now();
+    try {
+      const res = c.run();
+      if (res !== true) {
+        return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: typeof res === 'string' ? res : "Gradient verification failed." };
+      }
+      return { test_type: type, test_number: c.num, test_name: c.name, passed: true, execution_time_ms: Date.now() - t0, error_message: null };
+    } catch (e: any) {
+      return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: e.message || "Execution error in param_shift_gradient." };
+    }
+  }
+
+  const pubResults = publicCases.map((c) => runCase(c, 'public'));
+  const hidResults = mode === 'submit' ? hiddenCases.map((c) => runCase(c, 'hidden')) : [];
+  const allTests = [...pubResults, ...hidResults];
+  const passedCount = allTests.filter((t) => t.passed).length;
+  const isFull = passedCount === allTests.length;
+  const score = Math.round((passedCount / allTests.length) * 11);
+
+  return {
+    success: isFull && (mode === 'run' || score === 11),
+    mode,
+    score: mode === 'submit' ? score : 0,
+    max_score: 11,
+    passed_tests: passedCount,
+    total_tests: allTests.length,
+    execution_time_ms: Date.now() - start,
+    stdout: `[Evaluator] Passed ${passedCount}/${allTests.length} tests.`,
+    stderr: '',
+    error_message: isFull ? null : allTests.find(t => !t.passed)?.error_message || "Not all tests passed.",
+    public_results: pubResults,
+    hidden_results: hidResults,
+  };
+}
+
+// P7: Directed-Coupling Router
+function evaluateP7(userCode: string, mode: 'run' | 'submit'): JudgeEvaluationResult {
+  const start = Date.now();
+  let func: any = null;
+  try {
+    func = executeUserFunction(userCode, 'route_to_coupling');
+  } catch (err: any) {
+    return makeFailResult(mode, 12, `Compilation error: ${err.message}`, "Syntax Verification");
+  }
+
+  if (!func || typeof func !== 'function') {
+    return makeFailResult(mode, 12, "Function 'route_to_coupling' is not defined in submission.", "Function Presence");
+  }
+
+  const ALLOWED_BASIS = new Set(['cx', 'rz', 'sx', 'x']);
+
+  const publicCases = [
+    {
+      num: 1,
+      name: "4-Qubit Distant CX",
+      circuit: new MockQuantumCircuit(4).h(0).cx(0, 2),
+      coupling: [[0, 1], [1, 2], [2, 3], [1, 0], [2, 1], [3, 2]],
+      refCx: 7,
+    },
+  ];
+
+  const hiddenCases = [
+    {
+      num: 1,
+      name: "Hidden Directed Edge Reversal",
+      circuit: new MockQuantumCircuit(2).cx(1, 0),
+      coupling: [[0, 1]],
+      refCx: 1,
+    },
+  ];
+
+  function runCase(c: any, type: 'public' | 'hidden'): TestResultItem {
+    const t0 = Date.now();
+    try {
+      const outQc = func(c.circuit, c.coupling);
+      if (!outQc || typeof outQc !== 'object') {
+        return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: "Expected return type QuantumCircuit, received NoneType or invalid object." };
+      }
+
+      // Check basis gates
+      for (const inst of outQc.gates || []) {
+        if (!ALLOWED_BASIS.has(inst.name.toLowerCase())) {
+          return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: `Gate '${inst.name}' not in allowed basis {cx, rz, sx, x}.` };
+        }
+      }
+
+      // Check coupling map
+      const couplingSet = new Set(c.coupling.map((pair: number[]) => `${pair[0]},${pair[1]}`));
+      let cxCount = 0;
+      for (const inst of outQc.gates || []) {
+        if (inst.name.toLowerCase() === 'cx') {
+          cxCount++;
+          const u = inst.qubits[0];
+          const v = inst.qubits[1];
+          if (!couplingSet.has(`${u},${v}`)) {
+            return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: `CX(${u}, ${v}) violates directed coupling map.` };
+          }
+        }
+      }
+
+      if (cxCount === 0 && c.circuit.gates.some((g: any) => g.name === 'cx')) {
+        return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: "Routed circuit is missing required CX entangling operations." };
+      }
+
+      if (cxCount > c.refCx * 2.5) {
+        return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: `Excessive CX count: ${cxCount} (max allowed: ${Math.round(c.refCx * 2.5)}).` };
+      }
+
+      return { test_type: type, test_number: c.num, test_name: c.name, passed: true, execution_time_ms: Date.now() - t0, error_message: null };
+    } catch (e: any) {
+      return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: e.message || "Execution error in route_to_coupling." };
+    }
+  }
+
+  const pubResults = publicCases.map((c) => runCase(c, 'public'));
+  const hidResults = mode === 'submit' ? hiddenCases.map((c) => runCase(c, 'hidden')) : [];
+  const allTests = [...pubResults, ...hidResults];
+  const passedCount = allTests.filter((t) => t.passed).length;
+  const isFull = passedCount === allTests.length;
+  const score = Math.round((passedCount / allTests.length) * 12);
+
+  return {
+    success: isFull && (mode === 'run' || score === 12),
+    mode,
+    score: mode === 'submit' ? score : 0,
+    max_score: 12,
+    passed_tests: passedCount,
+    total_tests: allTests.length,
+    execution_time_ms: Date.now() - start,
+    stdout: `[Evaluator] Passed ${passedCount}/${allTests.length} tests.`,
+    stderr: '',
+    error_message: isFull ? null : allTests.find(t => !t.passed)?.error_message || "Not all tests passed.",
+    public_results: pubResults,
+    hidden_results: hidResults,
+  };
+}
+
+// P8: Noise-Scaled Extrapolation (ZNE)
+function evaluateP8(userCode: string, mode: 'run' | 'submit'): JudgeEvaluationResult {
+  const start = Date.now();
+  let func: any = null;
+  try {
+    func = executeUserFunction(userCode, 'zne_expectation');
+  } catch (err: any) {
+    return makeFailResult(mode, 15, `Compilation error: ${err.message}`, "Syntax Verification");
+  }
+
+  if (!func || typeof func !== 'function') {
+    return makeFailResult(mode, 15, "Function 'zne_expectation' is not defined in submission.", "Function Presence");
+  }
+
+  const publicCases = [
+    {
+      num: 1,
+      name: "Bell Pair ZZ Mitigation",
+      circuit: new MockQuantumCircuit(2).h(0).cx(0, 1),
+      zMask: "ZZ",
+      idealVal: 1.0,
+      noiseRate: 0.15,
+    },
+  ];
+
+  const hiddenCases = [
+    {
+      num: 1,
+      name: "Hidden GHZ ZZZ Mitigation",
+      circuit: new MockQuantumCircuit(3).h(0).cx(0, 1).cx(1, 2),
+      zMask: "ZZZ",
+      idealVal: 1.0,
+      noiseRate: 0.18,
+    },
+  ];
+
+  function runCase(c: any, type: 'public' | 'hidden'): TestResultItem {
+    const t0 = Date.now();
+    try {
+      let calls = 0;
+      const scales: number[] = [];
+
+      const mockNoisyRunner = (qc: any, shots: number) => {
+        calls++;
+        const scale = Math.max(1.0, (qc?.gates?.length || 1) / Math.max(1, c.circuit.gates.length));
+        scales.push(scale);
+        const noisyVal = c.idealVal * Math.exp(-c.noiseRate * scale);
+        const evenProb = (1.0 + noisyVal) / 2.0;
+        const nEven = Math.round(shots * evenProb);
+        const nOdd = shots - nEven;
+        return { "00": nEven, "11": nOdd };
+      };
+
+      const est = func(c.circuit, c.zMask, mockNoisyRunner, 4000);
+      if (typeof est !== 'number' || isNaN(est)) {
+        return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: "Function must return a float zero-noise expectation value." };
+      }
+
+      if (calls < 2) {
+        return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: `ZNE requires calling noisy_runner at least twice with scaled/folded circuits. Only ${calls} call made.` };
+      }
+
+      const distinctScales = new Set(scales.map((s) => s.toFixed(1))).size;
+      if (distinctScales < 2) {
+        return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: "ZNE requires evaluating at least 2 distinct noise scale factors." };
+      }
+
+      const err = Math.abs(est - c.idealVal);
+      const rawNoisy = c.idealVal * Math.exp(-c.noiseRate);
+      const rawErr = Math.abs(rawNoisy - c.idealVal);
+
+      if (err > 0.08 || (err >= rawErr && rawErr > 0.05)) {
+        return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: `ZNE estimate ${est.toFixed(4)} failed to extrapolate accurately (error: ${err.toFixed(4)}, raw error: ${rawErr.toFixed(4)}).` };
+      }
+
+      return { test_type: type, test_number: c.num, test_name: c.name, passed: true, execution_time_ms: Date.now() - t0, error_message: null };
+    } catch (e: any) {
+      return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: e.message || "Execution error in zne_expectation." };
+    }
+  }
+
+  const pubResults = publicCases.map((c) => runCase(c, 'public'));
+  const hidResults = mode === 'submit' ? hiddenCases.map((c) => runCase(c, 'hidden')) : [];
+  const allTests = [...pubResults, ...hidResults];
+  const passedCount = allTests.filter((t) => t.passed).length;
+  const isFull = passedCount === allTests.length;
+  const score = Math.round((passedCount / allTests.length) * 15);
+
+  return {
+    success: isFull && (mode === 'run' || score === 15),
+    mode,
+    score: mode === 'submit' ? score : 0,
+    max_score: 15,
+    passed_tests: passedCount,
+    total_tests: allTests.length,
+    execution_time_ms: Date.now() - start,
+    stdout: `[Evaluator] Passed ${passedCount}/${allTests.length} tests.`,
+    stderr: '',
+    error_message: isFull ? null : allTests.find(t => !t.passed)?.error_message || "Not all tests passed.",
+    public_results: pubResults,
+    hidden_results: hidResults,
+  };
+}
+
+// P9: Weighted-MaxCut QAOA
+function evaluateP9(userCode: string, mode: 'run' | 'submit'): JudgeEvaluationResult {
+  const start = Date.now();
+  let func: any = null;
+  try {
+    func = executeUserFunction(userCode, 'qaoa_maxcut');
+  } catch (err: any) {
+    return makeFailResult(mode, 18, `Compilation error: ${err.message}`, "Syntax Verification");
+  }
+
+  if (!func || typeof func !== 'function') {
+    return makeFailResult(mode, 18, "Function 'qaoa_maxcut' is not defined in submission.", "Function Presence");
+  }
+
+  const publicCases = [
+    {
+      num: 1,
+      name: "Triangle Graph K3 (p=1)",
+      n: 3,
+      edges: [[0, 1, 1.0], [1, 2, 1.0], [0, 2, 1.0]],
+      p: 1,
+    },
+    {
+      num: 2,
+      name: "Square Cycle C4 (p=1)",
+      n: 4,
+      edges: [[0, 1, 1.0], [1, 2, 1.0], [2, 3, 1.0], [3, 0, 1.0]],
+      p: 1,
+    },
+  ];
+
+  const hiddenCases = [
+    {
+      num: 1,
+      name: "Hidden Line Graph 4Q (p=2)",
+      n: 4,
+      edges: [[0, 1, 1.0], [1, 2, 1.0], [2, 3, 1.0]],
+      p: 2,
+    },
+    {
+      num: 2,
+      name: "Hidden Complete Graph K4 (p=2)",
+      n: 4,
+      edges: [[0, 1, 1.0], [1, 2, 1.0], [2, 3, 1.0], [0, 2, 1.0], [1, 3, 1.0], [0, 3, 1.0]],
+      p: 2,
+    },
+  ];
+
+  function runCase(c: any, type: 'public' | 'hidden'): TestResultItem {
+    const t0 = Date.now();
+    try {
+      const qc = func(c.n, c.edges, c.p);
+      if (!qc || typeof qc !== 'object') {
+        return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: "Expected return type QuantumCircuit, received NoneType or invalid object." };
+      }
+      if (qc.numQubits !== c.n) {
+        return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: `Expected ${c.n} qubits, got ${qc.numQubits}.` };
+      }
+      if (qc.numClbits !== c.n) {
+        return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: `Expected ${c.n} classical bits for measurement, got ${qc.numClbits}.` };
+      }
+
+      // Check initial H layer
+      const hCount = (qc.gates || []).filter((g: any) => g.name === 'h').length;
+      if (hCount < c.n) {
+        return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: `QAOA state preparation requires initial Hadamard gates on all ${c.n} qubits (found ${hCount}).` };
+      }
+
+      // Check cost unitary interactions: rzz or cx-rz-cx
+      const rzzCount = (qc.gates || []).filter((g: any) => g.name === 'rzz').length;
+      const cxCount = (qc.gates || []).filter((g: any) => g.name === 'cx').length;
+      const expectedInteractions = c.p * c.edges.length;
+      const hasInteractions = rzzCount >= expectedInteractions || cxCount >= expectedInteractions * 2;
+      if (!hasInteractions) {
+        return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: `Expected ${expectedInteractions} cost Hamiltonian edge interactions (RZZ or CX-RZ-CX pairs), found insufficient gates.` };
+      }
+
+      // Check mixer layer: rx gates
+      const rxCount = (qc.gates || []).filter((g: any) => g.name === 'rx').length;
+      const expectedMixers = c.p * c.n;
+      if (rxCount < expectedMixers) {
+        return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: `Expected ${expectedMixers} RX mixer gates (p * n = ${c.p} * ${c.n}), found ${rxCount}.` };
+      }
+
+      // Check final measurements
+      const measures = (qc.gates || []).filter((g: any) => g.name === 'measure');
+      if (measures.length < c.n) {
+        return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: `All ${c.n} qubits must be measured at the end of the circuit.` };
+      }
+
+      return { test_type: type, test_number: c.num, test_name: c.name, passed: true, execution_time_ms: Date.now() - t0, error_message: null };
+    } catch (e: any) {
+      return { test_type: type, test_number: c.num, test_name: c.name, passed: false, execution_time_ms: Date.now() - t0, error_message: e.message || "Execution error in qaoa_maxcut." };
+    }
+  }
+
+  const pubResults = publicCases.map((c) => runCase(c, 'public'));
+  const hidResults = mode === 'submit' ? hiddenCases.map((c) => runCase(c, 'hidden')) : [];
+  const allTests = [...pubResults, ...hidResults];
+  const passedCount = allTests.filter((t) => t.passed).length;
+  const isFull = passedCount === allTests.length;
+  const score = Math.round((passedCount / allTests.length) * 18);
+
+  return {
+    success: isFull && (mode === 'run' || score === 18),
+    mode,
+    score: mode === 'submit' ? score : 0,
+    max_score: 18,
+    passed_tests: passedCount,
+    total_tests: allTests.length,
+    execution_time_ms: Date.now() - start,
+    stdout: `[Evaluator] Passed ${passedCount}/${allTests.length} tests.`,
+    stderr: '',
+    error_message: isFull ? null : allTests.find(t => !t.passed)?.error_message || "Not all tests passed.",
     public_results: pubResults,
     hidden_results: hidResults,
   };
@@ -760,23 +1456,19 @@ export async function evaluateProblemWithTypeScript(
     case 'P2':
       return evaluateP2(sourceCode, mode);
     case 'P3':
-      return evaluateGeneric('P3', sourceCode, mode, 10, 'repair_circuit');
+      return evaluateP3(sourceCode, mode);
     case 'P4':
-      return evaluateGeneric('P4', sourceCode, mode, 10, 'bernstein_vazirani');
-    case 'P5': {
-      const hasCirc = sourceCode.includes('pauli_measurement_circuit');
-      const hasExp = sourceCode.includes('expectation_from_counts');
-      const fnTarget = hasCirc ? 'pauli_measurement_circuit' : (hasExp ? 'expectation_from_counts' : 'pauli_measurement_circuit');
-      return evaluateGeneric('P5', sourceCode, mode, 10, fnTarget);
-    }
+      return evaluateP4(sourceCode, mode);
+    case 'P5':
+      return evaluateP5(sourceCode, mode);
     case 'P6':
-      return evaluateGeneric('P6', sourceCode, mode, 11, 'param_shift_gradient');
+      return evaluateP6(sourceCode, mode);
     case 'P7':
-      return evaluateGeneric('P7', sourceCode, mode, 12, 'route_to_coupling');
+      return evaluateP7(sourceCode, mode);
     case 'P8':
-      return evaluateGeneric('P8', sourceCode, mode, 15, 'zne_expectation');
+      return evaluateP8(sourceCode, mode);
     case 'P9':
-      return evaluateGeneric('P9', sourceCode, mode, 18, 'qaoa_maxcut');
+      return evaluateP9(sourceCode, mode);
     default:
       return evaluateP1(sourceCode, mode);
   }

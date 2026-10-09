@@ -19,6 +19,8 @@ class P8Judge(BaseProblemJudge):
 
         from qiskit.quantum_info import Statevector
 
+        scales_recorded = []
+
         def mock_noisy_runner(qc_measured, shots: int):
             calls[0] += 1
             total_shots[0] += shots
@@ -30,6 +32,7 @@ class P8Judge(BaseProblemJudge):
 
             # Compute effective noise scale from circuit depth/size
             scale = max(1.0, len(qc_measured.data) / max(1, len(circuit.data)))
+            scales_recorded.append(scale)
             # Model depolarizing decay: <Z>_noisy = <Z>_ideal * exp(-noise_rate * scale)
             noisy_exp = ideal_val * np.exp(-noise_rate * scale)
 
@@ -49,15 +52,24 @@ class P8Judge(BaseProblemJudge):
         try:
             est = func(circuit, z_mask, mock_noisy_runner, 4000)
 
+            if calls[0] < 2:
+                return TestResult(test_type, test_number, name, False, int((time.perf_counter() - start_t) * 1000),
+                                  f"ZNE requires calling noisy_runner at least twice with scaled/folded circuits. Only {calls[0]} call(s) made.")
+
+            distinct_scales = len(set(round(s, 1) for s in scales_recorded))
+            if distinct_scales < 2:
+                return TestResult(test_type, test_number, name, False, int((time.perf_counter() - start_t) * 1000),
+                                  "ZNE requires measuring at least 2 distinct noise scale factors (e.g. scale 1, scale 3).")
+
             # Evaluate performance
             error = abs(est - ideal_val)
             raw_noisy = ideal_val * np.exp(-noise_rate * 1.0)
             raw_error = abs(raw_noisy - ideal_val)
 
-            # Threshold: mitigated error must improve on raw error or be within tolerance
-            if error > 0.15 and error >= raw_error:
+            # Threshold: mitigated error must improve on raw error and be within tolerance
+            if error > 0.08 or (error >= raw_error and abs(raw_error) > 0.05):
                 return TestResult(test_type, test_number, name, False, int((time.perf_counter() - start_t) * 1000),
-                                  f"ZNE estimate {est:.4f} did not improve noisy baseline ({raw_noisy:.4f}) towards ideal ({ideal_val:.4f}).")
+                                  f"ZNE estimate {est:.4f} failed to extrapolate accurately (error: {error:.4f}, raw noisy error: {raw_error:.4f}).")
 
             exec_time = int((time.perf_counter() - start_t) * 1000)
             return TestResult(test_type, test_number, name, True, exec_time, None)

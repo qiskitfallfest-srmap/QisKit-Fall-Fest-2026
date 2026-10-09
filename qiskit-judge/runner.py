@@ -151,10 +151,19 @@ def run_evaluation(problem_id: str, source_code: str, mode: str = "run") -> Dict
     total_count = len(all_results)
     score = judge.calculate_score(pub_results, hidden_results) if mode == "submit" else 0
 
+    all_passed = (total_count > 0 and passed_count == total_count)
+    success = all_passed and (mode == "run" or score == judge.max_score)
+
+    first_err = None
+    for r in all_results:
+        if not r.passed and r.error_message:
+            first_err = r.error_message
+            break
+
     exec_ms = int((time.perf_counter() - total_start) * 1000)
 
     return {
-        "success": True,
+        "success": success,
         "mode": mode,
         "score": score,
         "max_score": judge.max_score,
@@ -163,7 +172,7 @@ def run_evaluation(problem_id: str, source_code: str, mode: str = "run") -> Dict
         "execution_time_ms": exec_ms,
         "stdout": stdout_buf.getvalue()[:4000],
         "stderr": stderr_buf.getvalue()[:4000],
-        "error_message": None,
+        "error_message": first_err,
         "public_results": [r.to_dict(sanitize_hidden=False) for r in pub_results],
         "hidden_results": [r.to_dict(sanitize_hidden=True) for r in hidden_results],
     }

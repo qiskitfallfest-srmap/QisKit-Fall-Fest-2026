@@ -29,13 +29,20 @@ class P5Judge(BaseProblemJudge):
             results.append(TestResult('public', 1, "Function 'pauli_measurement_circuit' defined", False, 0, "Missing function."))
         else:
             try:
-                qc = QuantumCircuit(1) # |0>
+                qc = QuantumCircuit(1)
+                qc.h(0) # Prepare |+>
                 meas_qc = circuit_fn(qc, "X")
                 ok, err = validate_v0_circuit(meas_qc, expected_qubits=1, expected_clbits=1)
                 if not ok:
                     results.append(TestResult('public', 1, "Circuit Basis Rotation for X", False, int((time.perf_counter() - start_t) * 1000), err))
                 else:
-                    results.append(TestResult('public', 1, "Circuit Basis Rotation for X", True, int((time.perf_counter() - start_t) * 1000), None))
+                    sv = Statevector(meas_qc.remove_final_measurements(inplace=False))
+                    p0 = sv.probabilities_dict().get('0', 0.0)
+                    if abs(p0 - 1.0) < 1e-4:
+                        results.append(TestResult('public', 1, "Circuit Basis Rotation for X", True, int((time.perf_counter() - start_t) * 1000), None))
+                    else:
+                        results.append(TestResult('public', 1, "Circuit Basis Rotation for X", False, int((time.perf_counter() - start_t) * 1000),
+                                                  f"X-basis rotation failed: expected state |0> with probability 1.0 on |+>, got {p0:.4f}. Apply Hadamard before measurement."))
             except Exception as e:
                 results.append(TestResult('public', 1, "Circuit Basis Rotation for X", False, int((time.perf_counter() - start_t) * 1000), str(e)))
 
@@ -45,14 +52,13 @@ class P5Judge(BaseProblemJudge):
             results.append(TestResult('public', 2, "Function 'expectation_from_counts' defined", False, 0, "Missing function."))
         else:
             try:
-                counts = {"0": 750, "1": 250}
-                val = expect_fn(counts, "Z")
-                # Expected: (750 - 250) / 1000 = 0.5
-                if abs(val - 0.5) < 1e-4:
+                val1 = expect_fn({"0": 750, "1": 250}, "Z")
+                val2 = expect_fn({"0": 100, "1": 900}, "Z")
+                if abs(val1 - 0.5) < 1e-4 and abs(val2 - (-0.8)) < 1e-4:
                     results.append(TestResult('public', 2, "Expectation from Counts for Z", True, int((time.perf_counter() - start_t) * 1000), None))
                 else:
                     results.append(TestResult('public', 2, "Expectation from Counts for Z", False, int((time.perf_counter() - start_t) * 1000),
-                                              f"Expected 0.5, got {val}."))
+                                              f"Expected 0.5 and -0.8, got {val1} and {val2}."))
             except Exception as e:
                 results.append(TestResult('public', 2, "Expectation from Counts for Z", False, int((time.perf_counter() - start_t) * 1000), str(e)))
 

@@ -32,6 +32,10 @@ class P6Judge(BaseProblemJudge):
 
             # Cap on calls: at most 2 calls per parameterized-gate occurrence
             max_calls = len(circuit.data) * 2 + 5
+            min_calls = 2 * len(values)
+            if call_count[0] < min_calls:
+                return TestResult(test_type, test_number, name, False, int((time.perf_counter() - start_t) * 1000),
+                                  f"Evaluator called {call_count[0]} times, expected at least {min_calls} calls for parameter-shift rule.")
             if call_count[0] > max_calls:
                 return TestResult(test_type, test_number, name, False, int((time.perf_counter() - start_t) * 1000),
                                   f"Evaluator called {call_count[0]} times, exceeding limit of {max_calls}.")

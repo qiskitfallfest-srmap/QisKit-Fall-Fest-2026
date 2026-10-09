@@ -23,7 +23,9 @@ def make_bv_oracle(n: int, anc: int, s: str, b: int):
         if bit == '1':
             oracle.cx(data_qubits[k], anc)
 
-    return oracle.to_gate(label=f"U_f(s={s},b={b})")
+    gate = oracle.to_gate(label=f"U_f(s={s},b={b})")
+    gate.to_gate = lambda *args, **kwargs: gate
+    return gate
 
 class P4Judge(BaseProblemJudge):
     problem_id = "P4"
@@ -73,9 +75,21 @@ class P4Judge(BaseProblemJudge):
             sv = Statevector(qc_no_meas)
             probs = sv.probabilities_dict()
 
+            data_qubits = [q for q in range(n + 1) if q != anc]
+
+            # Verify that the state on data qubits matches s with probability >= 0.999
+            recovered_prob = 0.0
+            for bitstr, p in probs.items():
+                rec_s = ''.join(bitstr[-1 - data_qubits[k]] for k in range(n))
+                if rec_s == s:
+                    recovered_prob += p
+
+            if recovered_prob < 0.999:
+                return TestResult(test_type, test_number, name, False, int((time.perf_counter() - start_t) * 1000),
+                                  f"Failed to recover secret bitstring '{s}'. Probability was {recovered_prob:.4f} (expected 1.0).")
+
             # Data qubits measured to classical bits
             # Check measurement connections: clbit k should measure data qubit k
-            data_qubits = [q for q in range(n + 1) if q != anc]
             meas_map = {}
             for inst in qc.data:
                 if inst.operation.name == 'measure':
