@@ -59,6 +59,7 @@ export interface DailyCompetition {
   submissionType: 'url' | 'document';
   urlPlaceholder: string;
   submissionDeadline: string;
+  prize: string;
 }
 
 export type VerticalType =

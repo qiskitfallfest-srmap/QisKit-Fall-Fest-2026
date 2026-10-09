@@ -427,9 +427,13 @@ export function LearningSidebar() {
                       <span className="truncate text-xs leading-snug font-semibold text-slate-800 dark:text-[#FAF6F3]">
                         {comp.title}
                       </span>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
-                        Day 0{comp.day} · Due 12 Oct
-                      </span>
+                      <div className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500 font-mono">
+                        <span>Day 0{comp.day}</span>
+                        <span>·</span>
+                        <span className="text-amber-600 dark:text-amber-400 font-bold">
+                          {comp.prize}
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <span

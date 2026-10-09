@@ -29,6 +29,7 @@ import {
   UserPlus,
   Trash2,
   RefreshCw,
+  Trophy,
 } from 'lucide-react';
 
 const VERTICALS: VerticalType[] = [
@@ -520,6 +521,47 @@ export default function HackathonWorkspacePage() {
             </p>
           </div>
 
+          {/* Highlighted Grand Hackathon Prize Pool Banner (Visible both Before and After Creating Team) */}
+          <div className="relative overflow-hidden mb-8 p-4 sm:p-5 rounded-2xl border-2 border-amber-400 dark:border-amber-600/90 bg-linear-to-r from-amber-500/10 via-amber-400/15 to-orange-500/10 dark:from-amber-950/60 dark:via-amber-900/30 dark:to-orange-950/40 shadow-sm">
+            <div className="absolute top-0 right-0 -mt-6 -mr-6 w-36 h-36 bg-amber-400/20 dark:bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
+
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-xl bg-linear-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center shrink-0 shadow-sm ring-2 ring-amber-300 dark:ring-amber-500/40">
+                  <Trophy className="w-6 h-6 animate-pulse" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300">
+                      Grand Hackathon Award
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-extrabold bg-amber-500 text-white uppercase tracking-wider shadow-2xs">
+                      Official Prize Pool
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-baseline gap-2 mt-0.5">
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      Total Prize Pool:
+                    </span>
+                    <span className="font-serif text-2xl sm:text-3xl font-black text-amber-950 dark:text-amber-200 tracking-tight">
+                      Up to ₹1,00,000
+                    </span>
+                    <span className="text-xs font-bold text-amber-800 dark:text-amber-300 font-mono">
+                      (1 Lakh Rupees)
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <div className="px-3.5 py-1.5 rounded-xl bg-white/90 dark:bg-[#1A0A0D] border border-amber-300 dark:border-amber-700/80 shadow-2xs text-xs font-mono font-bold text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Phase 1 & Phase 2 Awards</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Pending Invitations Alert Banner */}
           {pendingInvitations.length > 0 && (
             <div className="mb-8 space-y-3">
@@ -616,7 +658,11 @@ export default function HackathonWorkspacePage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-200 font-bold text-xs sm:text-sm border border-amber-300 dark:border-amber-700 flex items-center gap-1.5 shadow-2xs">
+                      <Trophy className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                      Prize Pool: Up to ₹1,00,000
+                    </span>
                     {isFinalized ? (
                       <span className="px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-bold text-xs sm:text-sm border border-emerald-300 dark:border-emerald-700 flex items-center gap-1.5 shadow-2xs">
                         <Lock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
@@ -1175,6 +1221,10 @@ export default function HackathonWorkspacePage() {
                       statements and 1 open innovation track. Your team will unlock the full
                       technical dossier for the selected statement upon creation.
                     </p>
+                    <div className="inline-flex items-center gap-2 mt-2 px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/80 text-amber-900 dark:text-amber-200 text-xs font-semibold">
+                      <Trophy className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                      <span>Hackathon Grand Prize Pool: <strong>Up to ₹1,00,000</strong></span>
+                    </div>
                   </div>
 
                   {/* Mandatory Drive Notice across all statements */}

@@ -26,6 +26,7 @@ import {
   Users,
   Terminal,
   Lock,
+  Trophy,
 } from 'lucide-react';
 
 function LearningDashboardContent() {
@@ -179,6 +180,32 @@ function LearningDashboardContent() {
             <p className="font-sans text-slate-600 dark:text-slate-300 text-xs sm:text-sm mt-1">
               {challenge.description}
             </p>
+          </div>
+
+          {/* Highlighted Prize Banner */}
+          <div className="relative overflow-hidden p-4 rounded-xl border-2 border-amber-400/90 dark:border-amber-600/90 bg-linear-to-r from-amber-50 via-amber-100/40 to-orange-50 dark:from-amber-950/50 dark:via-amber-900/30 dark:to-orange-950/40 shadow-xs flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-linear-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center shrink-0 shadow-sm ring-2 ring-amber-300 dark:ring-amber-500/40">
+                <Trophy className="w-6 h-6 animate-pulse" />
+              </div>
+              <div>
+                <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300 block">
+                  Award & Cash Prize
+                </span>
+                <div className="flex flex-wrap items-baseline gap-2 mt-0.5">
+                  <span className="font-serif text-xl sm:text-2xl font-black text-amber-950 dark:text-amber-200 tracking-tight">
+                    {challenge.prize || 'Up to ₹5,000'}
+                  </span>
+                  <span className="text-xs font-semibold text-amber-800 dark:text-amber-300 font-mono">
+                    (Top Performing Entries)
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/20 dark:bg-amber-400/10 border border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-300 text-xs font-bold font-mono">
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              <span>Prize Award</span>
+            </div>
           </div>
 
           <div className="bg-slate-50 dark:bg-[#1C0A0D] rounded-lg p-4 border border-slate-200/80 dark:border-[#3D1418] space-y-3">
