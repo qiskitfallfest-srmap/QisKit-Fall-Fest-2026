@@ -141,7 +141,9 @@ export async function POST(request: NextRequest) {
     const whitelistCheck = await isEmailWhitelisted(trimmedEmail);
     if (!whitelistCheck.whitelisted) {
       return NextResponse.json(
-        { error: `Teammate ${trimmedEmail} is not authorized on the event whitelist.` },
+        {
+          error: `Teammate ${trimmedEmail} is not in the registered whitelist. Tell your team member to register on Unstop and join the WhatsApp group to quickly resolve the issue.`,
+        },
         { status: 400 }
       );
     }
