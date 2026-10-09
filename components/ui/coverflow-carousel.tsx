@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Mail, Linkedin, ExternalLink } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -13,6 +13,9 @@ export interface CoverflowSlide {
   alt: string;
   title?: string;
   subtitle?: string;
+  email?: string;
+  linkedin?: string;
+  bio?: string;
   meta?: { label: string; value: string }[];
 }
 
@@ -304,6 +307,12 @@ export function CoverflowCarousel({
                   src={slide.src}
                   alt={slide.alt}
                   draggable={false}
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (!target.src.includes('logo-icon-person-on-white-background-free-vector.webp')) {
+                      target.src = '/logo-icon-person-on-white-background-free-vector.webp';
+                    }
+                  }}
                   className="h-full w-full select-none object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
@@ -339,7 +348,7 @@ export function CoverflowCarousel({
           key={selected}
           className="mt-3 flex flex-col items-center px-4 duration-300 animate-in fade-in"
         >
-          <div className="text-center space-y-0.5">
+          <div className="text-center space-y-1">
             <p className="text-xl sm:text-2xl font-serif font-bold text-[#3A0B10] dark:text-[#F5F3F0] tracking-tight">
               {active.title}
             </p>
@@ -347,6 +356,35 @@ export function CoverflowCarousel({
               <p className="text-xs sm:text-sm font-mono font-medium text-[#800020] dark:text-[#B08D57]">
                 {active.subtitle}
               </p>
+            )}
+
+            {/* Email & LinkedIn Action Badges */}
+            {(active.email || active.linkedin) && (
+              <div className="pt-1.5 flex flex-wrap items-center justify-center gap-2">
+                {active.email && (
+                  <a
+                    href={`mailto:${active.email}`}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] sm:text-xs font-mono font-medium bg-[#800020]/10 hover:bg-[#800020] text-[#800020] hover:text-white dark:bg-[#B08D57]/15 dark:hover:bg-[#B08D57] dark:text-[#B08D57] dark:hover:text-[#1A0407] border border-[#800020]/25 dark:border-[#B08D57]/30 transition-all duration-200 active:scale-95"
+                    title={`Send email to ${active.email}`}
+                  >
+                    <Mail className="size-3 sm:size-3.5" />
+                    <span>{active.email}</span>
+                  </a>
+                )}
+                {active.linkedin && (
+                  <a
+                    href={active.linkedin.startsWith('http') ? active.linkedin : `https://${active.linkedin}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] sm:text-xs font-mono font-medium bg-[#0A66C2]/10 hover:bg-[#0A66C2] text-[#0A66C2] hover:text-white dark:bg-[#0A66C2]/20 dark:hover:bg-[#0A66C2] dark:text-[#70B5F9] dark:hover:text-white border border-[#0A66C2]/30 transition-all duration-200 active:scale-95"
+                    title="Open LinkedIn Profile"
+                  >
+                    <Linkedin className="size-3 sm:size-3.5" />
+                    <span>LinkedIn Profile</span>
+                    <ExternalLink className="size-2.5 sm:size-3 opacity-60" />
+                  </a>
+                )}
+              </div>
             )}
           </div>
 
@@ -361,6 +399,17 @@ export function CoverflowCarousel({
                   <span className="font-semibold text-[#3A0B10] dark:text-[#F5F3F0]">{row.value}</span>
                 </div>
               ))}
+            </div>
+          )}
+
+          {active.bio && (
+            <div className="mt-2.5 max-w-2xl px-4 py-2.5 rounded-xl bg-black/[0.03] dark:bg-white/[0.04] border border-[#3A0B10]/10 dark:border-white/10 text-center">
+              <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#800020] dark:text-[#B08D57] mb-1">
+                Brief Bio / Research Focus
+              </p>
+              <p className="text-xs sm:text-[13px] font-sans text-[#16171B]/80 dark:text-[#C7C8CC]/90 leading-relaxed italic line-clamp-4 hover:line-clamp-none transition-all">
+                &ldquo;{active.bio}&rdquo;
+              </p>
             </div>
           )}
         </div>

@@ -6,8 +6,11 @@ infinite loop traps, and sets execution timeouts.
 
 import ast
 import os
-import resource
 import subprocess
+try:
+    import resource
+except ImportError:
+    resource = None
 import sys
 import tempfile
 from typing import Tuple, Optional, Set

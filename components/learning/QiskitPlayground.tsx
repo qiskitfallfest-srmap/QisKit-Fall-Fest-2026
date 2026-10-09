@@ -26,7 +26,7 @@ import {
 import { CodingChallenge } from '@/data/qiskit/challenges';
 
 // Dynamically import Monaco Editor to avoid SSR window issues
-const Editor = dynamic(() => import('@monaco-editor/react'), {
+const Editor = dynamic<any>(() => import('@monaco-editor/react'), {
   ssr: false,
   loading: () => (
     <div className="flex flex-col items-center justify-center h-full min-h-[420px] bg-[#1e1e1e] text-slate-400 font-mono text-xs gap-3">
@@ -223,7 +223,7 @@ export function QiskitPlayground({
     setLastRunSuccess(null);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
 
     try {
       const res = await fetch('/api/qiskit/run', {
@@ -269,7 +269,7 @@ export function QiskitPlayground({
       setLastRunSuccess(false);
       setRunStderr(
         err.name === 'AbortError'
-          ? 'Execution timed out after 10 seconds. Check for infinite loops or long-running computations.'
+          ? 'Execution timed out after 20 seconds. Check for infinite loops or long-running computations.'
           : `Execution error: ${err.message || 'Failed to communicate with runner.'}`
       );
     } finally {
@@ -290,7 +290,7 @@ export function QiskitPlayground({
     });
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
 
     try {
       const res = await fetch('/api/qiskit/submit', {
@@ -504,7 +504,7 @@ export function QiskitPlayground({
           theme="vs-dark"
           value={code}
           onMount={handleEditorDidMount}
-          onChange={(newVal) => setCode(newVal || '')}
+          onChange={(newVal?: string) => setCode(newVal || '')}
           options={{
             readOnly: false,
             domReadOnly: false,

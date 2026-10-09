@@ -960,7 +960,7 @@ export function OrganizationalTreeChart() {
                 exit={{ opacity: 0, scale: 0.95, y: 15 }}
                 transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                 onClick={(e) => e.stopPropagation()}
-                className="relative w-[95vw] max-w-5xl flex flex-col rounded-3xl bg-white dark:bg-[#1A0407] border-2 border-[#800020]/30 dark:border-[#B08D57]/40 shadow-2xl overflow-hidden my-auto shrink-0"
+                className="relative w-[95vw] max-w-5xl max-h-[92vh] flex flex-col rounded-3xl bg-white dark:bg-[#1A0407] border-2 border-[#800020]/30 dark:border-[#B08D57]/40 shadow-2xl overflow-hidden my-auto shrink-0"
               >
                 {/* Modal Header */}
                 <div className="flex items-center justify-between gap-4 px-6 sm:px-8 py-3.5 sm:py-4 border-b border-[#3A0B10]/10 dark:border-white/10 shrink-0 bg-[#FAF9F6]/95 dark:bg-black/40 backdrop-blur-sm">
@@ -1028,8 +1028,8 @@ export function OrganizationalTreeChart() {
                   </div>
                 </div>
 
-                {/* Modal Body: ONLY THE CAROUSEL COMPONENT - NO EXTRA TEXT - NO VERTICAL SCROLL */}
-                <div className="w-full overflow-hidden px-4 sm:px-8 py-4 sm:py-5 flex flex-col items-center justify-center bg-gradient-to-b from-transparent via-[#800020]/[0.02] to-[#800020]/[0.04] dark:via-white/[0.01] dark:to-white/[0.02]">
+                {/* Modal Body: CAROUSEL COMPONENT WITH CLEAN SCROLLING SUPPORT */}
+                <div className="w-full overflow-y-auto max-h-[calc(92vh-80px)] px-4 sm:px-8 py-4 sm:py-5 flex flex-col items-center justify-center bg-gradient-to-b from-transparent via-[#800020]/[0.02] to-[#800020]/[0.04] dark:via-white/[0.01] dark:to-white/[0.02]">
                   <CoverflowCarousel
                     slides={activeModalData.slides}
                     cardWidth="clamp(160px, 18vw, 220px)"

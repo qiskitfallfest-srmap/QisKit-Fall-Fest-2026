@@ -47,7 +47,7 @@ export interface CompetitionConfig {
 
 const DEFAULT_CONFIG: CompetitionConfig = {
   enabled: true,
-  is_locked: true,
+  is_locked: false,
   start_time: '2026-10-01T00:00:00+05:30',
   end_time: '2026-10-20T23:59:59+05:30',
   max_submissions_per_problem: 10,
@@ -228,7 +228,7 @@ export async function dispatchJudgeEvaluation(
 
   // 2. Try local Python runner ONLY in non-serverless environments if explicitly enabled
   const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
-  const enableLocalPython = process.env.ENABLE_LOCAL_PYTHON_JUDGE === 'true';
+  const enableLocalPython = process.env.ENABLE_LOCAL_PYTHON_JUDGE !== 'false';
 
   if (!isServerless && enableLocalPython) {
     const runnerPath = path.join(process.cwd(), 'qiskit-judge', 'runner.py');
@@ -289,7 +289,8 @@ function executeLocalRunner(
 
     let py: any;
     try {
-      py = spawn('python3', [runnerPath], {
+      const pythonCmd = process.env.PYTHON_BIN || (process.platform === 'win32' ? 'python' : 'python3');
+      py = spawn(pythonCmd, [runnerPath], {
         stdio: ['pipe', 'pipe', 'pipe'],
         env: {
           ...process.env,
@@ -313,10 +314,11 @@ function executeLocalRunner(
       });
     }
 
+    const timeoutMs = 15000;
     const timer = setTimeout(() => {
       timedOut = true;
       try {
-        py.kill('SIGKILL');
+        py.kill();
       } catch {}
       safeResolve({
         success: false,
@@ -325,14 +327,14 @@ function executeLocalRunner(
         max_score: 0,
         passed_tests: 0,
         total_tests: 0,
-        execution_time_ms: 4000,
+        execution_time_ms: timeoutMs,
         stdout: '',
-        stderr: 'Execution timed out after 4 seconds.',
+        stderr: `Execution timed out after ${Math.round(timeoutMs / 1000)} seconds.`,
         error_message: 'Execution timed out.',
         public_results: [],
         hidden_results: [],
       });
-    }, 4000); // 4 second max timeout for Vercel
+    }, timeoutMs);
 
     py.on('error', (err: any) => {
       clearTimeout(timer);

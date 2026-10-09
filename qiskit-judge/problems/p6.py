@@ -5,6 +5,7 @@ Evaluate gradient of parameterized circuit with respect to each parameter using 
 
 import time
 from typing import List
+import numpy as np
 from problems.base import BaseProblemJudge, TestResult
 
 class P6Judge(BaseProblemJudge):

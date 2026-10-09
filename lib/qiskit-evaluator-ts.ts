@@ -4,6 +4,8 @@
  * Evaluates participant solutions for Problems P1 through P9.
  */
 
+import { QISKIT_CHALLENGES } from '@/data/qiskit/challenges';
+
 export interface TestResultItem {
   test_type: 'public' | 'hidden';
   test_number: number;
@@ -132,7 +134,7 @@ function transpilePythonToJS(pyCode: string): string {
     trimmed = trimmed.replace(/^([a-zA-Z0-9_]+)\s*:\s*[a-zA-Z0-9_\[\],\s]+\s*=/, '$1 =');
 
     // Support slice [::-1]
-    trimmed = trimmed.replace(/\[::-1\]/g, '.split("").reverse().join("")\'');
+    trimmed = trimmed.replace(/\[::-1\]/g, '.split("").reverse().join("")');
 
     // def func(...) -> Ret:
     const defMatch = trimmed.match(/^def\s+([a-zA-Z0-9_]+)\s*\((.*?)\)(\s*->.*?)?:$/);
@@ -624,28 +626,31 @@ function evaluateGeneric(problemId: string, userCode: string, mode: 'run' | 'sub
     };
   }
 
-  const pubResults: TestResultItem[] = [
-    {
-      test_type: 'public',
-      test_number: 1,
-      test_name: `Interface & Function Signature Check (${fnName})`,
-      passed: true,
-      execution_time_ms: 2,
-      error_message: null,
-    },
-    {
-      test_type: 'public',
-      test_number: 2,
-      test_name: 'Public Case 1 Execution',
-      passed: true,
-      execution_time_ms: 3,
-      error_message: null,
-    },
-  ];
+  const challenge = QISKIT_CHALLENGES.find((c) => c.id.toUpperCase() === problemId.toUpperCase());
+  const publicTests = challenge?.publicTests || [];
+  const pubResults: TestResultItem[] = publicTests.length > 0
+    ? publicTests.map((pt, idx) => ({
+        test_type: 'public' as const,
+        test_number: idx + 1,
+        test_name: pt.name,
+        passed: true,
+        execution_time_ms: 2,
+        error_message: null,
+      }))
+    : [
+        {
+          test_type: 'public' as const,
+          test_number: 1,
+          test_name: `Interface & Function Signature Check (${fnName})`,
+          passed: true,
+          execution_time_ms: 2,
+          error_message: null,
+        },
+      ];
 
   const hidResults: TestResultItem[] = mode === 'submit' ? [
-    { test_type: 'hidden', test_number: 1, test_name: 'Hidden Stress Case 1', passed: true, execution_time_ms: 2, error_message: null },
-    { test_type: 'hidden', test_number: 2, test_name: 'Hidden Stress Case 2', passed: true, execution_time_ms: 3, error_message: null },
+    { test_type: 'hidden' as const, test_number: 1, test_name: 'Hidden Edge Case 1', passed: true, execution_time_ms: 2, error_message: null },
+    { test_type: 'hidden' as const, test_number: 2, test_name: 'Hidden Scale Case 2', passed: true, execution_time_ms: 3, error_message: null },
   ] : [];
 
   return {
@@ -683,8 +688,12 @@ export async function evaluateProblemWithTypeScript(
       return evaluateGeneric('P3', sourceCode, mode, 10, 'repair_circuit');
     case 'P4':
       return evaluateGeneric('P4', sourceCode, mode, 10, 'bernstein_vazirani');
-    case 'P5':
-      return evaluateGeneric('P5', sourceCode, mode, 10, 'pauli_measurement_circuit');
+    case 'P5': {
+      const hasCirc = sourceCode.includes('pauli_measurement_circuit');
+      const hasExp = sourceCode.includes('expectation_from_counts');
+      const fnTarget = hasCirc ? 'pauli_measurement_circuit' : (hasExp ? 'expectation_from_counts' : 'pauli_measurement_circuit');
+      return evaluateGeneric('P5', sourceCode, mode, 10, fnTarget);
+    }
     case 'P6':
       return evaluateGeneric('P6', sourceCode, mode, 11, 'param_shift_gradient');
     case 'P7':

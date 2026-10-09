@@ -5,6 +5,7 @@ Correct 1-2 seeded faults in a quantum circuit to match target state with fideli
 
 import time
 from typing import List
+import numpy as np
 from problems.base import BaseProblemJudge, TestResult
 from validator import validate_v0_circuit
 

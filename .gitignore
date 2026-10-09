@@ -39,3 +39,7 @@ yarn-error.log*
 /dt_venue*
 scratch/
 *.csv
+
+# Python
+__pycache__/
+*.pyc

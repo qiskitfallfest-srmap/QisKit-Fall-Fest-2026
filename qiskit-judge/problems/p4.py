@@ -63,7 +63,7 @@ class P4Judge(BaseProblemJudge):
                 return TestResult(test_type, test_number, name, False, int((time.perf_counter() - start_t) * 1000), err)
 
             # 2. Check oracle inclusion: must contain oracle gate
-            oracle_count = sum(1 for inst in qc.data if 'BV_Oracle' in inst.operation.name or 'U_f' in getattr(inst.operation, 'label', ''))
+            oracle_count = sum(1 for inst in qc.data if 'BV_Oracle' in (inst.operation.name or '') or 'U_f' in (inst.operation.label or ''))
             if oracle_count != 1:
                 return TestResult(test_type, test_number, name, False, int((time.perf_counter() - start_t) * 1000),
                                   f"Expected exactly 1 oracle instruction call, found {oracle_count}.")

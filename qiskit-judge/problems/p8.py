@@ -5,6 +5,7 @@ Mitigate noise on expectation values using unitary folding and polynomial/richar
 
 import time
 from typing import List
+import numpy as np
 from problems.base import BaseProblemJudge, TestResult
 
 class P8Judge(BaseProblemJudge):

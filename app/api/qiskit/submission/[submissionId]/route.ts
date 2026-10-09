@@ -96,8 +96,8 @@ export async function GET(
       errorMessage: submission.error_message,
       submittedAt: submission.submitted_at,
       completedAt: submission.completed_at,
-      publicResults: publicTests,
-      hiddenResults: hiddenTests,
+      publicResults: publicTests.length > 0 ? publicTests : (submission.public_results || []),
+      hiddenResults: hiddenTests.length > 0 ? hiddenTests : (submission.hidden_results || []),
     });
   } catch (err: any) {
     console.error('[API /api/qiskit/submission/[id]] Error:', err);
