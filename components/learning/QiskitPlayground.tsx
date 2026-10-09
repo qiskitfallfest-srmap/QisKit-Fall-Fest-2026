@@ -218,6 +218,7 @@ export function QiskitPlayground({
     setIsRunning(true);
     setIsConsoleCollapsed(false);
     setActiveBottomTab('result');
+    setPublicTestResults([]);
     setRunStdout('');
     setRunStderr('');
     setLastRunSuccess(null);
@@ -253,14 +254,12 @@ export function QiskitPlayground({
       setRunExecutionMs(data.executionTimeMs || 0);
 
       const publicResults = data.publicResults || [];
+      setPublicTestResults(publicResults);
       const hasPublicResults = publicResults.length > 0;
       const allPassed = hasPublicResults
-        ? publicResults.every((t: any) => Boolean(t.passed))
-        : Boolean(data.success);
+        ? publicResults.every((t: any) => Boolean(t.passed)) && Boolean(data.success)
+        : false;
 
-      if (hasPublicResults) {
-        setPublicTestResults(publicResults);
-      }
       setRunStdout(data.stdout || '');
       setRunStderr(data.stderr || (allPassed ? '' : (data.error || (!res.ok ? 'Execution failed.' : ''))));
       setLastRunSuccess(allPassed);
@@ -365,8 +364,8 @@ export function QiskitPlayground({
             clearInterval(pollingIntervalRef.current!);
             setIsSubmitting(false);
             setSubmission(data);
-            if (data.status === 'completed' && onSubmissionSuccess) {
-              onSubmissionSuccess(data.score || 0);
+            if (data.status === 'completed' && (data.score || 0) > 0 && onSubmissionSuccess) {
+              onSubmissionSuccess(data.score);
             }
           } else {
             setSubmission((prev) => ({
@@ -792,38 +791,87 @@ export function QiskitPlayground({
               ) : (
                 <div className="space-y-3 pb-8">
                   {/* Status Headline Banner */}
-                  <div className={clsx(
-                    'p-4 rounded-xl border flex items-center justify-between',
-                    submission.status === 'completed'
-                      ? 'bg-[#1b2b22] border-emerald-800'
-                      : 'bg-[#2b181a] border-rose-800'
-                  )}>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className={clsx(
-                          'text-lg font-bold font-sans',
-                          submission.status === 'completed' ? 'text-emerald-400' : 'text-rose-400'
-                        )}>
-                          {submission.status === 'completed'
-                            ? (submission.score === challenge.points ? 'Accepted' : 'Partial Credit')
-                            : 'Submission Failed'}
-                        </span>
-                        <span className="text-slate-500">•</span>
-                        <span className="text-xs text-slate-300">
-                          {submission.executionTimeMs} ms
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-300 mt-0.5">
-                        Earned <span className="font-bold text-white">{submission.score || 0}</span> of <span className="font-bold text-white">{challenge.points}</span> points ({submission.passedTests || 0}/{submission.totalTests || 0} tests passed).
-                      </p>
-                    </div>
+                  {(() => {
+                    const isAccepted = Boolean(
+                      submission.status === 'completed' &&
+                      (submission.score || 0) === challenge.points &&
+                      (submission.passedTests || 0) === (submission.totalTests || 0) &&
+                      (submission.totalTests || 0) > 0
+                    );
+                    const isPartial = Boolean(
+                      submission.status === 'completed' &&
+                      !isAccepted &&
+                      (submission.score || 0) > 0
+                    );
+                    const errText = submission.errorMessage || submission.stderr || '';
+                    const headline = isAccepted
+                      ? 'Accepted'
+                      : isPartial
+                      ? 'Partial Credit'
+                      : errText
+                      ? (errText.includes('Syntax') || errText.includes('Compilation')
+                          ? 'Compilation Error'
+                          : 'Runtime Error')
+                      : 'Wrong Answer';
 
-                    <div className="text-right">
-                      <span className="text-xs font-mono font-bold px-3 py-1.5 rounded-lg bg-[#252526] border border-[#3e3e42] text-amber-300">
-                        +{submission.score || 0} pts
+                    return (
+                      <div className={clsx(
+                        'p-4 rounded-xl border flex items-center justify-between',
+                        isAccepted
+                          ? 'bg-[#1b2b22] border-emerald-800'
+                          : isPartial
+                          ? 'bg-[#2b2416] border-amber-800'
+                          : 'bg-[#2b181a] border-rose-800'
+                      )}>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className={clsx(
+                              'text-lg font-bold font-sans',
+                              isAccepted
+                                ? 'text-emerald-400'
+                                : isPartial
+                                ? 'text-amber-400'
+                                : 'text-rose-400'
+                            )}>
+                              {headline}
+                            </span>
+                            <span className="text-slate-500">•</span>
+                            <span className="text-xs text-slate-300">
+                              {submission.executionTimeMs} ms
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-300 mt-0.5">
+                            Earned <span className="font-bold text-white">{submission.score || 0}</span> of <span className="font-bold text-white">{challenge.points}</span> points ({submission.passedTests || 0}/{submission.totalTests || 0} tests passed).
+                          </p>
+                        </div>
+
+                        <div className="text-right">
+                          <span className={clsx(
+                            'text-xs font-mono font-bold px-3 py-1.5 rounded-lg border',
+                            isAccepted
+                              ? 'bg-[#1b2b22] border-emerald-800 text-emerald-300'
+                              : isPartial
+                              ? 'bg-[#2b2416] border-amber-800 text-amber-300'
+                              : 'bg-[#252526] border-[#3e3e42] text-slate-400'
+                          )}>
+                            +{submission.score || 0} pts
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Stderr / Error Message in Submission Tab */}
+                  {(submission.errorMessage || submission.stderr) && (
+                    <div className="space-y-1.5 pt-1">
+                      <span className="text-[10px] font-bold text-rose-400 uppercase tracking-wider block">
+                        Diagnostics & Error Output
                       </span>
+                      <div className="p-3 rounded-lg bg-[#2b181a] border border-rose-800/60 text-rose-200 font-mono text-xs whitespace-pre-wrap">
+                        {submission.stderr || submission.errorMessage}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Public breakdown */}
                   {submission.publicResults && submission.publicResults.length > 0 && (
@@ -831,17 +879,24 @@ export function QiskitPlayground({
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
                         Public Tests ({submission.publicResults.filter(t => t.passed).length}/{submission.publicResults.length})
                       </span>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                      <div className="space-y-1.5">
                         {submission.publicResults.map((t, i) => (
                           <div
                             key={i}
                             className={clsx(
-                              'p-2 rounded border text-xs flex items-center justify-between',
+                              'p-2.5 rounded border text-xs flex flex-col gap-1',
                               t.passed ? 'bg-[#1b2b22] border-emerald-800/40 text-emerald-300' : 'bg-[#2b181a] border-rose-800/40 text-rose-300'
                             )}
                           >
-                            <span className="truncate">{t.test_name}</span>
-                            <span className="text-[10px] text-slate-400">{t.execution_time_ms}ms</span>
+                            <div className="flex items-center justify-between">
+                              <span className="font-semibold">{t.test_name}</span>
+                              <span className="text-[10px] text-slate-400">{t.execution_time_ms}ms</span>
+                            </div>
+                            {t.error_message && (
+                              <div className="text-[11px] text-rose-300 font-mono pt-1 border-t border-rose-900/40 whitespace-pre-wrap">
+                                {t.error_message}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>

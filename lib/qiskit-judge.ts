@@ -235,19 +235,16 @@ export async function dispatchJudgeEvaluation(
     if (fs.existsSync(runnerPath)) {
       try {
         const localRes = await executeLocalRunner(problemId, sourceCode, mode);
-        const hasRuntimeFailure =
+        // If Python executed, its result (whether passed, failed, syntax error, or compile error) is authoritative!
+        const isInfrastructureFailure =
           !localRes ||
-          Boolean(localRes.error_message?.includes('Python runtime error')) ||
-          Boolean(localRes.error_message?.includes('Python runner execution error')) ||
-          Boolean(localRes.stderr?.includes('ENOENT')) ||
-          Boolean(localRes.stderr?.includes('not found')) ||
-          Boolean(localRes.stderr?.includes("No module named 'qiskit'")) ||
-          Boolean(localRes.stderr?.includes('Judge runtime dependency error'));
+          localRes.error_message === 'JUDGE_INFRA_PYTHON_SPAWN_ERROR' ||
+          Boolean(localRes.stderr?.includes('ENOENT'));
 
-        if (!hasRuntimeFailure) {
+        if (!isInfrastructureFailure) {
           return localRes;
         }
-        console.warn('[Local Python Runner] Runtime error detected, falling back to TypeScript evaluator:', localRes?.stderr);
+        console.warn('[Local Python Runner] Python runtime unavailable, falling back to TypeScript evaluator:', localRes?.stderr);
       } catch (err) {
         console.warn('[Local Python Runner] Failed, falling back to TypeScript evaluator:', err);
       }
@@ -323,7 +320,7 @@ function executeLocalRunner(
         execution_time_ms: 0,
         stdout: '',
         stderr: e.message || 'Python not available',
-        error_message: 'Python runner execution error',
+        error_message: 'JUDGE_INFRA_PYTHON_SPAWN_ERROR',
         public_results: [],
         hidden_results: [],
       });
@@ -362,8 +359,8 @@ function executeLocalRunner(
         total_tests: 0,
         execution_time_ms: Date.now() - startTime,
         stdout: '',
-        stderr: err?.message || 'Python3 process error',
-        error_message: 'Local Python runtime error',
+        stderr: err?.message || 'Python process spawn error',
+        error_message: 'JUDGE_INFRA_PYTHON_SPAWN_ERROR',
         public_results: [],
         hidden_results: [],
       });
