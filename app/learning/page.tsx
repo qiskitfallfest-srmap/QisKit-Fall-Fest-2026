@@ -901,7 +901,7 @@ function LearningDashboardContent() {
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
               <span className="font-mono text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 dark:bg-[#1C0A0D]">
-                Official Credential
+                Official Certificate
               </span>
               <span className="font-mono text-[10px] font-bold text-burgundy dark:text-[#E89BA5]">
                 {completedSessionsCount + passedQuizzesCount} / {totalSessionsCount * 2} Tasks Complete
@@ -911,7 +911,7 @@ function LearningDashboardContent() {
               IBM Quantum Masterclass Certificate
             </h2>
             <p className="text-xs text-slate-600 dark:text-slate-400 font-sans max-w-xl">
-              Watch all {totalSessionsCount} video lectures ({completedSessionsCount}/{totalSessionsCount}) and pass all {totalSessionsCount} concept check quizzes ({passedQuizzesCount}/{totalSessionsCount}) to unlock your official co-certified digital credential.
+              Watch all {totalSessionsCount} video lectures ({completedSessionsCount}/{totalSessionsCount}) and pass all {totalSessionsCount} concept check quizzes ({passedQuizzesCount}/{totalSessionsCount}) to unlock your official co-certified digital certificate.
             </p>
           </div>
 

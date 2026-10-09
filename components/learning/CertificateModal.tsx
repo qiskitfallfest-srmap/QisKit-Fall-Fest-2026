@@ -218,7 +218,7 @@ export function CertificateModal({
             </div>
             <div className="min-w-0">
               <h2 id="certificate-modal-title" className="font-serif text-base sm:text-lg font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight truncate">
-                Official Masterclass Credential
+                Official Masterclass Certificate
               </h2>
               <p className="font-mono text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
                 IBM Quantum × SRM University-AP
