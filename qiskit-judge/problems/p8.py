@@ -30,8 +30,9 @@ class P8Judge(BaseProblemJudge):
             if total_shots[0] > 40000:
                 raise ValueError("Exceeded maximum total budget of 40,000 shots.")
 
-            # Compute effective noise scale from circuit depth/size
-            scale = max(1.0, len(qc_measured.data) / max(1, len(circuit.data)))
+            # Compute effective noise scale from circuit depth/size (excluding readout measurements)
+            gates_only = [inst for inst in qc_measured.data if inst.operation.name != 'measure']
+            scale = max(1.0, len(gates_only) / max(1, len(circuit.data)))
             scales_recorded.append(scale)
             # Model depolarizing decay: <Z>_noisy = <Z>_ideal * exp(-noise_rate * scale)
             noisy_exp = ideal_val * np.exp(-noise_rate * scale)

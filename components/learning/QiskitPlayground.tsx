@@ -198,11 +198,55 @@ export function QiskitPlayground({
     }
   };
 
-  // 4. Editor Mount Handler (Guarantees Clickable & Interactive)
-  const handleEditorDidMount = (editor: any) => {
+  // Draft saving function
+  const triggerSaveDraft = useCallback(async () => {
+    if (!code) return;
+    setSaveStatus('saving');
+    try {
+      localStorage.setItem(localDraftKey, code);
+      await fetch('/api/qiskit/draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          problemId: challenge.id,
+          code,
+        }),
+      });
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    } catch {
+      setSaveStatus('idle');
+    }
+  }, [code, challenge.id, localDraftKey]);
+
+  // Keep latest function refs for Monaco commands
+  const runCodeRef = useRef<() => void>(() => {});
+  const submitCodeRef = useRef<() => void>(() => {});
+  const saveDraftRef = useRef<() => void>(() => {});
+
+  // 4. Editor Mount Handler (Guarantees Clickable & Interactive with Shortcuts)
+  const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
     editor.layout();
     editor.focus();
+
+    if (monaco) {
+      // Cmd/Ctrl + Enter -> Run code against public tests
+      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+        runCodeRef.current();
+      });
+
+      // Cmd/Ctrl + Shift + Enter -> Submit solution
+      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => {
+        submitCodeRef.current();
+      });
+
+      // Cmd/Ctrl + S -> Save draft without browser 'Save Page' prompt
+      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+        saveDraftRef.current();
+      });
+    }
+
     setTimeout(() => {
       if (editorRef.current) {
         editorRef.current.layout();
@@ -390,11 +434,23 @@ export function QiskitPlayground({
     }, 1000);
   }, [onSubmissionSuccess]);
 
-  // Keyboard shortcut: Cmd/Ctrl + Enter to Run Code
+  // Keep refs synchronized with latest handlers
+  runCodeRef.current = handleRunCode;
+  submitCodeRef.current = handleSubmitCode;
+  saveDraftRef.current = triggerSaveDraft;
+
+  // Keyboard shortcut: Cmd/Ctrl + Enter to Run, Cmd/Ctrl + Shift + Enter to Submit, Cmd/Ctrl + S to Save
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
       e.preventDefault();
-      handleRunCode();
+      if (e.shiftKey) {
+        handleSubmitCode();
+      } else {
+        handleRunCode();
+      }
+    } else if ((e.metaKey || e.ctrlKey) && (e.key === 's' || e.key === 'S')) {
+      e.preventDefault();
+      triggerSaveDraft();
     }
   };
 
@@ -605,7 +661,7 @@ export function QiskitPlayground({
               onClick={handleSubmitCode}
               disabled={isRunning || isSubmitting}
               type="button"
-              title="Submit solution for official judging"
+              title="Submit solution for official judging (Cmd/Ctrl + Shift + Enter)"
               className="px-3 sm:px-4 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-xs shrink-0"
             >
               {isSubmitting ? (
@@ -614,6 +670,7 @@ export function QiskitPlayground({
                 <Send className="w-3.5 h-3.5" />
               )}
               <span>Submit</span>
+              <span className="hidden md:inline text-[10px] font-mono text-emerald-200 ml-0.5">⌘⇧↵</span>
             </button>
 
             {/* Collapse / Expand Toggle Button */}
