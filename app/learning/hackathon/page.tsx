@@ -30,7 +30,9 @@ import {
   RefreshCw,
   Trophy,
   GraduationCap,
+  MessageCircle,
 } from 'lucide-react';
+import { REGISTRATION_URL, WHATSAPP_COMMUNITY_URL } from '@/lib/constants';
 
 const VERTICALS: VerticalType[] = [
   'Quantum Chemistry',
@@ -114,6 +116,40 @@ export default function HackathonWorkspacePage() {
       setChangePSId(team.problem_statement_id);
     }
   }, [team?.vertical, team?.problem_statement_id]);
+
+  // Debounced lookup for adding member to existing team
+  useEffect(() => {
+    const trimmed = newMemberEmail.trim().toLowerCase();
+    if (!trimmed || !trimmed.includes('@')) {
+      setNewMemberStatus('idle');
+      return;
+    }
+
+    setNewMemberStatus('checking');
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/auth/verify-email?email=${encodeURIComponent(trimmed)}`);
+        const data = await res.json();
+        if (!data.whitelisted) {
+          setNewMemberStatus('not_whitelisted');
+        } else if (data.inTeam) {
+          setNewMemberStatus('already_in_team');
+        } else {
+          setNewMemberStatus('valid');
+          if (data.fullName && !newMemberName) {
+            setNewMemberName(data.fullName);
+          }
+          if (trimmed.endsWith('@srmap.edu.in') && !newMemberUniversity) {
+            setNewMemberUniversity('SRM University-AP');
+          }
+        }
+      } catch {
+        setNewMemberStatus('idle');
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [newMemberEmail]);
 
   // Release status state (Temporarily set to true for testing)
   const [isReleased, setIsReleased] = useState(true);
@@ -200,7 +236,7 @@ export default function HackathonWorkspacePage() {
         return;
       }
       if (m.status === 'not_whitelisted') {
-        setTeamFormError(`Teammate ${m.email} is not whitelisted. Remove or replace.`);
+        setTeamFormError(`Teammate ${m.email} is not in the registered whitelist. Tell your team member to register on Unstop and join the WhatsApp group to quickly resolve the issue.`);
         return;
       }
       if (m.status === 'already_in_team') {
@@ -337,6 +373,22 @@ export default function HackathonWorkspacePage() {
     }
   }
 
+  function handleToggleChangePS() {
+    if (!team) return;
+    setChangeVertical(team.vertical);
+    setChangePSId(team.problem_statement_id);
+    const willOpen = !isChangingPS;
+    setIsChangingPS(willOpen);
+    if (willOpen) {
+      setTimeout(() => {
+        const el = document.getElementById('problem-statement-switcher');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
+  }
+
   // Active Team: Add new teammate
   async function handleAddMemberToTeam(e: React.FormEvent) {
     e.preventDefault();
@@ -348,7 +400,7 @@ export default function HackathonWorkspacePage() {
     }
 
     if (newMemberStatus === 'not_whitelisted') {
-      setMemberActionErr(`Teammate ${newMemberEmail} is not authorized on the whitelist.`);
+      setMemberActionErr(`Teammate ${newMemberEmail} is not authorized on the whitelist. Tell your team member to register on Unstop and join the WhatsApp group to quickly resolve the issue.`);
       return;
     }
     if (newMemberStatus === 'already_in_team') {
@@ -547,8 +599,7 @@ export default function HackathonWorkspacePage() {
             </h1>
             <p className="font-sans text-sm sm:text-base text-slate-600 dark:text-slate-300 mt-1 max-w-2xl leading-relaxed">
               Form your team of 2 to 6 members, select your specialized domain track and problem
-              statement, and benchmark quantum algorithms across Processors A, B, and C before
-              proposing custom Processor D.
+              statement, and benchmark quantum algorithms across Processors A and B.
             </p>
           </div>
 
@@ -669,11 +720,7 @@ export default function HackathonWorkspacePage() {
                       {!isFinalized ? (
                         <button
                           type="button"
-                          onClick={() => {
-                            setChangeVertical(team.vertical);
-                            setChangePSId(team.problem_statement_id);
-                            setIsChangingPS(!isChangingPS);
-                          }}
+                          onClick={handleToggleChangePS}
                           className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-burgundy/30 bg-burgundy/5 dark:bg-burgundy/20 hover:bg-burgundy/10 text-burgundy dark:text-[#E89BA5] text-xs font-semibold transition-all cursor-pointer ml-0 sm:ml-1 mt-1 sm:mt-0"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
@@ -726,7 +773,10 @@ export default function HackathonWorkspacePage() {
 
                 {/* Change Problem Statement Drawer / Panel */}
                 {isChangingPS && (
-                  <div className="p-4 sm:p-5 rounded-xl border-2 border-burgundy/30 dark:border-[#E89BA5]/30 bg-slate-50/70 dark:bg-[#1A090C] space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div
+                    id="problem-statement-switcher"
+                    className="p-4 sm:p-5 rounded-xl border-2 border-burgundy/30 dark:border-[#E89BA5]/30 bg-slate-50/70 dark:bg-[#1A090C] space-y-4 animate-in fade-in slide-in-from-top-2 duration-200 scroll-mt-24"
+                  >
                     <div className="flex items-start justify-between gap-2 pb-3 border-b border-slate-200 dark:border-[#3D1418]">
                       <div>
                         <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-[#FAF6F3] flex items-center gap-2">
@@ -902,14 +952,41 @@ export default function HackathonWorkspacePage() {
                   )}
 
                   {memberActionErr && (
-                    <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-300 text-xs flex items-center justify-between gap-2 animate-in fade-in">
-                      <div className="flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
-                        <span>{memberActionErr}</span>
+                    <div className="p-3.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-300 text-xs space-y-2 animate-in fade-in">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                          <span>{memberActionErr}</span>
+                        </div>
+                        <button type="button" onClick={() => setMemberActionErr('')} className="p-1 text-rose-600 hover:text-rose-800 cursor-pointer">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
                       </div>
-                      <button type="button" onClick={() => setMemberActionErr('')} className="p-1 text-rose-600 hover:text-rose-800 cursor-pointer">
-                        <X className="w-3.5 h-3.5" />
-                      </button>
+                      {(memberActionErr.toLowerCase().includes('whitelist') ||
+                        memberActionErr.toLowerCase().includes('authorized') ||
+                        memberActionErr.toLowerCase().includes('unstop')) && (
+                        <div className="flex flex-wrap items-center gap-2 pl-6 pt-1">
+                          <a
+                            href={REGISTRATION_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-rose-100 hover:bg-rose-200 dark:bg-rose-900/40 dark:hover:bg-rose-900/70 text-rose-900 dark:text-rose-200 font-semibold text-xs transition-colors"
+                          >
+                            <span>Register on Unstop</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                          <a
+                            href={WHATSAPP_COMMUNITY_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-950/60 dark:hover:bg-emerald-900 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800 font-semibold text-xs transition-colors"
+                          >
+                            <MessageCircle className="w-3 h-3 text-[#25D366]" />
+                            <span>Join WhatsApp Group</span>
+                            <ExternalLink className="w-3 h-3 text-[#25D366]" />
+                          </a>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -964,6 +1041,66 @@ export default function HackathonWorkspacePage() {
                           />
                         </div>
                       </div>
+
+                      {/* Validation status badge */}
+                      {newMemberStatus !== 'idle' && (
+                        <div className="text-xs pt-1">
+                          {newMemberStatus === 'checking' && (
+                            <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                              <RefreshCw className="w-3 h-3 animate-spin text-slate-500 dark:text-slate-400" />
+                              Verifying platform whitelist...
+                            </span>
+                          )}
+
+                          {newMemberStatus === 'valid' && (
+                            <span className="text-emerald-700 dark:text-emerald-300 font-medium flex items-center gap-1">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                              Authorized & Available
+                            </span>
+                          )}
+
+                          {newMemberStatus === 'not_whitelisted' && (
+                            <div className="w-full rounded-lg border border-amber-300/80 dark:border-amber-700/60 bg-amber-50/90 dark:bg-amber-950/40 p-2.5 space-y-1.5 animate-in fade-in duration-200">
+                              <div className="flex items-center gap-1.5 font-semibold text-amber-800 dark:text-amber-300">
+                                <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+                                <span>Email not found in registered whitelist</span>
+                              </div>
+                              <p className="text-[11.5px] leading-relaxed text-amber-900/90 dark:text-amber-200/90 pl-5">
+                                Tell your team member to register on Unstop and join the WhatsApp group for quickly resolving the issue.
+                              </p>
+                              <div className="flex flex-wrap items-center gap-2 pl-5 pt-0.5">
+                                <a
+                                  href={REGISTRATION_URL}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-200/80 hover:bg-amber-300/90 dark:bg-amber-900/60 dark:hover:bg-amber-900 text-amber-950 dark:text-amber-100 font-semibold text-[11px] transition-colors"
+                                >
+                                  <span>Register on Unstop</span>
+                                  <ExternalLink className="w-3 h-3" />
+                                </a>
+                                <a
+                                  href={WHATSAPP_COMMUNITY_URL}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-950/60 dark:hover:bg-emerald-900 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800 font-semibold text-[11px] transition-colors"
+                                >
+                                  <MessageCircle className="w-3 h-3 text-[#25D366]" />
+                                  <span>Join WhatsApp Group</span>
+                                  <ExternalLink className="w-3 h-3 text-[#25D366]" />
+                                </a>
+                              </div>
+                            </div>
+                          )}
+
+                          {newMemberStatus === 'already_in_team' && (
+                            <span className="text-rose-700 dark:text-rose-300 font-medium flex items-center gap-1">
+                              <AlertCircle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                              Already registered in another team
+                            </span>
+                          )}
+                        </div>
+                      )}
+
                       <div className="flex justify-end gap-2 pt-1">
                         <button
                           type="button"
@@ -974,7 +1111,7 @@ export default function HackathonWorkspacePage() {
                         </button>
                         <button
                           type="submit"
-                          disabled={isSubmittingNewMember || !newMemberEmail.trim()}
+                          disabled={isSubmittingNewMember || !newMemberEmail.trim() || newMemberStatus === 'not_whitelisted' || newMemberStatus === 'checking'}
                           className="px-4 py-1.5 text-xs font-bold rounded bg-burgundy hover:bg-burgundy-deep text-white transition-colors disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
                         >
                           {isSubmittingNewMember ? (
@@ -1236,14 +1373,32 @@ export default function HackathonWorkspacePage() {
 
               {/* UNLOCKED PROBLEM STATEMENT DOSSIER */}
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-[#FAF6F3] flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
-                    Unlocked Problem Statement Dossier ({team.problem_statement_id})
-                  </h3>
-                  <span className="text-base text-slate-500 dark:text-slate-400">
-                    Confidential to Team {team.name}
-                  </span>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                  <div>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-[#FAF6F3] flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
+                      <span>Unlocked Problem Statement Dossier ({team.problem_statement_id})</span>
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      Confidential to Team {team.name}
+                    </p>
+                  </div>
+
+                  {!isFinalized ? (
+                    <button
+                      type="button"
+                      onClick={handleToggleChangePS}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-burgundy/30 bg-burgundy/5 dark:bg-burgundy/20 hover:bg-burgundy/10 text-burgundy dark:text-[#E89BA5] text-xs font-semibold transition-all cursor-pointer self-start sm:self-auto shadow-2xs"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>{isChangingPS ? 'Close Switcher' : 'Change Problem Statement'}</span>
+                    </button>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold bg-slate-100 dark:bg-[#1C0A0D] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-[#3D1418] self-start sm:self-auto">
+                      <Lock className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Track Locked</span>
+                    </span>
+                  )}
                 </div>
 
                 {selectedPSObj ? (
@@ -1360,9 +1515,35 @@ export default function HackathonWorkspacePage() {
                     </div>
 
                     {teamFormError && (
-                      <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-300 text-sm flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
-                        <span>{teamFormError}</span>
+                      <div className="p-3.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-300 text-xs sm:text-sm space-y-2">
+                        <div className="flex items-start gap-2">
+                          <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+                          <span className="leading-relaxed">{teamFormError}</span>
+                        </div>
+                        {(teamFormError.toLowerCase().includes('whitelist') ||
+                          teamFormError.toLowerCase().includes('unstop')) && (
+                          <div className="flex flex-wrap items-center gap-2 pl-6 pt-0.5">
+                            <a
+                              href={REGISTRATION_URL}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-rose-100 hover:bg-rose-200 dark:bg-rose-900/40 dark:hover:bg-rose-900/70 text-rose-900 dark:text-rose-200 font-semibold text-xs transition-colors"
+                            >
+                              <span>Register on Unstop</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                            <a
+                              href={WHATSAPP_COMMUNITY_URL}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-950/60 dark:hover:bg-emerald-900 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800 font-semibold text-xs transition-colors"
+                            >
+                              <MessageCircle className="w-3 h-3 text-[#25D366]" />
+                              <span>Join WhatsApp Group</span>
+                              <ExternalLink className="w-3 h-3 text-[#25D366]" />
+                            </a>
+                          </div>
+                        )}
                       </div>
                     )}
 

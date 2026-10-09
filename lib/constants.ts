@@ -4,3 +4,6 @@
 
 export const REGISTRATION_URL =
   'https://unstop.com/college-fests/qiskit-fall-fest-srmap-2026-srm-university-amaravati-515345';
+
+export const WHATSAPP_COMMUNITY_URL =
+  'https://chat.whatsapp.com/HoLFUpcm46L0qDE6VBdboW';

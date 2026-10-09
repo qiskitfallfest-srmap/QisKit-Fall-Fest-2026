@@ -7,7 +7,9 @@ import {
   AlertCircle,
   X,
   ExternalLink,
+  MessageCircle,
 } from 'lucide-react';
+import { REGISTRATION_URL, WHATSAPP_COMMUNITY_URL } from '@/lib/constants';
 
 interface AuthSession {
   email: string;
@@ -21,8 +23,7 @@ interface AuthGateProps {
   onSessionChange?: (session: AuthSession | null) => void;
 }
 
-const UNSTOP_REGISTRATION_URL =
-  'https://unstop.com/college-fests/qiskit-fall-fest-srmap-2026-srm-university-amaravati-515345';
+const UNSTOP_REGISTRATION_URL = REGISTRATION_URL;
 
 export function AuthGate({ children, onSessionChange }: AuthGateProps) {
   const [session, setSession] = useState<AuthSession | null>(null);
@@ -89,7 +90,7 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
         setShowToast(true);
         setErrorMessage(
           verifyData.error ||
-            'You are not eligible participant. Please register in Unstop and check back after October 7, 11:59 PM.'
+            'You are not found in the verified participant whitelist. Please register on Unstop and join our WhatsApp group to quickly resolve access.'
         );
         return false;
       } else {
@@ -300,7 +301,7 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
                 </button>
               </div>
               <p className="text-slate-700 dark:text-slate-300 mt-1 leading-relaxed">
-                You are not eligible participant. Please register in{' '}
+                You are not in the registered whitelist. Please register on{' '}
                 <a
                   href={UNSTOP_REGISTRATION_URL}
                   target="_blank"
@@ -310,7 +311,17 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
                   Unstop
                   <ExternalLink className="w-3 h-3 inline" />
                 </a>{' '}
-                and check back after <strong>few hours</strong>.
+                and join our{' '}
+                <a
+                  href={WHATSAPP_COMMUNITY_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold text-emerald-600 dark:text-emerald-400 underline inline-flex items-center gap-1 hover:text-emerald-700"
+                >
+                  WhatsApp group
+                  <ExternalLink className="w-3 h-3 inline" />
+                </a>{' '}
+                for quickly resolving the issue.
               </p>
             </div>
           </div>
@@ -336,21 +347,34 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
         {errorMessage && (
           <div className="mb-5 p-3.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-900 dark:text-rose-200 text-xs flex items-start gap-2.5">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" />
-            <div className="leading-relaxed">
+            <div className="leading-relaxed space-y-1.5">
               {errorMessage.toLowerCase().includes('eligible') ||
+              errorMessage.toLowerCase().includes('whitelist') ||
               errorMessage.toLowerCase().includes('unstop') ? (
                 <>
-                  <span>You are not eligible participant. Please register in </span>
-                  <a
-                    href={UNSTOP_REGISTRATION_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-bold text-burgundy dark:text-[#E89BA5] underline inline-flex items-center gap-1 hover:text-burgundy-deep"
-                  >
-                    Unstop
-                    <ExternalLink className="w-3 h-3 inline" />
-                  </a>
-                  <span> and check back after <strong>few hours</strong>.</span>
+                  <p>
+                    You are not in the registered whitelist. Please register on{' '}
+                    <a
+                      href={UNSTOP_REGISTRATION_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-bold text-burgundy dark:text-[#E89BA5] underline inline-flex items-center gap-1 hover:text-burgundy-deep"
+                    >
+                      Unstop
+                      <ExternalLink className="w-3 h-3 inline" />
+                    </a>{' '}
+                    and join the{' '}
+                    <a
+                      href={WHATSAPP_COMMUNITY_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-bold text-emerald-600 dark:text-emerald-400 underline inline-flex items-center gap-1 hover:text-emerald-700"
+                    >
+                      WhatsApp group
+                      <ExternalLink className="w-3 h-3 inline" />
+                    </a>{' '}
+                    for quickly resolving the issue.
+                  </p>
                 </>
               ) : (
                 <span className="font-medium">{errorMessage}</span>
