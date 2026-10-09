@@ -443,6 +443,47 @@ export function LearningSidebar() {
         </div>
       </div>
 
+      {/* Flagship: Python Coding Challenge in Qiskit */}
+      <Link
+        href="/learning/qiskit-challenge"
+        onClick={() => setIsMobileMenuOpen(false)}
+        className={clsx(
+          'w-full flex items-center justify-between px-3 py-2 mb-2 rounded-lg transition-colors text-xs sm:text-sm font-semibold group',
+          isCodingChallenge
+            ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] border border-burgundy/20 dark:border-burgundy/40 shadow-xs'
+            : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1C0A0D] border border-transparent'
+        )}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <Terminal
+            className={clsx(
+              'w-3.5 h-3.5 shrink-0',
+              isCodingChallenge
+                ? 'text-burgundy dark:text-[#E89BA5]'
+                : isChallengeLocked
+                ? 'text-amber-500'
+                : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
+            )}
+          />
+          <div className="flex flex-col min-w-0">
+            <span className="truncate">Coding Challenge</span>
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono font-normal">
+              9 Problems · 100 pts
+            </span>
+          </div>
+        </div>
+        {isChallengeLocked ? (
+          <span className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-mono font-semibold bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-500/20 flex items-center gap-1">
+            <Lock className="w-2.5 h-2.5" />
+            Soon
+          </span>
+        ) : (
+          <span className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+            ACTIVE
+          </span>
+        )}
+      </Link>
+
       <div className="mb-2">
         {/* Expandable Challenges Accordion Button */}
         <button
@@ -468,7 +509,7 @@ export function LearningSidebar() {
                 )}
               />
             )}
-            <span className="truncate">Challenges</span>
+            <span className="truncate">Daily Competitions</span>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             <span
@@ -588,46 +629,6 @@ export function LearningSidebar() {
           )}
         />
       </Link>
-
-      <Link
-        href="/learning/qiskit-challenge"
-        onClick={() => setIsMobileMenuOpen(false)}
-        className={clsx(
-          'w-full flex items-center justify-between px-3 py-2 mt-1 rounded-lg transition-colors text-xs sm:text-sm font-semibold group',
-          isCodingChallenge
-            ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] border border-burgundy/20 dark:border-burgundy/40 shadow-sm'
-            : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1C0A0D] border border-transparent'
-        )}
-      >
-        <div className="flex items-center gap-2 min-w-0">
-          <Terminal
-            className={clsx(
-              'w-3.5 h-3.5 shrink-0',
-              isCodingChallenge
-                ? 'text-burgundy dark:text-[#E89BA5]'
-                : isChallengeLocked
-                ? 'text-amber-500'
-                : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
-            )}
-          />
-          <div className="flex flex-col min-w-0">
-            <span className="truncate">Python Coding Challenge in Qiskit</span>
-            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono font-normal">
-              9 Problems · 100 pts
-            </span>
-          </div>
-        </div>
-        {isChallengeLocked ? (
-          <span className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-mono font-semibold bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-500/20 flex items-center gap-1">
-            <Lock className="w-2.5 h-2.5" />
-            Soon
-          </span>
-        ) : (
-          <span className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-            ACTIVE
-          </span>
-        )}
-      </Link>
     </>
   );
 
@@ -691,7 +692,7 @@ export function LearningSidebar() {
       {/* ─────────────────────────────────────────────────────────────
           1. MOBILE VIEW (< md): Sleek Sticky Header & Dropdown Drawer
          ───────────────────────────────────────────────────────────── */}
-      <div className="md:hidden w-full border-b border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] z-40 sticky top-0">
+      <div className="md:hidden w-full border-b border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] z-40 sticky top-[76px] sm:top-[82px]">
         <div className="px-4 py-2.5 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] uppercase tracking-wider shrink-0">
