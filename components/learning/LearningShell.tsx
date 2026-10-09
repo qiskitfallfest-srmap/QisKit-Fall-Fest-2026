@@ -197,7 +197,7 @@ export function LearningShell({ children, sidebar }: LearningShellProps) {
           isCollapsed ? 'hidden md:flex md:w-0 md:overflow-hidden md:border-r-0' : 'md:flex md:flex-col md:border-r md:overflow-hidden',
           isCodingChallenge
             ? 'md:relative md:h-full'
-            : 'md:sticky md:top-0 md:h-screen',
+            : 'md:sticky md:top-[82px] md:h-[calc(100dvh-82px)] xl:top-[88px] xl:h-[calc(100dvh-88px)]',
           'z-30 overscroll-contain',
           isDragging && 'select-none pointer-events-auto'
         )}
@@ -218,7 +218,12 @@ export function LearningShell({ children, sidebar }: LearningShellProps) {
           aria-valuemin={MIN_WIDTH}
           aria-valuemax={MAX_WIDTH}
           title="Drag to resize sidebar · Double-click to collapse"
-          className="hidden md:flex flex-col items-center justify-center w-2 h-full cursor-col-resize z-50 group select-none shrink-0 relative transition-colors -mx-1 px-1"
+          className={clsx(
+            'hidden md:flex flex-col items-center justify-center w-2 cursor-col-resize z-50 group select-none shrink-0 transition-colors -mx-1 px-1',
+            isCodingChallenge
+              ? 'relative h-full'
+              : 'sticky top-[82px] h-[calc(100dvh-82px)] xl:top-[88px] xl:h-[calc(100dvh-88px)]'
+          )}
         >
           {/* Subtle vertical indicator line */}
           <div
@@ -264,7 +269,12 @@ export function LearningShell({ children, sidebar }: LearningShellProps) {
           type="button"
           onClick={toggleCollapse}
           title="Expand Curriculum Sidebar"
-          className="hidden md:flex items-center gap-1.5 absolute top-3 left-3 z-30 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-white/95 dark:bg-[#150709]/95 backdrop-blur-xs text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-burgundy dark:hover:text-[#E89BA5] hover:bg-slate-50 dark:hover:bg-[#250D11] shadow-xs cursor-pointer transition-colors"
+          className={clsx(
+            'hidden md:flex items-center gap-1.5 z-30 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-white/95 dark:bg-[#150709]/95 backdrop-blur-xs text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-burgundy dark:hover:text-[#E89BA5] hover:bg-slate-50 dark:hover:bg-[#250D11] shadow-xs cursor-pointer transition-colors',
+            isCodingChallenge
+              ? 'absolute top-3 left-3'
+              : 'fixed top-[94px] xl:top-[100px] left-3'
+          )}
         >
           <PanelLeft className="w-3.5 h-3.5 text-burgundy dark:text-[#E89BA5]" />
           <span>Curriculum</span>

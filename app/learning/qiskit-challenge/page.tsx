@@ -382,103 +382,6 @@ function QiskitChallengeWorkspace() {
     }
   };
 
-  // If Challenge is locked and user is NOT an admin: Render Coming Soon Screen
-  if (!isLoadingStatus && isLocked && !isAdminUser) {
-    return (
-      <div className="min-h-screen bg-slate-50/60 dark:bg-[#100405] pb-16 font-sans">
-        {/* Navigation Breadcrumb Bar */}
-        <div className="bg-white dark:bg-[#150709] border-b border-slate-200 dark:border-[#3D1418]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-2">
-            <Link
-              href="/learning"
-              className="font-mono text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-burgundy dark:hover:text-[#E89BA5] flex items-center gap-1.5 transition-colors uppercase tracking-wider"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              Learning Hub
-            </Link>
-
-            <div className="flex items-center gap-2 font-mono text-xs">
-              <span className="text-slate-500 dark:text-slate-400">Competitive Arena</span>
-              <span className="text-slate-300 dark:text-slate-600">/</span>
-              <span className="font-bold text-amber-600 dark:text-amber-400">Challenge Locked</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-6 sm:pt-12 font-sans">
-          <div className="bg-white dark:bg-[#150709] rounded-2xl shadow-sm border border-slate-200 dark:border-[#3D1418] overflow-hidden text-center p-6 sm:p-10 space-y-6">
-            {/* Lock Icon */}
-            <div className="relative mx-auto w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center">
-              <div className="absolute inset-0 rounded-full bg-amber-500/10 dark:bg-amber-500/20 animate-ping opacity-60" />
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/80 flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-sm relative z-10">
-                <Lock className="w-8 h-8 sm:w-10 sm:h-10" />
-              </div>
-            </div>
-
-            {/* Title & Badge */}
-            <div className="space-y-2.5">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/70 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 font-mono text-xs font-semibold uppercase tracking-wider">
-                <Clock className="w-3.5 h-3.5" />
-                Coming Soon · Arena Locked
-              </div>
-              <h1 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight">
-                Python Coding Challenge in Qiskit
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-sans max-w-lg mx-auto">
-                The Python Coding Challenge in Qiskit arena is currently locked by the organizers.
-                Problem statements, the Monaco code editor, and the quantum test-suite judge will unlock at the scheduled launch time.
-              </p>
-            </div>
-
-            {/* Arena Highlights */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left max-w-lg mx-auto">
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] space-y-1">
-                <span className="font-mono text-[10px] uppercase font-bold text-burgundy dark:text-[#E89BA5]">
-                  9 Quantum Problems
-                </span>
-                <p className="text-xs text-slate-600 dark:text-slate-300">
-                  State prep, Bernstein-Vazirani, ZNE noise mitigation, QAOA & V2 Primitives.
-                </p>
-              </div>
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] space-y-1">
-                <span className="font-mono text-[10px] uppercase font-bold text-burgundy dark:text-[#E89BA5]">
-                  Real-Time Quantum Judge
-                </span>
-                <p className="text-xs text-slate-600 dark:text-slate-300">
-                  Built-in basis gate transpilation, unit testing, and instant score evaluation.
-                </p>
-              </div>
-            </div>
-
-            {/* Preparation Guidance */}
-            <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] max-w-lg mx-auto text-left space-y-2 text-xs text-slate-600 dark:text-slate-300">
-              <div className="flex items-center gap-2 font-semibold text-slate-800 dark:text-slate-200 font-sans">
-                <Info className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
-                How to prepare while waiting:
-              </div>
-              <ul className="list-disc list-inside space-y-1.5 pl-1 leading-relaxed">
-                <li>Review the 6 Online Masterclass lectures and concept quizzes</li>
-                <li>Familiarize yourself with Qiskit 1.2+ syntax and QuantumCircuit methods</li>
-                <li>Practice state vector calculations, Pauli expectation values, and Bell states</li>
-              </ul>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-              <Link
-                href="/learning"
-                className="w-full sm:w-auto px-5 py-2.5 bg-burgundy hover:bg-burgundy-deep text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
-              >
-                <PlayCircle className="w-4 h-4" />
-                Go to Curriculum Masterclasses
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   const selectedChallenge: CodingChallenge =
     challenges.find((c) => c.id === selectedProblemId) || challenges[0] || QISKIT_CHALLENGES[0];
 
@@ -617,6 +520,103 @@ function QiskitChallengeWorkspace() {
       document.body.style.userSelect = '';
     };
   }, [isResizing]);
+
+  // If Challenge is locked and user is NOT an admin: Render Coming Soon Screen
+  if (!isLoadingStatus && isLocked && !isAdminUser) {
+    return (
+      <div className="min-h-screen bg-slate-50/60 dark:bg-[#100405] pb-16 font-sans">
+        {/* Navigation Breadcrumb Bar */}
+        <div className="bg-white dark:bg-[#150709] border-b border-slate-200 dark:border-[#3D1418]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-2">
+            <Link
+              href="/learning"
+              className="font-mono text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-burgundy dark:hover:text-[#E89BA5] flex items-center gap-1.5 transition-colors uppercase tracking-wider"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Learning Hub
+            </Link>
+
+            <div className="flex items-center gap-2 font-mono text-xs">
+              <span className="text-slate-500 dark:text-slate-400">Competitive Arena</span>
+              <span className="text-slate-300 dark:text-slate-600">/</span>
+              <span className="font-bold text-amber-600 dark:text-amber-400">Challenge Locked</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-6 sm:pt-12 font-sans">
+          <div className="bg-white dark:bg-[#150709] rounded-2xl shadow-sm border border-slate-200 dark:border-[#3D1418] overflow-hidden text-center p-6 sm:p-10 space-y-6">
+            {/* Lock Icon */}
+            <div className="relative mx-auto w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full bg-amber-500/10 dark:bg-amber-500/20 animate-ping opacity-60" />
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/80 flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-sm relative z-10">
+                <Lock className="w-8 h-8 sm:w-10 sm:h-10" />
+              </div>
+            </div>
+
+            {/* Title & Badge */}
+            <div className="space-y-2.5">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/70 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 font-mono text-xs font-semibold uppercase tracking-wider">
+                <Clock className="w-3.5 h-3.5" />
+                Coming Soon · Arena Locked
+              </div>
+              <h1 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight">
+                Python Coding Challenge in Qiskit
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-sans max-w-lg mx-auto">
+                The Python Coding Challenge in Qiskit arena is currently locked by the organizers.
+                Problem statements, the Monaco code editor, and the quantum test-suite judge will unlock at the scheduled launch time.
+              </p>
+            </div>
+
+            {/* Arena Highlights */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left max-w-lg mx-auto">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] space-y-1">
+                <span className="font-mono text-[10px] uppercase font-bold text-burgundy dark:text-[#E89BA5]">
+                  9 Quantum Problems
+                </span>
+                <p className="text-xs text-slate-600 dark:text-slate-300">
+                  State prep, Bernstein-Vazirani, ZNE noise mitigation, QAOA & V2 Primitives.
+                </p>
+              </div>
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] space-y-1">
+                <span className="font-mono text-[10px] uppercase font-bold text-burgundy dark:text-[#E89BA5]">
+                  Real-Time Quantum Judge
+                </span>
+                <p className="text-xs text-slate-600 dark:text-slate-300">
+                  Built-in basis gate transpilation, unit testing, and instant score evaluation.
+                </p>
+              </div>
+            </div>
+
+            {/* Preparation Guidance */}
+            <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] max-w-lg mx-auto text-left space-y-2 text-xs text-slate-600 dark:text-slate-300">
+              <div className="flex items-center gap-2 font-semibold text-slate-800 dark:text-slate-200 font-sans">
+                <Info className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
+                How to prepare while waiting:
+              </div>
+              <ul className="list-disc list-inside space-y-1.5 pl-1 leading-relaxed">
+                <li>Review the 6 Online Masterclass lectures and concept quizzes</li>
+                <li>Familiarize yourself with Qiskit 1.2+ syntax and QuantumCircuit methods</li>
+                <li>Practice state vector calculations, Pauli expectation values, and Bell states</li>
+              </ul>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+              <Link
+                href="/learning"
+                className="w-full sm:w-auto px-5 py-2.5 bg-burgundy hover:bg-burgundy-deep text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+              >
+                <PlayCircle className="w-4 h-4" />
+                Go to Curriculum Masterclasses
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

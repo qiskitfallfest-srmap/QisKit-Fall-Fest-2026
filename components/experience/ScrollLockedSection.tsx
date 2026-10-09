@@ -79,16 +79,16 @@ export function ScrollLockedSection({
 
   // Keep latest state in refs for stable wheel handling without recreating event listener
   const currentIndexRef = React.useRef(currentIndex);
-  currentIndexRef.current = currentIndex;
-
   const itemCountRef = React.useRef(itemCount);
-  itemCountRef.current = itemCount;
-
   const onIndexChangeRef = React.useRef(onIndexChange);
-  onIndexChangeRef.current = onIndexChange;
-
   const controlledIndexRef = React.useRef(controlledIndex);
-  controlledIndexRef.current = controlledIndex;
+
+  React.useEffect(() => {
+    currentIndexRef.current = currentIndex;
+    itemCountRef.current = itemCount;
+    onIndexChangeRef.current = onIndexChange;
+    controlledIndexRef.current = controlledIndex;
+  });
 
   const cooldownUntilRef = React.useRef(0);
   const wheelAccumulatorYRef = React.useRef(0);
