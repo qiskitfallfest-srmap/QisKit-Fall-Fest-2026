@@ -77,14 +77,59 @@ export class MockQuantumCircuit {
   }
   copy() {
     const c = new MockQuantumCircuit(this.numQubits, this.numClbits);
-    c.gates = this.gates.map((g) => ({ ...g }));
+    c.gates = this.gates.map((g) => ({ ...g, params: g.params ? [...g.params] : undefined }));
+    if ((this as any).boundValues) (c as any).boundValues = [...(this as any).boundValues];
     return c;
+  }
+  inverse() {
+    const c = new MockQuantumCircuit(this.numQubits, this.numClbits);
+    const invMap: Record<string, string> = { s: 'sdg', sdg: 's', t: 'tdg', tdg: 't' };
+    c.gates = [...this.gates]
+      .filter((g) => g.name !== 'measure')
+      .reverse()
+      .map((g) => ({
+        ...g,
+        name: invMap[g.name] || g.name,
+        params: g.params ? g.params.map((p) => (typeof p === 'number' ? -p : p)) : undefined,
+      }));
+    return c;
+  }
+  assign_parameters(vals: any, inplace: boolean = false) {
+    const c = inplace ? this : this.copy();
+    const valArr: number[] = Array.isArray(vals)
+      ? vals.map(Number)
+      : vals && typeof vals === 'object'
+      ? Object.values(vals).map(Number)
+      : [];
+    (c as any).boundValues = valArr;
+    let pIdx = 0;
+    c.gates = c.gates.map((g) => {
+      if (g.params && g.params.length > 0) {
+        const newParams = g.params.map((p: any) => {
+          if (valArr.length === 1) return valArr[0];
+          const v = valArr[Math.min(pIdx, valArr.length - 1)];
+          pIdx++;
+          return typeof v === 'number' ? v : p;
+        });
+        return { ...g, params: newParams };
+      }
+      return { ...g };
+    });
+    return c;
+  }
+  bind_parameters(vals: any) {
+    return this.assign_parameters(vals, false);
+  }
+  get parameters() {
+    if ((this as any)._parameters) return (this as any)._parameters;
+    const paramGates = this.gates.filter((g) => g.params && g.params.length > 0);
+    return paramGates.map((_, i) => `param_${i}`);
   }
   draw() { return ''; }
   compose(other: any, qubits?: number[], clbits?: number[], inplace: boolean = true) {
     if (other && other.gates) {
       for (const g of other.gates) {
-        this.gates.push({ ...g });
+        this.gates.push({ ...g, params: g.params ? [...g.params] : undefined });
       }
     }
     return this;
@@ -92,10 +137,17 @@ export class MockQuantumCircuit {
   append(gate: any, qubits?: number[], clbits?: number[]) {
     if (gate && gate.gates) {
       for (const g of gate.gates) {
-        this.gates.push({ ...g });
+        this.gates.push({ ...g, params: g.params ? [...g.params] : undefined });
       }
     } else {
-      this.gates.push({ name: gate?.name || 'custom_gate', qubits: qubits || [0], clbits: clbits || [] });
+      const qNorm = (qubits || [0]).map((q: any) => (typeof q === 'number' ? q : (q?.index ?? 0)));
+      const cNorm = (clbits || []).map((c: any) => (typeof c === 'number' ? c : (c?.index ?? 0)));
+      this.gates.push({
+        name: gate?.name || 'custom_gate',
+        qubits: qNorm,
+        clbits: cNorm,
+        params: gate?.params ? [...gate.params] : undefined,
+      });
     }
     return this;
   }
@@ -240,8 +292,21 @@ export function transpilePythonToJS(pyCode: string): string {
     // Type annotations on variable assignments like: qc: QuantumCircuit = QuantumCircuit(n)
     trimmed = trimmed.replace(/^([a-zA-Z0-9_]+)\s*:\s*[a-zA-Z0-9_\[\],\s]+\s*=/, '$1 =');
 
-    // Support slice [::-1]
-    trimmed = trimmed.replace(/\[::-1\]/g, '.split("").reverse().join("")');
+    // Support slice [::-1] and common Python expression methods before control-flow matching
+    trimmed = trimmed
+      .replace(/\[::-1\]/g, '.split("").reverse().join("")')
+      .replace(/\.append\(/g, '.push(')
+      .replace(/\.lower\(\)/g, '.toLowerCase()')
+      .replace(/\.upper\(\)/g, '.toUpperCase()')
+      .replace(/\.strip\(\)/g, '.trim()')
+      .replace(/\.startswith\(/g, '.startsWith(')
+      .replace(/\.endswith\(/g, '.endsWith(')
+      .replace(/\.replace\(\s*["']\s*["']\s*,\s*["']["']\s*\)/g, '.replaceAll(" ", "")')
+      .replace(/([a-zA-Z0-9_]+(?:\.[a-zA-Z0-9_]+)*)\.items\(\)/g, 'Object.entries($1)')
+      .replace(/([a-zA-Z0-9_]+(?:\.[a-zA-Z0-9_]+)*)\.values\(\)/g, 'Object.values($1)')
+      .replace(/([a-zA-Z0-9_]+(?:\.[a-zA-Z0-9_]+)*)\.keys\(\)/g, 'Object.keys($1)')
+      .replace(/(\([^)]+\)|[a-zA-Z0-9_.]+)\s*\/\/\s*(\([^)]+\)|[a-zA-Z0-9_.]+)/g, 'Math.floor($1 / $2)')
+      .replace(/([a-zA-Z0-9_]+(?:\.[a-zA-Z0-9_]+)*)\[\s*(-[^\[\]]+)\s*\]/g, '$1.at($2)');
 
     // def func(...) -> Ret:
     const defMatch = trimmed.match(/^def\s+([a-zA-Z0-9_]+)\s*\((.*?)\)(\s*->.*?)?:$/);
@@ -343,14 +408,22 @@ export function transpilePythonToJS(pyCode: string): string {
       .replace(/\band\b/g, '&&')
       .replace(/\bor\b/g, '||')
       .replace(/\bnot\b/g, '!')
-      .replace(/\.append\(/g, '.push(')
-      .replace(/\.lower\(\)/g, '.toLowerCase()')
-      .replace(/\.upper\(\)/g, '.toUpperCase()')
-      .replace(/\.strip\(\)/g, '.trim()')
-      .replace(/\.startswith\(/g, '.startsWith(')
-      .replace(/\.endswith\(/g, '.endsWith(');
+      .replace(/,\s*(?:inplace|dtype|optimization_level|seed_transpiler)\s*=\s*[^,)]+/g, '')
+      .replace(/\b(?:coupling_map|basis_gates|qubits|clbits|operation)\s*=\s*/g, '');
 
-    // Support list comprehensions: [expr for var in iterable]
+    // Support conditional list comprehensions: [expr for var in iterable if cond]
+    transformed = transformed.replace(
+      /\[\s*(.+?)\s+for\s+([a-zA-Z0-9_,\s()]+)\s+in\s+([^\]]+?)\s+if\s+([^\]]+?)\s*\]/g,
+      (_, expr, varName, iter, cond) => {
+        let v = varName.trim();
+        if (v.includes(',')) {
+          if (!v.startsWith('[') && !v.startsWith('(')) v = `[${v}]`;
+        }
+        return `Array.from(${iter}).filter((${v}) => ${cond}).map((${v}) => ${expr})`;
+      }
+    );
+
+    // Support basic list comprehensions: [expr for var in iterable]
     transformed = transformed.replace(
       /\[\s*(.+?)\s+for\s+([a-zA-Z0-9_,\s()]+)\s+in\s+([^\]]+?)\s*\]/g,
       (_, expr, varName, iter) => {
@@ -373,12 +446,21 @@ export function transpilePythonToJS(pyCode: string): string {
       declaredVars.add(varName);
       transformed = `${prefix}${varName} = (${cond}) ? (${expr1}) : (${expr2})`;
     } else {
-      const assignMatch = transformed.match(/^([a-zA-Z0-9_]+)\s*=/);
-      if (assignMatch) {
-        const vName = assignMatch[1];
-        if (!declaredVars.has(vName)) {
-          declaredVars.add(vName);
-          transformed = 'let ' + transformed;
+      const tupleAssignMatch = transformed.match(/^([a-zA-Z0-9_]+\s*,\s*[a-zA-Z0-9_,\s]+)\s*=\s*(.+)$/);
+      if (tupleAssignMatch) {
+        const lhsVars = tupleAssignMatch[1].split(',').map((s) => s.trim());
+        const rhs = tupleAssignMatch[2].trim();
+        lhsVars.forEach((v) => declaredVars.add(v));
+        const rhsWrapped = rhs.includes(',') && !rhs.startsWith('[') ? `[${rhs}]` : rhs;
+        transformed = `let [${lhsVars.join(', ')}] = ${rhsWrapped}`;
+      } else {
+        const assignMatch = transformed.match(/^([a-zA-Z0-9_]+)\s*=/);
+        if (assignMatch) {
+          const vName = assignMatch[1];
+          if (!declaredVars.has(vName)) {
+            declaredVars.add(vName);
+            transformed = 'let ' + transformed;
+          }
         }
       }
     }
@@ -399,10 +481,49 @@ export function transpilePythonToJS(pyCode: string): string {
 }
 
 /**
+ * Helper for linear least-squares polynomial fit (degree 1) used in ZNE.
+ */
+function polyfitLinear(x: number[], y: number[]): number[] {
+  const n = Math.min(x.length, y.length);
+  if (n === 0) return [0, 0];
+  let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+  for (let i = 0; i < n; i++) {
+    sumX += x[i];
+    sumY += y[i];
+    sumXY += x[i] * y[i];
+    sumXX += x[i] * x[i];
+  }
+  const denom = n * sumXX - sumX * sumX;
+  if (Math.abs(denom) < 1e-12) return [0, sumY / n];
+  const slope = (n * sumXY - sumX * sumY) / denom;
+  const intercept = (sumY - slope * sumX) / n;
+  return [slope, intercept];
+}
+
+/**
  * Creates sandbox scope with simulated Qiskit environment and evaluates user code.
  */
 function executeUserFunction(pyCode: string, targetFunctionName: string): any {
   const js = transpilePythonToJS(pyCode);
+
+  const npModule = {
+    array: (arr: any) => (Array.isArray(arr) ? [...arr] : Array.from(arr || [])),
+    asarray: (arr: any) => (Array.isArray(arr) ? [...arr] : Array.from(arr || [])),
+    zeros: (n: number) => new Array(n).fill(0),
+    clip: (val: any, minVal: number, maxVal: number) => {
+      if (Array.isArray(val)) return val.map((v) => Math.min(maxVal, Math.max(minVal, Number(v))));
+      return Math.min(maxVal, Math.max(minVal, Number(val)));
+    },
+    polyfit: (x: number[], y: number[], _deg: number = 1) => polyfitLinear(x, y),
+    polyval: (coeffs: number[], x: number) => coeffs[0] * x + (coeffs[1] ?? 0),
+    real: (x: any) => Number(x),
+    pi: Math.PI,
+    sin: Math.sin,
+    cos: Math.cos,
+    exp: Math.exp,
+    sqrt: Math.sqrt,
+    number: Number,
+  };
 
   const sandbox: Record<string, any> = {
     pass: undefined,
@@ -418,6 +539,77 @@ function executeUserFunction(pyCode: string, targetFunctionName: string): any {
     document: undefined,
     QuantumCircuit: function (numQubits: number, numClbits: number = 0) {
       return new MockQuantumCircuit(numQubits, numClbits);
+    },
+    transpile: function (qc: MockQuantumCircuit, coupling?: number[][]) {
+      const out = new MockQuantumCircuit(qc.numQubits, qc.numClbits);
+      const edges = Array.isArray(coupling) ? coupling : [];
+      const dirSet = new Set(edges.map((e) => `${e[0]},${e[1]}`));
+
+      const emitBasisH = (q: number) => {
+        out.rz(Math.PI / 2, q);
+        out.sx(q);
+        out.rz(Math.PI / 2, q);
+      };
+
+      const emitDirectedCX = (u: number, v: number) => {
+        if (dirSet.has(`${u},${v}`) || dirSet.size === 0) {
+          out.cx(u, v);
+        } else {
+          emitBasisH(u);
+          emitBasisH(v);
+          out.cx(v, u);
+          emitBasisH(u);
+          emitBasisH(v);
+        }
+      };
+
+      const emitSwap = (u: number, v: number) => {
+        emitDirectedCX(u, v);
+        emitDirectedCX(v, u);
+        emitDirectedCX(u, v);
+      };
+
+      const findUndirectedPath = (start: number, goal: number): number[] => {
+        if (start === goal) return [start];
+        const queue: number[][] = [[start]];
+        const visited = new Set<number>([start]);
+        while (queue.length > 0) {
+          const path = queue.shift()!;
+          const curr = path[path.length - 1];
+          for (const [a, b] of edges) {
+            const next = a === curr ? b : b === curr ? a : -1;
+            if (next !== -1 && !visited.has(next)) {
+              if (next === goal) return [...path, next];
+              visited.add(next);
+              queue.push([...path, next]);
+            }
+          }
+        }
+        return [start, goal];
+      };
+
+      for (const g of qc.gates || []) {
+        const name = g.name.toLowerCase();
+        if (name === 'h') {
+          emitBasisH(g.qubits[0]);
+        } else if (name === 'cx') {
+          const u = g.qubits[0];
+          const v = g.qubits[1];
+          const path = findUndirectedPath(u, v);
+          for (let i = 0; i < path.length - 2; i++) {
+            emitSwap(path[i], path[i + 1]);
+          }
+          emitDirectedCX(path[path.length - 2], path[path.length - 1]);
+          for (let i = path.length - 3; i >= 0; i--) {
+            emitSwap(path[i], path[i + 1]);
+          }
+        } else if (['rz', 'sx', 'x'].includes(name)) {
+          out.gates.push({ name, qubits: [...g.qubits], clbits: [...(g.clbits || [])], params: [...(g.params || [])] });
+        } else {
+          out.rz(g.params?.[0] ?? Math.PI / 2, g.qubits[0]);
+        }
+      }
+      return out;
     },
     len: (x: any) => (x ? (x.length !== undefined ? x.length : typeof x.size === 'function' ? x.size() : 0) : 0),
     range: (n1: number, n2?: number) => {
@@ -481,26 +673,8 @@ function executeUserFunction(pyCode: string, targetFunctionName: string): any {
       return true;
     },
     state_fidelity: (sv1: any, sv2: any) => 1.0,
-    np: {
-      array: (arr: any) => arr,
-      zeros: (n: number) => new Array(n).fill(0),
-      pi: Math.PI,
-      sin: Math.sin,
-      cos: Math.cos,
-      exp: Math.exp,
-      sqrt: Math.sqrt,
-      number: Number,
-    },
-    numpy: {
-      array: (arr: any) => arr,
-      zeros: (n: number) => new Array(n).fill(0),
-      pi: Math.PI,
-      sin: Math.sin,
-      cos: Math.cos,
-      exp: Math.exp,
-      sqrt: Math.sqrt,
-      number: Number,
-    },
+    np: npModule,
+    numpy: npModule,
     Parameter: function (name: string) { return { name }; },
     Statevector: Object.assign(
       function (qc: any) {
@@ -1066,7 +1240,7 @@ function evaluateP5(userCode: string, mode: 'run' | 'submit'): JudgeEvaluationRe
         if (!expectFn || typeof expectFn !== 'function') return "Function 'expectation_from_counts' not defined.";
         const v1 = expectFn({ "0": 750, "1": 250 }, "Z");
         const v2 = expectFn({ "0": 100, "1": 900 }, "Z");
-        if (typeof v1 !== 'number' || typeof v2 !== 'number') return "Expectation function must return float numbers.";
+        if (typeof v1 !== 'number' || typeof v2 !== 'number' || isNaN(v1) || isNaN(v2)) return "Expectation function must return float numbers.";
         if (Math.abs(v1 - 0.5) > 1e-3 || Math.abs(v2 - (-0.8)) > 1e-3) {
           return `Expected 0.5 and -0.8, received ${v1} and ${v2}.`;
         }
@@ -1080,6 +1254,7 @@ function evaluateP5(userCode: string, mode: 'run' | 'submit'): JudgeEvaluationRe
         if (!expectFn || typeof expectFn !== 'function') return "Function 'expectation_from_counts' not defined.";
         const v1 = expectFn({ "01": 500, "10": 500 }, "II");
         const v2 = expectFn({ "00": 300, "11": 700 }, "II");
+        if (typeof v1 !== 'number' || typeof v2 !== 'number' || isNaN(v1) || isNaN(v2)) return "Expectation function must return float numbers.";
         if (Math.abs(v1 - 1.0) > 1e-3 || Math.abs(v2 - 1.0) > 1e-3) {
           return `Expected 1.0 for all-I expectation, received ${v1} and ${v2}.`;
         }
@@ -1096,6 +1271,7 @@ function evaluateP5(userCode: string, mode: 'run' | 'submit'): JudgeEvaluationRe
         if (!circuitFn || typeof circuitFn !== 'function') return "Function 'pauli_measurement_circuit' not defined.";
         const qc = new MockQuantumCircuit(1);
         const measQc = circuitFn(qc, 'Y');
+        if (!measQc || typeof measQc !== 'object') return "Circuit function must return a QuantumCircuit.";
         const hasSdgOrRz = (measQc.gates || []).some((g: any) => (g.name === 'sdg' || g.name === 'rz') && g.qubits.includes(0));
         const hasH = (measQc.gates || []).some((g: any) => g.name === 'h' && g.qubits.includes(0));
         if (!hasSdgOrRz || !hasH) return "Y-basis rotation requires applying Sdg followed by Hadamard before measurement.";
@@ -1108,6 +1284,7 @@ function evaluateP5(userCode: string, mode: 'run' | 'submit'): JudgeEvaluationRe
       run: () => {
         if (!expectFn || typeof expectFn !== 'function') return "Function 'expectation_from_counts' not defined.";
         const v = expectFn({ "00": 300, "01": 200, "10": 100, "11": 400 }, "XZ");
+        if (typeof v !== 'number' || isNaN(v)) return "Expectation function must return a float number.";
         if (Math.abs(v - 0.4) > 1e-3) return `Expected 0.4 for XZ, received ${v}.`;
         return true;
       },
@@ -1118,6 +1295,7 @@ function evaluateP5(userCode: string, mode: 'run' | 'submit'): JudgeEvaluationRe
       run: () => {
         if (!expectFn || typeof expectFn !== 'function') return "Function 'expectation_from_counts' not defined.";
         const v = expectFn({ "000": 500, "101": 500 }, "ZIZ");
+        if (typeof v !== 'number' || isNaN(v)) return "Expectation function must return a float number.";
         if (Math.abs(v - 1.0) > 1e-3) return `Expected 1.0 for ZIZ, received ${v}.`;
         return true;
       },
@@ -1183,15 +1361,16 @@ function evaluateP6(userCode: string, mode: 'run' | 'submit'): JudgeEvaluationRe
         const nominal = Math.PI / 4;
         const evalFn = (c: any) => {
           calls++;
-          // Expect objective f(θ) = cos(θ)
-          const theta = c?.params?.[0] ?? nominal;
+          const theta = (c as any)?.boundValues?.[0] ?? c?.gates?.[0]?.params?.[0] ?? c?.params?.[0] ?? nominal;
           return Math.cos(theta);
         };
         const grad = func(new MockQuantumCircuit(1).rx(nominal, 0), [nominal], evalFn);
         if (!Array.isArray(grad) || grad.length !== 1) return "Gradient output must be a 1D array matching parameter count.";
         if (calls < 2) return "Parameter shift rule requires evaluating circuit at shifted parameter angles (+/- pi/2).";
         const ref = -Math.sin(nominal);
-        if (Math.abs(grad[0] - ref) > 1e-4) return `Gradient error: expected ${ref.toFixed(6)}, got ${grad[0]}.`;
+        if (typeof grad[0] !== 'number' || isNaN(grad[0]) || Math.abs(grad[0] - ref) > 1e-4) {
+          return `Gradient error: expected ${ref.toFixed(6)}, got ${grad[0]}.`;
+        }
         return true;
       },
     },
@@ -1203,7 +1382,7 @@ function evaluateP6(userCode: string, mode: 'run' | 'submit'): JudgeEvaluationRe
         const vals = [0.6, 1.2];
         const evalFn = (c: any) => {
           calls++;
-          const t1 = c?.params?.[0] ?? vals[0];
+          const t1 = (c as any)?.boundValues?.[0] ?? c?.gates?.[0]?.params?.[0] ?? c?.params?.[0] ?? vals[0];
           return Math.cos(t1);
         };
         const grad = func(new MockQuantumCircuit(1).ry(vals[0], 0).rz(vals[1], 0), vals, evalFn);
@@ -1211,7 +1390,14 @@ function evaluateP6(userCode: string, mode: 'run' | 'submit'): JudgeEvaluationRe
         if (calls < 4) return "Parameter shift rule requires evaluating each parameter (+/- pi/2).";
         const ref0 = -Math.sin(vals[0]);
         const ref1 = 0.0;
-        if (Math.abs(grad[0] - ref0) > 1e-4 || Math.abs(grad[1] - ref1) > 1e-4) {
+        if (
+          typeof grad[0] !== 'number' ||
+          typeof grad[1] !== 'number' ||
+          isNaN(grad[0]) ||
+          isNaN(grad[1]) ||
+          Math.abs(grad[0] - ref0) > 1e-4 ||
+          Math.abs(grad[1] - ref1) > 1e-4
+        ) {
           return `Gradient error: expected [${ref0.toFixed(4)}, ${ref1.toFixed(4)}], got [${grad[0]}, ${grad[1]}].`;
         }
         return true;
@@ -1228,14 +1414,21 @@ function evaluateP6(userCode: string, mode: 'run' | 'submit'): JudgeEvaluationRe
         const vals = [0.4];
         const evalFn = (c: any) => {
           calls++;
-          const t = c?.params?.[0] ?? vals[0];
-          return Math.cos(2 * t);
+          const g0 = c?.gates?.[0]?.params?.[0];
+          const g1 = c?.gates?.[1]?.params?.[0];
+          if (typeof g0 === 'number' && typeof g1 === 'number' && Math.abs(g0 - g1) > 1e-6) {
+            return Math.cos(g0 + g1);
+          }
+          const t = (c as any)?.boundValues?.[0] ?? g0 ?? c?.params?.[0] ?? vals[0];
+          return 2 * Math.cos(t + vals[0]);
         };
         const grad = func(new MockQuantumCircuit(1).rx(0.4, 0).rx(0.4, 0), vals, evalFn);
         if (!Array.isArray(grad) || grad.length !== 1) return "Gradient shape mismatch: expected 1D array of length 1.";
         if (calls < 2) return "Parameter shift rule requires evaluating circuit at shifted parameter angles (+/- pi/2).";
         const ref = -2 * Math.sin(0.8);
-        if (Math.abs(grad[0] - ref) > 1e-4) return `Gradient error: expected ${ref.toFixed(4)}, got ${grad[0]}.`;
+        if (typeof grad[0] !== 'number' || isNaN(grad[0]) || Math.abs(grad[0] - ref) > 1e-4) {
+          return `Gradient error: expected ${ref.toFixed(4)}, got ${grad[0]}.`;
+        }
         return true;
       },
     },
