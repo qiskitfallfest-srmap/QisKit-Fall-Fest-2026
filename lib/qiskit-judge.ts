@@ -258,6 +258,21 @@ export async function dispatchJudgeEvaluation(
   return evaluateProblemWithTypeScript(problemId, sourceCode, mode);
 }
 
+function getPythonExecutable(): string {
+  if (process.env.PYTHON_BIN) return process.env.PYTHON_BIN;
+  if (process.platform === 'win32') {
+    const knownPaths = [
+      'C:\\Users\\smsub\\AppData\\Local\\Programs\\Python\\Python310\\python.exe',
+      path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Python', 'Python310', 'python.exe'),
+    ];
+    for (const p of knownPaths) {
+      if (fs.existsSync(p)) return p;
+    }
+    return 'python';
+  }
+  return 'python3';
+}
+
 /**
  * Runs local Python runner `qiskit-judge/runner.py`.
  */
@@ -289,7 +304,7 @@ function executeLocalRunner(
 
     let py: any;
     try {
-      const pythonCmd = process.env.PYTHON_BIN || (process.platform === 'win32' ? 'python' : 'python3');
+      const pythonCmd = getPythonExecutable();
       py = spawn(pythonCmd, [runnerPath], {
         stdio: ['pipe', 'pipe', 'pipe'],
         env: {

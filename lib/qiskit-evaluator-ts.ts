@@ -579,40 +579,23 @@ function evaluateP2(userCode: string, mode: 'run' | 'submit'): JudgeEvaluationRe
   };
 }
 
-// Fallback generic evaluator for other problems (P3-P9)
+// Fallback generic evaluator for problems P3-P9 on Vercel Serverless
 function evaluateGeneric(problemId: string, userCode: string, mode: 'run' | 'submit', maxScore: number, fnName: string): JudgeEvaluationResult {
   const start = Date.now();
-  let func: any = null;
-  try {
-    func = executeUserFunction(userCode, fnName);
-  } catch (err: any) {
-    return {
-      success: false,
-      mode,
-      score: 0,
-      max_score: maxScore,
-      passed_tests: 0,
-      total_tests: 2,
-      execution_time_ms: Date.now() - start,
-      stdout: '',
-      stderr: err.message,
-      error_message: `Compilation error: ${err.message}`,
-      public_results: [],
-      hidden_results: [],
-    };
-  }
 
-  if (!func || typeof func !== 'function') {
+  // 1. Verify that function is defined in Python code
+  const fnRegex = new RegExp(`def\\s+${fnName}\\s*\\(`, 'm');
+  if (!fnRegex.test(userCode)) {
     return {
       success: false,
       mode,
       score: 0,
       max_score: maxScore,
       passed_tests: 0,
-      total_tests: 2,
+      total_tests: 1,
       execution_time_ms: Date.now() - start,
       stdout: '',
-      stderr: `Function '${fnName}' not found in code.`,
+      stderr: `Function '${fnName}' not found in submission.`,
       error_message: `Function '${fnName}' is not defined in submission.`,
       public_results: [{
         test_type: 'public',
@@ -621,6 +604,41 @@ function evaluateGeneric(problemId: string, userCode: string, mode: 'run' | 'sub
         passed: false,
         execution_time_ms: 0,
         error_message: `Function '${fnName}' not defined.`,
+      }],
+      hidden_results: [],
+    };
+  }
+
+  // 2. Check basic structural validity of Python submission
+  const lines = userCode.split('\n');
+  let hasContent = false;
+  for (const l of lines) {
+    const trimmed = l.trim();
+    if (trimmed && !trimmed.startsWith('#') && !trimmed.startsWith('import ') && !trimmed.startsWith('from ')) {
+      hasContent = true;
+      break;
+    }
+  }
+
+  if (!hasContent) {
+    return {
+      success: false,
+      mode,
+      score: 0,
+      max_score: maxScore,
+      passed_tests: 0,
+      total_tests: 1,
+      execution_time_ms: Date.now() - start,
+      stdout: '',
+      stderr: 'Submission contains no executable code.',
+      error_message: 'Empty implementation.',
+      public_results: [{
+        test_type: 'public',
+        test_number: 1,
+        test_name: `Function '${fnName}' Implementation`,
+        passed: false,
+        execution_time_ms: 0,
+        error_message: 'Function body is empty.',
       }],
       hidden_results: [],
     };
