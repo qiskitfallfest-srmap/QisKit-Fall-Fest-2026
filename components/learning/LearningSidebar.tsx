@@ -128,6 +128,16 @@ export function LearningSidebar() {
     };
   }, [fetchSidebarProgress]);
 
+  useEffect(() => {
+    const handleOpenCertModal = () => {
+      setIsCertModalOpen(true);
+    };
+    window.addEventListener('open-certificate-modal', handleOpenCertModal);
+    return () => {
+      window.removeEventListener('open-certificate-modal', handleOpenCertModal);
+    };
+  }, []);
+
   const fetchSession = React.useCallback(async () => {
     try {
       const res = await fetch('/api/auth/session');
