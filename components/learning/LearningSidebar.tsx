@@ -29,6 +29,7 @@ import { DAILY_COMPETITIONS } from '@/data/learning/competitions';
 import { useCurriculumSessions } from '@/hooks/use-curriculum-sessions';
 import { useQuizzes } from '@/hooks/use-quizzes';
 import { useCodingChallengeStatus } from '@/hooks/use-coding-challenge';
+import { CertificateModal } from '@/components/learning/CertificateModal';
 
 const DAYS = [
   { id: 1, label: 'Day 1: Foundations' },
@@ -84,6 +85,7 @@ export function LearningSidebar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [progress, setProgress] = useState<Record<string, any>>({});
   const [competitions, setCompetitions] = useState<Record<string, any>>({});
+  const [isCertModalOpen, setIsCertModalOpen] = useState(false);
 
   const fetchSidebarProgress = React.useCallback(async () => {
     try {
@@ -201,6 +203,23 @@ export function LearningSidebar() {
     const comp = DAILY_COMPETITIONS[Number(activeChallengeDay)];
     activeMobileTitle = comp ? comp.title : `Day ${activeChallengeDay} Challenge`;
   }
+
+  // Calculate overall sidebar completion stats & certificate eligibility
+  const totalCurriculumSessions = sessions.length || CURRICULUM_SESSIONS.length || 5;
+  const completedVideosCount = sessions.filter((s) => progress[s.id]?.videoCompleted).length;
+  const passedQuizzesCount = sessions.filter((s) => progress[s.id]?.quizPassed).length;
+  const isCertEligible =
+    totalCurriculumSessions > 0 &&
+    completedVideosCount === totalCurriculumSessions &&
+    passedQuizzesCount === totalCurriculumSessions;
+
+  const completedSessionsCount = sessions.filter(
+    (s) => progress[s.id]?.videoCompleted && progress[s.id]?.quizPassed
+  ).length;
+  const submittedChallengesCount = Object.keys(competitions).length;
+  const totalTasks = totalCurriculumSessions + 3;
+  const completedTasks = completedSessionsCount + submittedChallengesCount;
+  const overallProgressPercent = Math.min(100, Math.round((completedTasks / totalTasks) * 100));
 
   // Navigation Items Renderer
   const renderNavContent = () => (
@@ -589,8 +608,61 @@ export function LearningSidebar() {
         )}
       </div>
 
-      {/* Section 3: Hackathon Phase Header */}
-      <div className="pt-4 pb-2 px-1">
+      {/* Section 3: Certification */}
+      <div className="pt-3 pb-1 px-1">
+        <div className="flex items-center gap-2 px-2">
+          <span className="font-mono text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
+            Certification
+          </span>
+          <div className="flex-1 h-px bg-slate-200/80 dark:bg-[#3D1418]" />
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => {
+          setIsCertModalOpen(true);
+          setIsMobileMenuOpen(false);
+        }}
+        className={clsx(
+          'w-full flex items-center justify-between px-3 py-2 mb-2 rounded-lg transition-colors text-xs sm:text-sm font-semibold group cursor-pointer border text-left',
+          isCertEligible
+            ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] border-burgundy/20 dark:border-burgundy/40 shadow-xs'
+            : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1C0A0D] border-transparent'
+        )}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <Award
+            className={clsx(
+              'w-3.5 h-3.5 shrink-0',
+              isCertEligible
+                ? 'text-burgundy dark:text-[#E89BA5]'
+                : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
+            )}
+          />
+          <div className="flex flex-col min-w-0">
+            <span className="truncate">Masterclass Certificate</span>
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono font-normal">
+              {isCertEligible
+                ? 'Eligible · Payment & Verification'
+                : `${completedVideosCount}/${totalCurriculumSessions} Videos · ${passedQuizzesCount}/${totalCurriculumSessions} Quizzes`}
+            </span>
+          </div>
+        </div>
+        {isCertEligible ? (
+          <span className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/70">
+            UNLOCKED
+          </span>
+        ) : (
+          <span className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-mono font-semibold bg-slate-100 dark:bg-[#250D11] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-[#3D1418] flex items-center gap-1">
+            <Lock className="w-2.5 h-2.5" />
+            LOCKED
+          </span>
+        )}
+      </button>
+
+      {/* Section 4: Hackathon Phase Header */}
+      <div className="pt-3 pb-2 px-1">
         <div className="flex items-center gap-2 px-2">
           <span className="font-mono text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
             Hackathon Phase
@@ -631,16 +703,6 @@ export function LearningSidebar() {
       </Link>
     </>
   );
-
-  // Calculate overall sidebar completion stats
-  const totalCurriculumSessions = sessions.length || CURRICULUM_SESSIONS.length || 5;
-  const completedSessionsCount = sessions.filter(
-    (s) => progress[s.id]?.videoCompleted && progress[s.id]?.quizPassed
-  ).length;
-  const submittedChallengesCount = Object.keys(competitions).length;
-  const totalTasks = totalCurriculumSessions + 3;
-  const completedTasks = completedSessionsCount + submittedChallengesCount;
-  const overallProgressPercent = Math.min(100, Math.round((completedTasks / totalTasks) * 100));
 
   // User Profile Renderer
   const renderUserProfile = () => {
@@ -816,6 +878,13 @@ export function LearningSidebar() {
         {/* User Profile & Sign Out at the bottom */}
         {renderUserProfile()}
       </div>
+
+      <CertificateModal
+        isOpen={isCertModalOpen}
+        onClose={() => setIsCertModalOpen(false)}
+        userEmail={session?.email || ''}
+        userName={session?.fullName || session?.email || 'Candidate'}
+      />
     </>
   );
 }
