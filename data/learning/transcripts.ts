@@ -489,4 +489,431 @@ plot_bloch_multivector(matrix)`,
       },
     ],
   },
+  'session-5': {
+    "sessionId": "session-5",
+    "streamUrl": "https://www.youtube.com/live/ev-L2YibRR4",
+    "youtubeId": "ev-L2YibRR4",
+    "totalBroadcastDuration": "2 Hours 25 Mins (Stream 00:01:45 \u2013 02:25:00)",
+    "recordedDate": "Day 3 \u00b7 Saturday, 10 October 2026 (Morning Broadcast)",
+    "overview": "Complete extracted transcript, architectural notes, and hands-on code walkthrough for Session 5: Quantum Machine Learning (QML) delivered by Jay Shah (Senior QML Engineer at BQP and creator of QRL-QAI). Covers the foundational transition from Feynman\u2019s 1981 simulation postulate to modern hybrid quantum-classical computing across the four major hardware modalities (Gate-model, Annealing, Continuous-Variable, and Quantum-Inspired). Features rigorous taxonomies separating QML, QDL, and QRL, deep dives into quantum feature encoding (ZZFeatureMap vs ZFeatureMap), barren plateaus, Quantum NLP (DisCoCat), QCNNs, Quantum-Aware Physics-Informed Neural Networks (QA-PIN) with logarithmic parameter reduction applied to Burgers\u2019 equation and Ice Nucleation, and live code implementations in Qiskit TorchConnector and PennyLane TorchLayer.",
+    "chapters": [
+      {
+        "id": "s5-ch1",
+        "timestamp": "00:01:45",
+        "endTimestamp": "00:07:30",
+        "startSeconds": 105,
+        "title": "Day 3 Opening & Speaker Introduction",
+        "speaker": "Sandhya, Harsha & Jay Shah",
+        "tag": "Introduction",
+        "summary": "Recap of Day 1 and Day 2 proceedings, overview of the Day 3 quantum algorithm and security schedule, and formal introduction of Jay Shah (Senior QML Engineer at BQP)."
+      },
+      {
+        "id": "s5-ch2",
+        "timestamp": "00:07:30",
+        "endTimestamp": "00:25:15",
+        "startSeconds": 450,
+        "title": "Feynman\u2019s 1981 Insight & Four Quantum Computing Modalities",
+        "speaker": "Jay Shah",
+        "tag": "Physics & Foundations",
+        "summary": "Richard Feynman's 1981 keynote on simulating quantum nature, contrasting Gate-Model quantum computers, Quantum Annealers (Ising spin Hamiltonians), Continuous-Variable systems (photonic qumodes), and Quantum-Inspired classical tensor networks."
+      },
+      {
+        "id": "s5-ch3",
+        "timestamp": "00:25:15",
+        "endTimestamp": "00:46:00",
+        "startSeconds": 1515,
+        "title": "The QML Taxonomy: QML vs QDL vs QRL & QNN Layer Anatomy",
+        "speaker": "Jay Shah",
+        "tag": "Taxonomy & Architecture",
+        "summary": "The four quadrants of machine learning (CC, CQ, QC, QQ), formal differentiation between general QML, layered Quantum Deep Learning (QDL), and Quantum Reinforcement Learning (QRL), and the 3-stage QNN pipeline (Feature Map \u2192 Parameterized Ansatz \u2192 Measurement)."
+      },
+      {
+        "id": "s5-ch4",
+        "timestamp": "00:46:00",
+        "endTimestamp": "01:08:45",
+        "startSeconds": 2760,
+        "title": "Feature Mapping: Z vs ZZFeatureMap & The Entanglement Trade-off",
+        "speaker": "Jay Shah",
+        "tag": "Circuit Design",
+        "summary": "Data encoding strategies (amplitude vs angle vs non-linear phase encoding), Qiskit's ZZFeatureMap entangling blocks, the expressibility vs trainability trade-off, and mathematical origins of Barren Plateaus (Var[\u2202C/\u2202\u03b8] ~ O(2^-n))."
+      },
+      {
+        "id": "s5-ch5",
+        "timestamp": "01:08:45",
+        "endTimestamp": "01:28:30",
+        "startSeconds": 4125,
+        "title": "QNLP (DisCoCat) & Quantum Convolutional Neural Networks (QCNN)",
+        "speaker": "Jay Shah",
+        "tag": "Advanced Architectures",
+        "summary": "Type 1 vs Type 2 Quantum Natural Language Processing using DisCoCat categorical grammar mappings, and Quantum Convolutional Neural Networks (QCNN) combining convolutional unitary blocks with measurement/trace-out pooling."
+      },
+      {
+        "id": "s5-ch6",
+        "timestamp": "01:28:30",
+        "endTimestamp": "01:49:15",
+        "startSeconds": 5310,
+        "title": "QA-PIN: Quantum-Aware Physics-Informed Neural Networks & PDE Benchmarks",
+        "speaker": "Jay Shah",
+        "tag": "Scientific AI & QA-PIN",
+        "summary": "Physics-Informed Neural Networks (PINN) loss formulation, Jay Shah's QA-PIN architecture achieving L x n parameter compression, 20% weight reduction on the 1D viscous Burgers' equation, and 32% weight reduction on the Thomson coefficient in Ice Nucleation."
+      },
+      {
+        "id": "s5-ch7",
+        "timestamp": "01:49:15",
+        "endTimestamp": "02:12:00",
+        "startSeconds": 6555,
+        "title": "Hands-on Code: Qiskit TorchConnector & PennyLane PyTorch QNNs",
+        "speaker": "Jay Shah",
+        "tag": "Live Coding Demo",
+        "summary": "Live Jupyter walkthrough connecting Qiskit EstimatorQNN to PyTorch via TorchConnector, and PennyLane's qml.qnn.TorchLayer classifying non-linear make_moons data in Hilbert space."
+      },
+      {
+        "id": "s5-ch8",
+        "timestamp": "02:12:00",
+        "endTimestamp": "02:25:00",
+        "startSeconds": 7920,
+        "title": "QRL-QAI (BlochSphere-v0), Barren Plateau Mitigation & Audience Q&A",
+        "speaker": "Jay Shah",
+        "tag": "Open Source & Q&A",
+        "summary": "Demonstration of the open-source QRL-QAI library with custom OpenAI Gym BlochSphere-v0 environment, practical strategies to bypass barren plateaus with local observables, and audience Q&A on enterprise quantum readiness."
+      }
+    ],
+    "sections": [
+      {
+        "id": "s5-sec1",
+        "timestampRange": "00:01:45 \u2013 00:25:15",
+        "startSeconds": 105,
+        "speaker": "Jay Shah",
+        "speakerRole": "Senior Quantum Machine Learning Engineer, BQP",
+        "title": "1. Quantum Computing Modalities, Feynman\u2019s Vision & The QML/QDL/QRL Taxonomy",
+        "keyTakeaways": [
+          "Richard Feynman's 1981 keynote established that classical computers face an exponential simulation overhead for quantum systems, motivating native quantum processors for quantum physical simulation.",
+          "Four hardware modalities: (1) Gate-Model (discrete unitary gates, universal), (2) Quantum Annealing (adiabatic Ising Hamiltonian ground state finding), (3) Continuous-Variable (optical qumodes with infinite-dimensional Hilbert spaces), and (4) Quantum-Inspired (classical tensor networks like MPS and TTN).",
+          "The QML Taxonomy splits along classical vs. quantum data and algorithms into four quadrants: Classical Data on Classical Algo (CC), Classical Data on Quantum Algo (CQ - standard QML), Quantum Data on Classical Algo (QC), and Quantum Data on Quantum Algo (QQ).",
+          "QML is the broad umbrella covering all hybrid algorithms (QSVM, Quantum Kernels, QPCA), while QDL specifically denotes deep parameterized variational circuits arranged in stacked neural network layers."
+        ],
+        "paragraphs": [
+          "Jay Shah initiates the session by grounding modern Quantum Machine Learning in Richard Feynman\u2019s famous 1981 keynote address, 'Simulating Physics with Computers'. Feynman pointed out that quantum mechanical systems cannot be efficiently simulated on classical Turing machines without an exponential overhead in memory and time. This insight catalyzed the quest for hardware devices governed by the laws of quantum mechanics to simulate nature directly.",
+          "He contrasts the four dominant computational paradigms in modern quantum technology: Gate-Model Quantum Computing, which synthesizes discrete unitary transformations on qubits (IBM, Google, Rigetti); Quantum Annealing, which leverages adiabatic Hamiltonian evolution to locate ground-state energy minima of Ising spin glass formulations (D-Wave); Continuous-Variable Quantum Computing, which encodes information into the amplitude and phase quadratures of optical modes (Xanadu); and Quantum-Inspired Computing, which uses classical tensor network decompositions (Matrix Product States) to solve large-scale optimization problems without physical quantum hardware.",
+          "Structuring the domain, Jay clarifies the academic taxonomy of Quantum Machine Learning. It spans four distinct quadrants depending on whether the data and algorithms are classical or quantum. While most current enterprise applications focus on Classical Data evaluated via Quantum Algorithms (CQ), the frontier lies in Quantum Deep Learning (QDL)\u2014employing parameterized variational quantum circuits as layered feature extractors and non-linear function approximators."
+        ],
+        "equations": [
+          {
+            "label": "Ising Spin Glass Hamiltonian for Quantum Annealing",
+            "formula": "H_Ising = - \u2211_{i < j} J_{ij} \u03c3_i^z \u03c3_j^z - \u2211_i h_i \u03c3_i^z"
+          },
+          {
+            "label": "Feynman Quantum Simulation Dimensionality Scaling",
+            "formula": "dim(H) = 2^n    \u21d2    Storage(2^n complex amplitudes) \u2208 O(2^n)"
+          }
+        ]
+      },
+      {
+        "id": "s5-sec2",
+        "timestampRange": "00:25:15 \u2013 01:08:45",
+        "startSeconds": 1515,
+        "speaker": "Jay Shah",
+        "speakerRole": "Senior Quantum Machine Learning Engineer, BQP",
+        "title": "2. Quantum Neural Network Anatomy: Feature Maps, Entanglement & Barren Plateaus",
+        "keyTakeaways": [
+          "A Quantum Neural Network (QNN) layer consists of three sequential stages: (1) Data Encoding / Feature Map U(x), (2) Parameterized Ansatz W(\u03b8), and (3) Observable Measurement \u27e8O\u27e9.",
+          "ZFeatureMap applies only single-qubit Z rotations; ZZFeatureMap adds two-qubit Rzz entangling phase gates parameterized by non-linear data interactions (\u03c0 - x_i)(\u03c0 - x_j), creating non-classical feature states |\u03a6(x)\u27e9.",
+          "Entanglement Trade-off: While entanglement increases expressibility (the capability of an ansatz to explore the full Hilbert space), excessive random entanglement leads to Barren Plateaus where the gradient variance vanishes exponentially: Var[\u2202C/\u2202\u03b8] ~ O(2^-n).",
+          "Barren Plateau Mitigations: Utilizing shallow circuit depths, local observables (measuring 1 or 2 neighboring qubits rather than global Z^\u2297n parity), identity parameter initializations, and domain-informed ansatz symmetries."
+        ],
+        "paragraphs": [
+          "Jay breaks down the internal structure of a Quantum Neural Network (QNN). Unlike classical neural network layers that compute y = \u03c3(Wx + b), a quantum layer begins with a state initialization |0\u27e9^\u2297n, applies a fixed non-linear data feature map U(x) to encode classical vector x into quantum state |\u03a6(x)\u27e9, executes a parameterized unitary ansatz W(\u03b8) containing trainable rotation angles, and measures the expectation value of a Hermitian operator \u27e8O\u27e9 = \u27e8\u03a6(x)| W^\u2020(\u03b8) O W(\u03b8) |\u03a6(x)\u27e9.",
+          "He conducts a detailed comparative analysis between Qiskit\u2019s ZFeatureMap and ZZFeatureMap. In ZFeatureMap, qubits undergo independent single-qubit rotations, which classical machines can simulate in linear time. ZZFeatureMap introduces two-qubit Rzz entangling blocks with interaction angles proportional to 2(\u03c0 - x_i)(\u03c0 - x_j). When implemented with sufficient depth on non-trivial topologies, computing the inner product |\u27e8\u03a6(x)|\u03a6(x')\u27e9|^2 becomes classically intractable, providing the basis for potential quantum advantage in kernel methods (QSVC).",
+          "However, Jay addresses the major theoretical obstacle in variational quantum algorithms: Barren Plateaus. Proved by McClean et al. (2018), whenever a parameterized quantum circuit forms a 2-design across the unitary group, the variance of the partial derivative of the cost function with respect to any variational parameter vanishes exponentially in the number of qubits n (Var[\u2202C/\u2202\u03b8] \u2208 O(2^-n)). He emphasizes that addressing barren plateaus requires careful architectural design: using local measurement observables (which restrict vanishing gradients to polynomial depths) and physically informed ansatz topologies rather than arbitrary hardware-efficient structures."
+        ],
+        "equations": [
+          {
+            "label": "ZZFeatureMap Two-Qubit Phase Interaction",
+            "formula": "U_{ZZ}(x) = exp( i \u2211_{j < k} 2 (\u03c0 - x_j)(\u03c0 - x_k) Z_j Z_k )"
+          },
+          {
+            "label": "Barren Plateau Gradient Variance Vanishing Law",
+            "formula": "Var_{\u03b8}[ \u2202C(\u03b8) / \u2202\u03b8_k ] \u2264 C_0 / 2^n    (Exponentially flat training landscape)"
+          }
+        ]
+      },
+      {
+        "id": "s5-sec3",
+        "timestampRange": "01:08:45 \u2013 01:49:15",
+        "startSeconds": 4125,
+        "speaker": "Jay Shah",
+        "speakerRole": "Senior Quantum Machine Learning Engineer, BQP",
+        "title": "3. Advanced Architectures: QNLP, QCNN & Quantum-Aware PINNs (QA-PIN)",
+        "keyTakeaways": [
+          "QNLP Architectures: Type 1 embeds classical NLP vector representations into quantum feature states; Type 2 uses Compositional Distributional Cognition (DisCoCat), mapping grammatical syntax trees directly to quantum circuit tensor networks.",
+          "Quantum Convolutional Neural Networks (QCNN): Translate classical CNN concepts to quantum circuits by alternating translationally-invariant multi-qubit unitary convolutions with measurement/trace-out pooling layers.",
+          "Physics-Informed Neural Networks (PINN): Enforce physical differential equations directly inside the loss function: L_total = w_data L_data + w_pde L_pde + w_bc L_bc + w_ic L_ic.",
+          "Quantum-Aware PINNs (QA-PIN): Jay Shah's novel framework replaces massive classical dense weight layers with quantum ansatz layers requiring only L x n parameters (n = ceil(log2 N)), demonstrating 20% weight reduction on 1D Burgers' equation and 32% reduction on Ice Nucleation kinetics."
+        ],
+        "paragraphs": [
+          "Moving into advanced QML architectures, Jay explains Quantum Natural Language Processing (QNLP). In standard Type 1 QNLP, classical word embeddings (Word2Vec) are passed through quantum circuits as numerical features. In contrast, Type 2 QNLP\u2014grounded in Bob Coecke\u2019s DisCoCat framework (Categorical Compositional Distributional Models)\u2014formalizes grammar and meaning as string diagrams in monoidal categories, directly mapping grammatical parsing trees to entangled quantum circuit graphs.",
+          "He then presents Quantum Convolutional Neural Networks (QCNNs), designed specifically to avoid barren plateaus while processing multi-qubit spatial or quantum many-body data. A QCNN alternates convolutional layers (applying parameterized 2-qubit unitaries across neighboring qubit pairs) with quantum pooling layers (measuring or tracing out half the qubits conditioned on neighboring states), progressively reducing system dimensionality down to a single readout qubit.",
+          "The centerpiece of Jay's research presentation is QA-PIN (Quantum-Aware Physics-Informed Neural Networks). Classical PINNs integrate governing partial differential equations (PDEs), initial conditions (ICs), and boundary conditions (BCs) into a multi-objective loss function minimized via automatic differentiation. In QA-PIN, dense linear weight matrices W \u2208 R^{N_in x N_out} are replaced by compact quantum circuit blocks. Because an n-qubit quantum state lives in a 2^n-dimensional Hilbert space, only n = \u2308log_2 N\u2309 qubits with L parameterized layers (requiring only L x n rotation angles) are needed. On the non-linear 1D viscous Burgers\u2019 equation (\u2202u/\u2202t + u \u2202u/\u2202x = \u03bd \u2202\u00b2u/\u2202x\u00b2), QA-PIN delivered a >20% reduction in trainable parameters with equivalent L2 relative error; on the inverse problem of estimating Thomson's coefficient \u03bc in Ice Nucleation crystal growth, it achieved a 32% parameter reduction."
+        ],
+        "equations": [
+          {
+            "label": "Physics-Informed Neural Network (PINN) Multi-Objective Loss",
+            "formula": "L_{total} = w_{data} L_{data} + w_{pde} L_{pde} + w_{bc} L_{bc} + w_{ic} L_{ic}"
+          },
+          {
+            "label": "1D Viscous Burgers' Equation Residual",
+            "formula": "f_{res} = \u2202u/\u2202t + u (\u2202u/\u2202x) - \u03bd (\u2202\u00b2u/\u2202x\u00b2) = 0"
+          },
+          {
+            "label": "QA-PIN Logarithmic Layer Parameter Compression",
+            "formula": "Params_{classical} = N_{in} \u00d7 N_{out}    vs.    Params_{QA-PIN} = L \u00d7 \u2308log_2(max(N_{in}, N_{out}))\u2309"
+          }
+        ]
+      },
+      {
+        "id": "s5-sec4",
+        "timestampRange": "01:49:15 \u2013 02:25:00",
+        "startSeconds": 6555,
+        "speaker": "Jay Shah",
+        "speakerRole": "Senior Quantum Machine Learning Engineer, BQP",
+        "title": "4. Hands-on Implementation: Qiskit TorchConnector, PennyLane & QRL-QAI",
+        "keyTakeaways": [
+          "Parameter-Shift Rule: Enables exact analytical gradient computation on physical quantum processors without numerical finite-difference approximation errors: \u2202\u27e8O\u27e9/\u2202\u03b8 = [\u27e8O\u27e9(\u03b8 + \u03c0/2) - \u27e8O\u27e9(\u03b8 - \u03c0/2)] / 2.",
+          "Qiskit TorchConnector: Integrates Qiskit EstimatorQNN and SamplerQNN instances directly into PyTorch's automatic differentiation engine (torch.autograd) as native nn.Module layers.",
+          "PennyLane TorchLayer: Seamlessly wraps quantum nodes (QNodes) into PyTorch sequential models for non-linear classification benchmarks (such as scikit-learn's make_moons).",
+          "QRL-QAI Open-Source Framework: Developed by Jay Shah, provides reinforcement learning environments (e.g., BlochSphere-v0) where agents learn optimal quantum control pulses to steer quantum states."
+        ],
+        "paragraphs": [
+          "In the practical demonstration segment, Jay walks through the end-to-end implementation of hybrid classical-quantum models in Python. He explains how quantum backpropagation functions in the absence of numerical finite-differencing: the parameter-shift rule evaluates the expectation value of the quantum circuit at two discrete parameter offsets (+\u03c0/2 and -\u03c0/2), yielding the exact analytical gradient on physical hardware with shot noise.",
+          "He demonstrates Qiskit Machine Learning's `TorchConnector`. By constructing a parameterized circuit in Qiskit (combining a `ZZFeatureMap` with a `RealAmplitudes` ansatz) and passing it to an `EstimatorQNN`, wrapping the network in `TorchConnector(qnn)` turns the quantum circuit into a standard PyTorch module. This module can be stacked alongside classical `nn.Linear` layers, optimized using `torch.optim.Adam`, and trained using standard PyTorch training loops with automatic backpropagation.",
+          "Jay then switches to PennyLane, showcasing its interface with PyTorch. Using `qml.qnn.TorchLayer`, he trains a hybrid neural network on the classic non-linear `make_moons` dataset. By projecting the 2D coordinates into a 4-qubit Hilbert space via angle and entanglement encoding, the model learns a decision boundary that cleanly separates the interleaved moons. Finally, he showcases his open-source repository `QRL-QAI`, demonstrating how custom OpenAI Gym environments like `BlochSphere-v0` allow deep Q-learning (DQN) agents to discover optimal pulse sequences for quantum state steering."
+        ],
+        "equations": [
+          {
+            "label": "The Parameter-Shift Rule for Analytical Quantum Gradients",
+            "formula": "\u2202\u27e8O\u27e9 / \u2202\u03b8_j = \u00bd [ \u27e8O(\u03b8_j + \u03c0/2)\u27e9 - \u27e8O(\u03b8_j - \u03c0/2)\u27e9 ]"
+          }
+        ],
+        "codeSnippet": {
+          "language": "python",
+          "title": "Hybrid Quantum-Classical Neural Network with Qiskit TorchConnector & PyTorch",
+          "code": "import torch\nimport torch.nn as nn\nfrom qiskit.circuit.library import ZZFeatureMap, RealAmplitudes\nfrom qiskit_machine_learning.neural_networks import EstimatorQNN\nfrom qiskit_machine_learning.connectors import TorchConnector\n\n# 1. Define 2-qubit feature map and variational ansatz\nnum_qubits = 2\nfeature_map = ZZFeatureMap(feature_dimension=num_qubits, reps=2)\nansatz = RealAmplitudes(num_qubits=num_qubits, reps=2)\ncircuit = feature_map.compose(ansatz)\n\n# 2. Construct EstimatorQNN\nqnn = EstimatorQNN(\n    circuit=circuit,\n    input_params=feature_map.parameters,\n    weight_params=ansatz.parameters\n)\n\n# 3. Seamlessly wrap into PyTorch nn.Module\nclass HybridQNN(nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.q_layer = TorchConnector(qnn)\n        self.fc = nn.Linear(1, 2)  # Binary classification head\n\n    def forward(self, x):\n        q_out = self.q_layer(x)\n        return self.fc(q_out)\n\nmodel = HybridQNN()\noptimizer = torch.optim.Adam(model.parameters(), lr=0.01)\ncriterion = nn.CrossEntropyLoss()\nprint('Model initialized:', model)"
+        }
+      }
+    ]
+  },
+  'session-6': {
+    "sessionId": "session-6",
+    "streamUrl": "https://www.youtube.com/live/ev-L2YibRR4",
+    "youtubeId": "ev-L2YibRR4",
+    "totalBroadcastDuration": "2 Hours 30 Mins (Stream 03:53:20 \u2013 06:11:13)",
+    "recordedDate": "Day 3 \u00b7 Saturday, 10 October 2026 (Afternoon Broadcast)",
+    "overview": "Complete extracted transcript, mathematical proofs, and architectural notes for Session 6: Quantum Cyber Security & Cryptography by Dr. Sazzad Ali Biswas and Dr. Sajal Mukherjee (Assistant Professors of Mathematics, SRM University-AP), followed by the Flagship Hackathon Announcement and Closing Ceremony led by Gyanendra. Delves into algebraic number theory (residue rings Z/nZ, Euler totient phi(n), CRT), RSA key generation and encryption mechanics with step-by-step numerical examples, Discrete Logarithms, Diffie-Hellman, and short Weierstrass Elliptic Curve Cryptography. Details the quantum algorithmic breakdown via Shor\u2019s order finding (polynomial time factoring & discrete log) and Grover\u2019s unstructured search. Evaluates Quantum Key Distribution (BB84 protocol, no-cloning theorem, ~11% QBER threshold) and NIST FIPS 203/204/205 Post-Quantum Cryptography standards (ML-KEM, ML-DSA, SLH-DSA, FN-DSA), concluding with the Hackathon Problem Statement Release on Algorithm-Architecture Co-Design across Processors A, B, C, and custom 12-qubit Processor D.",
+    "chapters": [
+      {
+        "id": "s6-ch1",
+        "timestamp": "03:53:20",
+        "endTimestamp": "04:00:45",
+        "startSeconds": 14000,
+        "title": "Session 6 Opening & Dr. Sazzad Ali Biswas Introduction",
+        "speaker": "Varsha, Gyan & Dr. Biswas",
+        "tag": "Introduction",
+        "summary": "Formal opening of the afternoon cybersecurity track, introduction of Dr. Sazzad Ali Biswas (Ph.D. Univ. of Hyderabad 2016; CMI, Humboldt, TIFR alumnus), and orientation on mathematical foundations."
+      },
+      {
+        "id": "s6-ch2",
+        "timestamp": "04:00:45",
+        "endTimestamp": "04:14:30",
+        "startSeconds": 14445,
+        "title": "Mathematical Foundations: Residue Rings, Totients & Computational Complexity",
+        "speaker": "Dr. Sazzad Ali Biswas",
+        "tag": "Number Theory",
+        "summary": "Residue class rings Z/nZ, Euler\u2019s totient function phi(n), Chinese Remainder Theorem, Fermat\u2019s Little Theorem, and computational complexity bounds (Big-O notation, polynomial vs exponential time)."
+      },
+      {
+        "id": "s6-ch3",
+        "timestamp": "04:14:30",
+        "endTimestamp": "04:30:15",
+        "startSeconds": 15270,
+        "title": "The RSA Cryptosystem: Modular Arithmetic & Step-by-Step Numerical Example",
+        "speaker": "Dr. Sazzad Ali Biswas",
+        "tag": "Public-Key Cryptography",
+        "summary": "RSA key generation, public/private exponent derivation (ed \u2261 1 mod phi(n)), one-way trapdoor functions, and concrete numerical demonstration encrypting QISKIT (p=11, q=13, n=143, e=7, d=103)."
+      },
+      {
+        "id": "s6-ch4",
+        "timestamp": "04:30:15",
+        "endTimestamp": "04:43:20",
+        "startSeconds": 16215,
+        "title": "Discrete Logarithms, Diffie-Hellman Key Exchange & Elliptic Curves (ECC)",
+        "speaker": "Dr. Sazzad Ali Biswas",
+        "tag": "Advanced Cryptography",
+        "summary": "Cyclic groups, the Discrete Logarithm Problem (DLP), Diffie-Hellman key exchange (K = g^ab mod p), short Weierstrass elliptic curves (y^2 = x^3 + ax + b), chord-and-tangent group laws, and ECDLP."
+      },
+      {
+        "id": "s6-ch5",
+        "timestamp": "05:10:00",
+        "endTimestamp": "05:22:40",
+        "startSeconds": 18600,
+        "title": "Quantum Threats: Shor\u2019s Period-Finding vs. Grover\u2019s Quadratic Search",
+        "speaker": "Dr. Sajal Mukherjee",
+        "tag": "Quantum Threat Analysis",
+        "summary": "How Shor's algorithm solves factoring and discrete logarithms in polynomial time O((log N)^3) via QFT order finding, and Grover's search reducing symmetric cipher security (AES-128 to 64 bits; requiring AES-256)."
+      },
+      {
+        "id": "s6-ch6",
+        "timestamp": "05:22:40",
+        "endTimestamp": "05:35:10",
+        "startSeconds": 19360,
+        "title": "Quantum Key Distribution (BB84, Conjugate Bases & QBER Bounds)",
+        "speaker": "Dr. Sajal Mukherjee",
+        "tag": "Quantum Communication",
+        "summary": "The BB84 protocol mechanics across rectilinear (+) and diagonal (\u00d7) bases, No-Cloning theorem, 25% eavesdropper error induction, and the ~11% QBER abort threshold for secure key distillation."
+      },
+      {
+        "id": "s6-ch7",
+        "timestamp": "05:35:10",
+        "endTimestamp": "05:48:30",
+        "startSeconds": 20110,
+        "title": "NIST Post-Quantum Cryptography Standards (ML-KEM, ML-DSA & SLH-DSA)",
+        "speaker": "Dr. Sajal Mukherjee",
+        "tag": "Post-Quantum Standards",
+        "summary": "NIST August 2024 FIPS standards: ML-KEM (FIPS 203 / Kyber), ML-DSA (FIPS 204 / Dilithium), SLH-DSA (FIPS 205 / SPHINCS+), FN-DSA (Falcon), hybrid classical-quantum TLS handshakes, and CNSA 2.0 roadmaps."
+      },
+      {
+        "id": "s6-ch8",
+        "timestamp": "05:48:30",
+        "endTimestamp": "06:11:13",
+        "startSeconds": 20910,
+        "title": "Flagship Hackathon Release: Algorithm-Architecture Co-Design & Valedictory",
+        "speaker": "Gyanendra",
+        "tag": "Hackathon Launch & Closing",
+        "summary": "Official Hackathon Problem Statement Release on Algorithm \u2194 Architecture Co-Design across Processors A/B/C/D, 5 domain tracks, 20 challenges, LMS quiz completion criteria (75%), and valedictory vote of thanks."
+      }
+    ],
+    "sections": [
+      {
+        "id": "s6-sec1",
+        "timestampRange": "03:53:20 \u2013 04:30:15",
+        "startSeconds": 14000,
+        "speaker": "Dr. Sazzad Ali Biswas",
+        "speakerRole": "Assistant Professor, Department of Mathematics, SRM University-AP",
+        "title": "1. Number-Theoretic Foundations, Complexity Theory & The RSA Cryptosystem",
+        "keyTakeaways": [
+          "Residue class rings Z/nZ form the algebraic foundation of modern cryptography; Euler's totient phi(n) counts coprime integers up to n, equaling (p-1)(q-1) for n = pq.",
+          "One-way trapdoor functions are easy to compute forward (modular exponentiation in O((log n)^3)) but infeasible to invert without private trapdoor knowledge (modular inverse d = e^-1 mod phi(n)).",
+          "Chinese Remainder Theorem (CRT) accelerates RSA private key decryption by roughly 4x by computing exponentiations modulo p and modulo q independently and recombining them.",
+          "Concrete numerical RSA example: Choosing primes p = 11, q = 13 gives modulus n = 143 and phi(n) = 120. Public exponent e = 7 gives private decryption exponent d = 103 (7 x 103 = 721 \u2261 1 mod 120). Message m = 17 ('Q') encrypts to c = 17^7 mod 143 = 30 and decrypts to 30^103 mod 143 = 17."
+        ],
+        "paragraphs": [
+          "Dr. Sazzad Ali Biswas opens the session by establishing that cryptography is fundamentally the application of algebraic number theory and computational complexity to ensure secure communication over insecure channels. He introduces the mathematical structure of modular residue classes Z/nZ, defining the ring properties under modular addition and multiplication.",
+          "He reviews Euler's Totient Function phi(n), which counts positive integers up to n that are relatively prime to n. For a composite modulus n = pq composed of two distinct primes p and q, phi(n) = (p-1)(q-1). Under Euler's Theorem, for any integer a coprime to n, a^phi(n) \u2261 1 (mod n). This algebraic symmetry forms the cornerstone of public-key cryptography: computing powers modulo n behaves cyclically with period phi(n).",
+          "Dr. Biswas then walks through the complete mechanics of the RSA cryptosystem. To create a key pair, a user selects primes p and q, calculates n = pq and phi(n) = (p-1)(q-1), and selects a public exponent e coprime to phi(n). Using the Extended Euclidean Algorithm, they derive the private decryption exponent d such that e \u00b7 d \u2261 1 (mod phi(n)). To demonstrate this tangibly, he works out a complete numerical calculation: selecting p = 11, q = 13 yields n = 143 and phi(n) = 120; choosing e = 7 yields d = 103 since 7 \u00b7 103 = 721 = 6 \u00b7 120 + 1. He shows how encoding the characters of 'QISKIT' into integer values (m = 17 for 'Q') results in ciphertext c = 17^7 mod 143 = 30, which decrypts back to 30^103 mod 143 = 17."
+        ],
+        "equations": [
+          {
+            "label": "Euler's Totient Theorem & RSA Key Inversion Relation",
+            "formula": "a^{\u03c6(n)} \u2261 1 \\pmod n    and    e \\cdot d \\equiv 1 \\pmod{\u03c6(n)}    \\Rightarrow    (m^e)^d \\equiv m \\pmod n"
+          },
+          {
+            "label": "RSA Modulus and Totient for Distinct Primes",
+            "formula": "n = p \\cdot q,    \\quad    \u03c6(n) = (p - 1)(q - 1)"
+          }
+        ]
+      },
+      {
+        "id": "s6-sec2",
+        "timestampRange": "04:30:15 \u2013 04:43:20",
+        "startSeconds": 16215,
+        "speaker": "Dr. Sazzad Ali Biswas",
+        "speakerRole": "Assistant Professor, Department of Mathematics, SRM University-AP",
+        "title": "2. Discrete Logarithms, Diffie-Hellman Key Exchange & Elliptic Curve Cryptography",
+        "keyTakeaways": [
+          "In a cyclic group G generated by g, the Discrete Logarithm Problem (DLP)\u2014finding scalar s such that h = g^s\u2014is classically intractable for large group orders.",
+          "Diffie-Hellman Protocol: Alice publishes A = g^a mod p; Bob publishes B = g^b mod p. Both compute shared secret K = B^a = A^b = g^{ab} mod p over an insecure channel without revealing a or b.",
+          "Elliptic Curves over finite fields F_p (in short Weierstrass form y^2 = x^3 + ax + b with non-singularity condition 4a^3 + 27b^2 \u2260 0) form an Abelian group under the chord-and-tangent addition rule, with the point at infinity O as identity.",
+          "ECDLP Advantage: Because no sub-exponential classical attack exists for generic elliptic curves (unlike the Number Field Sieve for RSA), a 256-bit ECC key achieves 128 bits of security equivalent to a 3072-bit RSA key, drastically reducing bandwidth and computation."
+        ],
+        "paragraphs": [
+          "Dr. Biswas extends the mathematical discussion from modular arithmetic to group-theoretic cryptography, focusing on the Discrete Logarithm Problem (DLP). In a finite cyclic group G of prime order q with generator g, computing g^s is efficient, but computing s = log_g(h) from h is computationally intractable for classical systems. He demonstrates how Whitfield Diffie and Martin Hellman utilized this in 1976 to establish shared secret keys over insecure communication channels: Alice computes A = g^a, Bob computes B = g^b, and both arrive at K = g^{ab} without exchanging private exponents a or b.",
+          "Next, he introduces Elliptic Curve Cryptography (ECC). Over a finite field F_p (with p > 3), an elliptic curve is defined by the short Weierstrass equation y^2 = x^3 + ax + b, where the discriminant condition 4a^3 + 27b^2 \u2260 0 ensures that the cubic polynomial has no repeated roots, eliminating cusps or self-intersections. The set of rational points on the curve, augmented by an ideal 'point at infinity' O, forms an Abelian group under the geometric chord-and-tangent addition rule.",
+          "The cryptographic hardness of ECC stems from the Elliptic Curve Discrete Logarithm Problem (ECDLP): given point P and point Q = sP (computed via repeated point doubling and addition), determining the integer scalar s is extraordinarily difficult. Because generic elliptic curves lack the smooth algebraic structure exploited by index calculus algorithms (such as the General Number Field Sieve on RSA integers), ECC requires drastically smaller parameters: a 256-bit elliptic curve key (e.g. NIST P-256) delivers security equivalent to 3072-bit RSA, offering huge savings in mobile and embedded communications."
+        ],
+        "equations": [
+          {
+            "label": "Short Weierstrass Elliptic Curve & Discriminant Non-Singularity",
+            "formula": "y^2 = x^3 + ax + b \\pmod p    \\quad \\text{with} \\quad 4a^3 + 27b^2 \\not\\equiv 0 \\pmod p"
+          },
+          {
+            "label": "Diffie-Hellman Shared Secret Agreement",
+            "formula": "K = (g^b)^a = (g^a)^b = g^{ab} \\pmod p"
+          }
+        ]
+      },
+      {
+        "id": "s6-sec3",
+        "timestampRange": "05:10:00 \u2013 05:22:40",
+        "startSeconds": 18600,
+        "speaker": "Dr. Sajal Mukherjee",
+        "speakerRole": "Assistant Professor, Department of Mathematics, SRM University-AP",
+        "title": "3. Quantum Algorithmic Threats: Shor\u2019s Factoring vs. Grover\u2019s Quadratic Search",
+        "keyTakeaways": [
+          "Shor's Algorithm (1994): Rephrases factoring and discrete logarithms as order finding of f(x) = a^x mod N, using the Quantum Fourier Transform (QFT) to find period r in polynomial time O((log N)^3).",
+          "Total Vulnerability of Classical Public-Key Cryptosystems: Shor's algorithm completely breaks RSA, Diffie-Hellman, DSA, and ECC by computing modular periods and group orders in polynomial time.",
+          "Factor Extraction: Once an even period r is found such that a^r \u2261 1 mod N and a^(r/2) \u2262 -1 mod N, non-trivial factors of N are extracted classically via gcd(a^(r/2) \u00b1 1, N) using Euclid's algorithm.",
+          "Grover's Algorithm (1996): Quadratic speedup for unstructured database search O(sqrt(N)) halves effective symmetric security (AES-128 is reduced to 64 bits of security; countered by adopting AES-256)."
+        ],
+        "paragraphs": [
+          "Dr. Sajal Mukherjee resumes the lecture by examining the existential threat that fault-tolerant quantum computers pose to modern digital infrastructure. He focuses on Peter Shor\u2019s 1994 algorithm, which proved that both Integer Prime Factorization and the Discrete Logarithm Problem can be solved in polynomial time O((log N)^3) on a quantum computer.",
+          "He details the mathematical elegance of Shor\u2019s approach: rather than searching for prime factors directly, Shor rephrases the problem as period finding. For a chosen integer a coprime to N, the function f(x) = a^x mod N is periodic with period r, such that a^r \u2261 1 (mod N). On a quantum computer, initializing an equal superposition across all inputs x and evaluating f(x) produces an entangled state. Applying the Quantum Fourier Transform (QFT) produces constructive interference at integer multiples of 1/r, allowing r to be measured with high probability. Once an even period r is determined, because (a^{r/2} - 1)(a^{r/2} + 1) = a^r - 1 \u2261 0 (mod N), computing the greatest common divisor gcd(a^{r/2} \u00b1 1, N) via Euclid's algorithm immediately extracts non-trivial factors of N.",
+          "Dr. Mukherjee then contrasts Shor\u2019s exponential speedup with Lov Grover\u2019s 1996 quantum search algorithm. Grover\u2019s algorithm provides a quadratic speedup for searching unsorted spaces of size 2^k in O(2^{k/2}) queries. While this does not break symmetric encryption completely, it reduces the effective security level by half: AES-128 offers only 64 bits of quantum security, which is vulnerable to brute-force attack. To maintain a 128-bit post-quantum security margin, national standards bodies mandate migrating to AES-256 and SHA-384/512."
+        ],
+        "equations": [
+          {
+            "label": "Shor's Factor Extraction via Period Halving",
+            "formula": "a^r \\equiv 1 \\pmod N   \\Rightarrow   (a^{r/2} - 1)(a^{r/2} + 1) = k N   \\Rightarrow   p, q = \\gcd(a^{r/2} \\pm 1, N)"
+          },
+          {
+            "label": "Grover's Search Complexity vs Classical Brute Force",
+            "formula": "T_{classical} \\in \\mathcal{O}(2^k)    \\quad \\text{vs.} \\quad    T_{quantum} \\in \\mathcal{O}(2^{k/2})"
+          }
+        ]
+      },
+      {
+        "id": "s6-sec4",
+        "timestampRange": "05:22:40 \u2013 06:11:13",
+        "startSeconds": 19360,
+        "speaker": "Dr. Sajal Mukherjee & Gyanendra",
+        "speakerRole": "Assistant Professor & Lead Student Organizer, SRM University-AP",
+        "title": "4. Quantum Key Distribution (BB84), NIST Post-Quantum Standards & Hackathon Launch",
+        "keyTakeaways": [
+          "Quantum Key Distribution (BB84): Relies on the No-Cloning Theorem and wave-function collapse across rectilinear (+) and diagonal (\u00d7) conjugate bases; an eavesdropper intercepting photons introduces a detectable 25% error rate on sifted keys.",
+          "QBER Abort Threshold: Alice and Bob calculate the Quantum Bit Error Rate; if QBER exceeds ~11% (the Shor-Preskill bound), the transmission is aborted due to potential eavesdropping.",
+          "NIST Post-Quantum Cryptography Standards (August 2024): FIPS 203 (ML-KEM / CRYSTALS-Kyber), FIPS 204 (ML-DSA / CRYSTALS-Dilithium), and FIPS 205 (SLH-DSA / SPHINCS+).",
+          "Hybrid Transition Architecture: Combining classical key exchange (X25519) with post-quantum key encapsulation (ML-KEM-768) prevents Harvest-Now-Decrypt-Later (HNDL) attacks.",
+          "Hackathon Release: Algorithm \u2194 Architecture Co-Design across Processors A, B, C, and custom 12-qubit Processor D across 5 tracks and 20 problem statements."
+        ],
+        "paragraphs": [
+          "Dr. Mukherjee surveys the two primary paradigms for securing communications in the quantum era: Quantum Key Distribution (QKD) and Post-Quantum Cryptography (PQC). In the BB84 protocol (Bennett and Brassard, 1984), Alice sends single photons prepared in four non-orthogonal polarization states across two conjugate bases: rectilinear (+) and diagonal (\u00d7). Bob randomly selects a measurement basis. By the No-Cloning Theorem, an adversary Eve cannot clone the quantum state. When Eve intercepts and measures in the wrong basis (which happens 50% of the time), she collapses the state and retransmits an altered photon, introducing an expected 25% error rate on bits where Alice and Bob used identical bases. If the Quantum Bit Error Rate (QBER) exceeds ~11%, Alice and Bob abort the transmission; otherwise, they distill an unconditionally secure key via error correction and privacy amplification.",
+          "He then covers the NIST Post-Quantum Cryptography standardization process, which culminated in August 2024 with the publication of FIPS 203, FIPS 204, and FIPS 205. FIPS 203 standardizes ML-KEM (Module-Lattice Key Encapsulation Mechanism, based on CRYSTALS-Kyber), resting on the hardness of Module Learning With Errors (M-LWE). FIPS 204 standardizes ML-DSA (CRYSTALS-Dilithium) for general digital signatures, while FIPS 205 standardizes SLH-DSA (SPHINCS+) for stateless hash-based signatures that do not rely on lattice hardness assumptions. Dr. Mukherjee highlights NSA CNSA 2.0 timelines and recommends hybrid classical-quantum key exchange (e.g. X25519 + ML-KEM-768) to protect against Harvest-Now-Decrypt-Later (HNDL) attacks.",
+          "In the final segment (05:48:30 \u2013 06:11:13), Technical Lead Gyanendra takes the stage to officially release the Flagship Hackathon problem statements and conclude the 3-Day Online Phase. Centered on Algorithm \u2194 Architecture Co-Design, teams must benchmark quantum algorithms on Processors A (12-qubit linear), B (12-qubit heavy-hex), and C (12-qubit all-to-all) before designing a custom 12-qubit Processor D coupling map. Gyan explains the 5 domain tracks (Chemistry, Optimization, Simulation, QML, Security), the 100-point rubric, LMS quiz certification requirements (75% score), and delivers the valedictory vote of thanks to all IBM Quantum mentors, university leadership, and participants."
+        ],
+        "equations": [
+          {
+            "label": "BB84 Intercept-Resend Eavesdropping Error Probability",
+            "formula": "P(error | basis\\_match) = P(Eve\\_wrong\\_basis) \\times P(Bob\\_flip) = \u00bd \\times \u00bd = 25\\%"
+          },
+          {
+            "label": "Shor-Preskill QBER Security Bound for BB84",
+            "formula": "QBER_{threshold} \\approx 11.0\\%    \\quad (Abort\\ key\\ generation\\ if\\ QBER > 11\\%)"
+          }
+        ],
+        "codeSnippet": {
+          "language": "python",
+          "title": "Classical RSA Key Generation & Encryption Verification in Python",
+          "code": "import math\n\ndef egcd(a, b):\n    if a == 0:\n        return b, 0, 1\n    gcd, x1, y1 = egcd(b % a, a)\n    return gcd, y1 - (b // a) * x1, x1\n\ndef modinv(e, phi):\n    gcd, x, _ = egcd(e, phi)\n    if gcd != 1:\n        raise ValueError('Modular inverse does not exist')\n    return x % phi\n\n# Lecture Parameters: p = 11, q = 13\np, q = 11, 13\nn = p * q          # 143\nphi = (p-1)*(q-1)  # 120\ne = 7              # gcd(7, 120) = 1\nd = modinv(e, phi) # 103\n\nprint(f'RSA Keypair: Public (n={n}, e={e}), Private (d={d})')\n\n# Encrypt character 'Q' (ASCII/Index 17)\nmsg = 17\ncipher = pow(msg, e, n)       # 17^7 mod 143 = 30\ndecrypted = pow(cipher, d, n) # 30^103 mod 143 = 17\nassert decrypted == msg\nprint(f'Plaintext: {msg} -> Ciphertext: {cipher} -> Decrypted: {decrypted}')"
+        }
+      }
+    ]
+  },
 };

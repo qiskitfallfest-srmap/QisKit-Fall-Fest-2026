@@ -89,8 +89,8 @@ function LearningDashboardContent() {
   const curriculumList = sessions && sessions.length > 0 ? sessions : CURRICULUM_SESSIONS;
   const { quizzes } = useQuizzes();
 
-  // Schedule timetable tab state (default to Day 2)
-  const [selectedScheduleDay, setSelectedScheduleDay] = useState<number>(2);
+  // Schedule timetable tab state (default to Day 3)
+  const [selectedScheduleDay, setSelectedScheduleDay] = useState<number>(3);
   const currentDayProgramme =
     ONLINE_PROGRAMME_SCHEDULE.find((d) => d.day === selectedScheduleDay) ||
     ONLINE_PROGRAMME_SCHEDULE[0];
@@ -1004,27 +1004,27 @@ function LearningDashboardContent() {
                 </Link>
 
                 <div className="pt-2.5 border-t border-slate-100 dark:border-[#250D11] flex items-center justify-between gap-2 text-[11px] font-mono">
-                  <Link
-                    href={`/learning/session/${s.id}`}
-                    className={clsx(
-                      'inline-flex items-center gap-1 font-semibold transition-colors',
-                      isVideoDone
-                        ? 'text-emerald-700 dark:text-emerald-400'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-burgundy dark:hover:text-[#E89BA5]'
-                    )}
-                  >
+                  <div className="flex items-center gap-2">
                     {isVideoDone ? (
-                      <>
-                        <CheckCircle2 className="w-3 h-3" />
+                      <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-semibold">
+                        <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                         <span>Watched</span>
-                      </>
+                      </span>
                     ) : (
-                      <>
-                        <PlayCircle className="w-3 h-3" />
-                        <span>{hasTranscript ? 'Watch + Transcript' : 'Watch Lecture'}</span>
-                      </>
+                      <span className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                        <Clock className="w-3.5 h-3.5 shrink-0" />
+                        <span>Unwatched</span>
+                      </span>
                     )}
-                  </Link>
+                    <span className="text-slate-300 dark:text-slate-700">·</span>
+                    <Link
+                      href={`/learning/session/${s.id}`}
+                      className="inline-flex items-center gap-1 text-slate-600 dark:text-slate-400 hover:text-burgundy dark:hover:text-[#E89BA5] transition-colors underline-offset-2 hover:underline font-semibold"
+                    >
+                      <PlayCircle className="w-3 h-3 shrink-0" />
+                      <span>{isVideoDone ? 'Review' : 'Watch'}</span>
+                    </Link>
+                  </div>
 
                   <Link
                     href={`/learning/session/${s.id}/quiz`}

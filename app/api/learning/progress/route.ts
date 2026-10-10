@@ -133,7 +133,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (action === 'mark_video') {
+    if (action === 'mark_video' || action === 'unmark_video') {
+      const isCompleted = action === 'mark_video' ? (body.completed ?? true) : false;
       // Query existing progress to avoid regressing existing quiz state
       const { data: existingRows } = await supabase
         .from('user_progress')
@@ -149,7 +150,7 @@ export async function POST(request: NextRequest) {
           {
             email: normalizedEmail,
             session_id: sessionId,
-            video_completed: true,
+            video_completed: isCompleted,
             quiz_passed: existingProgress?.quiz_passed ?? false,
             quiz_score: existingProgress?.quiz_score ?? 0,
             quiz_attempts: existingProgress?.quiz_attempts ?? 0,

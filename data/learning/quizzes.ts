@@ -863,172 +863,497 @@ export const SESSION_QUIZZES: Record<string, SessionQuiz> = {
     ],
   },
   'session-5': {
-    sessionId: 'session-5',
-    title: 'Session 5 Concept Check: Quantum Machine Learning',
-    passingScore: 75,
-    questions: [
+    "sessionId": "session-5",
+    "title": "Session 5 Concept Check: Quantum Machine Learning (QML, QA-PIN & PyTorch QNNs)",
+    "passingScore": 75,
+    "questions": [
       {
-        id: 's5-q1',
-        question:
-          'What is the primary role of a quantum feature map (such as ZZFeatureMap) in quantum classification?',
-        options: [
-          'To compress the dataset into a single bit',
-          'To non-linearly embed classical feature vectors into high-dimensional quantum Hilbert space states |Φ(x)⟩',
-          'To eliminate the need for classical data preprocessing',
-          'To convert quantum circuits into convolutional neural networks',
+        "id": "s5-q1",
+        "question": "In Jay Shah\u2019s introductory formulation of quantum machine learning, what was Richard Feynman\u2019s famous 1981 insight that initiated the field of quantum computation?",
+        "options": [
+          "\"Nature isn't classical, dammit, and if you want to make a simulation of nature, you'd better make it quantum mechanical!\"",
+          "\"Quantum computers will replace all classical CPUs by the year 2000.\"",
+          "\"Artificial intelligence requires infinite qubits to compute backpropagation.\"",
+          "\"Entanglement is only an illusion created by classical measurement error.\""
         ],
-        correctIndex: 1,
-        explanation:
-          'A quantum feature map applies unitary transformations parameterized by input data $x$, projecting classical inputs non-linearly into high-dimensional Hilbert space where complex patterns become linearly separable.',
+        "correctIndex": 0,
+        "explanation": "Richard Feynman stated in his 1981 keynote that simulating nature requires quantum mechanical computers because classical computers face an exponential simulation overhead for quantum systems."
       },
       {
-        id: 's5-q2',
-        question:
-          'What phenomenon causes the variance of gradients in random deep parameterized quantum circuits to vanish exponentially with the number of qubits?',
-        options: [
-          'Overfitting',
-          'Barren plateaus',
-          'Exploding gradients',
-          'Aliasing',
+        "id": "s5-q2",
+        "question": "Jay Shah outlined four quantum computational modalities. Which modality relies on adiabatic evolution to find the lowest energy ground state of an Ising spin Hamiltonian?",
+        "options": [
+          "Continuous-Variable Quantum Computing (Photonic qumodes)",
+          "Quantum Annealing (e.g., D-Wave systems)",
+          "Discrete Gate-Model Quantum Computing",
+          "Quantum-Inspired Classical Tensor Networks"
         ],
-        correctIndex: 1,
-        explanation:
-          'Barren plateaus occur when the gradients of cost functions vanish exponentially in $N$ ($Var[∂C/∂θ] ~ O(2^{-N})$), making gradient-based training impossible without local cost functions or structured initializations.',
+        "correctIndex": 1,
+        "explanation": "Quantum Annealing maps optimization problems to the ground state of an Ising spin Hamiltonian and adiabatically evolves the system to find the global energy minimum."
       },
       {
-        id: 's5-q3',
-        question:
-          'In a Quantum Support Vector Classifier (QSVC), how is the quantum kernel matrix element K(x_i, x_j) computed?',
-        options: [
-          'By taking the classical dot product x_i · x_j',
-          'By evaluating the fidelity overlap |⟨Φ(x_i)|Φ(x_j)⟩|² using a quantum circuit',
-          'By training a deep neural network on a GPU',
-          'By counting the number of CNOT gates in the circuit',
+        "id": "s5-q3",
+        "question": "According to the taxonomy presented in the lecture, what is the precise distinction between QML (Quantum Machine Learning) and QDL (Quantum Deep Learning)?",
+        "options": [
+          "QML is executed on classical GPUs, whereas QDL is executed exclusively on paper",
+          "QML requires 1,000+ qubits, whereas QDL only uses 2 qubits",
+          "QML encompasses general hybrid algorithms like Quantum SVM and Quantum PCA, whereas QDL specifically involves deep parameterized quantum circuits (PQCs) arranged in layered neural architectures",
+          "QML cannot compute gradients, whereas QDL uses classical backpropagation without parameter-shift rules"
         ],
-        correctIndex: 1,
-        explanation:
-          'The quantum kernel evaluates the transition probability / fidelity between quantum feature states: $K(x_i, x_j) = |⟨0|U^†(x_j) U(x_i)|0⟩|² = |⟨Φ(x_j)|Φ(x_i)⟩|²$.',
+        "correctIndex": 2,
+        "explanation": "QML is the broad umbrella covering all hybrid algorithms (QSVM, Quantum Kernels, QPCA), while QDL specifically denotes deep parameterized variational circuits arranged in stacked neural network layers."
       },
       {
-        id: 's5-q4',
-        question:
-          'How does hardware connectivity affect the evaluation of ZZFeatureMap entangling blocks?',
-        options: [
-          'Coupling topology has no effect on two-qubit gates',
-          'Non-adjacent qubit entanglers require SWAP routing passes that increase circuit depth and introduce noise into kernel evaluations',
-          'It speeds up execution linearly',
-          'It automatically cures barren plateaus',
+        "id": "s5-q4",
+        "question": "In a standard Quantum Neural Network (QNN) layer pipeline, what are the three sequential operations that transform classical data into an output prediction?",
+        "options": [
+          "Measurement \u2192 Classical Optimizer \u2192 Feature Map",
+          "Transpilation \u2192 Error Mitigation \u2192 Dilution Cooling",
+          "Ansatz \u2192 Post-Selection \u2192 Parameter Shift",
+          "Quantum Feature Map (Data Encoding) \u2192 Parameterized Ansatz (Trainable Unitary) \u2192 Observable Measurement (Expectation Value)"
         ],
-        correctIndex: 1,
-        explanation:
-          'The entangling layer of ZZFeatureMaps includes RZZ interactions. On constrained topologies (like linear or heavy-hex), non-local RZZ terms require SWAP routing, inflating depth and fidelity errors.',
+        "correctIndex": 3,
+        "explanation": "A QNN layer operates in three stages: (1) Encoding classical features into a quantum state via a Feature Map, (2) Applying trainable rotations via a Parameterized Ansatz, and (3) Measuring observable expectation values."
       },
       {
-        id: 's5-q5',
-        question: 'What is the role of the parameterized ansatz in a Variational Quantum Classifier (VQC)?',
-        options: [
-          'To act as a fixed random feature map',
-          'To apply trainable rotation and entanglement gates whose parameters are optimized to separate classes',
-          'To permanently store the training dataset',
-          'To execute Shor’s algorithm',
+        "id": "s5-q5",
+        "question": "What fundamental capability distinguishes Qiskit\u2019s ZZFeatureMap from a standard ZFeatureMap?",
+        "options": [
+          "ZZFeatureMap includes two-qubit entangling phase gates R_zz(2(\u03c0 - x_i)(\u03c0 - x_j)) between pairs of qubits, creating non-linear quantum correlations that cannot be efficiently simulated classically",
+          "ZZFeatureMap uses half the number of qubits as ZFeatureMap",
+          "ZZFeatureMap only supports single-qubit Pauli-X rotations",
+          "ZZFeatureMap completely eliminates circuit depth"
         ],
-        correctIndex: 1,
-        explanation: 'The ansatz serves as the trainable part of the model (akin to neural network weights). The classical optimizer iteratively updates its rotation angles to minimize the classification loss.',
+        "correctIndex": 0,
+        "explanation": "ZZFeatureMap applies Hadamard gates followed by single-qubit Rz rotations and two-qubit Rzz entangling phase gates parameterized by pairwise data products (\u03c0 - x_i)(\u03c0 - x_j), embedding data in an intractable non-linear Hilbert space."
       },
       {
-        id: 's5-q6',
-        question: 'How does a Quantum Support Vector Machine (QSVM) utilize a quantum computer?',
-        options: [
-          'By training the classical SVM weights entirely on quantum hardware',
-          'By using a quantum circuit to compute the inner product (kernel) between data points mapped to a quantum Hilbert space',
-          'By replacing the classical CPU with a QPU for all OS tasks',
-          'By using Grover’s algorithm to search for the best hyperparameter',
+        "id": "s5-q6",
+        "question": "During the lecture, what nuanced insight did Jay Shah share regarding the debate around entanglement in quantum feature maps?",
+        "options": [
+          "Entanglement always guarantees exponential quantum advantage on all datasets",
+          "Entanglement increases expressibility but can also lead to barren plateaus and trainability bottlenecks; sometimes unentangled feature maps generalize better for specific structured problems",
+          "Entanglement cannot be simulated on classical computers under any circumstances",
+          "Entanglement only occurs when using superconducting qubits, not photonic systems"
         ],
-        correctIndex: 1,
-        explanation: 'A QSVM delegates only the kernel matrix evaluation K(x_i, x_j) to the quantum computer, passing the resulting matrix back to a standard classical SVM optimizer.',
+        "correctIndex": 1,
+        "explanation": "Jay Shah highlighted that while entanglement expands the reachable Hilbert space volume (expressibility), excessive entanglement often induces barren plateaus where gradients vanish, so simpler unentangled maps can offer superior generalization."
+      },
+      {
+        "id": "s5-q7",
+        "question": "In Quantum Natural Language Processing (QNLP) as introduced in the session, what is the structural difference between Type 1 and Type 2 QNLP architectures?",
+        "options": [
+          "Type 1 operates on text, while Type 2 operates on audio signals",
+          "Type 1 uses 100 qubits, while Type 2 uses 1 qubit",
+          "Type 1 embeds classical NLP embeddings (word2vec) into quantum circuits, whereas Type 2 uses native compositional distributional models (DisCoCat) where grammatical structures directly map to quantum tensor networks",
+          "Type 1 compiles only in Python 2, whereas Type 2 compiles in Python 3"
+        ],
+        "correctIndex": 2,
+        "explanation": "Type 1 QNLP feeds classical vector embeddings into quantum circuits as feature vectors, whereas Type 2 QNLP (DisCoCat / lambeq) maps grammatical syntax trees directly to quantum circuit tensor networks."
+      },
+      {
+        "id": "s5-q8",
+        "question": "In Quantum Convolutional Neural Networks (QCNN), what quantum operation serves as the analog to classical pooling (downsampling)?",
+        "options": [
+          "Applying global Hadamard gates across all qubits",
+          "Adding ancilla qubits to double the Hilbert space",
+          "Transpiling with optimization level 0",
+          "Measuring or tracing out a subset of qubits conditioned on two-qubit unitary operations, reducing system dimensionality"
+        ],
+        "correctIndex": 3,
+        "explanation": "In QCNNs, quantum pooling applies two-qubit controlled gates and then measures or traces out one of the qubits, reducing the active qubit register size while preserving feature representations."
+      },
+      {
+        "id": "s5-q9",
+        "question": "In Physics-Informed Neural Networks (PINNs) and Jay Shah's QA-PIN framework, how is the total loss function constructed to train the model?",
+        "options": [
+          "L_total = w_data * L_data + w_pde * L_pde + w_bc * L_bc + w_ic * L_ic (combining empirical data error, differential equation residual, boundary conditions, and initial conditions)",
+          "L_total = Accuracy * Qubit Count",
+          "L_total is computed by minimizing classical CPU temperature",
+          "L_total only penalizes the number of CNOT gates in the circuit"
+        ],
+        "correctIndex": 0,
+        "explanation": "PINNs integrate physical governing laws into optimization by summing the residual loss of the partial differential equation (PDE), initial condition (IC) errors, boundary condition (BC) errors, and labeled data errors."
+      },
+      {
+        "id": "s5-q10",
+        "question": "In Jay Shah\u2019s Quantum-Aware Physics-Informed Neural Network (QA-PIN) formulation, by what exact formula is the number of trainable parameters in an ansatz layer reduced compared to a classical dense layer?",
+        "options": [
+          "Parameter reduction is always a flat 50%",
+          "A classical layer of N_in x N_out weights is compressed into an ansatz with L x n parameters (where L is the number of layers and n = ceil(log2 N) is the number of qubits)",
+          "Parameters scale as 2^n rather than polynomial n",
+          "QA-PIN eliminates all parameters and uses zero weights"
+        ],
+        "correctIndex": 1,
+        "explanation": "QA-PIN replaces large dense weight matrices with parameterized quantum circuit layers requiring only L x n rotation angles (where n is the number of qubits, logarithmic in feature dimension), drastically compressing model weights."
+      },
+      {
+        "id": "s5-q11",
+        "question": "In the 1D viscous Burgers' equation benchmark (\u2202u/\u2202t + u \u2202u/\u2202x = \u03bd \u2202\u00b2u/\u2202x\u00b2) presented in the QA-PIN paper, what weight reduction and performance did the quantum-aware architecture achieve?",
+        "options": [
+          "99% weight reduction with 50% accuracy loss",
+          "0% weight reduction with identical training time",
+          "Over 20% reduction in trainable parameters while maintaining comparable or superior L2 relative error against classical PINNs",
+          "It required 128 physical QPUs running simultaneously"
+        ],
+        "correctIndex": 2,
+        "explanation": "On the non-linear 1D Burgers' equation, QA-PIN achieved more than a 20% reduction in parameter count while achieving equivalent or superior L2 error convergence compared to standard classical PINNs."
+      },
+      {
+        "id": "s5-q12",
+        "question": "In the Ice Nucleation inverse problem benchmark presented by Jay Shah, what physical parameter was estimated, and what parameter compression was demonstrated?",
+        "options": [
+          "Speed of light in vacuum; 5% compression",
+          "Gravitational constant G; 10% compression",
+          "Electron charge e; 15% compression",
+          "Thomson's chemical coefficient (\u03bc) governing ice crystal growth kinetics, achieved with a 32% reduction in neural network parameters"
+        ],
+        "correctIndex": 3,
+        "explanation": "In the inverse ice nucleation study, QA-PIN successfully estimated Thomson's kinetic coefficient \u03bc while reducing total trainable neural network parameters by 32%."
+      },
+      {
+        "id": "s5-q13",
+        "question": "How does the parameter-shift rule calculate analytical gradients \u2202\u27e8O\u27e9/\u2202\u03b8_i of a parameterized quantum circuit on real hardware without numerical finite-difference errors?",
+        "options": [
+          "\u2202\u27e8O\u27e9/\u2202\u03b8_i = (\u27e8O\u27e9_(\u03b8_i + \u03c0/2) - \u27e8O\u27e9_(\u03b8_i - \u03c0/2)) / 2 (evaluating the circuit expectation at two shifted parameter values \u00b1 \u03c0/2)",
+          "By taking the symbolic derivative of the Python bytecode",
+          "By running backpropagation directly inside the dilution refrigerator",
+          "By setting the learning rate to zero"
+        ],
+        "correctIndex": 0,
+        "explanation": "The parameter-shift rule yields exact analytical gradients on physical quantum processors by executing two circuit evaluations shifted by \u00b1\u03c0/2: d\u27e8O\u27e9/d\u03b8 = [\u27e8O\u27e9(\u03b8 + \u03c0/2) - \u27e8O\u27e9(\u03b8 - \u03c0/2)] / 2."
+      },
+      {
+        "id": "s5-q14",
+        "question": "In the hands-on code demonstration, which class from qiskit_machine_learning.connectors was used to seamlessly bridge a Qiskit QNN into a standard PyTorch nn.Module?",
+        "options": [
+          "QiskitPyTorchBridge",
+          "TorchConnector",
+          "QuantumLinearLayer",
+          "EstimatorTorchAdapter"
+        ],
+        "correctIndex": 1,
+        "explanation": "Qiskit Machine Learning provides TorchConnector, which wraps an EstimatorQNN or SamplerQNN into a PyTorch-compatible module with automatic backward gradient calculation."
+      },
+      {
+        "id": "s5-q15",
+        "question": "In the PennyLane hands-on demonstration, how is a quantum circuit converted into a trainable PyTorch neural network layer?",
+        "options": [
+          "qml.convert_to_keras()",
+          "qml.numpy.tensor()",
+          "Wrapping the qml.qnode inside qml.qnn.TorchLayer(qnode, weight_shapes)",
+          "By exporting the circuit to an ONNX file"
+        ],
+        "correctIndex": 2,
+        "explanation": "PennyLane's qml.qnn.TorchLayer accepts a QNode and a dictionary of weight tensor shapes, creating a native PyTorch layer that integrates into torch.nn.Sequential pipelines."
+      },
+      {
+        "id": "s5-q16",
+        "question": "In the live classification demonstration on the make_moons non-linear dataset, why was a quantum neural network able to separate the two interleaving half-circles?",
+        "options": [
+          "The dataset was pre-sorted in alphabetical order",
+          "Classical neural networks cannot solve 2D datasets",
+          "The learning rate was set to 1.0",
+          "The quantum feature map embedded the 2D non-linear coordinates into a higher-dimensional Hilbert space where the two moons became linearly separable"
+        ],
+        "correctIndex": 3,
+        "explanation": "The quantum feature map maps 2D Cartesian coordinates non-linearly into the multi-qubit Bloch state space, allowing a linear hyperplane (ansatz + measurement) to separate non-linear decision boundaries."
+      },
+      {
+        "id": "s5-q17",
+        "question": "In Jay Shah\u2019s open-source library QRL-QAI (Quantum Reinforcement Learning for Quantum Artificial Intelligence), what custom OpenAI Gym environment was showcased?",
+        "options": [
+          "BlochSphere-v0 (where an agent learns optimal pulse/gate sequences to navigate a qubit state vector to a target point on the Bloch sphere)",
+          "CartPole-QPU",
+          "MountainCar-Quantum",
+          "Atari-Qiskit"
+        ],
+        "correctIndex": 0,
+        "explanation": "QRL-QAI features the BlochSphere-v0 environment, where reinforcement learning agents take discrete or continuous rotation actions to control single and multi-qubit states toward a target state."
+      },
+      {
+        "id": "s5-q18",
+        "question": "How does Barren Plateau phenomenon manifest mathematically in deep parameterized quantum circuits?",
+        "options": [
+          "The loss function increases towards infinity",
+          "The variance of the gradient vanishes exponentially with the number of qubits n: Var[\u2202_\u03b8 C] \u2208 O(2^-n), flattening the training landscape",
+          "The quantum circuit outputs negative probabilities",
+          "The classical optimizer terminates due to memory exhaustion"
+        ],
+        "correctIndex": 1,
+        "explanation": "McClean et al. (2018) proved that for random deep Haar-distributed parameterized quantum circuits, the gradient variance decreases exponentially with qubit count: Var[\u2202C/\u2202\u03b8] ~ O(2^-n)."
+      },
+      {
+        "id": "s5-q19",
+        "question": "What strategy was recommended during the lecture to mitigate barren plateaus in variational quantum algorithms?",
+        "options": [
+          "Adding 50 additional layers of random CNOT gates",
+          "Using single-precision floating point numbers",
+          "Using shallow circuit depths, local observables (measuring 1 or 2 qubits rather than global Z^\u2297n), and identity/pre-trained parameter initialization",
+          "Replacing all Hadamard gates with Pauli-X gates"
+        ],
+        "correctIndex": 2,
+        "explanation": "Cerezo et al. showed that local cost functions (measuring local observables rather than global operators) together with shallow architectures and identity initialization prevent gradient vanishing."
+      },
+      {
+        "id": "s5-q20",
+        "question": "What is the primary advantage of Quantum Kernel methods (such as QSVC) over Variational Quantum Classifiers (VQC) with iterative classical optimization?",
+        "options": [
+          "Quantum kernels run with zero execution time",
+          "Quantum kernels do not require any quantum gates",
+          "Quantum kernels only work on classical tabular data",
+          "The optimization problem for QSVC is convex (guaranteeing a global optimum via quadratic programming without local minima or barren plateaus during training)"
+        ],
+        "correctIndex": 3,
+        "explanation": "Because QSVC computes a kernel Gram matrix K(x_i, x_j) and solves standard convex quadratic programming, it avoids the non-convex optimization landscapes, local minima, and barren plateaus inherent to VQC training."
       }
-    ],
+    ]
   },
   'session-6': {
-    sessionId: 'session-6',
-    title: 'Session 6 Concept Check: Quantum Cyber Security / Cryptography',
-    passingScore: 75,
-    questions: [
+    "sessionId": "session-6",
+    "title": "Session 6 Concept Check: Quantum Cyber Security, Cryptography & Hackathon Launch",
+    "passingScore": 75,
+    "questions": [
       {
-        id: 's6-q1',
-        question:
-          'Which mathematical problem underlying RSA encryption does Shor’s algorithm solve in polynomial time on a fault-tolerant quantum computer?',
-        options: [
-          'Integer factorization via quantum order finding',
-          'Symmetric block cipher substitution',
-          'SHA-256 hash collision generation',
-          'Graph coloring',
+        "id": "s6-q1",
+        "question": "In the RSA key generation algorithm with distinct primes p and q, why must the public encryption exponent e be selected such that gcd(e, phi(n)) = 1?",
+        "options": [
+          "To ensure that a unique modular multiplicative inverse d = e^(-1) mod phi(n) exists via the Extended Euclidean Algorithm",
+          "To prevent trial-division factoring algorithms from discovering p and q",
+          "To guarantee that the resulting ciphertext is always strictly larger than the modulus n",
+          "To eliminate quadratic search speedups achievable via Grover's algorithm"
         ],
-        correctIndex: 0,
-        explanation:
-          'Shor’s algorithm computes the period $r$ of $a^x \\pmod N$ in $O((\\log N)^3)$ time using the Quantum Fourier Transform (QFT), efficiently breaking RSA integer factorization.',
+        "correctIndex": 0,
+        "explanation": "The condition gcd(e, phi(n)) = 1 is necessary and sufficient for e to have a unique modular multiplicative inverse d modulo phi(n), satisfying e * d = 1 (mod phi(n))."
       },
       {
-        id: 's6-q2',
-        question:
-          'What is the primary architectural bottleneck when compiling Shor’s modular arithmetic on physical hardware?',
-        options: [
-          'Lack of single-qubit Pauli-X gates',
-          'Deep reversible carry chains in modular addition and exponentiation requiring long routing SWAP sequences',
-          'Classical computers cannot compile Python code',
-          'Qiskit does not support modular math',
+        "id": "s6-q2",
+        "question": "In the mathematical proof of RSA decryption correctness, which number-theoretic theorem directly guarantees that m^(1 + k*phi(n)) = m (mod n) for all messages m coprime to n?",
+        "options": [
+          "Wilson's Theorem",
+          "Euler's Totient Theorem (a^phi(n) = 1 mod n)",
+          "Lagrange's Four-Square Theorem",
+          "Goldbach's Conjecture"
         ],
-        correctIndex: 1,
-        explanation:
-          'Reversible modular addition and multiplication circuits require sequential carry propagation chains across all bits, creating tight dependencies and massive SWAP overhead on constrained planar topologies.',
+        "correctIndex": 1,
+        "explanation": "Euler's Totient Theorem states that if gcd(m, n) = 1, then m^phi(n) = 1 (mod n). Therefore, m^(e*d) = m^(1 + k*phi(n)) = m * (m^phi(n))^k = m * (1)^k = m (mod n)."
       },
       {
-        id: 's6-q3',
-        question:
-          'Which post-quantum cryptographic algorithm was standardized by NIST in 2024 as FIPS 203 for general key encapsulation (ML-KEM)?',
-        options: ['CRYSTALS-Kyber', 'RSA-4096', 'ECDSA P-384', 'DES'],
-        correctIndex: 0,
-        explanation:
-          'NIST standardized CRYSTALS-Kyber as ML-KEM (Module-Lattice Key Encapsulation Mechanism) in FIPS 203 as the premier post-quantum key establishment standard.',
+        "id": "s6-q3",
+        "question": "In the BB84 QKD protocol, if an eavesdropper (Eve) mounts an intercept-resend attack, what is the expected error rate introduced on bits where Alice and Bob used matching bases, and what is the typical QBER abort threshold?",
+        "options": [
+          "50% introduced error rate; abort threshold of 25%",
+          "10% introduced error rate; abort threshold of 5%",
+          "25% introduced error rate; abort threshold of ~11% (Shor-Preskill security bound)",
+          "0% introduced error rate; abort threshold of 1%"
+        ],
+        "correctIndex": 2,
+        "explanation": "When Eve measures in the wrong basis (50% probability) and resends to Bob, Bob has a 50% chance of measuring the incorrect bit when using Alice's basis, yielding a 25% error rate (0.5 * 0.5 = 0.25). The theoretical threshold for secret key distillation is ~11%."
       },
       {
-        id: 's6-q4',
-        question:
-          'By what factor does Grover’s algorithm speed up brute-force attacks against symmetric encryption (AES-256)?',
-        options: [
-          'Exponential speedup (solves in seconds)',
-          'Quadratic speedup (reducing 256-bit effective security to 128-bit)',
-          'Polynomial speedup of degree 10',
-          'No speedup whatsoever',
+        "id": "s6-q4",
+        "question": "Compared to RSA-2048 or RSA-3072, why is Elliptic Curve Cryptography (e.g., secp256r1 / NIST P-256) widely preferred in resource-constrained classical computing environments?",
+        "options": [
+          "ECC is mathematically proven to be completely immune to Shor's quantum algorithm",
+          "ECC does not require modular arithmetic or field operations",
+          "ECC private keys can be derived directly from public keys without discrete log calculations",
+          "ECC provides equivalent cryptographic security (128 bits) with dramatically smaller key sizes (256 bits vs 3072 bits), reducing memory footprint and network overhead"
         ],
-        correctIndex: 1,
-        explanation:
-          'Grover’s quantum search provides a quadratic speedup ($O(\\sqrt{N})$), effectively halving the key length security level (e.g. AES-256 offers 128 bits of quantum security).',
+        "correctIndex": 3,
+        "explanation": "Because solving the ECDLP on generic curves requires O(sqrt(q)) operations via Pollard's rho algorithm (compared to subexponential GNFS for RSA), a 256-bit elliptic curve key matches the security of a 3072-bit RSA key, vastly improving bandwidth and computational efficiency."
       },
       {
-        id: 's6-q5',
-        question: 'What principle guarantees the security of Quantum Key Distribution (QKD) protocols like BB84?',
-        options: [
-          'The computational difficulty of factoring large primes',
-          'The no-cloning theorem and the fact that measurement disturbs a quantum state, revealing any eavesdropper',
-          'The speed of light',
-          'Symmetric block encryption',
+        "id": "s6-q5",
+        "question": "In public-key cryptography, what mathematically characterizes a 'trapdoor one-way function'?",
+        "options": [
+          "A function that is computationally easy to evaluate in the forward direction, but computationally infeasible to invert unless auxiliary private information (the trapdoor) is known",
+          "A hash function that maps arbitrary-length inputs to fixed-length bitstrings with zero mathematical probability of collisions",
+          "A symmetric block cipher where the encryption key and decryption key are identical and derived via linear feedback shift registers",
+          "A reversible quantum logic gate that collapses its superposition state whenever non-orthogonal measurements are executed"
         ],
-        correctIndex: 1,
-        explanation: 'Unlike classical cryptography which relies on unproven mathematical hardness, QKD relies on quantum physics: an eavesdropper cannot copy unknown quantum states (no-cloning) and intercepting them introduces detectable errors.',
+        "correctIndex": 0,
+        "explanation": "A trapdoor one-way function can be computed in polynomial time in the forward direction by anyone with the public key, but cannot be inverted in polynomial time unless the private trapdoor information is available."
       },
       {
-        id: 's6-q6',
-        question: 'Which approach to post-quantum cryptography is based on the difficulty of finding the shortest vector in a high-dimensional grid?',
-        options: [
-          'Isogeny-based cryptography',
-          'Hash-based signatures',
-          'Lattice-based cryptography',
-          'Multivariate polynomials',
+        "id": "s6-q6",
+        "question": "How is the Chinese Remainder Theorem (CRT) typically applied to optimize RSA private key decryption operations?",
+        "options": [
+          "It eliminates the necessity of generating large prime numbers p and q",
+          "It allows decryption exponentiations to be computed modulo p and modulo q independently, accelerating private key computation by approximately 4x",
+          "It enables the public modulus n to be kept confidential from eavesdroppers",
+          "It prevents quantum computers from using phase estimation on the ciphertext"
         ],
-        correctIndex: 2,
-        explanation: 'Lattice-based cryptography (including NIST winners like CRYSTALS-Kyber/Dilithium) relies on the Shortest Vector Problem (SVP) and Learning With Errors (LWE), which are believed to be hard even for quantum computers.',
+        "correctIndex": 1,
+        "explanation": "By computing m_p = c^(d mod p-1) mod p and m_q = c^(d mod q-1) mod q and recombining via CRT, the bit lengths of the operands are halved, speeding up modular exponentiation by roughly a factor of 4."
+      },
+      {
+        "id": "s6-q7",
+        "question": "Under the NIST Post-Quantum Cryptography standards (FIPS 203 and FIPS 204), which underlying mathematical family forms the foundation of both ML-KEM (CRYSTALS-Kyber) and ML-DSA (CRYSTALS-Dilithium)?",
+        "options": [
+          "Supersingular elliptic curve isogenies (SIKE)",
+          "Multivariate quadratic polynomial systems (Rainbow)",
+          "Structured Euclidean lattices (Module Learning With Errors / M-LWE and Module Short Integer Solution / M-SIS)",
+          "Error-correcting Goppa codes (Classic McEliece)"
+        ],
+        "correctIndex": 2,
+        "explanation": "Both ML-KEM (FIPS 203) and ML-DSA (FIPS 204) are lattice-based cryptographic algorithms built upon hardness problems over module lattices, specifically Module-LWE and Module-SIS."
+      },
+      {
+        "id": "s6-q8",
+        "question": "In the modular arithmetic demonstration presented in the lecture with modulus n = 15 and base a = 7, what is the order (period) r such that 7^r = 1 (mod 15)?",
+        "options": [
+          "r = 1 (7^1 = 7 mod 15)",
+          "r = 2 (7^2 = 49 = 4 mod 15)",
+          "r = 3 (7^3 = 343 = 13 mod 15)",
+          "r = 4 (7^4 = 2401 = 160 * 15 + 1 = 1 mod 15)"
+        ],
+        "correctIndex": 3,
+        "explanation": "Computing powers of 7 modulo 15: 7^1 = 7, 7^2 = 49 = 4, 7^3 = 28 = 13, 7^4 = 91 = 1 (mod 15). The smallest positive integer r where 7^r = 1 (mod 15) is r = 4."
+      },
+      {
+        "id": "s6-q9",
+        "question": "In the Diffie-Hellman key exchange over a finite cyclic group G of prime order q generated by g, which computational problem prevents an eavesdropper from computing the shared secret g^(ab) from public values g^a and g^b?",
+        "options": [
+          "The Computational Diffie-Hellman (CDH) problem and the Discrete Logarithm Problem (DLP)",
+          "The Integer Factorization Problem of composite modulus n = pq",
+          "The Shortest Vector Problem (SVP) in high-dimensional Euclidean lattices",
+          "The NP-completeness of evaluating modular exponentiation with repeated squaring"
+        ],
+        "correctIndex": 0,
+        "explanation": "Diffie-Hellman security relies on the Computational Diffie-Hellman (CDH) problem and the hardness of the Discrete Logarithm Problem (DLP) in the cyclic group, where finding a from g^a is computationally infeasible."
+      },
+      {
+        "id": "s6-q10",
+        "question": "In Elliptic Curve Cryptography (ECC), an elliptic curve over a finite field F_p (p > 3) is given in short Weierstrass form as y^2 = x^3 + ax + b. What condition must coefficients a and b satisfy to ensure the curve is non-singular?",
+        "options": [
+          "a^2 + b^2 != 0",
+          "4a^3 + 27b^2 != 0",
+          "a + b = 1 mod p",
+          "gcd(a, b) = 1"
+        ],
+        "correctIndex": 1,
+        "explanation": "The discriminant of the cubic x^3 + ax + b is proportional to Delta = -16(4a^3 + 27b^2). The condition 4a^3 + 27b^2 != 0 guarantees that the polynomial has no repeated roots, ensuring the curve contains no self-intersections or cusps."
+      },
+      {
+        "id": "s6-q11",
+        "question": "Which standardized NIST Post-Quantum digital signature scheme (FIPS 205) does NOT rely on lattice assumptions, but instead derives its security strictly from the collision and preimage resistance of cryptographic hash functions?",
+        "options": [
+          "ML-DSA (CRYSTALS-Dilithium)",
+          "FN-DSA (Falcon)",
+          "SLH-DSA (SPHINCS+)",
+          "LMS (Leighton-Micali Signatures)"
+        ],
+        "correctIndex": 2,
+        "explanation": "SLH-DSA (FIPS 205, based on SPHINCS+) is a stateless hash-based digital signature scheme whose security relies entirely on the established cryptographic security properties of underlying hash functions (e.g., SHA-256 or SHAKE-256)."
+      },
+      {
+        "id": "s6-q12",
+        "question": "According to national cybersecurity roadmaps (e.g., NSA CNSA 2.0 guidelines), what deployment strategy is recommended during the transition period before legacy classical cryptography is fully retired?",
+        "options": [
+          "Abandoning public-key cryptography and relying exclusively on physical air-gapping",
+          "Restricting all consumer network communications exclusively to satellite-based QKD links",
+          "Replacing all digital signature verification with pre-shared one-time pads",
+          "Implementing hybrid cryptosystems that combine classical algorithms (e.g., ECDH/RSA) with post-quantum algorithms (e.g., ML-KEM) so that communications remain protected if either scheme holds"
+        ],
+        "correctIndex": 3,
+        "explanation": "CNSA 2.0 and NIST recommend hybrid key exchange mechanisms combining an established classical algorithm with an approved post-quantum algorithm (e.g., X25519 + ML-KEM-768). This defends against future quantum decryption while safeguarding against unforeseen vulnerabilities in newly standardized PQC schemes."
+      },
+      {
+        "id": "s6-q13",
+        "question": "How does Shor's quantum algorithm achieve an exponential speedup over classical algorithms when solving integer factorization and discrete logarithms?",
+        "options": [
+          "By mapping the problem to period finding of a modular function and evaluating the period in polynomial time O((log n)^3) using the Quantum Fourier Transform (QFT)",
+          "By evaluating all candidate factors in parallel via unstructured database search in O(sqrt(N)) oracle queries",
+          "By cloning the quantum superposition of private keys to circumvent the classical bit-length constraint",
+          "By replacing modular arithmetic operations with linear quantum teleportation circuits"
+        ],
+        "correctIndex": 0,
+        "explanation": "Shor's algorithm reduces integer factorization to order (period) finding of f(x) = a^x mod N. The Quantum Fourier Transform extracts this global period in polynomial time O((log n)^3), delivering an exponential speedup over the best classical algorithms."
+      },
+      {
+        "id": "s6-q14",
+        "question": "In the BB84 Quantum Key Distribution protocol, Alice prepares single photons by encoding bit values randomly across which two mutually unbiased conjugate polarization bases?",
+        "options": [
+          "Circular basis {|L>, |R>} and Elliptical basis {|E1>, |E2>}",
+          "Rectilinear basis (+ with 0 deg, 90 deg) and Diagonal basis (x with 45 deg, 135 deg)",
+          "Bell entangled state basis and GHZ tripartite basis",
+          "Longitudinal spin basis and Transverse orbital angular momentum basis"
+        ],
+        "correctIndex": 1,
+        "explanation": "BB84 uses two conjugate, non-orthogonal polarization bases: the rectilinear basis (+) with orthogonal states |0 deg> and |90 deg>, and the diagonal basis (x) with orthogonal states |45 deg> and |135 deg>."
+      },
+      {
+        "id": "s6-q15",
+        "question": "In the Abelian group formed by the points on an elliptic curve E(F_p), what serves as the group identity element?",
+        "options": [
+          "The origin coordinate (0, 0)",
+          "The point (1, 1)",
+          "The point at infinity O (ideal point in projective coordinates)",
+          "The curve inflection coordinate (a, b)"
+        ],
+        "correctIndex": 2,
+        "explanation": "The identity element of an elliptic curve group is the point at infinity O. For any curve point P, P + O = P, and P + (-P) = O, where -P is the reflection of P across the x-axis."
+      },
+      {
+        "id": "s6-q16",
+        "question": "In the lecturer's detailed RSA key generation example with prime factors p = 11 and q = 13, what are the values of the modulus n and the totient phi(n)?",
+        "options": [
+          "n = 120 and phi(n) = 143",
+          "n = 143 and phi(n) = 142",
+          "n = 130 and phi(n) = 110",
+          "n = 143 and phi(n) = 120"
+        ],
+        "correctIndex": 3,
+        "explanation": "The modulus is n = p * q = 11 * 13 = 143. The Euler totient is phi(n) = (p - 1) * (q - 1) = (11 - 1) * (13 - 1) = 10 * 12 = 120."
+      },
+      {
+        "id": "s6-q17",
+        "question": "What is the primary impact of Grover's quantum search algorithm on symmetric ciphers (e.g., AES), and what is the standard countermeasure?",
+        "options": [
+          "It provides a quadratic speedup reducing effective key security from k bits to k/2 bits; the countermeasure is doubling key sizes from AES-128 to AES-256",
+          "It provides an exponential speedup completely breaking all symmetric ciphers; the countermeasure is replacing AES with asymmetric lattice cryptography",
+          "It identifies modular inverses in polynomial time; the countermeasure is replacing block ciphers with stream ciphers",
+          "It passively reconstructs secret keys from ciphertext; the countermeasure is implementing optical QKD links"
+        ],
+        "correctIndex": 0,
+        "explanation": "Grover's algorithm searches unstructured spaces of size 2^k in O(2^(k/2)) operations, halving effective symmetric security. Doubling key lengths (e.g., moving from AES-128 to AES-256) preserves 128 bits of post-quantum security."
+      },
+      {
+        "id": "s6-q18",
+        "question": "Which fundamental quantum principle ensures that an eavesdropper (Eve) cannot duplicate intercepted flying qubits in a QKD transmission without creating detectable errors?",
+        "options": [
+          "The Quantum Zeno Effect",
+          "The No-Cloning Theorem",
+          "The Pauli Exclusion Principle",
+          "The Adiabatic Quantum Theorem"
+        ],
+        "correctIndex": 1,
+        "explanation": "The No-Cloning Theorem proves that an arbitrary unknown quantum state cannot be copied perfectly. Any attempt by Eve to measure and duplicate the photon disturbs its quantum state, introducing detectable errors in Bob's measurements."
+      },
+      {
+        "id": "s6-q19",
+        "question": "Using Fermat's Little Theorem, what is the exact value of 3^6 mod 7?",
+        "options": [
+          "3",
+          "6",
+          "1",
+          "0"
+        ],
+        "correctIndex": 2,
+        "explanation": "Since 7 is a prime and gcd(3, 7) = 1, Fermat's Little Theorem states a^(p-1) = 1 (mod p). Here p = 7, so 3^(7-1) = 3^6 = 729 = (104 * 7) + 1 = 1 (mod 7)."
+      },
+      {
+        "id": "s6-q20",
+        "question": "In Shor's algorithm, once an even period r is determined such that a^r = 1 (mod N) and a^(r/2) != -1 (mod N), how are non-trivial factors of composite integer N extracted?",
+        "options": [
+          "By calculating the modular quotient (a^r - 1) / N",
+          "By evaluating the discrete logarithm log_a(N) over field F_N",
+          "By executing Grover search over the interval [1, r]",
+          "By computing greatest common divisors gcd(a^(r/2) - 1, N) and gcd(a^(r/2) + 1, N) via Euclid's algorithm"
+        ],
+        "correctIndex": 3,
+        "explanation": "Since a^r - 1 = (a^(r/2) - 1)(a^(r/2) + 1) = 0 (mod N), N divides (a^(r/2) - 1)(a^(r/2) + 1). As long as a^(r/2) != +-1 (mod N), computing gcd(a^(r/2) - 1, N) and gcd(a^(r/2) + 1, N) using the classical Euclidean algorithm yields non-trivial factors of N."
       }
-    ],
+    ]
   },
 };
