@@ -151,7 +151,7 @@ export const FAQS_DATA: FAQItem[] = [
     number: 15,
     question: 'How do I form a hackathon team and what is the team size?',
     answer:
-      "Team size: 1 to 6 members (1 leader + up to 5 teammates) for Phase 1.\n\nSteps:\n1. Log in at https://www.qffsrmap2026.com/learning/hackathon\n2. Select your domain track and problem statement\n3. Enter your team name and add teammates by their Gmail addresses\n4. Teammates receive an invitation to accept on the portal\n\nEvery teammate's Gmail must be whitelisted first. If a teammate shows 'Not Found in Whitelist,' send us their Gmail on WhatsApp.\n\nPhase 1 deadline: 12 October 2026, 11:59 PM IST.",
+      "Team size: 2 to 6 members (1 leader + up to 5 teammates) for Phase 1.\n\nSteps:\n1. Log in at https://www.qffsrmap2026.com/learning/hackathon\n2. Select your domain track and problem statement\n3. Enter your team name and add teammates by their Gmail addresses\n4. Teammates receive an invitation to accept on the portal\n\nEvery teammate's Gmail must be whitelisted first. If a teammate shows 'Not Found in Whitelist,' send us their Gmail on WhatsApp.\n\nPhase 1 deadline: 12 October 2026, 11:59 PM IST.",
     category: 'Events & Competitions',
     isTopQuestion: true,
   },
