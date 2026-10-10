@@ -47,11 +47,13 @@ export function ResponsivePicture({
   objectFit = 'cover',
   objectPosition = 'center',
 }: ResponsivePictureProps) {
-  // Resolve paths from page & index if explicit paths not provided
-  const desktopSrc = desktop || (page && index ? `/Assets2/desktop/${page}/${index}.png` : '');
-  const laptopSrc = laptop || (page && index ? `/Assets2/laptop/${page}/${index}.png` : '');
-  const tabletSrc = tablet || (page && index ? `/Assets2/tablet/${page}/${index}.png` : '');
-  const mobileSrc = mobile || (page && index ? `/Assets2/mobile/${page}/${index}.png` : desktopSrc);
+  // Resolve paths from page & index if explicit paths not provided (using modern optimized WebP)
+  const desktopSrc = desktop || (page && index ? `/Assets2/desktop/${page}/${index}.webp` : '');
+  const laptopSrc = laptop || (page && index ? `/Assets2/laptop/${page}/${index}.webp` : '');
+  const tabletSrc = tablet || (page && index ? `/Assets2/tablet/${page}/${index}.webp` : '');
+  const mobileSrc = mobile || (page && index ? `/Assets2/mobile/${page}/${index}.webp` : desktopSrc);
+
+  const getMimeType = (src: string) => (src.endsWith('.webp') ? 'image/webp' : 'image/png');
 
   const containerClasses = [
     fill ? 'absolute inset-0 w-full h-full' : 'relative block w-full h-full',
@@ -77,7 +79,7 @@ export function ResponsivePicture({
         <source
           media="(min-width: 1280px)"
           srcSet={desktopSrc}
-          type="image/png"
+          type={getMimeType(desktopSrc)}
         />
       )}
 
@@ -86,7 +88,7 @@ export function ResponsivePicture({
         <source
           media="(min-width: 1024px)"
           srcSet={laptopSrc}
-          type="image/png"
+          type={getMimeType(laptopSrc)}
         />
       )}
 
@@ -95,7 +97,7 @@ export function ResponsivePicture({
         <source
           media="(min-width: 768px)"
           srcSet={tabletSrc}
-          type="image/png"
+          type={getMimeType(tabletSrc)}
         />
       )}
 

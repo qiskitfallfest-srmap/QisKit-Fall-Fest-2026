@@ -157,7 +157,7 @@ export function getRouteMetadata(routeKey: string): Metadata {
       type: 'website',
       images: [
         {
-          url: `${SITE_CONFIG.primaryDomain}/og-image.png`,
+          url: `${SITE_CONFIG.primaryDomain}/og-image.webp`,
           width: 1200,
           height: 630,
           alt: `${config.title} - ${SITE_CONFIG.brandName}`,
@@ -168,7 +168,7 @@ export function getRouteMetadata(routeKey: string): Metadata {
       card: 'summary_large_image',
       title: config.title,
       description: config.description,
-      images: [`${SITE_CONFIG.primaryDomain}/og-image.png`],
+      images: [`${SITE_CONFIG.primaryDomain}/og-image.webp`],
     },
     robots: {
       index: true,

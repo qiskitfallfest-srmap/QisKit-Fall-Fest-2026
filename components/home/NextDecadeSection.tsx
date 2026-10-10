@@ -7,8 +7,8 @@ import { ArrowRight } from 'lucide-react';
 import styles from './NextDecadeSection.module.css';
 
 const NEXT_DECADE_ASSETS = {
-  backgroundLight: '/images/home/next-decade/HOME-03-NEXT-DECADE-BACKGROUND-LIGHT.png',
-  backgroundDark: '/images/home/next-decade/HOME-03-NEXT-DECADE-BACKGROUND-DARK.png',
+  backgroundLight: '/images/home/next-decade/HOME-03-NEXT-DECADE-BACKGROUND-LIGHT.webp',
+  backgroundDark: '/images/home/next-decade/HOME-03-NEXT-DECADE-BACKGROUND-DARK.webp',
 };
 
 const STATS = [

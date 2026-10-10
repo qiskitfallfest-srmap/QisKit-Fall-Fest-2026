@@ -3,8 +3,8 @@ import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
 
 const MATTER_ASSETS = {
-  artworkLight: '/ABOUT-02-MATTER-LIGHT.png',
-  artworkDark: '/ABOUT-02-MATTER-DARK.png',
+  artworkLight: '/ABOUT-02-MATTER-LIGHT.webp',
+  artworkDark: '/ABOUT-02-MATTER-DARK.webp',
 };
 
 function ProgressStep({ title, text }: { title: string; text: string }) {

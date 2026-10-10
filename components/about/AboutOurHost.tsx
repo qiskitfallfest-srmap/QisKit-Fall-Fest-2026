@@ -5,10 +5,10 @@ import { ResponsivePicture } from '@/components/shared/ResponsivePicture';
 import { ArrowRight, Building2, UsersRound, MapPin } from 'lucide-react';
 
 const HOST_ASSETS = {
-  desktop: '/Assets2/desktop/about/3.png',
-  laptop: '/Assets2/laptop/about/3.png',
-  tablet: '/Assets2/tablet/about/3.png',
-  mobile: '/Assets2/mobile/about/3.png',
+  desktop: '/Assets2/desktop/about/3.webp',
+  laptop: '/Assets2/laptop/about/3.webp',
+  tablet: '/Assets2/tablet/about/3.webp',
+  mobile: '/Assets2/mobile/about/3.webp',
 };
 
 interface HostFeatureProps {

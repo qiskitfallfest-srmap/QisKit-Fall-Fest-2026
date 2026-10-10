@@ -746,7 +746,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
     linkText: 'Open Website Team Roster',
     slides: [
       {
-        src: '/images/team/srihaas-pigilam.jpg',
+        src: '/images/team/srihaas-pigilam.webp',
         alt: 'Srihaas Pigilam',
         title: 'Srihaas Pigilam',
         subtitle: 'Team Leader',
@@ -757,7 +757,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: '/images/team/pradnish-chintada.jpg',
+        src: '/images/team/pradnish-chintada.webp',
         alt: 'Pradnish Chintada',
         title: 'Pradnish Chintada',
         subtitle: 'Lead UI/UX and Frontend',
@@ -768,7 +768,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: '/images/team/shaik-subhani.jpg',
+        src: '/images/team/shaik-subhani.webp',
         alt: 'Shaik Mahaboob Subhani',
         title: 'Shaik Mahaboob Subhani',
         subtitle: 'Co-lead UI/UX and Components',
@@ -779,7 +779,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: '/images/team/robert-bandaru.jpg',
+        src: '/images/team/robert-bandaru.webp',
         alt: 'Robert Bandaru',
         title: 'Robert Bandaru',
         subtitle: 'UI/UX and documentation',
@@ -790,7 +790,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: '/images/team/sandeep-nambi.jpg',
+        src: '/images/team/sandeep-nambi.webp',
         alt: 'Sandeep Nambi',
         title: 'Sandeep Nambi',
         subtitle: 'UI/UX Technical and Documentation',

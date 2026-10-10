@@ -72,7 +72,7 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: `${SITE_CONFIG.primaryDomain}/og-image.png`,
+        url: `${SITE_CONFIG.primaryDomain}/og-image.webp`,
         width: 1200,
         height: 630,
         alt: `${SITE_CONFIG.brandName} - SRM University-AP x IBM Quantum`,
@@ -85,7 +85,7 @@ export const metadata: Metadata = {
     creator: SITE_CONFIG.social.twitterCreator,
     title: `${SITE_CONFIG.brandName} | SRM University-AP`,
     description: SITE_CONFIG.description,
-    images: [`${SITE_CONFIG.primaryDomain}/og-image.png`],
+    images: [`${SITE_CONFIG.primaryDomain}/og-image.webp`],
   },
   robots: {
     index: true,

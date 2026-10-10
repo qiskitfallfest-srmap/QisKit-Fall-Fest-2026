@@ -5,8 +5,8 @@ import Image from 'next/image';
 import { ArrowRight, Play, Globe, Building2, Atom, X } from 'lucide-react';
 
 const HERO_ASSETS = {
-  artworkLight: '/ABOUT-01-HERO-LIGHT.png',
-  artworkDark: '/ABOUT-01-HERO-DARK.png',
+  artworkLight: '/ABOUT-01-HERO-LIGHT.webp',
+  artworkDark: '/ABOUT-01-HERO-DARK.webp',
 };
 
 export function AboutHero() {

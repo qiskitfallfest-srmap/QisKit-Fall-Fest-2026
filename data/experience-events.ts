@@ -21,7 +21,7 @@ export const LEARN_ITEMS: ExperienceHeroItem[] = [
     title: 'Introduction to Qiskit,\nDiscord & Quantum Computing',
     description:
       'An introductory session covering qubits, classical bits, superposition, entanglement, fundamental quantum gates, Bell states and getting started with Qiskit. Build a first-principles understanding of quantum computing and prepare for the technical sessions that follow.',
-    image: '/images/events/world-class-workshops-dark.png',
+    image: '/images/events/world-class-workshops-dark.webp',
     accent: '#6C151E',
     category: 'learn',
     credit: 'FOUNDATIONAL MASTERCLASS',
@@ -34,7 +34,7 @@ export const LEARN_ITEMS: ExperienceHeroItem[] = [
     title: 'Quantum Material',
     description:
       'Explore the physical materials and technologies behind quantum processors, including superconducting qubits, Josephson junctions, transmons, semiconductor spin qubits and trapped-ion systems. Understand how material properties, coherence time and fabrication trade-offs influence quantum hardware.',
-    image: '/images/events/world-class-workshops-light.png',
+    image: '/images/events/world-class-workshops-light.webp',
     accent: '#B08D57',
     category: 'learn',
     credit: 'MATERIALS & HARDWARE PHYSICS',
@@ -47,7 +47,7 @@ export const LEARN_ITEMS: ExperienceHeroItem[] = [
     title: 'Qubit Connectivity\n& Architecture',
     description:
       'Explore quantum processor connectivity through coupling maps and compare different architectures, including linear, heavy-hex and experimental graph structures. Understand how physical qubit connectivity affects circuit execution, routing and SWAP overhead.',
-    image: '/images/events/inspiring-sessions-dark.png',
+    image: '/images/events/inspiring-sessions-dark.webp',
     accent: '#521018',
     category: 'learn',
     credit: 'HARDWARE ARCHITECTURE',
@@ -60,7 +60,7 @@ export const LEARN_ITEMS: ExperienceHeroItem[] = [
     title: 'Quantum Optics\n& Sensing',
     description:
       'Explore photonic qubits, single-photon sources, gravimetry, magnetometry and quantum-enhanced imaging. Discover how quantum phenomena can be used for sensing, measurement and imaging beyond conventional technologies.',
-    image: '/images/events/inspiring-sessions-light.png',
+    image: '/images/events/inspiring-sessions-light.webp',
     accent: '#3A0B10',
     category: 'learn',
     credit: 'OPTICS & PRECISION SENSING',
@@ -73,7 +73,7 @@ export const LEARN_ITEMS: ExperienceHeroItem[] = [
     title: 'Quantum Machine\nLearning',
     description:
       'Explore variational quantum circuits, hybrid classical–quantum training, data encoding strategies and variational classifiers. Understand where quantum machine learning fits today and how quantum circuits can participate in practical ML workflows.',
-    image: '/images/events/global-community-dark.png',
+    image: '/images/events/global-community-dark.webp',
     accent: '#6C151E',
     category: 'learn',
     credit: 'QML & HYBRID ALGORITHMS',
@@ -86,7 +86,7 @@ export const LEARN_ITEMS: ExperienceHeroItem[] = [
     title: 'Quantum Cyber Security\n& Cryptography',
     description:
       "Explore encryption, decryption, prime-number-based security and how Shor's algorithm demonstrates the potential impact of quantum computing on classical cryptography. Connect quantum algorithms with the future of cybersecurity and quantum-safe communication.",
-    image: '/images/events/quantum-hackathons-dark.png',
+    image: '/images/events/quantum-hackathons-dark.webp',
     accent: '#521018',
     category: 'learn',
     credit: 'POST-QUANTUM CRYPTOGRAPHY',
@@ -99,7 +99,7 @@ export const LEARN_ITEMS: ExperienceHeroItem[] = [
     title: 'Keynote Speech 1',
     description:
       'A keynote addressing the broader quantum-computing landscape, followed by an interactive Q&A session with distinguished quantum researchers and thought leaders.',
-    image: '/images/events/global-community-light.png',
+    image: '/images/events/global-community-light.webp',
     accent: '#B08D57',
     category: 'learn',
     credit: 'INAUGURAL KEYNOTE',
@@ -112,7 +112,7 @@ export const LEARN_ITEMS: ExperienceHeroItem[] = [
     title: 'Hardware Quantum\nTech Expo',
     description:
       'A dedicated showcase of quantum hardware and emerging technologies featuring demonstrations and exhibits. Get closer to the physical systems, technologies and engineering behind quantum computing.',
-    image: '/images/events/quantum-hackathons-light.png',
+    image: '/images/events/quantum-hackathons-light.webp',
     accent: '#3A0B10',
     category: 'learn',
     credit: 'HARDWARE EXHIBITS & DEMOS',
@@ -125,7 +125,7 @@ export const LEARN_ITEMS: ExperienceHeroItem[] = [
     title: 'Quantum Word\nPuzzles',
     description:
       'Decode mixed letters and clues to identify quantum terminology, concepts, algorithms and technologies in an engaging interactive challenge.',
-    image: '/images/events/world-class-workshops-dark.png',
+    image: '/images/events/world-class-workshops-dark.webp',
     accent: '#6C151E',
     category: 'learn',
     credit: 'QUANTUM BRAIN TEASERS',
@@ -138,7 +138,7 @@ export const LEARN_ITEMS: ExperienceHeroItem[] = [
     title: 'Hands-on Qiskit Circuits\n— Workshop 1',
     description:
       'A practical Qiskit workshop using networked workstations with Qiskit and IBM Quantum access. Move from quantum concepts to actually writing and executing quantum circuits.',
-    image: '/images/events/inspiring-sessions-dark.png',
+    image: '/images/events/inspiring-sessions-dark.webp',
     accent: '#521018',
     category: 'learn',
     credit: 'CIRCUIT DESIGN LAB',
@@ -151,7 +151,7 @@ export const LEARN_ITEMS: ExperienceHeroItem[] = [
     title: 'Conclave / Debate:\nQuantum vs Classical',
     description:
       'A five-track debate examining quantum and classical computing through hardware and scalability, algorithms and advantage, error mitigation and correction, security and cryptography, and industry readiness.',
-    image: '/images/events/world-class-workshops-light.png',
+    image: '/images/events/world-class-workshops-light.webp',
     accent: '#B08D57',
     category: 'learn',
     credit: 'ACADEMIC CONCLAVE',
@@ -164,7 +164,7 @@ export const LEARN_ITEMS: ExperienceHeroItem[] = [
     title: 'Quiz Hot Chair\nCompetition',
     description:
       'A knockout quantum quiz with escalating difficulty designed to test conceptual knowledge, speed and teamwork in an electric live-audience format.',
-    image: '/images/events/inspiring-sessions-light.png',
+    image: '/images/events/inspiring-sessions-light.webp',
     accent: '#3A0B10',
     category: 'learn',
     credit: 'KNOCKOUT QUIZ ARENA',
@@ -177,7 +177,7 @@ export const LEARN_ITEMS: ExperienceHeroItem[] = [
     title: 'Keynote Speech 2',
     description:
       'A technical keynote exploring developments in quantum computing, utility-scale applications, fault tolerance, and the broader quantum ecosystem.',
-    image: '/images/events/global-community-dark.png',
+    image: '/images/events/global-community-dark.webp',
     accent: '#6C151E',
     category: 'learn',
     credit: 'TECHNICAL KEYNOTE',
@@ -190,7 +190,7 @@ export const LEARN_ITEMS: ExperienceHeroItem[] = [
     title: 'Participant Lectures',
     description:
       'Peer-to-peer technical presentations where participants share topics they have studied in quantum computing and exchange insights with fellow attendees and mentors.',
-    image: '/images/events/quantum-hackathons-dark.png',
+    image: '/images/events/quantum-hackathons-dark.webp',
     accent: '#521018',
     category: 'learn',
     credit: 'PEER TECHNICAL SESSIONS',
@@ -203,7 +203,7 @@ export const LEARN_ITEMS: ExperienceHeroItem[] = [
     title: 'QTalk — 2-Minute\nQuantum Talk',
     description:
       'Participants explain a quantum concept, theory or application within a strict two-minute format, testing conceptual clarity, precision, and stage communication.',
-    image: '/images/events/global-community-light.png',
+    image: '/images/events/global-community-light.webp',
     accent: '#B08D57',
     category: 'learn',
     credit: 'LIGHTNING TALK ARENA',
@@ -216,7 +216,7 @@ export const LEARN_ITEMS: ExperienceHeroItem[] = [
     title: 'Hands-on Qiskit Circuits\n— Applied Session',
     description:
       'An applied continuation of the hands-on Qiskit experience, allowing participants to work with practical quantum circuits, noise mitigation, and real hardware runs.',
-    image: '/images/events/quantum-hackathons-light.png',
+    image: '/images/events/quantum-hackathons-light.webp',
     accent: '#3A0B10',
     category: 'learn',
     credit: 'APPLIED CIRCUIT LAB',
@@ -229,7 +229,7 @@ export const LEARN_ITEMS: ExperienceHeroItem[] = [
     title: 'Guess the QTech',
     description:
       'Predict and identify emerging quantum technologies and future hardware capabilities through rapid clue-based deduction rounds.',
-    image: '/images/events/world-class-workshops-dark.png',
+    image: '/images/events/world-class-workshops-dark.webp',
     accent: '#6C151E',
     category: 'learn',
     credit: 'FUTURE TECH CHALLENGE',
@@ -242,7 +242,7 @@ export const LEARN_ITEMS: ExperienceHeroItem[] = [
     title: 'Keynote Speech 3',
     description:
       'The closing keynote of the festival, bringing together perspectives on quantum technology, industry roadmaps, and its future direction.',
-    image: '/images/events/inspiring-sessions-dark.png',
+    image: '/images/events/inspiring-sessions-dark.webp',
     accent: '#521018',
     category: 'learn',
     credit: 'FESTIVAL FINALE KEYNOTE',
@@ -258,7 +258,7 @@ export const BUILD_ITEMS: ExperienceHeroItem[] = [
     title: 'Hackathon Phase 1 —\nAlgorithm ↔ Architecture Co-Design',
     description:
       'The flagship online hackathon where teams develop quantum solutions across five tracks: Quantum Chemistry, Optimization, Simulation, QML, and Post-Quantum Cryptography. Problem statements release 10th Oct at 5:00 PM IST; submissions close 12th Oct at 11:59 PM IST.',
-    image: '/images/events/quantum-hackathons-dark.png',
+    image: '/images/events/quantum-hackathons-dark.webp',
     accent: '#6C151E',
     category: 'build',
     credit: 'FLAGSHIP ONLINE HACKATHON',
@@ -271,7 +271,7 @@ export const BUILD_ITEMS: ExperienceHeroItem[] = [
     title: 'Quantum Capture\nthe Flag — QCTF',
     description:
       'A technical quantum Capture the Flag competition where participants solve challenges in quantum algorithms, error correction, and cryptography to uncover hidden flags.',
-    image: '/images/events/world-class-workshops-dark.png',
+    image: '/images/events/world-class-workshops-dark.webp',
     accent: '#521018',
     category: 'build',
     credit: 'QUANTUM CYBERSECURITY ARENA',
@@ -284,7 +284,7 @@ export const BUILD_ITEMS: ExperienceHeroItem[] = [
     title: 'QISKIT 102 —\nImplementation Track',
     description:
       'An implementation-focused track where participants apply Qiskit concepts to build, transpile, and execute practical quantum programs on real hardware.',
-    image: '/images/events/inspiring-sessions-dark.png',
+    image: '/images/events/inspiring-sessions-dark.webp',
     accent: '#B08D57',
     category: 'build',
     credit: 'PRACTICAL QUANTUM PROGRAMMING',
@@ -297,7 +297,7 @@ export const BUILD_ITEMS: ExperienceHeroItem[] = [
     title: 'Circuit Optimization\nChallenge',
     description:
       'Participants optimize quantum circuits by reducing two-qubit gate depth, swap routing overhead, and execution cost while strictly preserving circuit functionality.',
-    image: '/images/events/inspiring-sessions-light.png',
+    image: '/images/events/inspiring-sessions-light.webp',
     accent: '#3A0B10',
     category: 'build',
     credit: 'HARDWARE CO-DESIGN & TRANSPILATION',
@@ -310,7 +310,7 @@ export const BUILD_ITEMS: ExperienceHeroItem[] = [
     title: 'Hackathon Phase 2 —\n24-Hour Flagship Challenge',
     description:
       'A 24-hour overnight quantum-computing build challenge involving intense team development, mentor checkpoints, hardware execution, and final submission.',
-    image: '/images/events/world-class-workshops-light.png',
+    image: '/images/events/world-class-workshops-light.webp',
     accent: '#6C151E',
     category: 'build',
     credit: 'OVERNIGHT BUILD CHALLENGE',
@@ -323,7 +323,7 @@ export const BUILD_ITEMS: ExperienceHeroItem[] = [
     title: 'Hackathon Phase 2 —\nDemonstrations & Jury',
     description:
       'Shortlisted teams demonstrate their solutions to the jury, present benchmark results, and answer technical questions during the final evaluation.',
-    image: '/images/events/global-community-dark.png',
+    image: '/images/events/global-community-dark.webp',
     accent: '#521018',
     category: 'build',
     credit: 'FINAL JURY DEFENSE',
@@ -336,7 +336,7 @@ export const BUILD_ITEMS: ExperienceHeroItem[] = [
     title: 'Innovation Challenge',
     description:
       'An open innovation challenge focused on software, developer frameworks, interactive educational tools, quantum visualization systems, and quantum-inspired prototypes.',
-    image: '/images/events/global-community-light.png',
+    image: '/images/events/global-community-light.webp',
     accent: '#B08D57',
     category: 'build',
     credit: 'SOFTWARE & FRAMEWORKS PROTOTYPES',
@@ -349,7 +349,7 @@ export const BUILD_ITEMS: ExperienceHeroItem[] = [
     title: 'Startup Challenge',
     description:
       'Teams develop and pitch commercially relevant business solutions and quantum venture proposals addressing high-impact industrial problems.',
-    image: '/images/events/quantum-hackathons-light.png',
+    image: '/images/events/quantum-hackathons-light.webp',
     accent: '#3A0B10',
     category: 'build',
     credit: 'COMMERCIAL QUANTUM VENTURES',
@@ -362,7 +362,7 @@ export const BUILD_ITEMS: ExperienceHeroItem[] = [
     title: 'Assistive Application\nDevelopment Challenge',
     description:
       'An assistive technology challenge focused on engineering practical, accessible applications addressing real-time needs of persons with disabilities.',
-    image: '/images/events/world-class-workshops-dark.png',
+    image: '/images/events/world-class-workshops-dark.webp',
     accent: '#6C151E',
     category: 'build',
     credit: 'ASSISTIVE REAL-TIME SOLUTIONS',
@@ -375,7 +375,7 @@ export const BUILD_ITEMS: ExperienceHeroItem[] = [
     title: 'Python Coding Challenge\nin Qiskit',
     description:
       'A fast-paced online coding competition focused on solving algorithmic quantum-computing problems and data transformations using Python and Qiskit.',
-    image: '/images/events/inspiring-sessions-dark.png',
+    image: '/images/events/inspiring-sessions-dark.webp',
     accent: '#521018',
     category: 'build',
     credit: 'COMPETITIVE QUANTUM PROGRAMMING',
@@ -388,7 +388,7 @@ export const BUILD_ITEMS: ExperienceHeroItem[] = [
     title: 'Machine Learning\nCompetition',
     description:
       'A competitive machine-learning sprint involving predictive modelling, high-dimensional data-driven problem solving, and applied ML pipelines.',
-    image: '/images/events/world-class-workshops-light.png',
+    image: '/images/events/world-class-workshops-light.webp',
     accent: '#B08D57',
     category: 'build',
     credit: 'APPLIED MACHINE LEARNING',
@@ -401,7 +401,7 @@ export const BUILD_ITEMS: ExperienceHeroItem[] = [
     title: 'Tech Marathon',
     description:
       'An extended multi-day technical challenge testing sustained algorithmic problem-solving, hardware ingenuity, and engineering endurance.',
-    image: '/images/events/inspiring-sessions-light.png',
+    image: '/images/events/inspiring-sessions-light.webp',
     accent: '#3A0B10',
     category: 'build',
     credit: 'SUSTAINED PROBLEM SOLVING',
@@ -414,7 +414,7 @@ export const BUILD_ITEMS: ExperienceHeroItem[] = [
     title: 'Hardware-Related\nChallenges',
     description:
       'Hands-on challenges involving quantum and emerging-technology hardware, including sensor calibration, physical circuit testing, and hardware debugging.',
-    image: '/images/events/global-community-dark.png',
+    image: '/images/events/global-community-dark.webp',
     accent: '#6C151E',
     category: 'build',
     credit: 'PHYSICAL HARDWARE & TESTING',
@@ -427,7 +427,7 @@ export const BUILD_ITEMS: ExperienceHeroItem[] = [
     title: 'Quantum Code Golf',
     description:
       'Generate a target quantum state or unitary matrix using the shortest character count and minimal gate depth to top the competitive leaderboard.',
-    image: '/images/events/quantum-hackathons-dark.png',
+    image: '/images/events/quantum-hackathons-dark.webp',
     accent: '#521018',
     category: 'build',
     credit: 'SHORTEST CODE & UNITARY SYNTHESIS',
@@ -440,7 +440,7 @@ export const BUILD_ITEMS: ExperienceHeroItem[] = [
     title: 'Quantum Cryptography\nChallenge',
     description:
       'Implement a simplified BB84 protocol to establish provably secure key exchange while detecting simulated eavesdroppers in an applied cyber lab.',
-    image: '/images/events/global-community-light.png',
+    image: '/images/events/global-community-light.webp',
     accent: '#B08D57',
     category: 'build',
     credit: 'BB84 QUANTUM KEY DISTRIBUTION',
@@ -453,7 +453,7 @@ export const BUILD_ITEMS: ExperienceHeroItem[] = [
     title: 'Quantum Algo Sprint',
     description:
       'A fast-paced timed sprint testing participants\' algorithmic intuition, circuit composition speed, and practical application of quantum algorithms.',
-    image: '/images/events/quantum-hackathons-light.png',
+    image: '/images/events/quantum-hackathons-light.webp',
     accent: '#3A0B10',
     category: 'build',
     credit: 'ALGORITHMIC APPLICATION & SPEED',
@@ -466,7 +466,7 @@ export const BUILD_ITEMS: ExperienceHeroItem[] = [
     title: 'Quantum Magnetometry\nChallenge',
     description:
       'Analyze simulated NV-center quantum-magnetometer data to identify nano-Tesla magnetic-field fluctuations and isolate their physical sources.',
-    image: '/images/events/world-class-workshops-dark.png',
+    image: '/images/events/world-class-workshops-dark.webp',
     accent: '#6C151E',
     category: 'build',
     credit: 'QUANTUM PRECISION MAGNETOMETRY',
@@ -479,7 +479,7 @@ export const BUILD_ITEMS: ExperienceHeroItem[] = [
     title: 'Quantum Teleportation\nChallenge',
     description:
       'Design, simulate and optimize a quantum teleportation protocol for transmitting unknown single-qubit states across noisy entanglement channels.',
-    image: '/images/events/inspiring-sessions-dark.png',
+    image: '/images/events/inspiring-sessions-dark.webp',
     accent: '#521018',
     category: 'build',
     credit: 'QUANTUM STATE TELEPORTATION',
@@ -495,7 +495,7 @@ export const CONNECT_ITEMS: ExperienceHeroItem[] = [
     title: 'Tech Reels Competition',
     description:
       'Create a short-form creative video reel introducing quantum technology while highlighting SRM University-AP and IBM Qiskit Fall Fest.',
-    image: '/images/events/global-community-dark.png',
+    image: '/images/events/global-community-dark.webp',
     accent: '#6C151E',
     category: 'connect',
     credit: 'SHORT-FORM DIGITAL MEDIA',
@@ -508,7 +508,7 @@ export const CONNECT_ITEMS: ExperienceHeroItem[] = [
     title: 'Digital Poster Creation',
     description:
       'Design an original visual poster communicating quantum computing breakthroughs or concepts from the festival\'s online lecture series.',
-    image: '/images/events/inspiring-sessions-dark.png',
+    image: '/images/events/inspiring-sessions-dark.webp',
     accent: '#521018',
     category: 'connect',
     credit: 'VISUAL SCIENCE COMMUNICATION',
@@ -521,7 +521,7 @@ export const CONNECT_ITEMS: ExperienceHeroItem[] = [
     title: 'Essay Competition',
     description:
       'Write an original scholarly essay exploring a festival theme, evaluated on analytical depth, conceptual clarity, narrative structure, and references.',
-    image: '/images/events/world-class-workshops-light.png',
+    image: '/images/events/world-class-workshops-light.webp',
     accent: '#B08D57',
     category: 'connect',
     credit: 'SCHOLARLY WRITING & ANALYSIS',
@@ -534,7 +534,7 @@ export const CONNECT_ITEMS: ExperienceHeroItem[] = [
     title: 'Photo Booth —\nQuantum Image World',
     description:
       'An interactive quantum-themed photo experience featuring immersive futuristic backdrops, quantum optics installations, and generative digital frames.',
-    image: '/images/events/inspiring-sessions-light.png',
+    image: '/images/events/inspiring-sessions-light.webp',
     accent: '#3A0B10',
     category: 'connect',
     credit: 'IMMERSIVE PHOTO EXPERIENCE',
@@ -547,7 +547,7 @@ export const CONNECT_ITEMS: ExperienceHeroItem[] = [
     title: 'Quantum Skribble',
     description:
       'A fast-paced multiplayer drawing and guessing contest where participants illustrate quantum physics and computing concepts against the clock.',
-    image: '/images/events/world-class-workshops-dark.png',
+    image: '/images/events/world-class-workshops-dark.webp',
     accent: '#6C151E',
     category: 'connect',
     credit: 'SPEED DRAWING & GUESSING',
@@ -560,7 +560,7 @@ export const CONNECT_ITEMS: ExperienceHeroItem[] = [
     title: 'QChess',
     description:
       'A quantum-inspired chess tournament featuring pieces in superposition, probability-based measurements upon capture, and timed knockout rounds.',
-    image: '/images/events/quantum-hackathons-dark.png',
+    image: '/images/events/quantum-hackathons-dark.webp',
     accent: '#521018',
     category: 'connect',
     credit: 'QUANTUM SUPERPOSITION CHESS',
@@ -573,7 +573,7 @@ export const CONNECT_ITEMS: ExperienceHeroItem[] = [
     title: 'Quantum Checkers',
     description:
       'A strategic checkers tournament upgraded with probabilistic transitions, entangled piece movements, and tactical measurement choices.',
-    image: '/images/events/global-community-light.png',
+    image: '/images/events/global-community-light.webp',
     accent: '#B08D57',
     category: 'connect',
     credit: 'PROBABILISTIC BOARD STRATEGY',
@@ -586,7 +586,7 @@ export const CONNECT_ITEMS: ExperienceHeroItem[] = [
     title: 'Participant Lectures',
     description:
       'Peer-to-peer presentations and collaborative roundtables where participants communicate research findings and share quantum computing insights.',
-    image: '/images/events/quantum-hackathons-light.png',
+    image: '/images/events/quantum-hackathons-light.webp',
     accent: '#3A0B10',
     category: 'connect',
     credit: 'PEER KNOWLEDGE EXCHANGE',
@@ -599,7 +599,7 @@ export const CONNECT_ITEMS: ExperienceHeroItem[] = [
     title: 'Drama —\nQuantum on Stage',
     description:
       'Original theatrical performances and dramatic interpretations exploring quantum paradoxes, scientific history, and philosophical conundrums.',
-    image: '/images/events/world-class-workshops-dark.png',
+    image: '/images/events/world-class-workshops-dark.webp',
     accent: '#6C151E',
     category: 'connect',
     credit: 'CREATIVE STAGE EXPRESSION',
@@ -612,7 +612,7 @@ export const CONNECT_ITEMS: ExperienceHeroItem[] = [
     title: 'Artwork — Creation',
     description:
       'An open creative studio providing canvases, materials, and digital drawing pads to produce quantum-inspired paintings, diagrams, and illustrations.',
-    image: '/images/events/inspiring-sessions-dark.png',
+    image: '/images/events/inspiring-sessions-dark.webp',
     accent: '#521018',
     category: 'connect',
     credit: 'LIVE ART & PAINTING STUDIO',
@@ -625,7 +625,7 @@ export const CONNECT_ITEMS: ExperienceHeroItem[] = [
     title: 'Artwork — Gallery Display\n& Jury Walk',
     description:
       'Completed participant artwork is exhibited along the Atrium Gallery Wall and formally evaluated by an expert multidisciplinary judging jury.',
-    image: '/images/events/world-class-workshops-light.png',
+    image: '/images/events/world-class-workshops-light.webp',
     accent: '#B08D57',
     category: 'connect',
     credit: 'JURIED EXHIBITION & EVALUATION',
@@ -638,7 +638,7 @@ export const CONNECT_ITEMS: ExperienceHeroItem[] = [
     title: 'QEscapes — Quantum\nEscape Room',
     description:
       'Immersive physical escape rooms built around quantum mechanics mysteries, optical clues, and cryptographic puzzles requiring team collaboration.',
-    image: '/images/events/inspiring-sessions-light.png',
+    image: '/images/events/inspiring-sessions-light.webp',
     accent: '#3A0B10',
     category: 'connect',
     credit: 'QUANTUM LOGIC & PUZZLES',
@@ -651,7 +651,7 @@ export const CONNECT_ITEMS: ExperienceHeroItem[] = [
     title: 'Entanglement Partners',
     description:
       'A paired card game where partners explore quantum correlation and Bell-state non-locality through secretly linked cards and outcome predictions.',
-    image: '/images/events/global-community-dark.png',
+    image: '/images/events/global-community-dark.webp',
     accent: '#6C151E',
     category: 'connect',
     credit: 'CORRELATED CARD DYNAMICS',
@@ -664,7 +664,7 @@ export const CONNECT_ITEMS: ExperienceHeroItem[] = [
     title: 'Quantum Casino',
     description:
       'An auction and betting strategy game combining probability amplitudes, wave-function collapses, and high-stakes quantum decision-making.',
-    image: '/images/events/quantum-hackathons-dark.png',
+    image: '/images/events/quantum-hackathons-dark.webp',
     accent: '#521018',
     category: 'connect',
     credit: 'UNCERTAINTY & AUCTION GAMEPLAY',
@@ -677,7 +677,7 @@ export const CONNECT_ITEMS: ExperienceHeroItem[] = [
     title: 'Guess the QTech',
     description:
       'A lively prediction and deduction game where participants identify upcoming quantum hardware architectures and breakthrough capabilities.',
-    image: '/images/events/global-community-light.png',
+    image: '/images/events/global-community-light.webp',
     accent: '#B08D57',
     category: 'connect',
     credit: 'FUTURE HARDWARE FORECASTING',
@@ -690,7 +690,7 @@ export const CONNECT_ITEMS: ExperienceHeroItem[] = [
     title: 'Q-Charades',
     description:
       'A hilarious acting game where participants pantomime quantum algorithms, physical phenomena, and hardware components without speaking.',
-    image: '/images/events/quantum-hackathons-light.png',
+    image: '/images/events/quantum-hackathons-light.webp',
     accent: '#3A0B10',
     category: 'connect',
     credit: 'ACTING & CONCEPT CHARADES',
@@ -703,7 +703,7 @@ export const CONNECT_ITEMS: ExperienceHeroItem[] = [
     title: 'Quantum Go',
     description:
       'The ancient board game of Go reimagined: stones exist across multiple intersections in superposition until territory measurement triggers collapse.',
-    image: '/images/events/world-class-workshops-dark.png',
+    image: '/images/events/world-class-workshops-dark.webp',
     accent: '#6C151E',
     category: 'connect',
     credit: 'PARALLEL POSSIBILITIES BOARD GAME',
@@ -716,7 +716,7 @@ export const CONNECT_ITEMS: ExperienceHeroItem[] = [
     title: 'Quantum Battleships',
     description:
       'Naval tactical gameplay where ships occupy probabilistic coordinate clouds and firing shots induces quantum interference and localization.',
-    image: '/images/events/inspiring-sessions-dark.png',
+    image: '/images/events/inspiring-sessions-dark.webp',
     accent: '#521018',
     category: 'connect',
     credit: 'INTERFERENCE & PROBABILITY TACTICS',
@@ -729,7 +729,7 @@ export const CONNECT_ITEMS: ExperienceHeroItem[] = [
     title: 'Quantum Solitaire',
     description:
       'A single-player card challenge using qubit-state rules, phase rotations, and probabilistic draw mechanics to clear the board tableau.',
-    image: '/images/events/world-class-workshops-light.png',
+    image: '/images/events/world-class-workshops-light.webp',
     accent: '#B08D57',
     category: 'connect',
     credit: 'QUBIT STATE CARD PUZZLE',
@@ -742,7 +742,7 @@ export const CONNECT_ITEMS: ExperienceHeroItem[] = [
     title: 'Quantum Gaming\nCompetition — QTictoec',
     description:
       'A competitive esports tournament in Quantum Tic-Tac-Toe, featuring dual-square entangled moves and cyclical measurement resolution.',
-    image: '/images/events/inspiring-sessions-light.png',
+    image: '/images/events/inspiring-sessions-light.webp',
     accent: '#3A0B10',
     category: 'connect',
     credit: 'SUPERPOSITION TIC-TAC-TOE',
@@ -755,7 +755,7 @@ export const CONNECT_ITEMS: ExperienceHeroItem[] = [
     title: 'Quantum Gaming\nCompetition — QLudo',
     description:
       'Classic Ludo elevated with quantum dice tunneling, entangled tokens, and shortcut wormholes through the board perimeter.',
-    image: '/images/events/global-community-dark.png',
+    image: '/images/events/global-community-dark.webp',
     accent: '#6C151E',
     category: 'connect',
     credit: 'QUANTUM-INSPIRED LUDO',
@@ -768,7 +768,7 @@ export const CONNECT_ITEMS: ExperienceHeroItem[] = [
     title: 'Campus Play Activity',
     description:
       'Casual social games and interactive icebreakers designed for lighthearted entertainment, cross-campus bonding, and festival networking.',
-    image: '/images/events/quantum-hackathons-dark.png',
+    image: '/images/events/quantum-hackathons-dark.webp',
     accent: '#521018',
     category: 'connect',
     credit: 'INFORMAL COMMUNITY ENGAGEMENT',
@@ -781,7 +781,7 @@ export const CONNECT_ITEMS: ExperienceHeroItem[] = [
     title: 'Quantum Puzzle Race',
     description:
       'High-octane team sprint where squads race against time across sequential checkpoints solving physical and conceptual quantum logic puzzles.',
-    image: '/images/events/global-community-light.png',
+    image: '/images/events/global-community-light.webp',
     accent: '#B08D57',
     category: 'connect',
     credit: 'TEAM LOGIC & PUZZLE RACE',
@@ -794,7 +794,7 @@ export const CONNECT_ITEMS: ExperienceHeroItem[] = [
     title: 'Quantum Word Puzzles',
     description:
       'Decode anagrams, cryptograms, and terminology riddles to test your mastery of quantum physics nomenclature and quantum algorithms.',
-    image: '/images/events/quantum-hackathons-light.png',
+    image: '/images/events/quantum-hackathons-light.webp',
     accent: '#3A0B10',
     category: 'connect',
     credit: 'WORD DECODING & TERMINOLOGY',

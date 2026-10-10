@@ -6,8 +6,8 @@ import { ArrowRight, Globe2, Gem, UsersRound, BarChart3 } from 'lucide-react';
 import { NAVBAR_JOIN_HREF } from '@/components/shared/Navbar';
 
 const GLOBAL_ASSETS = {
-  light: '/ABOUT-05-GLOBAL-MOVEMENT-MOUNTAINS-LIGHT.png',
-  dark: '/ABOUT-05-GLOBAL-MOVEMENT-MOUNTAINS-DARK.png',
+  light: '/ABOUT-05-GLOBAL-MOVEMENT-MOUNTAINS-LIGHT.webp',
+  dark: '/ABOUT-05-GLOBAL-MOVEMENT-MOUNTAINS-DARK.webp',
 };
 
 interface MovementItemProps {

@@ -127,7 +127,7 @@ export function EcosystemStrip() {
               <div className="relative flex items-center h-7 xl:h-8">
                 {/* Light Theme: Dark Positive Logotype */}
                 <Image
-                  src="/images/branding/IBM_Quantum_logotype_pos_RGB.png"
+                  src="/images/branding/IBM_Quantum_logotype_pos_RGB.webp"
                   alt="IBM Quantum"
                   width={284}
                   height={109}
@@ -136,7 +136,7 @@ export function EcosystemStrip() {
                 />
                 {/* Dark Theme: Light Reverse Logotype */}
                 <Image
-                  src="/images/branding/IBM_Quantum_logotype_rev_RGB.png"
+                  src="/images/branding/IBM_Quantum_logotype_rev_RGB.webp"
                   alt="IBM Quantum"
                   width={196}
                   height={28}
@@ -156,7 +156,7 @@ export function EcosystemStrip() {
             <div className="flex items-center gap-2.5 xl:gap-3 flex-shrink-0">
               <div className="relative h-7 w-7 xl:h-8 xl:w-8 flex-shrink-0 flex items-center justify-center">
                 <Image
-                  src="/images/branding/qiskit_white.png"
+                  src="/images/branding/qiskit_white.webp"
                   alt="Qiskit logo"
                   width={32}
                   height={32}
@@ -243,7 +243,7 @@ export function EcosystemStrip() {
                 </span>
                 {/* Light Theme: Dark Positive Logotype */}
                 <Image
-                  src="/images/branding/IBM_Quantum_logotype_pos_RGB.png"
+                  src="/images/branding/IBM_Quantum_logotype_pos_RGB.webp"
                   alt="IBM Quantum"
                   width={203}
                   height={78}
@@ -251,7 +251,7 @@ export function EcosystemStrip() {
                 />
                 {/* Dark Theme: Light Reverse Logotype */}
                 <Image
-                  src="/images/branding/IBM_Quantum_logotype_rev_RGB.png"
+                  src="/images/branding/IBM_Quantum_logotype_rev_RGB.webp"
                   alt="IBM Quantum"
                   width={154}
                   height={22}
@@ -268,7 +268,7 @@ export function EcosystemStrip() {
               {/* Group 2: Qiskit */}
               <div className="flex items-center gap-2">
                 <Image
-                  src="/images/branding/qiskit_white.png"
+                  src="/images/branding/qiskit_white.webp"
                   alt="Qiskit logo"
                   width={24}
                   height={24}
@@ -336,7 +336,7 @@ export function EcosystemStrip() {
               </span>
               {/* Light Theme: Dark Positive Logotype */}
               <Image
-                src="/images/branding/IBM_Quantum_logotype_pos_RGB.png"
+                src="/images/branding/IBM_Quantum_logotype_pos_RGB.webp"
                 alt="IBM Quantum"
                 width={182}
                 height={70}
@@ -344,7 +344,7 @@ export function EcosystemStrip() {
               />
               {/* Dark Theme: Light Reverse Logotype */}
               <Image
-                src="/images/branding/IBM_Quantum_logotype_rev_RGB.png"
+                src="/images/branding/IBM_Quantum_logotype_rev_RGB.webp"
                 alt="IBM Quantum"
                 width={130}
                 height={20}
@@ -354,7 +354,7 @@ export function EcosystemStrip() {
 
             <div className="flex items-center gap-1.5">
               <Image
-                src="/images/branding/qiskit_white.png"
+                src="/images/branding/qiskit_white.webp"
                 alt="Qiskit logo"
                 width={20}
                 height={20}

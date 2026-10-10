@@ -298,7 +298,7 @@ export function HeroCarousel({
 
   const active = items[index] || items[0] || {
     title: 'Quantum Event',
-    image: '/images/events/world-class-workshops-dark.png',
+    image: '/images/events/world-class-workshops-dark.webp',
   };
 
   const parsed = React.useMemo(() => parseEventDetails(active), [active]);

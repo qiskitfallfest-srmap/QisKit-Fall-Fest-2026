@@ -44,11 +44,11 @@ export const SITE_CONFIG = {
     addressCountry: 'IN',
   },
   images: {
-    ogImage: '/og-image.png',
+    ogImage: '/og-image.webp',
     favicon: '/favicon.ico',
     iconPng: '/icon.png',
     appleTouchIcon: '/apple-touch-icon.png',
-    logoHorizontal: '/images/branding/srm-ap-logo-horizontal-backgroundless.png',
+    logoHorizontal: '/images/branding/srm-ap-logo-horizontal-backgroundless.webp',
   },
 } as const;
 

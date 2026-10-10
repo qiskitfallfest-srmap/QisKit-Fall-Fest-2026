@@ -39,7 +39,7 @@ export function CampusHero() {
         className="pointer-events-none absolute inset-0 z-0 select-none overflow-hidden"
       >
         <Image
-          src="/images/venues/hero-1.png"
+          src="/images/venues/hero-1.webp"
           alt="SRM University-AP Campus Aerial Overview"
           fill
           priority

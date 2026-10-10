@@ -179,8 +179,8 @@ export const CURRICULUM_SESSIONS: LectureSession[] = [
     dateStr: 'Day 3 · Saturday, 10 October 2026',
     timeStr: '02:00 PM – 04:00 PM IST',
     duration: '2 Hours (120 Mins)',
-    youtubeId: 'MO-hajVngHM',
-    youtubeUrl: 'https://www.youtube.com/watch?v=MO-hajVngHM',
+    youtubeId: 'ev-L2YibRR4',
+    youtubeUrl: 'https://www.youtube.com/live/ev-L2YibRR4',
     speaker: {
       name: 'Dr. Sazzad Ali Biswas',
       role: 'Assistant Professor',
