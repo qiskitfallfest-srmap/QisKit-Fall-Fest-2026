@@ -34,6 +34,7 @@ import {
   Copy,
 } from 'lucide-react';
 import { REGISTRATION_URL, WHATSAPP_COMMUNITY_URL, HACKATHON_WORKSPACE_URL } from '@/lib/constants';
+import { supabase } from '@/lib/supabase';
 
 const VERTICALS: VerticalType[] = [
   'Quantum Chemistry',
@@ -49,9 +50,36 @@ export default function HackathonWorkspacePage() {
   const { data: teamDataObj, error: teamError, mutate: mutateTeam } = useSWR('/api/hackathon/team', fetcher, {
     revalidateOnFocus: true,
     revalidateOnReconnect: true,
-    // Poll every 15 seconds if user has pending invitations or an active team with pending invitations
-    refreshInterval: 15000,
+    revalidateIfStale: false,
+    dedupingInterval: 5000,
   });
+
+  // Supabase Realtime: instant push updates on invitations, member status, and roster changes
+  useEffect(() => {
+    if (!sessionUser?.email) return;
+
+    const channel = supabase
+      .channel(`hackathon-realtime-${sessionUser.email.toLowerCase()}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'team_members' },
+        () => {
+          mutateTeam();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'hackathon_teams' },
+        () => {
+          mutateTeam();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [sessionUser?.email, mutateTeam]);
   
   const team = teamDataObj?.team || null;
   const pendingInvitations: any[] = teamDataObj?.pendingInvitations || [];

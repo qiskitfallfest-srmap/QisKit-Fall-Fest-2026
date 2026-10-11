@@ -1,4 +1,5 @@
 import { track as vercelTrack } from '@vercel/analytics';
+import { supabase } from './supabase';
 
 /**
  * Client-Side Analytics Event Tracker
@@ -57,13 +58,13 @@ export function trackEvent(
     }
   }
 
-  // 2. Ingest into Persistent Database / Cache API
-  // For 'page_view', deduplicate per browser session to prevent burning serverless function CPU on back-and-forth navigations
+  // 2. Direct telemetry write to Supabase Pro (bypasses Vercel Serverless Functions completely)
+  // For 'page_view', deduplicate per browser session
   if (eventName === 'page_view') {
     try {
       const pathKey = `qff_pv_${window.location.pathname || '/'}`;
       if (sessionStorage.getItem(pathKey)) {
-        return; // Already tracked for this session; skip hitting serverless function
+        return; // Already tracked for this session; skip write
       }
       sessionStorage.setItem(pathKey, '1');
     } catch {
@@ -76,20 +77,25 @@ export function trackEvent(
       event: eventName,
       path: window.location.pathname || '/',
       properties: properties || {},
-      visitorId: getOrCreateVisitorId(),
-      timestamp: new Date().toISOString(),
+      visitor_id: getOrCreateVisitorId(),
+      created_at: new Date().toISOString(),
     };
 
-    fetch('/api/analytics/track', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      keepalive: true,
-    }).catch((err) => {
-      console.debug('[Internal Analytics] Dispatch error:', err);
-    });
-  } catch (err) {
-    console.debug('[Internal Analytics] Exception:', err);
+    supabase
+      .from('telemetry_events')
+      .insert(payload)
+      .then(
+        ({ error }: any) => {
+          if (error) {
+            console.debug('[Supabase Telemetry] Notice:', error.message);
+          }
+        },
+        (err: any) => {
+          console.debug('[Supabase Telemetry] Dispatch notice:', err);
+        }
+      );
+  } catch (err: any) {
+    console.debug('[Supabase Telemetry] Exception:', err);
   }
 }
 
