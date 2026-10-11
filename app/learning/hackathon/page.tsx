@@ -1203,10 +1203,14 @@ export default function HackathonWorkspacePage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                     {team.members?.map((m: any) => {
                       const isLeader = m.role === 'leader';
+                      const isPending = m.status === 'invited';
+                      const isLeaderOrAdmin = team.currentUserRole === 'leader' || Boolean(sessionUser?.isAdmin);
                       const canRemove =
                         !isFinalized &&
-                        ((team.currentUserRole === 'leader' && !isLeader) ||
-                          (m.email?.toLowerCase() === sessionUser?.email?.toLowerCase() && !isLeader));
+                        !isLeader &&
+                        (isLeaderOrAdmin ||
+                          isPending ||
+                          m.email?.toLowerCase() === sessionUser?.email?.toLowerCase());
 
                       return (
                         <div
@@ -1238,7 +1242,7 @@ export default function HackathonWorkspacePage() {
                           </div>
 
                           <div className="pt-2 border-t border-slate-200/60 dark:border-[#3D1418] flex items-center justify-between gap-2">
-                            <div>
+                            <div className="flex-1 min-w-0">
                               {m.status === 'accepted' ? (
                                 <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
                                   <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> Confirmed
@@ -1250,7 +1254,7 @@ export default function HackathonWorkspacePage() {
                                       <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
                                       <span>Pending Acceptance</span>
                                     </span>
-                                    {team.currentUserRole === 'leader' && !isFinalized && (
+                                    {!isFinalized && (isLeaderOrAdmin || team.currentUserStatus === 'accepted') && (
                                       <button
                                         type="button"
                                         onClick={() => handleResendInvite(m.id, m.email)}
@@ -1297,7 +1301,7 @@ export default function HackathonWorkspacePage() {
                               ) : (
                                 <div className="flex items-center gap-1.5">
                                   <span className="text-[11px] text-rose-600 dark:text-rose-400 font-semibold">Declined</span>
-                                  {team.currentUserRole === 'leader' && !isFinalized && (
+                                  {!isFinalized && (isLeaderOrAdmin || team.currentUserStatus === 'accepted') && (
                                     <button
                                       type="button"
                                       onClick={() => handleResendInvite(m.id, m.email)}
@@ -1311,17 +1315,17 @@ export default function HackathonWorkspacePage() {
                               )}
                             </div>
 
-                            {/* Remove button */}
+                            {/* Remove / Cancel Invite button */}
                             {canRemove && (
                               <button
                                 type="button"
                                 onClick={() => handleRemoveMember(m.id, m.email)}
                                 disabled={removingMemberId === m.id}
-                                title="Remove from team"
-                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold text-rose-600 hover:text-rose-800 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition-colors"
+                                title={isPending ? 'Cancel in-portal invitation' : 'Remove from team'}
+                                className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded text-[10.5px] font-semibold text-rose-600 hover:text-rose-800 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition-colors"
                               >
-                                <Trash2 className="w-3 h-3" />
-                                <span>{removingMemberId === m.id ? 'Removing...' : 'Remove'}</span>
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>{removingMemberId === m.id ? 'Removing...' : isPending ? 'Cancel' : 'Remove'}</span>
                               </button>
                             )}
                           </div>
