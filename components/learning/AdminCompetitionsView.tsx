@@ -295,6 +295,19 @@ export function AdminCompetitionsView() {
     });
   }, [submissions, typeFilter, searchQuery]);
 
+  const shortlistedCount = useMemo(
+    () => submissions.filter((s) => s.evaluation?.is_next_round).length,
+    [submissions]
+  );
+  const rejectedCount = useMemo(
+    () => submissions.filter((s) => s.evaluation?.status === 'rejected').length,
+    [submissions]
+  );
+  const downloadedCount = useMemo(
+    () => submissions.filter((s) => s.evaluation?.downloaded).length,
+    [submissions]
+  );
+
   const exportCSV = () => {
     if (filteredSubmissions.length === 0) return;
 
@@ -558,7 +571,7 @@ export function AdminCompetitionsView() {
                 : 'bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1E0B0E]'
             }`}
           >
-            Round 2 Shortlisted ({stats.shortlistedCount || 0})
+            Round 2 Shortlisted ({shortlistedCount})
           </button>
 
           <button
@@ -570,7 +583,7 @@ export function AdminCompetitionsView() {
                 : 'bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1E0B0E]'
             }`}
           >
-            Rejected ({stats.rejectedCount ?? submissions.filter((s) => s.evaluation?.status === 'rejected').length})
+            Rejected ({rejectedCount})
           </button>
 
           <button
@@ -582,7 +595,7 @@ export function AdminCompetitionsView() {
                 : 'bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1E0B0E]'
             }`}
           >
-            Downloaded ({stats.downloadedCount || 0})
+            Downloaded ({downloadedCount})
           </button>
         </div>
       </div>
@@ -817,7 +830,7 @@ export function AdminCompetitionsView() {
                             title="Open evaluation rubric and discussion notes"
                           >
                             <Sliders className="w-3 h-3" />
-                            <span>Review</span>
+                            <span>Review Desk</span>
                           </button>
 
                           {/* Delete Button */}

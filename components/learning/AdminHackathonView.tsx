@@ -136,9 +136,11 @@ export function AdminHackathonView() {
               let downloadedCount = 0;
               let shortlistedCount = 0;
               let evaluatedCount = 0;
+              let rejectedCount = 0;
               nextTeams.forEach((t) => {
                 if (t.evaluation?.downloaded) downloadedCount++;
                 if (t.evaluation?.is_next_round) shortlistedCount++;
+                if (t.evaluation?.status === 'rejected') rejectedCount++;
                 if (t.evaluation?.status && t.evaluation.status !== 'pending') evaluatedCount++;
               });
 
@@ -149,6 +151,7 @@ export function AdminHackathonView() {
                   ...prev.stats,
                   downloadedSubmissionsCount: downloadedCount,
                   shortlistedTeamsCount: shortlistedCount,
+                  rejectedTeamsCount: rejectedCount,
                   evaluatedTeamsCount: evaluatedCount,
                 },
               };
@@ -170,6 +173,27 @@ export function AdminHackathonView() {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  const recomputeHackathonStats = (teams: AdminHackathonTeam[], baseStats: any) => {
+    if (!baseStats) return baseStats;
+    let downloadedCount = 0;
+    let shortlistedCount = 0;
+    let evaluatedCount = 0;
+    let rejectedCount = 0;
+    teams.forEach((t) => {
+      if (t.evaluation?.downloaded) downloadedCount++;
+      if (t.evaluation?.is_next_round) shortlistedCount++;
+      if (t.evaluation?.status === 'rejected') rejectedCount++;
+      if (t.evaluation?.status && t.evaluation.status !== 'pending') evaluatedCount++;
+    });
+    return {
+      ...baseStats,
+      downloadedSubmissionsCount: downloadedCount,
+      shortlistedTeamsCount: shortlistedCount,
+      rejectedTeamsCount: rejectedCount,
+      evaluatedTeamsCount: evaluatedCount,
+    };
+  };
 
   // Quick Action: Download Repo ZIP + Auto-Tick in DB
   const handleQuickDownload = async (team: AdminHackathonTeam) => {
@@ -209,7 +233,7 @@ export function AdminHackathonView() {
           const nextTeams = prev.teams.map((t) =>
             t.id === team.id ? { ...t, evaluation: json.evaluation } : t
           );
-          return { ...prev, teams: nextTeams };
+          return { ...prev, teams: nextTeams, stats: recomputeHackathonStats(nextTeams, prev.stats) };
         });
       }
     } catch (err) {
@@ -241,7 +265,7 @@ export function AdminHackathonView() {
           const nextTeams = prev.teams.map((t) =>
             t.id === team.id ? { ...t, evaluation: json.evaluation } : t
           );
-          return { ...prev, teams: nextTeams };
+          return { ...prev, teams: nextTeams, stats: recomputeHackathonStats(nextTeams, prev.stats) };
         });
       }
     } catch (err) {
@@ -273,7 +297,7 @@ export function AdminHackathonView() {
           const nextTeams = prev.teams.map((t) =>
             t.id === team.id ? { ...t, evaluation: json.evaluation } : t
           );
-          return { ...prev, teams: nextTeams };
+          return { ...prev, teams: nextTeams, stats: recomputeHackathonStats(nextTeams, prev.stats) };
         });
         const wasRejected = json.evaluation.status === 'rejected';
         setFeedbackMsg(
@@ -310,7 +334,7 @@ export function AdminHackathonView() {
       const nextTeams = prev.teams.map((t) =>
         t.id === updated.target_id ? { ...t, evaluation: updated } : t
       );
-      return { ...prev, teams: nextTeams };
+      return { ...prev, teams: nextTeams, stats: recomputeHackathonStats(nextTeams, prev.stats) };
     });
   };
 
