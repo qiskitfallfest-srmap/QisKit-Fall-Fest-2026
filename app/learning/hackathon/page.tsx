@@ -717,21 +717,14 @@ export default function HackathonWorkspacePage() {
                       <span>Track: <span className="font-semibold text-slate-800 dark:text-[#FAF6F3]">{team.vertical}</span></span>
                       <span>·</span>
                       <span>Problem Statement: <span className="font-mono font-bold text-burgundy dark:text-[#E89BA5]">{team.problem_statement_id}</span></span>
-                      {!isFinalized ? (
-                        <button
-                          type="button"
-                          onClick={handleToggleChangePS}
-                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-burgundy/30 bg-burgundy/5 dark:bg-burgundy/20 hover:bg-burgundy/10 text-burgundy dark:text-[#E89BA5] text-xs font-semibold transition-all cursor-pointer ml-0 sm:ml-1 mt-1 sm:mt-0"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                          <span>{isChangingPS ? 'Close Switcher' : 'Change Problem Statement'}</span>
-                        </button>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-slate-100 dark:bg-[#1C0A0D] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-[#3D1418] ml-0 sm:ml-1 mt-1 sm:mt-0">
-                          <Lock className="w-3 h-3 text-slate-400" />
-                          <span>Track Locked</span>
-                        </span>
-                      )}
+                      <button
+                        type="button"
+                        onClick={handleToggleChangePS}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-burgundy/30 bg-burgundy/5 dark:bg-burgundy/20 hover:bg-burgundy/10 text-burgundy dark:text-[#E89BA5] text-xs font-semibold transition-all cursor-pointer ml-0 sm:ml-1 mt-1 sm:mt-0"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>{isChangingPS ? 'Close Switcher' : 'Change Problem Statement'}</span>
+                      </button>
                     </div>
                   </div>
 
@@ -1384,21 +1377,14 @@ export default function HackathonWorkspacePage() {
                     </p>
                   </div>
 
-                  {!isFinalized ? (
-                    <button
-                      type="button"
-                      onClick={handleToggleChangePS}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-burgundy/30 bg-burgundy/5 dark:bg-burgundy/20 hover:bg-burgundy/10 text-burgundy dark:text-[#E89BA5] text-xs font-semibold transition-all cursor-pointer self-start sm:self-auto shadow-2xs"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                      <span>{isChangingPS ? 'Close Switcher' : 'Change Problem Statement'}</span>
-                    </button>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold bg-slate-100 dark:bg-[#1C0A0D] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-[#3D1418] self-start sm:self-auto">
-                      <Lock className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Track Locked</span>
-                    </span>
-                  )}
+                  <button
+                    type="button"
+                    onClick={handleToggleChangePS}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-burgundy/30 bg-burgundy/5 dark:bg-burgundy/20 hover:bg-burgundy/10 text-burgundy dark:text-[#E89BA5] text-xs font-semibold transition-all cursor-pointer self-start sm:self-auto shadow-2xs"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>{isChangingPS ? 'Close Switcher' : 'Change Problem Statement'}</span>
+                  </button>
                 </div>
 
                 {selectedPSObj ? (

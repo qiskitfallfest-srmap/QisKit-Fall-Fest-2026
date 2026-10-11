@@ -21,6 +21,7 @@ import {
   ShieldAlert,
   Sliders,
   RotateCcw,
+  XCircle,
 } from 'lucide-react';
 import {
   SubmissionEvaluation,
@@ -246,6 +247,43 @@ export function EvaluationDrawer({
     }
   };
 
+  // Toggle Reject Status
+  const handleToggleReject = async () => {
+    try {
+      setIsSaving(true);
+      const res = await fetch('/api/admin/evaluations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category,
+          target_id: targetId,
+          action: 'toggle_reject',
+        }),
+      });
+
+      const json = await res.json();
+      if (json.success && json.evaluation) {
+        setEvaluation(json.evaluation);
+        setIsNextRound(Boolean(json.evaluation.is_next_round));
+        setStatus(json.evaluation.status);
+        if (onEvaluationUpdated) {
+          onEvaluationUpdated(json.evaluation);
+        }
+        setFeedbackMsg({
+          text: json.evaluation.status === 'rejected'
+            ? 'Submission marked as rejected.'
+            : 'Submission rejection undone (restored to review).',
+        });
+      }
+    } catch (err: any) {
+      console.error('Error toggling rejection:', err);
+      setFeedbackMsg({ text: 'Failed to update rejection status.', isError: true });
+    } finally {
+      setIsSaving(false);
+      setTimeout(() => setFeedbackMsg(null), 4000);
+    }
+  };
+
   // Save full rubric and score
   const handleSaveEvaluation = async () => {
     try {
@@ -341,6 +379,12 @@ export function EvaluationDrawer({
                 <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 flex items-center gap-1">
                   <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                   Round 2 Shortlisted
+                </span>
+              )}
+              {status === 'rejected' && (
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-700 flex items-center gap-1">
+                  <XCircle className="w-3 h-3 text-rose-600 dark:text-rose-400" />
+                  Rejected
                 </span>
               )}
             </div>
@@ -450,31 +494,49 @@ export function EvaluationDrawer({
             )}
           </div>
 
-          {/* SECTION 2: Decision & Next Round Toggle */}
+          {/* SECTION 2: Decision & Next Round / Reject Actions */}
           <div className="p-4 rounded-xl border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] space-y-3">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h4 className="text-xs font-bold text-slate-900 dark:text-[#FAF6F3] uppercase tracking-wider">
                   Deliberation & Decision
                 </h4>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Advance this team to the next round shortlist or update evaluation stage.
+                  Advance this entry to Round 2, mark as rejected, or update evaluation stage.
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={handleToggleNextRound}
-                disabled={isSaving}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer ${
-                  isNextRound
-                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-500'
-                    : 'bg-slate-100 hover:bg-slate-200 dark:bg-[#200B0E] dark:hover:bg-[#2A0E12] text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-[#3D1418]'
-                }`}
-              >
-                <CheckCircle2 className={`w-3.5 h-3.5 ${isNextRound ? 'text-white' : 'text-slate-400'}`} />
-                <span>{isNextRound ? 'Round 2 Shortlisted' : 'Mark for Next Round'}</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleToggleReject}
+                  disabled={isSaving}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer ${
+                    status === 'rejected'
+                      ? 'bg-rose-600 hover:bg-rose-700 text-white border border-rose-500'
+                      : 'bg-white hover:bg-rose-50 hover:text-rose-700 dark:bg-[#200B0E] dark:hover:bg-rose-950/40 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-[#3D1418]'
+                  }`}
+                  title={status === 'rejected' ? 'Undo rejection (restore to review)' : 'Reject submission'}
+                >
+                  <XCircle className={`w-3.5 h-3.5 ${status === 'rejected' ? 'text-white' : 'text-slate-400'}`} />
+                  <span>{status === 'rejected' ? 'Rejected' : 'Reject'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleToggleNextRound}
+                  disabled={isSaving}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer ${
+                    isNextRound
+                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-500'
+                      : 'bg-slate-100 hover:bg-slate-200 dark:bg-[#200B0E] dark:hover:bg-[#2A0E12] text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-[#3D1418]'
+                  }`}
+                  title="Toggle Round 2 Shortlist"
+                >
+                  <CheckCircle2 className={`w-3.5 h-3.5 ${isNextRound ? 'text-white' : 'text-slate-400'}`} />
+                  <span>{isNextRound ? 'Round 2 Shortlisted' : 'Mark Next Round'}</span>
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3 pt-2">
@@ -484,7 +546,15 @@ export function EvaluationDrawer({
                 </label>
                 <select
                   value={status}
-                  onChange={(e) => setStatus(e.target.value as EvaluationStatus)}
+                  onChange={(e) => {
+                    const nextStatus = e.target.value as EvaluationStatus;
+                    setStatus(nextStatus);
+                    if (nextStatus === 'rejected') {
+                      setIsNextRound(false);
+                    } else if (nextStatus === 'shortlisted') {
+                      setIsNextRound(true);
+                    }
+                  }}
                   className="w-full px-2.5 py-1.5 text-xs border border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] rounded-lg focus:outline-none focus:ring-1 focus:ring-burgundy"
                 >
                   <option value="pending">Pending Review</option>
@@ -493,7 +563,7 @@ export function EvaluationDrawer({
                   <option value="needs_discussion">Needs Deliberation</option>
                   <option value="finalist">Finalist</option>
                   <option value="winner">Winner / Top Rank</option>
-                  <option value="rejected">Not Recommended</option>
+                  <option value="rejected">Rejected (Not Recommended)</option>
                 </select>
               </div>
 

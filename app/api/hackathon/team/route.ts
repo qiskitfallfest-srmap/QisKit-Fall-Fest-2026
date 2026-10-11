@@ -389,16 +389,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // 2. Guard: check if team is finalized
-    const finCheck = await isTeamFinalized(teamId);
-    if (finCheck.isFinalized) {
-      return NextResponse.json(
-        { error: 'Team roster and track selection have been finalized and locked.' },
-        { status: 400 }
-      );
-    }
-
-    // 3. Safely UPDATE only problem_statement_id and vertical without touching other fields
+    // 2. Safely UPDATE only problem_statement_id and vertical without touching other fields
     const { data: updatedTeam, error: updateError } = await supabase
       .from('hackathon_teams')
       .update({
