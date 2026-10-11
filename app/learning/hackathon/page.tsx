@@ -46,11 +46,17 @@ const VERTICALS: VerticalType[] = [
 export default function HackathonWorkspacePage() {
   const [sessionUser, setSessionUser] = useState<any>(null);
   const fetcher = (url: string) => fetch(url).then((res) => res.json());
-  const { data: teamDataObj, error: teamError, mutate: mutateTeam } = useSWR('/api/hackathon/team', fetcher);
+  const { data: teamDataObj, error: teamError, mutate: mutateTeam } = useSWR('/api/hackathon/team', fetcher, {
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+    // Poll every 15 seconds if user has pending invitations or an active team with pending invitations
+    refreshInterval: 15000,
+  });
   
   const team = teamDataObj?.team || null;
   const pendingInvitations: any[] = teamDataObj?.pendingInvitations || [];
   const isLoading = !teamDataObj && !teamError;
+  const [isRefreshingRoster, setIsRefreshingRoster] = useState(false);
 
   useEffect(() => {
     if (team?.github_repo_url) {
@@ -109,6 +115,8 @@ export default function HackathonWorkspacePage() {
   const [finalizeSuccess, setFinalizeSuccess] = useState('');
   const [recentInvitedEmail, setRecentInvitedEmail] = useState<string | null>(null);
   const [copiedInviteEmail, setCopiedInviteEmail] = useState<string | null>(null);
+  const [respondingInviteId, setRespondingInviteId] = useState<string | null>(null);
+  const [respondingInviteErr, setRespondingInviteErr] = useState<string>('');
 
   function getInviteShareMessage(teammateEmail?: string) {
     const teamNameStr = team?.name ? `"${team.name}"` : 'our team';
@@ -303,6 +311,8 @@ export default function HackathonWorkspacePage() {
 
   // Respond to invitation (accept / decline)
   async function handleInviteResponse(invitationId: string, action: 'accept' | 'decline') {
+    setRespondingInviteId(invitationId);
+    setRespondingInviteErr('');
     try {
       const res = await fetch('/api/hackathon/invite-respond', {
         method: 'POST',
@@ -310,11 +320,17 @@ export default function HackathonWorkspacePage() {
         body: JSON.stringify({ invitationId, action }),
       });
       const data = await res.json();
-      if (data.success) {
-        await fetchTeamData();
+      if (!res.ok || !data.success) {
+        setRespondingInviteErr(data.error || 'Failed to process invitation response.');
+        return;
       }
-    } catch (err) {
+      // Revalidate fresh team data immediately
+      await mutateTeam();
+    } catch (err: any) {
       console.error('Error responding to invitation:', err);
+      setRespondingInviteErr(err?.message || 'A network error occurred while responding to the invitation.');
+    } finally {
+      setRespondingInviteId(null);
     }
   }
 
@@ -677,52 +693,80 @@ export default function HackathonWorkspacePage() {
                 Action Required: Pending Team Invitations ({pendingInvitations.length})
               </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {pendingInvitations.map((inv) => (
-                  <div
-                    key={inv.invitationId}
-                    className="p-5 bg-white dark:bg-[#150709] border-2 border-burgundy/40 dark:border-burgundy/60 rounded-xl shadow-xs space-y-3"
-                  >
-                    <div>
-                      <span className="text-sm font-bold uppercase tracking-wider text-burgundy dark:text-[#E89BA5] block">
-                        Team Invitation
-                      </span>
-                      <h3 className="text-base font-bold text-slate-900 dark:text-[#FAF6F3]">{inv.teamName}</h3>
-                      <p className="text-base text-slate-600 dark:text-slate-300 mt-1">
-                        Invited by <span className="font-semibold text-slate-800 dark:text-[#FAF6F3]">{inv.leadName}</span> ({inv.leadEmail})
-                      </p>
-                    </div>
-
-                    <div className="text-sm bg-slate-50 dark:bg-[#1C0A0D] p-2.5 rounded border border-slate-200 dark:border-[#3D1418] text-slate-700 dark:text-slate-300 space-y-1">
-                      <div>
-                        <span className="font-bold">Track:</span> {inv.vertical}
-                      </div>
-                      <div>
-                        <span className="font-bold">Problem Statement:</span> {inv.problemStatementId}
-                      </div>
-                    </div>
-
-                    <p className="text-base text-slate-500 dark:text-slate-400 leading-snug">
-                      Accepting this invitation confirms you as a full team member and unlocks the
-                      dossier for {inv.problemStatementId}. You cannot join other teams once accepted.
-                    </p>
-
-                    <div className="flex gap-2 pt-1">
-                      <button
-                        onClick={() => handleInviteResponse(inv.invitationId, 'accept')}
-                        className="flex-1 px-4 py-2 bg-burgundy text-white text-sm font-semibold rounded hover:bg-burgundy-deep transition-colors cursor-pointer"
-                      >
-                        Accept Invitation
-                      </button>
-                      <button
-                        onClick={() => handleInviteResponse(inv.invitationId, 'decline')}
-                        className="px-4 py-2 bg-slate-100 dark:bg-[#1C0A0D] hover:bg-slate-200 dark:hover:bg-[#250D11] text-slate-700 dark:text-slate-300 text-sm font-semibold rounded transition-colors cursor-pointer"
-                      >
-                        Decline
-                      </button>
-                    </div>
+              {respondingInviteErr && (
+                <div className="p-3.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-300 text-xs flex items-center justify-between gap-2 animate-in fade-in">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                    <span>{respondingInviteErr}</span>
                   </div>
-                ))}
+                  <button
+                    type="button"
+                    onClick={() => setRespondingInviteErr('')}
+                    className="p-1 text-rose-600 hover:text-rose-800 cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {pendingInvitations.map((inv) => {
+                  const isProcessing = respondingInviteId === inv.invitationId;
+                  return (
+                    <div
+                      key={inv.invitationId}
+                      className="p-5 bg-white dark:bg-[#150709] border-2 border-burgundy/40 dark:border-burgundy/60 rounded-xl shadow-xs space-y-3"
+                    >
+                      <div>
+                        <span className="text-sm font-bold uppercase tracking-wider text-burgundy dark:text-[#E89BA5] block">
+                          Team Invitation
+                        </span>
+                        <h3 className="text-base font-bold text-slate-900 dark:text-[#FAF6F3]">{inv.teamName}</h3>
+                        <p className="text-base text-slate-600 dark:text-slate-300 mt-1">
+                          Invited by <span className="font-semibold text-slate-800 dark:text-[#FAF6F3]">{inv.leadName}</span> ({inv.leadEmail})
+                        </p>
+                      </div>
+
+                      <div className="text-sm bg-slate-50 dark:bg-[#1C0A0D] p-2.5 rounded border border-slate-200 dark:border-[#3D1418] text-slate-700 dark:text-slate-300 space-y-1">
+                        <div>
+                          <span className="font-bold">Track:</span> {inv.vertical}
+                        </div>
+                        <div>
+                          <span className="font-bold">Problem Statement:</span> {inv.problemStatementId}
+                        </div>
+                      </div>
+
+                      <p className="text-base text-slate-500 dark:text-slate-400 leading-snug">
+                        Accepting this invitation confirms you as a full team member and unlocks the
+                        dossier for {inv.problemStatementId}. You cannot join other teams once accepted.
+                      </p>
+
+                      <div className="flex gap-2 pt-1">
+                        <button
+                          disabled={isProcessing}
+                          onClick={() => handleInviteResponse(inv.invitationId, 'accept')}
+                          className="flex-1 px-4 py-2 bg-burgundy text-white text-sm font-semibold rounded hover:bg-burgundy-deep transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
+                        >
+                          {isProcessing ? (
+                            <>
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                              <span>Joining Team...</span>
+                            </>
+                          ) : (
+                            <span>Accept Invitation</span>
+                          )}
+                        </button>
+                        <button
+                          disabled={isProcessing}
+                          onClick={() => handleInviteResponse(inv.invitationId, 'decline')}
+                          className="px-4 py-2 bg-slate-100 dark:bg-[#1C0A0D] hover:bg-slate-200 dark:hover:bg-[#250D11] text-slate-700 dark:text-slate-300 text-sm font-semibold rounded transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                          Decline
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -932,12 +976,26 @@ export default function HackathonWorkspacePage() {
                           : 'Manage your roster. Add, remove, or resend invites freely before finalization (min 2, max 6 accepted members).'}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="font-mono text-xs px-2.5 py-1 rounded-md bg-slate-100 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] text-slate-700 dark:text-slate-300 font-semibold">
                         {confirmedMembers.length}/6 Confirmed
                         {pendingMembers.length > 0 ? ` · ${pendingMembers.length} Pending` : ''}
                         {declinedMembers.length > 0 ? ` · ${declinedMembers.length} Declined` : ''}
                       </span>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setIsRefreshingRoster(true);
+                          await mutateTeam();
+                          setTimeout(() => setIsRefreshingRoster(false), 500);
+                        }}
+                        disabled={isRefreshingRoster}
+                        title="Check for newly accepted teammate invitations"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-100 dark:bg-[#1C0A0D] hover:bg-slate-200 dark:hover:bg-[#250D11] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#3D1418] text-xs font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingRoster ? 'animate-spin' : ''}`} />
+                        <span>Refresh Roster</span>
+                      </button>
                       {canAddMore && (
                         <button
                           type="button"
