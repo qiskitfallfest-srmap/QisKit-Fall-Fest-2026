@@ -344,7 +344,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Team successfully created and invitations dispatched.',
+      message: 'Team successfully created. Ask teammates to log into the portal to accept their invitations.',
       team: newTeam,
     });
   } catch (error: any) {

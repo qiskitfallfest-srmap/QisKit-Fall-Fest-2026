@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
           success: true,
-          message: `Invitation re-dispatched to ${trimmedEmail}.`,
+          message: `In-portal invitation restored for ${trimmedEmail}. Ask them to sign into the Hackathon Workspace to accept.`,
           member: resurrected,
         });
       }
@@ -210,7 +210,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Invitation successfully dispatched to ${trimmedEmail}.`,
+      message: `In-portal invitation created for ${trimmedEmail}. Ask them to sign in to accept.`,
       member: {
         ...newMember,
         university: cleanUniversity,
@@ -397,7 +397,7 @@ export async function PATCH(request: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        message: `Invitation refreshed and dispatched to ${targetMember.email}.`,
+        message: `In-portal invitation refreshed for ${targetMember.email}.`,
         member: updated,
       });
     }
