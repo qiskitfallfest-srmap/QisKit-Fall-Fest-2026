@@ -23,6 +23,18 @@ function getOrCreateVisitorId(): string {
   }
 }
 
+// Check if running in a local development environment
+function isDevEnvironment(): boolean {
+  if (typeof window === 'undefined') return false;
+  const hostname = window.location.hostname;
+  return (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '0.0.0.0' ||
+    hostname.endsWith('.local')
+  );
+}
+
 /**
  * Universal Event Tracker
  * Logs to Vercel Analytics and persistent API endpoint
@@ -32,15 +44,33 @@ export function trackEvent(
   properties?: Record<string, string | number | boolean | null | undefined>
 ) {
   if (typeof window === 'undefined') return;
+  if (isDevEnvironment()) return;
 
   // 1. Ingest into Vercel Web Analytics
-  try {
-    vercelTrack(eventName, properties || {});
-  } catch (err) {
-    console.debug('[Vercel Analytics] Track error:', err);
+  // NOTE: @vercel/analytics <Analytics /> already tracks page views automatically at the edge.
+  // We NEVER pass 'page_view' here to prevent double-counting against the 50,000 monthly event quota.
+  if (eventName !== 'page_view') {
+    try {
+      vercelTrack(eventName, properties || {});
+    } catch (err) {
+      console.debug('[Vercel Analytics] Track error:', err);
+    }
   }
 
   // 2. Ingest into Persistent Database / Cache API
+  // For 'page_view', deduplicate per browser session to prevent burning serverless function CPU on back-and-forth navigations
+  if (eventName === 'page_view') {
+    try {
+      const pathKey = `qff_pv_${window.location.pathname || '/'}`;
+      if (sessionStorage.getItem(pathKey)) {
+        return; // Already tracked for this session; skip hitting serverless function
+      }
+      sessionStorage.setItem(pathKey, '1');
+    } catch {
+      // sessionStorage may fail in private mode; proceed
+    }
+  }
+
   try {
     const payload = {
       event: eventName,
