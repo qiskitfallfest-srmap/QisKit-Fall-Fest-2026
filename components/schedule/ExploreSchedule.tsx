@@ -22,7 +22,6 @@ import {
 } from 'lucide-react';
 import { Day, SchedulePhase, Session, Track } from '@/data/schedule.types';
 import { getPhaseDays, getPhaseInfo, filterSessions, getSessionAction } from '@/data/schedule.utils';
-import { PhaseSelector } from './PhaseSelector';
 import { StaggeredTextReveal } from '@/components/ui/StaggeredTextReveal';
 
 const posterImage = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="300" viewBox="0 0 600 300"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%233A0B10"/><stop offset="50%" stop-color="%236C151E"/><stop offset="100%" stop-color="%23120506"/></linearGradient></defs><rect width="600" height="300" fill="url(%23g)"/><g opacity="0.3" stroke="%23F5DABF" stroke-width="1.5" fill="none"><polygon points="300,40 420,95 420,205 300,260 180,205 180,95"/><line x1="300" y1="40" x2="300" y2="150"/><line x1="420" y1="95" x2="300" y2="150"/><line x1="180" y1="95" x2="300" y2="150"/><line x1="300" y1="150" x2="300" y2="260"/><line x1="420" y1="205" x2="300" y2="150"/><line x1="180" y1="205" x2="300" y2="150"/></g></svg>';
@@ -30,19 +29,19 @@ const posterImage = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/
 const tracks = ['All', 'Workshop', 'Talk', 'Hackathon', 'Networking', 'Community'] as const;
 
 interface ExploreScheduleProps {
-  currentPhase: SchedulePhase;
-  onPhaseChange: (phase: SchedulePhase) => void;
+  currentPhase?: SchedulePhase;
+  onPhaseChange?: (phase: SchedulePhase) => void;
   targetDayIndex?: number;
 }
 
-export function ExploreSchedule({ currentPhase, onPhaseChange, targetDayIndex }: ExploreScheduleProps) {
+export function ExploreSchedule({ currentPhase = 'offline', onPhaseChange, targetDayIndex }: ExploreScheduleProps) {
   const [dayIndex, setDayIndex] = useState(0);
   const [activeTrack, setActiveTrack] = useState<(typeof tracks)[number]>('All');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
 
-  const phaseInfo = getPhaseInfo(currentPhase);
-  const currentDays = getPhaseDays(currentPhase);
+  const phaseInfo = getPhaseInfo('offline');
+  const currentDays = getPhaseDays('offline');
 
   // Reset or sync day index & session selection when phase or external targetDayIndex changes
   useEffect(() => {
@@ -202,49 +201,51 @@ export function ExploreSchedule({ currentPhase, onPhaseChange, targetDayIndex }:
       )}
 
       {/* Action Buttons */}
-      <div className="pt-2">
-        {action.isExternal ? (
-          <a
-            href={action.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group relative flex w-full items-center justify-between overflow-hidden rounded-xl border border-[rgba(193,46,63,0.85)] bg-[#6C151E] text-white py-3.5 px-6 text-xs font-bold transition-all duration-300 shadow-md active:scale-[0.98]"
-          >
-            {/* Expanding Circle Background Fill */}
-            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-[#3A0B10] rounded-full opacity-0 pointer-events-none group-hover:w-[600px] group-hover:h-[600px] group-hover:opacity-100 transition-all duration-[1200ms] ease-[cubic-bezier(0.25,1,0.35,1)]" />
+      {action && (
+        <div className="pt-2">
+          {action.isExternal ? (
+            <a
+              href={action.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group relative flex w-full items-center justify-between overflow-hidden rounded-xl border border-[rgba(193,46,63,0.85)] bg-[#6C151E] text-white py-3.5 px-6 text-xs font-bold transition-all duration-300 shadow-md active:scale-[0.98]"
+            >
+              {/* Expanding Circle Background Fill */}
+              <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-[#3A0B10] rounded-full opacity-0 pointer-events-none group-hover:w-[600px] group-hover:h-[600px] group-hover:opacity-100 transition-all duration-[1200ms] ease-[cubic-bezier(0.25,1,0.35,1)]" />
 
-            {/* Text */}
-            <span className="relative z-[1] tracking-wide">{action.detailLabel}</span>
+              {/* Text */}
+              <span className="relative z-[1] tracking-wide">{action.detailLabel}</span>
 
-            {/* Arrow */}
-            <ArrowRight
-              size={16}
-              className="relative z-[1] transition-transform duration-300 ease-out group-hover:translate-x-1.5"
-            />
-          </a>
-        ) : (
-          <Link
-            href={action.href}
-            className="group relative flex w-full items-center justify-between overflow-hidden rounded-xl border border-[rgba(193,46,63,0.85)] bg-[#6C151E] text-white py-3.5 px-6 text-xs font-bold transition-all duration-300 shadow-md active:scale-[0.98]"
-          >
-            {/* Expanding Circle Background Fill */}
-            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-[#3A0B10] rounded-full opacity-0 pointer-events-none group-hover:w-[600px] group-hover:h-[600px] group-hover:opacity-100 transition-all duration-[1200ms] ease-[cubic-bezier(0.25,1,0.35,1)]" />
+              {/* Arrow */}
+              <ArrowRight
+                size={16}
+                className="relative z-[1] transition-transform duration-300 ease-out group-hover:translate-x-1.5"
+              />
+            </a>
+          ) : (
+            <Link
+              href={action.href}
+              className="group relative flex w-full items-center justify-between overflow-hidden rounded-xl border border-[rgba(193,46,63,0.85)] bg-[#6C151E] text-white py-3.5 px-6 text-xs font-bold transition-all duration-300 shadow-md active:scale-[0.98]"
+            >
+              {/* Expanding Circle Background Fill */}
+              <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-[#3A0B10] rounded-full opacity-0 pointer-events-none group-hover:w-[600px] group-hover:h-[600px] group-hover:opacity-100 transition-all duration-[1200ms] ease-[cubic-bezier(0.25,1,0.35,1)]" />
 
-            {/* Text */}
-            <span className="relative z-[1] tracking-wide">{action.detailLabel}</span>
+              {/* Text */}
+              <span className="relative z-[1] tracking-wide">{action.detailLabel}</span>
 
-            {/* Arrow */}
-            <ArrowRight
-              size={16}
-              className="relative z-[1] transition-transform duration-300 ease-out group-hover:translate-x-1.5"
-            />
-          </Link>
-        )}
-      </div>
+              {/* Arrow */}
+              <ArrowRight
+                size={16}
+                className="relative z-[1] transition-transform duration-300 ease-out group-hover:translate-x-1.5"
+              />
+            </Link>
+          )}
+        </div>
+      )}
 
     </aside>
-  );
-};
+    );
+  };
 
   return (
     <section 
@@ -274,7 +275,7 @@ export function ExploreSchedule({ currentPhase, onPhaseChange, targetDayIndex }:
               </h2>
 
               <p className="mt-3 max-w-[720px] font-sans font-normal text-sm sm:text-base leading-relaxed text-[#4E4441] dark:text-[#D6CDCA]">
-                Browse sessions, filter by track, and plan your Fall Fest experience across Online and Offline phases.
+                Browse verified on-campus sessions across all 5 days, filter by track, and plan your Fall Fest experience at SRM University-AP.
               </p>
 
               {currentPhase === 'online' && (
@@ -289,9 +290,12 @@ export function ExploreSchedule({ currentPhase, onPhaseChange, targetDayIndex }:
               )}
             </div>
 
-            {/* Phase Selector */}
+            {/* Venue Location Pill */}
             <div className="flex items-center">
-              <PhaseSelector currentPhase={currentPhase} onPhaseChange={onPhaseChange} variant="segmented" />
+              <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(108,21,30,0.2)] bg-white/50 dark:bg-black/40 px-4 py-2 text-xs font-semibold text-[#6C151E] dark:text-[#F5DABF] shadow-sm backdrop-blur-md">
+                <MapPin size={14} className="text-[#6C151E] dark:text-[#F5DABF]" />
+                <span>SRM University-AP, Amaravati</span>
+              </div>
             </div>
           </header>
 
@@ -468,25 +472,28 @@ export function ExploreSchedule({ currentPhase, onPhaseChange, targetDayIndex }:
                             </div>
 
                             <h4 className="font-serif text-lg sm:text-xl font-bold tracking-tight text-[#13090A] dark:text-[#F6F2F1] group-hover:text-[#6C151E] dark:group-hover:text-[#E45464] transition-colors leading-snug">
-                              {action.isExternal ? (
-                                <a
-                                  href={action.href}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="hover:underline"
-                                >
-                                  {session.title}
-                                </a>
+                              {action ? (
+                                action.isExternal ? (
+                                  <a
+                                    href={action.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                                    className="hover:underline"
+                                  >
+                                    {session.title}
+                                  </a>
+                                ) : (
+                                  <Link
+                                    href={action.href}
+                                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                                    className="hover:underline"
+                                  >
+                                    {session.title}
+                                  </Link>
+                                )
                               ) : (
-                                <Link
-                                  href={action.href}
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="hover:underline"
-                                >
-                                  {session.title}
-                                </Link>
-                              )}
+                                <span>{session.title}</span>                              )}
                             </h4>
 
                             <p className="font-sans font-normal text-xs sm:text-sm leading-relaxed text-[#665B57] dark:text-[#BEB5B4] line-clamp-2">
@@ -498,27 +505,28 @@ export function ExploreSchedule({ currentPhase, onPhaseChange, targetDayIndex }:
 
                         {/* Right: Actions */}
                         <div className="flex items-center gap-2 mt-3 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#D9D0CB]/40 dark:border-white/10 w-full sm:w-auto justify-end shrink-0">
-                          {action.isExternal ? (
-                            <a
-                              href={action.href}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-xl bg-[#6C151E] hover:bg-[#8F2632] text-white text-xs font-bold shadow-xs transition-all active:scale-95 shrink-0"
-                            >
-                              <span>{action.cardLabel}</span>
-                              <ArrowRight size={13} />
-                            </a>
-                          ) : (
-                            <Link
-                              href={action.href}
-                              onClick={(e) => e.stopPropagation()}
-                              className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-xl bg-[#6C151E] hover:bg-[#8F2632] text-white text-xs font-bold shadow-xs transition-all active:scale-95 shrink-0"
-                            >
-                              <span>{action.cardLabel}</span>
-                              <ArrowRight size={13} />
-                            </Link>
-                          )}
+                          {action && (
+                            action.isExternal ? (
+                              <a
+                                href={action.href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                                className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-xl bg-[#6C151E] hover:bg-[#8F2632] text-white text-xs font-bold shadow-xs transition-all active:scale-95 shrink-0"
+                              >
+                                <span>{action.cardLabel}</span>
+                                <ArrowRight size={13} />
+                              </a>
+                            ) : (
+                              <Link
+                                href={action.href}
+                                onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                                className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-xl bg-[#6C151E] hover:bg-[#8F2632] text-white text-xs font-bold shadow-xs transition-all active:scale-95 shrink-0"
+                              >
+                                <span>{action.cardLabel}</span>
+                                <ArrowRight size={13} />
+                              </Link>
+                            )                          )}
 
                           <button
                             type="button"
@@ -572,7 +580,7 @@ export function ExploreSchedule({ currentPhase, onPhaseChange, targetDayIndex }:
 
           {/* RIGHT SELECTED SESSION DETAIL PANEL (5 cols desktop, slides in cleanly when session clicked) */}
           <div className={`hidden lg:block transition-all duration-300 ease-in-out ${activePanelSession ? 'lg:col-span-5 sticky top-24' : 'hidden'}`}>
-            <AnimatePresence 
+            <AnimatePresence
               mode="wait"
               onExitComplete={() => {
                 if (!selectedSession) {

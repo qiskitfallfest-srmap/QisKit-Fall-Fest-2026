@@ -128,7 +128,7 @@ function calculateTimeRemaining(targetTime: number): TimeRemaining {
 }
 
 export function CountdownSection() {
-  const [selectedPhase, setSelectedPhase] = React.useState<PhaseId>('online');
+  const [selectedPhase, setSelectedPhase] = React.useState<PhaseId>('on-campus');
   const [isTransitioning, setIsTransitioning] = React.useState(false);
   const [mounted, setMounted] = React.useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = React.useState(false);
@@ -407,9 +407,9 @@ export function CountdownSection() {
               {/* Phase 17: Context-Aware Schedule CTA (Shimmer Track + Arrow Glide Interaction) */}
               <div className="mt-6 sm:mt-7">
                 <Link
-                  href={selectedPhase === 'online' ? '/schedule#online-day-1' : '/schedule#offline-day-1'}
+                  href="/schedule#offline-day-1"
                   data-cursor="cta"
-                  aria-label={selectedPhase === 'online' ? 'View Online Schedule' : 'View On-Campus Schedule'}
+                  aria-label="View On-Campus Schedule"
                   className="
                     group relative inline-flex h-[46px] sm:h-[48px] items-center justify-between overflow-hidden
                     rounded-[8px] pl-6 pr-3 text-[14px] sm:text-[14.5px] font-semibold tracking-[0.01em] outline-none

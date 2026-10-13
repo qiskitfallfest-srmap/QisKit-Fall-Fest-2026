@@ -6,9 +6,9 @@ into the judge's submission box for each problem.
 """
 
 import numpy as np
-from qiskit import QuantumCircuit
-from qiskit.circuit import Parameter
-from qiskit.quantum_info import Statevector, state_fidelity, Operator
+from qiskit import QuantumCircuit  # type: ignore
+from qiskit.circuit import Parameter  # type: ignore
+from qiskit.quantum_info import Statevector, state_fidelity, Operator  # type: ignore
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -78,7 +78,7 @@ def parity_probe(n: int) -> QuantumCircuit:
 #   7. Try combined delete-one + replace-one (2-fault case).
 # ─────────────────────────────────────────────────────────────────────────────
 def repair_circuit(buggy: QuantumCircuit, target) -> QuantumCircuit:
-    from qiskit.circuit.library import (
+    from qiskit.circuit.library import (  # type: ignore
         SGate, SdgGate, TGate, TdgGate,
         XGate, YGate, ZGate, HGate, SXGate,
     )
@@ -353,7 +353,7 @@ def pauli_measurement_circuit(state_prep: QuantumCircuit, pauli: str) -> Quantum
         # I and Z: no rotation needed
 
     if qc.num_clbits < n:
-        from qiskit import ClassicalRegister
+        from qiskit import ClassicalRegister  # type: ignore
         qc.add_register(ClassicalRegister(n))
     for i in range(n):
         qc.measure(i, i)
@@ -499,8 +499,8 @@ def param_shift_gradient(circuit: QuantumCircuit, values: list, evaluator) -> li
 # Qiskit automatically applies the H-CX-H pattern when reversing direction.
 # ─────────────────────────────────────────────────────────────────────────────
 def route_to_coupling(circuit: QuantumCircuit, coupling: list) -> QuantumCircuit:
-    from qiskit.compiler import transpile
-    from qiskit.quantum_info import Operator
+    from qiskit.compiler import transpile  # type: ignore
+    from qiskit.quantum_info import Operator  # type: ignore
     import collections
 
     n = circuit.num_qubits
@@ -768,7 +768,7 @@ def qaoa_maxcut(n: int, edges: list, p: int) -> QuantumCircuit:
         return qc
 
     def compute_cut(qc_noM):
-        from qiskit.quantum_info import Statevector as SV
+        from qiskit.quantum_info import Statevector as SV  # type: ignore
         probs = SV(qc_noM).probabilities()
         e = 0.0
         for idx, pr in enumerate(probs):

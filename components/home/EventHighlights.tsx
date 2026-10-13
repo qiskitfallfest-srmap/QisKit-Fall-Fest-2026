@@ -26,7 +26,7 @@ const HIGHLIGHTS: HighlightItem[] = [
     icon: BriefcaseBusiness,
     imageSrc: '/images/home/highlights/workshops.webp',
     imageAlt: 'World-Class Quantum Workshops and hands-on laboratory sessions',
-    href: '/schedule#online-day-1',
+    href: '/schedule#offline-day-1',
   },
   {
     id: 'hackathons',
@@ -46,7 +46,7 @@ const HIGHLIGHTS: HighlightItem[] = [
     icon: Atom,
     imageSrc: '/images/home/highlights/sessions.webp',
     imageAlt: 'Keynotes and technical presentations on quantum computing',
-    href: '/schedule#online-day-2',
+    href: '/schedule#offline-day-2',
   },
   {
     id: 'community',

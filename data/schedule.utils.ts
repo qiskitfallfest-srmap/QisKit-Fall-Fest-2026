@@ -1,27 +1,18 @@
 import { Day, SchedulePhase, SchedulePhaseInfo, Session, Track } from './schedule.types';
 import { onlineSchedule } from './onlineSchedule';
 import { offlineSchedule } from './offlineSchedule';
+import { REGISTRATION_URL } from '@/lib/constants';
 
 export function getPhaseDays(phase: SchedulePhase): Day[] {
   return phase === 'online' ? onlineSchedule : offlineSchedule;
 }
 
-export function getPhaseInfo(phase: SchedulePhase): SchedulePhaseInfo {
-  if (phase === 'online') {
-    return {
-      id: 'online',
-      title: 'Online Phase',
-      dateRange: '8–10 October 2026',
-      shortDescription: 'Virtual foundations and advanced quantum computing masterclasses.',
-      locationText: 'Online (Virtual)',
-      daysCount: 3,
-    };
-  }
+export function getPhaseInfo(phase: SchedulePhase = 'offline'): SchedulePhaseInfo {
   return {
     id: 'offline',
-    title: 'Offline Phase',
+    title: 'On-Campus Phase',
     dateRange: '26–30 October 2026',
-    shortDescription: 'On-campus masterclass labs, QPU hardware access, and hackathon at SRM University-AP.',
+    shortDescription: 'Official 5-day on-campus festival at SRM University-AP featuring workshops, flagship QCTF, 24-hour hackathon, and hardware expo.',
     locationText: 'SRM University-AP, Amaravati',
     daysCount: 5,
   };
@@ -54,15 +45,21 @@ export function filterSessions(
   });
 }
 
-export function computeScheduleStats(phase: SchedulePhase) {
-  const days = getPhaseDays(phase);
+export function computeScheduleStats(phase: SchedulePhase = 'offline') {
+  const days = offlineSchedule;
   let totalSessionsCount = 0;
   const speakerSet = new Set<string>();
 
   days.forEach((day) => {
     day.sessions.forEach((s) => {
       totalSessionsCount++;
-      if (s.speaker && s.speaker !== 'To be confirmed') {
+      if (
+        s.speaker &&
+        s.speaker !== 'To be confirmed' &&
+        s.speaker !== '—' &&
+        !s.speaker.startsWith('Student Organizing') &&
+        !s.speaker.startsWith('Organizing Team')
+      ) {
         speakerSet.add(s.speaker);
       }
     });
@@ -75,7 +72,7 @@ export function computeScheduleStats(phase: SchedulePhase) {
       icon: 'calendar',
     },
     {
-      value: phase === 'online' ? '10+' : '12+',
+      value: '15+',
       label: 'Speakers & Experts',
       icon: 'users',
     },
@@ -85,12 +82,12 @@ export function computeScheduleStats(phase: SchedulePhase) {
       icon: 'code',
     },
     {
-      value: phase === 'online' ? 'Global Virtual' : 'On-Campus Hybrid',
+      value: 'On-Campus',
       label: 'Experience',
       icon: 'globe',
     },
     {
-      value: phase === 'online' ? '1,000+' : '500+',
+      value: '500+',
       label: 'Learners & Builders',
       icon: 'award',
     },
@@ -104,14 +101,33 @@ export interface SessionActionInfo {
   isExternal?: boolean;
 }
 
-export function getSessionAction(session: Session, phase: SchedulePhase): SessionActionInfo {
+export function getSessionAction(session: Session, phase?: SchedulePhase): SessionActionInfo | null {
   const url = session.learningUrl;
   const sId = (session.id || '').toLowerCase();
   const title = (session.title || '').toLowerCase();
 
-  // Session 1
+  // Explicit learningUrl provided
+  if (url) {
+    return {
+      href: url,
+      cardLabel: 'Go to Session',
+      detailLabel: 'Launch Learning Session',
+    };
+  }
+
+  // Explicit external registration URL
+  if (session.registrationUrl) {
+    return {
+      href: session.registrationUrl,
+      cardLabel: 'Register',
+      detailLabel: 'Complete Registration',
+      isExternal: true,
+    };
+  }
+
+  // Masterclass Session 1
   if (
-    url === '/learning/session/session-1' ||
+    sId.includes('session-1') ||
     sId.includes('s1') ||
     title.includes('session 1') ||
     title.includes('introduction to qiskit')
@@ -123,25 +139,13 @@ export function getSessionAction(session: Session, phase: SchedulePhase): Sessio
     };
   }
 
-  // Session 1 (Quantum Material segment)
+  // Masterclass Session 3
   if (
-    url === '/learning/session/session-2' ||
-    sId.includes('s2') ||
-    title.includes('quantum material')
-  ) {
-    return {
-      href: '/learning/session/session-1',
-      cardLabel: 'Enter Session 1',
-      detailLabel: 'Launch Learning Session 1',
-    };
-  }
-
-  // Session 3
-  if (
-    url === '/learning/session/session-3' ||
+    sId.includes('session-3') ||
     sId.includes('s3') ||
     title.includes('session 3') ||
     title.includes('connectivity') ||
+    title.includes('transpilation') ||
     title.includes('architecture')
   ) {
     return {
@@ -151,16 +155,17 @@ export function getSessionAction(session: Session, phase: SchedulePhase): Sessio
     };
   }
 
-  // Session 4 (4A / 4B)
+  // Masterclass Session 4 (4A / 4B / Photonic Technologies)
   if (
-    url === '/learning/session/session-4' ||
+    sId.includes('session-4') ||
     sId.includes('s4') ||
     title.includes('session 4') ||
     title.includes('sensing') ||
-    title.includes('optics')
+    title.includes('optics') ||
+    title.includes('photonic')
   ) {
     const isSensing = title.includes('sensing') || sId.includes('4a');
-    const isOptics = title.includes('optics') || sId.includes('4b');
+    const isOptics = title.includes('optics') || sId.includes('4b') || title.includes('photonic');
     return {
       href: '/learning/session/session-4',
       cardLabel: isSensing ? 'Enter Session 4A' : isOptics ? 'Enter Session 4B' : 'Enter Session 4',
@@ -168,9 +173,9 @@ export function getSessionAction(session: Session, phase: SchedulePhase): Sessio
     };
   }
 
-  // Session 5
+  // Masterclass Session 5
   if (
-    url === '/learning/session/session-5' ||
+    sId.includes('session-5') ||
     sId.includes('s5') ||
     title.includes('session 5') ||
     title.includes('machine learning') ||
@@ -183,9 +188,9 @@ export function getSessionAction(session: Session, phase: SchedulePhase): Sessio
     };
   }
 
-  // Session 6
+  // Masterclass Session 6
   if (
-    url === '/learning/session/session-6' ||
+    sId.includes('session-6') ||
     sId.includes('s6') ||
     title.includes('session 6') ||
     title.includes('cryptography') ||
@@ -250,7 +255,7 @@ export function getSessionAction(session: Session, phase: SchedulePhase): Sessio
     };
   }
 
-  // Hackathon Problem Release or Hackathon milestones
+  // Hackathon Workspace & Milestones (Phase 1 & Phase 2)
   if (
     url === '/learning/hackathon' ||
     sId.includes('hackathon') ||
@@ -264,60 +269,30 @@ export function getSessionAction(session: Session, phase: SchedulePhase): Sessio
     };
   }
 
-  // Inauguration & addresses
+  // Intermissions, breaks, and lunches do not have registration buttons
   if (
-    title.includes('inaugur') ||
-    title.includes('welcome') ||
-    title.includes('keynote')
+    title.includes('break') ||
+    title.includes('lunch') ||
+    sId.includes('break') ||
+    sId.includes('lunch')
   ) {
-    return {
-      href: '/learning',
-      cardLabel: 'Learning Hub',
-      detailLabel: 'Explore Learning Hub',
-    };
+    return null;
   }
 
-  // Lunch Break / Networking
-  if (title.includes('lunch') || session.track === 'Networking') {
-    return {
-      href: '/learning',
-      cardLabel: 'Learning Hub',
-      detailLabel: 'View Learning Hub & Lounge',
-    };
-  }
-
-  // If explicit learningUrl is specified
-  if (url) {
-    return {
-      href: url,
-      cardLabel: 'Go to Session',
-      detailLabel: 'Launch Learning Session',
-    };
-  }
-
-  // Online phase default
+  // Online phase fallback
   if (phase === 'online') {
     return {
       href: '/learning',
-      cardLabel: 'Go to Session',
-      detailLabel: 'Launch Learning Session',
+      cardLabel: 'Learning Hub',
+      detailLabel: 'Go to Learning Hub',
     };
   }
 
-  // Offline phase
-  if (session.registrationUrl) {
-    return {
-      href: session.registrationUrl,
-      cardLabel: 'Register',
-      detailLabel: 'Complete Registration',
-      isExternal: true,
-    };
-  }
-
+  // All remaining on-campus sessions direct to official Unstop registration
   return {
-    href: '/learning',
-    cardLabel: 'Learning Hub',
-    detailLabel: 'Go to Learning Hub',
+    href: REGISTRATION_URL,
+    cardLabel: 'Register',
+    detailLabel: 'Register on Unstop',
+    isExternal: true,
   };
 }
-
