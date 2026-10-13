@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isEmailWhitelisted } from '@/lib/redis';
-import { SUPER_ADMIN_EMAILS } from '@/lib/auth';
-
-const COOKIE_NAME = 'qff_auth_session';
-
-export const runtime = 'edge';
+import {
+  SUPER_ADMIN_EMAILS,
+  COOKIE_NAME,
+  signSessionCookie,
+  verifySessionCookieValue,
+} from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   const sessionCookie = request.cookies.get(COOKIE_NAME);
@@ -13,12 +14,12 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const parsed = JSON.parse(decodeURIComponent(sessionCookie.value));
-    const email = parsed.email?.trim().toLowerCase();
-    if (!email) {
+    const verified = verifySessionCookieValue(sessionCookie.value);
+    if (!verified) {
       return NextResponse.json({ authenticated: false, session: null });
     }
 
+    const { email, fullName, role, isAdmin } = verified;
     const isSuperAdmin = SUPER_ADMIN_EMAILS.includes(email);
     const whitelist = await isEmailWhitelisted(email);
 
@@ -26,25 +27,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ authenticated: false, session: null });
     }
 
-    const role = isSuperAdmin ? 'admin' : whitelist.role || 'participant';
-
     const isCleanWhitelistName =
       Boolean(whitelist.fullName) &&
       !whitelist.fullName!.includes('|') &&
       !/^\d{5,}-/.test(whitelist.fullName!);
 
     const resolvedFullName =
-      (parsed.fullName && !parsed.fullName.includes('|'))
-        ? parsed.fullName
-        : (isCleanWhitelistName ? whitelist.fullName! : (parsed.fullName || whitelist.fullName || email.split('@')[0]));
+      (fullName && !fullName.includes('|'))
+        ? fullName
+        : (isCleanWhitelistName ? whitelist.fullName! : (fullName || whitelist.fullName || email.split('@')[0]));
 
     return NextResponse.json({
       authenticated: true,
       session: {
         email,
         fullName: resolvedFullName,
-        role,
-        isAdmin: isSuperAdmin || role === 'admin',
+        role: isSuperAdmin && isAdmin ? 'admin' : (whitelist.role || role),
+        isAdmin,
       },
     });
   } catch {
@@ -81,7 +80,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const role = isSuperAdmin ? 'admin' : whitelist.role || 'participant';
+    // Verify admin credentials if attempting to claim super-admin access
+    let isVerifiedAdmin = false;
+    if (isSuperAdmin) {
+      const authHeader = request.headers.get('authorization') || '';
+      const adminSecretHeader = request.headers.get('x-admin-secret') || '';
+      const token = authHeader.replace(/^Bearer\s+/i, '') || body.authToken || '';
+      const serverAdminSecret = process.env.ADMIN_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      if (serverAdminSecret && (adminSecretHeader === serverAdminSecret || body.adminSecret === serverAdminSecret)) {
+        isVerifiedAdmin = true;
+      } else if (token) {
+        try {
+          const { supabaseAdmin } = await import('@/lib/supabase-admin');
+          const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
+          if (!userErr && userData?.user?.email?.toLowerCase() === email) {
+            isVerifiedAdmin = true;
+          }
+        } catch {}
+      }
+    }
+
+    const effectiveIsAdmin = isSuperAdmin ? isVerifiedAdmin : (whitelist.role === 'admin');
+    const role = effectiveIsAdmin ? 'admin' : (whitelist.role || 'participant');
     const isCleanWhitelistName =
       Boolean(whitelist.fullName) &&
       !whitelist.fullName!.includes('|') &&
@@ -95,8 +116,8 @@ export async function POST(request: NextRequest) {
     const sessionData = {
       email,
       fullName: resolvedFullName,
-      role,
-      isAdmin: isSuperAdmin || role === 'admin',
+      role: role as 'participant' | 'admin' | 'tester' | 'mentor',
+      isAdmin: effectiveIsAdmin,
     };
 
     const response = NextResponse.json({
@@ -123,10 +144,10 @@ export async function POST(request: NextRequest) {
     const isSecure = isRequestSecure(request);
     const domain = getCookieDomain(request);
 
-    // Set cookie for 14 days
+    // Set signed tamper-proof cookie for 14 days
     response.cookies.set({
       name: COOKIE_NAME,
-      value: encodeURIComponent(JSON.stringify(sessionData)),
+      value: signSessionCookie(sessionData),
       httpOnly: true,
       secure: isSecure,
       sameSite: 'lax',

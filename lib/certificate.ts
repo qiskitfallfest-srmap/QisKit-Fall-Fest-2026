@@ -155,6 +155,20 @@ export function generateVerificationHash(
     .digest('hex');
 }
 
+function escapeXml(unsafe: string): string {
+  if (!unsafe) return '';
+  return unsafe.replace(/[<>&'"]/g, (c) => {
+    switch (c) {
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '&': return '&amp;';
+      case '\'': return '&apos;';
+      case '"': return '&quot;';
+      default: return c;
+    }
+  });
+}
+
 /**
  * Generates an SVG Certificate
  */
@@ -177,6 +191,12 @@ export function generateCertificateSVG({
       : averageScore >= 75
       ? 'Passed with Distinction'
       : 'Certificate of Successful Completion';
+
+  const safeRecipientName = escapeXml(recipientName);
+  const safeSerialNumber = escapeXml(serialNumber);
+  const safeVerificationUrl = escapeXml(verificationUrl);
+  const safeDistinction = escapeXml(distinction.toUpperCase());
+  const safeIssuedDate = escapeXml(issuedDateStr);
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
@@ -235,7 +255,7 @@ export function generateCertificateSVG({
 
   <!-- Recipient Name -->
   <text x="960" y="490" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="46" font-weight="800" letter-spacing="1" fill="#0f172a">
-    ${recipientName}
+    ${safeRecipientName}
   </text>
   <line x1="560" y1="520" x2="1360" y2="520" stroke="url(#goldGrad)" stroke-width="2"/>
 
@@ -253,7 +273,7 @@ export function generateCertificateSVG({
   <!-- Distinction Badge Box -->
   <rect x="760" y="685" width="400" height="42" rx="21" fill="#f8fafc" stroke="#d4af37" stroke-width="1.5"/>
   <text x="960" y="712" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" letter-spacing="1" fill="#800020">
-    ${distinction.toUpperCase()} (${averageScore}%)
+    ${safeDistinction} (${averageScore}%)
   </text>
 
   <!-- Signatures Section -->
@@ -282,10 +302,10 @@ export function generateCertificateSVG({
   <!-- Footer Metadata & Verification -->
   <g transform="translate(100, 990)">
     <text x="0" y="0" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#475569">
-      SERIAL: <tspan fill="#800020">${serialNumber}</tspan>
+      SERIAL: <tspan fill="#800020">${safeSerialNumber}</tspan>
     </text>
     <text x="0" y="18" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#94a3b8">
-      ISSUED: ${issuedDateStr} · SRM UNIVERSITY-AP AMARAVATI
+      ISSUED: ${safeIssuedDate} · SRM UNIVERSITY-AP AMARAVATI
     </text>
   </g>
 
@@ -294,7 +314,7 @@ export function generateCertificateSVG({
       VERIFICATION URL:
     </text>
     <text x="0" y="18" text-anchor="end" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#800020">
-      ${verificationUrl}
+      ${safeVerificationUrl}
     </text>
   </g>
 </svg>`;

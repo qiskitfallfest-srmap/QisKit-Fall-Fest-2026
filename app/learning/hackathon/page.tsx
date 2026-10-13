@@ -204,12 +204,8 @@ export default function HackathonWorkspacePage() {
           setNewMemberStatus('already_in_team');
         } else {
           setNewMemberStatus('valid');
-          if (data.fullName && !newMemberName) {
-            setNewMemberName(data.fullName);
-          }
-          if (trimmed.endsWith('@srmap.edu.in') && !newMemberUniversity) {
-            setNewMemberUniversity('SRM University-AP');
-          }
+          setNewMemberName((prev) => (data.fullName && !prev ? data.fullName : prev));
+          setNewMemberUniversity((prev) => (trimmed.endsWith('@srmap.edu.in') && !prev ? 'SRM University-AP' : prev));
         }
       } catch {
         setNewMemberStatus('idle');
@@ -219,7 +215,7 @@ export default function HackathonWorkspacePage() {
     return () => clearTimeout(timer);
   }, [newMemberEmail]);
 
-  // Release status state (Temporarily set to true for testing)
+  // Release status state (Defaults to true since release date 2026-10-10 has passed)
   const [isReleased, setIsReleased] = useState(true);
 
   useEffect(() => {
@@ -227,10 +223,6 @@ export default function HackathonWorkspacePage() {
   }, []);
 
   async function checkReleaseStatus() {
-    // TEMPORARY: Bypass release date check for testing purposes
-    setIsReleased(true);
-    return;
-    
     const targetDate = new Date('2026-10-10T00:00:00+05:30');
     if (new Date() >= targetDate) {
       setIsReleased(true);

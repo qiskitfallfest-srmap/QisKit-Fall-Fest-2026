@@ -40,8 +40,39 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 2. Cryptographic Signature Verification
+    // 2. Validate Order Exists and belongs to this user
+    const { data: existingOrder, error: orderFetchErr } = await supabase
+      .from('certificate_orders')
+      .select('*')
+      .eq('razorpay_order_id', razorpay_order_id)
+      .maybeSingle();
+
+    if (orderFetchErr || !existingOrder) {
+      return NextResponse.json(
+        { error: 'Order not found or invalid' },
+        { status: 404 }
+      );
+    }
+
+    if (
+      existingOrder.user_email &&
+      existingOrder.user_email.toLowerCase().trim() !== normalizedEmail
+    ) {
+      return NextResponse.json(
+        { error: 'Order does not belong to the authenticated user' },
+        { status: 403 }
+      );
+    }
+
+    // 3. Cryptographic Signature Verification
     const isTestOrder = razorpay_order_id.startsWith('order_test_');
+
+    if (isTestOrder && process.env.NODE_ENV === 'production') {
+      return NextResponse.json(
+        { error: 'Test orders are not permitted in production environment' },
+        { status: 400 }
+      );
+    }
 
     if (!isTestOrder && razorpayInstance) {
       if (!razorpay_signature) {
@@ -74,7 +105,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 3. Update order in certificate_orders table to 'paid'
+    // 4. Update order in certificate_orders table to 'paid'
     const { data: updatedOrder, error: orderUpdateErr } = await supabase
       .from('certificate_orders')
       .update({
@@ -87,12 +118,26 @@ export async function POST(req: NextRequest) {
       .select('id, metadata')
       .single();
 
-    if (orderUpdateErr) {
+    if (orderUpdateErr || !updatedOrder) {
       console.error('[Verify Order DB Error]:', orderUpdateErr);
+      return NextResponse.json(
+        { error: 'Failed to record payment confirmation in database' },
+        { status: 500 }
+      );
     }
 
-    // 4. Verify candidate eligibility and compute final average score
+    // 5. Verify candidate eligibility and compute final average score
     const eligibility = await checkCertificateEligibility(normalizedEmail);
+
+    if (!eligibility.eligible) {
+      return NextResponse.json(
+        {
+          error: 'User is not yet eligible for certificate issuance',
+          details: eligibility.missingTasks,
+        },
+        { status: 400 }
+      );
+    }
 
     const averageScore = eligibility.averageQuizScore || 85.0;
     const recipientName =
@@ -100,11 +145,11 @@ export async function POST(req: NextRequest) {
       session.fullName ||
       session.email.split('@')[0];
 
-    // 5. Mint official academic certificate and upload to Supabase Storage
+    // 6. Mint official academic certificate and upload to Supabase Storage
     const mintResult = await mintCertificate({
       userEmail: normalizedEmail,
       recipientName,
-      orderId: updatedOrder?.id || null,
+      orderId: updatedOrder.id,
       averageScore,
     });
 

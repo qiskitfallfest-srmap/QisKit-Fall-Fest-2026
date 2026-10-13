@@ -33,17 +33,17 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/join',
-        destination: 'https://events.srmap.edu.in/event/qiskit-fall-fest-2026/',
+        destination: '/learning',
         permanent: false,
       },
       {
         source: '/register',
-        destination: 'https://events.srmap.edu.in/event/qiskit-fall-fest-2026/',
+        destination: '/learning',
         permanent: false,
       },
       {
         source: '/signup',
-        destination: 'https://events.srmap.edu.in/event/qiskit-fall-fest-2026/',
+        destination: '/learning',
         permanent: false,
       },
     ];
@@ -67,7 +67,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
+            value: 'camera=(), microphone=(), geolocation=(), usb=()',
           },
           {
             key: 'Cross-Origin-Opener-Policy',

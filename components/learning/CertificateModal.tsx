@@ -458,6 +458,7 @@ export function CertificateModal({
                   {/* QR Box */}
                   <div className="w-36 h-36 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#150709] flex flex-col items-center justify-center p-2 text-center shrink-0 shadow-xs overflow-hidden">
                     {isGatewayActive && data?.qrCodeUrl ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
                       <img
                         src={data.qrCodeUrl}
                         alt="Payment QR Code"

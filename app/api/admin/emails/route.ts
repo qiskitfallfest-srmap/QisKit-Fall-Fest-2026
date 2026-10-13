@@ -11,23 +11,28 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const search = searchParams.get('search') || '';
+  const limit = Math.min(parseInt(searchParams.get('limit') || '5000', 10), 10000);
+  const page = Math.max(parseInt(searchParams.get('page') || '1', 10), 1);
+  const offset = (page - 1) * limit;
 
   try {
     let query = supabase
       .from('allowed_emails')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (search) {
       query = query.or(`email.ilike.%${search}%,full_name.ilike.%${search}%`);
     }
 
-    const { data, error } = await query;
+    const { data, count, error } = await query;
     if (error) throw error;
 
     return NextResponse.json({
       emails: data || [],
-      count: data?.length || 0,
+      count: count ?? data?.length ?? 0,
+      totalCount: count ?? data?.length ?? 0,
     });
   } catch (error) {
     console.error('Error listing whitelist:', error);

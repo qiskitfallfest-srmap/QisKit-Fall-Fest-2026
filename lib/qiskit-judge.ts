@@ -304,12 +304,17 @@ function executeLocalRunner(
     let py: any;
     try {
       const pythonCmd = getPythonExecutable();
+      const sanitizedEnv: NodeJS.ProcessEnv = {
+        NODE_ENV: process.env.NODE_ENV || 'production',
+        PATH: process.env.PATH || '',
+        SYSTEMROOT: process.env.SYSTEMROOT || '',
+        TEMP: process.env.TEMP || '',
+        TMP: process.env.TMP || '',
+        PYTHONPATH: path.join(process.cwd(), 'qiskit-judge'),
+      };
       py = spawn(pythonCmd, [runnerPath], {
         stdio: ['pipe', 'pipe', 'pipe'],
-        env: {
-          ...process.env,
-          PYTHONPATH: path.join(process.cwd(), 'qiskit-judge'),
-        },
+        env: sanitizedEnv,
       });
     } catch (e: any) {
       return safeResolve({

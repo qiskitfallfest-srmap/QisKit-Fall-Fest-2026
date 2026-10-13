@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyWebhookSignature } from '@/lib/razorpay';
-import { mintCertificate } from '@/lib/certificate';
+import { checkCertificateEligibility, mintCertificate } from '@/lib/certificate';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export async function POST(req: NextRequest) {
@@ -72,18 +72,23 @@ export async function POST(req: NextRequest) {
         .maybeSingle();
 
       if (!existingCert) {
-        const averageScore = (order.metadata as any)?.averageQuizScore || 85.0;
-        const recipientName =
-          userName ||
-          (order.metadata as any)?.candidateName ||
-          recipientEmail.split('@')[0];
+        const eligibility = await checkCertificateEligibility(recipientEmail);
+        if (eligibility.eligible) {
+          const averageScore = eligibility.averageQuizScore || (order.metadata as any)?.averageQuizScore || 85.0;
+          const recipientName =
+            userName ||
+            (order.metadata as any)?.candidateName ||
+            recipientEmail.split('@')[0];
 
-        await mintCertificate({
-          userEmail: recipientEmail,
-          recipientName,
-          orderId: order.id,
-          averageScore,
-        });
+          await mintCertificate({
+            userEmail: recipientEmail,
+            recipientName,
+            orderId: order.id,
+            averageScore,
+          });
+        } else {
+          console.warn(`[Razorpay Webhook] User ${recipientEmail} paid but is not yet eligible for certificate.`);
+        }
       }
     }
 

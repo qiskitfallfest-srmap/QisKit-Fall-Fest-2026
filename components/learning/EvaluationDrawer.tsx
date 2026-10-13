@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   X,
   Download,
@@ -121,7 +121,7 @@ export function EvaluationDrawer({
   const [feedbackMsg, setFeedbackMsg] = useState<{ text: string; isError?: boolean } | null>(null);
 
   // Close with unsaved changes verification (Don Norman Error Prevention)
-  const handleCloseWithCheck = () => {
+  const handleCloseWithCheck = useCallback(() => {
     if (isDirty) {
       const confirmDiscard = window.confirm(
         'You have unsaved changes in this review desk. Do you want to discard them?'
@@ -130,7 +130,7 @@ export function EvaluationDrawer({
     }
     setIsDirty(false);
     onClose();
-  };
+  }, [isDirty, onClose]);
 
   // Keyboard accessibility: Escape key listener
   useEffect(() => {
@@ -142,7 +142,7 @@ export function EvaluationDrawer({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isDirty]);
+  }, [isOpen, handleCloseWithCheck]);
 
   // Sync state when initialEvaluation or targetId changes
   useEffect(() => {
