@@ -31,6 +31,7 @@ import { useQuizzes } from '@/hooks/use-quizzes';
 import { useCodingChallengeStatus } from '@/hooks/use-coding-challenge';
 import { CertificateModal } from '@/components/learning/CertificateModal';
 import { useLearningSidebar } from '@/components/learning/LearningShell';
+import { handleGoogleSignInDirect } from '@/components/learning/AuthGate';
 
 const DAYS = [
   { id: 1, label: 'Day 1: Foundations' },
@@ -64,12 +65,13 @@ export function LearningSidebar() {
     ? sessions.find((s) => s.id === activeSessionId) || CURRICULUM_SESSIONS.find((s) => s.id === activeSessionId)
     : null;
 
-  // Determine which days are open in the accordion. Open Day 1, Day 2, and Day 3 by default.
+  // Initially, accordion days start in closed phase (Day 1, Day 2, Day 3 closed by default).
+  // If user is actively viewing a specific session page, open only that session's day.
   const activeDay = activeSessionObj?.day ?? null;
-  const initialOpenDays = activeDay ? Array.from(new Set([1, 2, 3, activeDay])) : [1, 2, 3];
+  const initialOpenDays: number[] = activeDay ? [activeDay] : [];
 
   const [openDays, setOpenDays] = useState<number[]>(initialOpenDays);
-  const [isChallengesOpen, setIsChallengesOpen] = useState<boolean>(true);
+  const [isChallengesOpen, setIsChallengesOpen] = useState<boolean>(Boolean(activeChallengeDay));
 
   // Keep newly active day open without collapsing already opened days
   useEffect(() => {
@@ -725,7 +727,19 @@ export function LearningSidebar() {
 
   // User Profile Renderer
   const renderUserProfile = () => {
-    if (!session) return null;
+    if (!session) {
+      return (
+        <div className="p-3 border-t border-slate-100 dark:border-[#3D1418] bg-slate-50 dark:bg-[#1C0A0D] shrink-0 mt-auto">
+          <button
+            type="button"
+            onClick={() => handleGoogleSignInDirect()}
+            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-burgundy hover:bg-burgundy-deep text-white font-mono text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer shadow-xs"
+          >
+            <span>Sign In with Google</span>
+          </button>
+        </div>
+      );
+    }
     return (
       <div className="p-3 border-t border-slate-100 dark:border-[#3D1418] bg-slate-50 dark:bg-[#1C0A0D] shrink-0 mt-auto">
         <div className="flex flex-col gap-1.5">

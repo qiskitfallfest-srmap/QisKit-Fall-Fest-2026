@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import {
   Lock,
@@ -26,8 +27,32 @@ interface AuthSession {
 interface AuthGateProps {
   children: React.ReactNode;
   onSessionChange?: (session: AuthSession | null) => void;
+  allowGuest?: boolean;
 }
 
+export async function handleGoogleSignInDirect(returnUrlPath?: string) {
+  if (typeof window !== 'undefined') {
+    sessionStorage.setItem(
+      'qff_auth_return_url',
+      returnUrlPath || window.location.pathname + window.location.search
+    );
+  }
+  const siteUrl =
+    typeof window !== 'undefined'
+      ? window.location.origin
+      : (process.env.NEXT_PUBLIC_SITE_URL || '');
+  const redirectUrl = `${siteUrl}/learning`;
+
+  return await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: redirectUrl,
+      queryParams: {
+        prompt: 'select_account',
+      },
+    },
+  });
+}
 
 const BACKGROUND_ROLES = [
   'Undergraduate Student (B.Tech / B.Sc / BCA)',
@@ -48,7 +73,7 @@ const INTEREST_TRACKS = [
   'Offline Campus Summit (26–30 Oct)',
 ];
 
-export function AuthGate({ children, onSessionChange }: AuthGateProps) {
+export function AuthGate({ children, onSessionChange, allowGuest = false }: AuthGateProps) {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -390,6 +415,15 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
   }
 
   if (isLoading) {
+    if (allowGuest) {
+      const hasCode =
+        typeof window !== 'undefined' &&
+        (window.location.search.includes('code=') ||
+          window.location.hash.includes('access_token'));
+      if (!hasCode) {
+        return <React.Fragment key="auth-gate-guest">{children}</React.Fragment>;
+      }
+    }
     return (
       <div key="auth-gate-loading" className="min-h-[50vh] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
@@ -618,6 +652,11 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
     );
   }
 
+  // If allowGuest is enabled and user is unauthenticated, render children (e.g. for previewing competitions)
+  if (allowGuest) {
+    return <React.Fragment key="auth-gate-guest-unauthenticated">{children}</React.Fragment>;
+  }
+
   // =========================================================================
   // VIEW A: Participant Gateway (High Discoverability & Instant Access Signifiers)
   // =========================================================================
@@ -735,12 +774,12 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
             First time here? Sign in with Google to complete your 30-second profile setup and get immediate access.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3 pt-1 text-xs font-mono font-semibold">
-            <a
+            <Link
               href="/"
               className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
             >
               Main Site
-            </a>
+            </Link>
             <span className="text-slate-300 dark:text-slate-700">·</span>
             <a
               href={WHATSAPP_COMMUNITY_URL}
