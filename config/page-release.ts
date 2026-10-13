@@ -48,8 +48,8 @@ export const ROUTE_RELEASE_CONFIG: Record<string, RouteConfig> = {
     path: '/schedule',
     name: 'Schedule',
     status: 'live',
-    title: `Event Schedule & Itinerary | ${SITE_CONFIG.brandName}`,
-    description: 'Detailed two-tier event timeline: Online Phase (Oct 5–13) masterclasses and Onsite Campus Phase (Oct 26–30) keynote and 24h hackathon.',
+    title: `Official Event Schedule & Itinerary | ${SITE_CONFIG.brandName}`,
+    description: 'Official 5-day on-campus event schedule at SRM University-AP (Oct 26–30): keynote addresses, hands-on workshops, flagship QCTF, 24-hour hackathon, tech expo, and valedictory awards.',
   },
   venues: {
     path: '/venues',

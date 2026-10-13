@@ -8,12 +8,11 @@ import { Footer } from '@/components/shared/Footer';
 import { SchedulePhase } from '@/data/schedule.types';
 
 export default function SchedulePageContent() {
-  const [currentPhase, setCurrentPhase] = useState<SchedulePhase>('online');
+  const [currentPhase, setCurrentPhase] = useState<SchedulePhase>('offline');
   const [targetDayIndex, setTargetDayIndex] = useState<number | undefined>(undefined);
 
-  // Restore phase and day target from URL hash on mount or hash change.
-  // Supports canonical hashes (#online, #offline, #online-day-1, #online-day-2, #technical-sessions, #offline-day-3, #hackathon, etc.)
-  // Otherwise, preserves official reload behavior (keeping initial load at top in Hero section).
+  // Restore day target from URL hash on mount or hash change.
+  // Supports canonical hashes (#day-1, #day-2, #day-3, #day-4, #day-5, #offline, #qctf, #hackathon, #valedictory, etc.)
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -30,46 +29,31 @@ export default function SchedulePageContent() {
         return;
       }
 
-      let phase: SchedulePhase | null = null;
+      let phase: SchedulePhase = 'offline';
       let dayIdx: number | undefined = undefined;
 
-      if (hash === 'online' || hash === 'online-day-1') {
-        phase = 'online';
+      if (hash === 'offline' || hash === 'day-1' || hash === 'day1' || hash === 'offline-day-1') {
         dayIdx = 0;
-      } else if (hash === 'online-day-2' || hash === 'technical-sessions') {
-        phase = 'online';
+      } else if (hash === 'day-2' || hash === 'day2' || hash === 'offline-day-2' || hash === 'qctf') {
         dayIdx = 1;
-      } else if (hash === 'online-day-3') {
-        phase = 'online';
+      } else if (hash === 'day-3' || hash === 'day3' || hash === 'offline-day-3' || hash === 'workshop' || hash === 'expo') {
         dayIdx = 2;
-      } else if (hash === 'offline' || hash === 'offline-day-1') {
-        phase = 'offline';
-        dayIdx = 0;
-      } else if (hash === 'offline-day-2') {
-        phase = 'offline';
-        dayIdx = 1;
-      } else if (hash === 'offline-day-3' || hash === 'hackathon') {
-        phase = 'offline';
-        dayIdx = 2;
-      } else if (hash === 'offline-day-4') {
-        phase = 'offline';
+      } else if (hash === 'day-4' || hash === 'day4' || hash === 'offline-day-4' || hash === 'hackathon') {
         dayIdx = 3;
-      } else if (hash === 'offline-day-5') {
-        phase = 'offline';
+      } else if (hash === 'day-5' || hash === 'day5' || hash === 'offline-day-5' || hash === 'valedictory' || hash === 'closing') {
         dayIdx = 4;
+      } else if (hash.includes('online')) {
+        // Graceful redirect of legacy online hashes to the on-campus schedule
+        dayIdx = 0;
       }
 
-      if (phase) {
-        setCurrentPhase(phase);
-        if (dayIdx !== undefined) {
-          setTargetDayIndex(dayIdx);
-        }
-        setTimeout(() => {
-          scrollToExploreSchedule(hash);
-        }, 220);
-      } else if (isInitialLoad) {
-        window.scrollTo(0, 0);
+      setCurrentPhase('offline');
+      if (dayIdx !== undefined) {
+        setTargetDayIndex(dayIdx);
       }
+      setTimeout(() => {
+        scrollToExploreSchedule(hash);
+      }, 220);
     };
 
     handleHash(true);
@@ -92,13 +76,14 @@ export default function SchedulePageContent() {
       const lenis = (window as any).__lenis;
       const navbarHeight =
         window.innerWidth >= 1280 ? 90 : window.innerWidth >= 640 ? 84 : 78;
-      // Scroll target offset adjusted slightly up (+85px) for perfect header card positioning
+      // Scroll target offset adjusted for comfortable breathing room beneath sticky navbar
+      const offset = -navbarHeight - 12;
       if (lenis && typeof lenis.scrollTo === 'function') {
-        lenis.scrollTo(element, { offset: -navbarHeight + 85, duration: 1.0 });
+        lenis.scrollTo(element, { offset, duration: 1.0 });
       } else {
         const rect = element.getBoundingClientRect();
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        window.scrollTo({ top: rect.top + scrollTop - navbarHeight + 85, behavior: 'smooth' });
+        window.scrollTo({ top: rect.top + scrollTop + offset, behavior: 'smooth' });
       }
     });
   };
