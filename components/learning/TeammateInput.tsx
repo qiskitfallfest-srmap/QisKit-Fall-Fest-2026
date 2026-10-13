@@ -158,7 +158,7 @@ export function TeammateInput({
               setUniversityInput(e.target.value);
               onChange(index, { ...member, university: e.target.value });
             }}
-            placeholder="University / College Name *"
+            placeholder="University / College Name"
             required
             className="w-full px-3 py-1.5 text-xs bg-white dark:bg-[#150709] border border-slate-300 dark:border-[#3D1418] text-slate-900 dark:text-[#FAF6F3] rounded focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy dark:placeholder-slate-500"
           />

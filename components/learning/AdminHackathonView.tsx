@@ -21,7 +21,6 @@ import {
   AlertCircle,
   FileSpreadsheet,
   Layers,
-  Sparkles,
   Zap,
   Sliders,
   MessageSquare,

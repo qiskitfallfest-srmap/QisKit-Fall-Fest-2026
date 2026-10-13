@@ -13,7 +13,6 @@ import {
   Phone,
   User,
   GraduationCap,
-  Sparkles,
 } from 'lucide-react';
 import { REGISTRATION_URL, WHATSAPP_COMMUNITY_URL } from '@/lib/constants';
 
@@ -60,14 +59,11 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
   const [pendingUser, setPendingUser] = useState<{ email: string; fullName: string } | null>(null);
   const [regFullName, setRegFullName] = useState('');
-  const [regRole, setRegRole] = useState(BACKGROUND_ROLES[0]);
-  const [regInstitution, setRegInstitution] = useState('SRM University-AP');
+  const [regRole, setRegRole] = useState('');
+  const [regInstitution, setRegInstitution] = useState('');
   const [regPhone, setRegPhone] = useState('');
-  const [regYear, setRegYear] = useState('2nd Year');
-  const [regInterests, setRegInterests] = useState<string[]>([
-    'Quantum SDK & Qiskit',
-    '24h Quantum Hackathon',
-  ]);
+  const [regYear, setRegYear] = useState('');
+  const [regInterests, setRegInterests] = useState<string[]>([...INTEREST_TRACKS]);
   const [regError, setRegError] = useState('');
   const [regSubmitting, setRegSubmitting] = useState(false);
 
@@ -326,6 +322,10 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
       setRegError('Please enter your full name.');
       return;
     }
+    if (!regRole) {
+      setRegError('Please select your primary background.');
+      return;
+    }
     if (!regInstitution.trim() || regInstitution.trim().length < 2) {
       setRegError('Please enter your university, college, or organization.');
       return;
@@ -334,10 +334,14 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
       setRegError('Please enter a valid WhatsApp or contact phone number.');
       return;
     }
+    const isStudent = regRole.includes('Student');
+    if (isStudent && !regYear) {
+      setRegError('Please select your current year of study.');
+      return;
+    }
 
     try {
       setRegSubmitting(true);
-      const isStudent = regRole.includes('Student');
 
       const res = await fetch('/api/auth/register', {
         method: 'POST',
@@ -413,7 +417,6 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
         <div className="w-full max-w-lg bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-2xl shadow-xl p-6 sm:p-8">
           <div className="text-center mb-6">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 font-mono text-[10px] font-bold uppercase tracking-wider mb-2">
-              <Sparkles className="w-3 h-3" />
               <span>Instant On-Site Registration</span>
             </div>
             <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-[#FAF6F3]">
@@ -440,7 +443,6 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
               <div className="relative">
                 <input
                   type="text"
-                  required
                   value={regFullName}
                   onChange={(e) => setRegFullName(e.target.value)}
                   placeholder="Enter your full name"
@@ -480,6 +482,9 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
                   onChange={(e) => setRegRole(e.target.value)}
                   className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-slate-300 dark:border-[#3D1418] bg-slate-50 dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] focus:ring-2 focus:ring-burgundy focus:border-transparent outline-none cursor-pointer"
                 >
+                  <option value="" disabled>
+                    Select your primary background
+                  </option>
                   {BACKGROUND_ROLES.map((role) => (
                     <option key={role} value={role}>
                       {role}
@@ -492,24 +497,12 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
 
             {/* Institution / University */}
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">
-                  College, University, or Organization
-                </label>
-                {regInstitution !== 'SRM University-AP' && (
-                  <button
-                    type="button"
-                    onClick={() => setRegInstitution('SRM University-AP')}
-                    className="text-[10px] text-burgundy dark:text-[#E89BA5] hover:underline font-mono"
-                  >
-                    Set to SRM University-AP
-                  </button>
-                )}
-              </div>
+              <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                College, University, or Organization
+              </label>
               <div className="relative">
                 <input
                   type="text"
-                  required
                   value={regInstitution}
                   onChange={(e) => setRegInstitution(e.target.value)}
                   placeholder="e.g. SRM University-AP, IIT Madras, Tech Corp"
@@ -527,7 +520,6 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
               <div className="relative">
                 <input
                   type="tel"
-                  required
                   value={regPhone}
                   onChange={(e) => setRegPhone(e.target.value)}
                   placeholder="+91 98765 43210"
@@ -552,7 +544,7 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
                       key={yr}
                       type="button"
                       onClick={() => setRegYear(yr)}
-                      className={`py-1.5 text-center rounded-md font-mono text-[11px] border transition-colors ${
+                      className={`py-1.5 text-center rounded-md font-mono text-[11px] border transition-colors cursor-pointer ${
                         regYear === yr
                           ? 'bg-burgundy text-white border-burgundy'
                           : 'bg-slate-50 dark:bg-[#1C0A0D] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#3D1418] hover:border-slate-400'
@@ -675,9 +667,8 @@ export function AuthGate({ children, onSessionChange }: AuthGateProps) {
 
         {/* Feature Highlights Card */}
         <div className="mb-5 p-3.5 rounded-xl bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200/80 dark:border-[#3D1418] text-xs space-y-2">
-          <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-burgundy dark:text-[#E89BA5]" />
-            <span>Instant Free Participant Access</span>
+          <div className="font-semibold text-slate-800 dark:text-slate-200">
+            Instant Free Participant Access
           </div>
           <ul className="text-slate-600 dark:text-slate-400 space-y-1 pl-1">
             <li className="flex items-center gap-1.5">

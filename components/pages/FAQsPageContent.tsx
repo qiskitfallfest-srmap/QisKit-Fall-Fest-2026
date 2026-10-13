@@ -24,7 +24,6 @@ import {
   Cpu,
   Terminal,
   Layers,
-  Sparkles,
   BookOpen,
   FileCode,
   Award,
@@ -862,8 +861,7 @@ export default function FAQsPageContent() {
 
                           {/* Top Question Badge */}
                           {item.isTopQuestion && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-sans font-bold uppercase tracking-wider bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20">
-                              <Sparkles size={10} />
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-sans font-bold uppercase tracking-wider bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20">
                               Essential
                             </span>
                           )}

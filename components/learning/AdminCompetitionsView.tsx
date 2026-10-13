@@ -18,7 +18,6 @@ import {
   FileCode,
   Calendar,
   Layers,
-  Sparkles,
   Clock,
   Sliders,
   MessageSquare,
