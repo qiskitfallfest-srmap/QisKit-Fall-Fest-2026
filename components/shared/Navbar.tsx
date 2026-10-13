@@ -19,7 +19,7 @@ import clsx from 'clsx';
 import { REGISTRATION_URL } from '@/lib/constants';
 import { trackUnstopClick } from '@/lib/analytics';
 
-export const NAVBAR_JOIN_HREF = REGISTRATION_URL;
+export const NAVBAR_JOIN_HREF = '/learning';
 export { REGISTRATION_URL };
 
 const NAV_LINKS = [
@@ -511,10 +511,8 @@ export function Navbar() {
           </button>
 
           {/* Join CTA (Fix 3: Subtle Border in Default State, Clean Ivory Surface on Hover) */}
-          <a
+          <Link
             href={NAVBAR_JOIN_HREF}
-            target="_blank"
-            rel="noopener noreferrer"
             data-cursor="cta"
             onClick={() => trackUnstopClick('navbar_desktop')}
             onMouseEnter={() => setIsJoinHovered(true)}
@@ -525,7 +523,7 @@ export function Navbar() {
                 : (activeTheme === 'dark' ? 'rgba(239,116,129,0.26)' : 'rgba(122,17,27,0.22)'),
               transition: 'border-color 250ms cubic-bezier(0.22,1,0.36,1), background-color 280ms cubic-bezier(0.22,1,0.36,1), color 280ms cubic-bezier(0.22,1,0.36,1), box-shadow 250ms cubic-bezier(0.22,1,0.36,1), transform 250ms cubic-bezier(0.22,1,0.36,1)',
             }}
-            className="group relative flex h-[44px] min-w-[110px] items-center justify-between overflow-hidden rounded-[8px] pl-5 pr-2 text-[14px] font-semibold tracking-[0.01em] outline-none border bg-[#8F1723] text-[#FFF8F4] shadow-[0_4px_14px_rgba(108,21,30,0.12)] active:scale-[0.985] focus-visible:ring-2 focus-visible:ring-burgundy focus-visible:ring-offset-2 dark:bg-[#841521] dark:text-[#FFF3EF] dark:shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
+            className="group relative flex h-[44px] min-w-[120px] items-center justify-between overflow-hidden rounded-[8px] pl-4 pr-2 text-[14px] font-semibold tracking-[0.01em] outline-none border bg-[#8F1723] text-[#FFF8F4] shadow-[0_4px_14px_rgba(108,21,30,0.12)] active:scale-[0.985] focus-visible:ring-2 focus-visible:ring-burgundy focus-visible:ring-offset-2 dark:bg-[#841521] dark:text-[#FFF3EF] dark:shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
           >
             {/* Expanding Chamber: strictly clipped inside button (400ms expansion / 320ms retraction) */}
             <span
@@ -535,7 +533,7 @@ export function Navbar() {
 
             {/* CTA Label (280ms transition) */}
             <span className="relative z-10 transition-colors duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:text-[#851722] dark:group-hover:text-[#851722]">
-              Join
+              Join Free
             </span>
 
             {/* Circular Arrow Chamber & Icon (seamlessly merges into expanding fill) */}
@@ -549,7 +547,7 @@ export function Navbar() {
                 className="transition-transform duration-[300ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-[2px]"
               />
             </span>
-          </a>
+          </Link>
 
           {/* Official SRM University-AP Production Logo */}
           <div className="relative h-[56px] w-[124px] 2xl:w-[140px] shrink-0">
@@ -636,13 +634,10 @@ export function Navbar() {
               <div className="my-5 sm:my-6 h-px w-full bg-[var(--nav-divider)]/40" />
 
               {/* Full-width Join Button with Arrow Fill */}
-              <a
+              <Link
                 href={NAVBAR_JOIN_HREF}
-                target="_blank"
-                rel="noopener noreferrer"
                 data-cursor="cta"
                 onClick={() => {
-                  trackUnstopClick('navbar_mobile');
                   setMobileMenuOpen(false);
                 }}
                 onMouseEnter={() => setIsMobileJoinHovered(true)}
@@ -660,7 +655,7 @@ export function Navbar() {
                   className="pointer-events-none absolute right-[10px] top-1/2 -translate-y-1/2 h-[32px] w-[32px] rounded-full bg-[#FFF7F2] transition-transform duration-[320ms] group-hover:duration-[400ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[16] -z-0"
                 />
                 <span className="relative z-10 transition-colors duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:text-[#851722] dark:group-hover:text-[#851722]">
-                  Join Festival
+                  Join Free
                 </span>
                 <span
                   aria-hidden="true"
@@ -672,7 +667,7 @@ export function Navbar() {
                     className="transition-transform duration-[300ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-[2px]"
                   />
                 </span>
-              </a>
+              </Link>
             </div>
           </motion.div>
         )}

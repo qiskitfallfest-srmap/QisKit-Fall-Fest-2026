@@ -43,6 +43,7 @@ This file is automatically loaded by AI agents working in this workspace.
      - `session-6`: Dr. Sazzad Ali Biswas (`media/session-materials/session-6/Quantum_Cybersecurity_Cryptography.pdf`).
    - **Session 6 Architecture & Sole Speaker Integrity:** Session 6 is delivered exclusively by **Dr. Sazzad Ali Biswas** as the sole speaker (`coSpeakers: []`).
    - **Don Norman Information Architecture:** Official PDF decks are surfaced as prominent hero action cards immediately beneath session descriptions on `/learning/session/{id}`, with transcript accordions collapsed by default to eliminate cognitive clutter while preserving on-demand expandability.
+   - **Faculty & Speaker Email Isolation:** Dr. Sazzad Ali Biswas (`sazzadali.b@srmap.edu.in`) and university faculty must NEVER be included in student communication, reminder, or participant nudge email recipient lists.
 
 5. **Hackathon & Coding Challenges:**
    - Hackathon Phase 1 team submissions and repo registration: accessed via `https://www.qffsrmap2026.com/learning/hackathon`.
@@ -61,17 +62,22 @@ This file is automatically loaded by AI agents working in this workspace.
 
 ## 4. Active Deadlines & Don Norman UX Standards (Source of Truth)
 
-1. **Active Online Deadlines:**
-   - **Creative Competitions (Day 1 Tech Reels, Day 2 Digital Poster, Day 3 Technical Essay):** Officially extended to **Wednesday, 14 October 2026, 11:59 PM IST**.
+1. **Active Deadlines & Instant Registration:**
+   - **Final Festival Registration Deadline:** Officially extended to **Saturday, 17 October 2026, 11:59 PM IST** with instant on-site self-registration.
+   - **Creative Competitions (Day 1 Tech Reels, Day 2 Digital Poster, Day 3 Technical Essay):** Submissions open until **Wednesday, 14 October 2026, 11:59 PM IST**.
    - **Hackathon Phase 1 Online Window:** Submissions close **14 October 2026, 11:59 PM IST**.
    - **Qiskit Coding Challenges (P1 to P9):** Browser challenges open until **15 October 2026**.
 
-2. **Don Norman Communication Architecture (MANDATORY):**
+2. **Instant On-Site Registration Architecture (GT-28):**
+   - Eliminate all manual approval friction. Any visitor signing in with Google can complete a 30-second on-page profile in `AuthGate.tsx` and receive immediate whitelisted access via `POST /api/auth/register`.
+   - Primary site CTAs (Navbar "Join Free" and Hero "Enter Learning Hub") route directly to `https://www.qffsrmap2026.com/learning`.
+
+3. **Don Norman Communication Architecture (MANDATORY):**
    - **Never rely solely on ephemeral toasts** for environmental constraints or deadlines. A toast provides brief entrance feedback, but persistent environmental visibility ("knowledge in the world") is required.
    - When communicating deadline status or temporal changes, maintain:
      - Persistent in-page dashboard banners (`DeadlineExtensionBanner.tsx`).
-     - Point-of-action visual signifiers (`~~12 Oct~~ → 14 Oct (Extended)`) on submission cards and guidelines.
-     - Synchronized sidebar status badges (`14 Oct`).
+     - Point-of-action visual signifiers on submission cards and guidelines.
+     - Synchronized sidebar status badges.
      - Contextual alert badges on the Public Schedule (`ExploreSchedule.tsx`).
      - Global non-intrusive entrance toasts (`DeadlineToast.tsx`) with localStorage dismissal.
    - Single source of truth must remain 100% synchronized across all schedule, FAQ, curriculum, and competition data files.

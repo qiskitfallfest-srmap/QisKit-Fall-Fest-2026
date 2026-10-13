@@ -52,10 +52,10 @@ export function DeadlineToast() {
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
-                Deadline Extended
+                Registration Extended
               </span>
               <span className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 font-semibold">
-                Until 14 Oct
+                Until 17 Oct
               </span>
             </div>
             <button
@@ -68,20 +68,20 @@ export function DeadlineToast() {
           </div>
 
           <h4 className="font-serif font-bold text-slate-900 dark:text-[#FAF6F3] text-sm mt-1 leading-snug">
-            Creative Competitions Extended to 14 Oct
+            Final Registration Extended to 17 Oct
           </h4>
 
           <p className="text-slate-600 dark:text-slate-300 mt-1 leading-relaxed text-[11px] sm:text-xs">
-            Submissions for Tech Reels, Digital Poster, and Technical Essay have been extended to Wednesday, 14 October 2026, 11:59 PM IST.
+            Instant on-site registration is now open. Sign in with Google for direct access to online masterclasses, quizzes, and Hackathon Phase 1.
           </p>
 
           <div className="mt-3 flex items-center gap-3">
             <Link
-              href="/learning?challenge=1"
+              href="/learning"
               onClick={handleDismiss}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-burgundy hover:bg-burgundy-deep text-white font-mono text-[11px] font-semibold transition-colors shadow-xs"
             >
-              <span>View Challenges</span>
+              <span>Instant Access</span>
               <ArrowRight className="w-3 h-3" />
             </Link>
 

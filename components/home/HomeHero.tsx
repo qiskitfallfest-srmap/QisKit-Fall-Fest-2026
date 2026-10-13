@@ -212,13 +212,11 @@ export function HomeHero() {
               min-[360px]:flex-nowrap
             `}
           >
-            {/* Primary Register Button with Navbar Join Interaction Language */}
-            <a
-              href={REGISTRATION_URL}
-              target="_blank"
-              rel="noopener noreferrer"
+            {/* Primary Register Button linking directly to Learning Hub */}
+            <Link
+              href="/learning"
               data-cursor="cta"
-              onClick={() => trackUnstopClick('home_hero')}
+              onClick={() => trackEvent('cta_click', { placement: 'home_hero', target: '/learning' })}
               className={`
                 ${styles.registerBtn}
                 group
@@ -257,7 +255,7 @@ export function HomeHero() {
 
               {/* CTA Label (280ms text transition) */}
               <span className="relative z-10 font-[650] transition-colors duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:text-[#A61629] dark:group-hover:text-[#921426]">
-                Register Now
+                Enter Learning Hub
               </span>
 
               {/* Circular Arrow Chamber & Icon (300ms translation) */}
@@ -271,7 +269,7 @@ export function HomeHero() {
                   className="transition-transform duration-[300ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-[2px]"
                 />
               </span>
-            </a>
+            </Link>
 
             {/* Watch Live Link */}
             <a

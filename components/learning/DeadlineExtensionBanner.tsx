@@ -42,19 +42,19 @@ export function DeadlineExtensionBanner() {
           <div className="space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300">
-                Official Deadline Extension
+                Official Festival Update
               </span>
               <span className="px-2 py-0.5 rounded-full font-mono text-[9px] font-bold uppercase tracking-wider bg-amber-200/70 dark:bg-amber-950 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700">
-                Extended to 14 Oct
+                Extended to 17 Oct
               </span>
             </div>
 
             <h3 className="font-serif font-bold text-slate-900 dark:text-[#FAF6F3] text-sm sm:text-base">
-              Online Competition Submissions Open Until 14 October 2026, 11:59 PM IST
+              Final Registration Extended to 17 October 2026 • Instant Portal Access
             </h3>
 
             <p className="font-sans text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed max-w-2xl">
-              All Day 1, Day 2, and Day 3 creative competition submission deadlines (Tech Reels, Digital Poster Creation, and Technical Essay Competition) have been officially extended to Wednesday, 14 October 2026, 11:59 PM IST.
+              Registration has been simplified with instant on-site access. Sign in directly with Google to complete all masterclass lectures, pass concept check quizzes, and submit to Hackathon Phase 1.
             </p>
 
             <div className="pt-2 flex flex-wrap items-center gap-2">

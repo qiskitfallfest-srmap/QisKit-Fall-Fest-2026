@@ -71,12 +71,13 @@ export async function POST(request: NextRequest) {
     if (!isSuperAdmin && !whitelist.whitelisted) {
       return NextResponse.json(
         {
-          error:
-            'You are not eligible participant. Please register in Unstop and check back after few hours.',
-          registrationUrl:
-            'https://unstop.com/college-fests/qiskit-fall-fest-srmap-2026-srm-university-amaravati-515345',
+          authenticated: false,
+          requiresRegistration: true,
+          email,
+          fullName: fullName || email.split('@')[0],
+          message: 'Please complete your quick participant profile to unlock instant access.',
         },
-        { status: 403 }
+        { status: 200 }
       );
     }
 
