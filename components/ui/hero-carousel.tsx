@@ -64,6 +64,11 @@ const GRAIN =
 const clamp = (n: number, min: number, max: number) =>
   Math.min(max, Math.max(min, n));
 
+const DEFAULT_HERO_ITEM: HeroCarouselItem = {
+  title: 'Quantum Event',
+  image: '/images/events/world-class-workshops-dark.webp',
+};
+
 /**
  * Robust extractor for Track, Date, Time, Venue, and Host across all 60 events.
  */
@@ -133,7 +138,7 @@ function parseEventDetails(item?: HeroCarouselItem) {
   // Specific event custom overrides for high-profile events
   if (item.id === 'build-01-hackathon-phase-1') {
     venue = 'Online / Virtual Quantum Portal';
-    time = 'Launch: 10 Oct 5:00 PM · Close: 14 Oct 11:59 PM';
+    time = 'Launch: 10 Oct 5:00 PM · Close: 17 Oct 11:59 PM';
   } else if (item.id === 'build-05-hackathon-phase-2-flagship') {
     venue = 'Lab Blocks A & B, SRM University-AP';
     time = '7:30 PM – 7:30 AM IST (24-Hour Overnight)';
@@ -296,10 +301,9 @@ export function HeroCarousel({
     return () => clearInterval(timer);
   }, [autoplay, paused, index, last, items.length, autoplayDelay, go]);
 
-  const active = items[index] || items[0] || {
-    title: 'Quantum Event',
-    image: '/images/events/world-class-workshops-dark.webp',
-  };
+  const active = React.useMemo(() => {
+    return items[index] || items[0] || DEFAULT_HERO_ITEM;
+  }, [items, index]);
 
   const parsed = React.useMemo(() => parseEventDetails(active), [active]);
   const lines = React.useMemo(

@@ -619,7 +619,7 @@ export function LearningSidebar() {
                           : 'bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] border border-burgundy/20 dark:border-burgundy/40'
                       )}
                     >
-                      14 Oct
+                      17 Oct
                     </span>
                   )}
                 </Link>
