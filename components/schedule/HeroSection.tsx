@@ -3,14 +3,14 @@
 import React from 'react';
 import { useTheme } from 'next-themes';
 import { motion } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
 import ParticleDrift from './ParticleDrift';
-import { PhaseSelector } from './PhaseSelector';
 import { SchedulePhase } from '@/data/schedule.types';
 import { StaggeredTextReveal } from '@/components/ui/StaggeredTextReveal';
 
 interface HeroSectionProps {
-  currentPhase: SchedulePhase;
-  onPhaseChange: (phase: SchedulePhase) => void;
+  currentPhase?: SchedulePhase;
+  onPhaseChange?: (phase: SchedulePhase) => void;
 }
 
 const fadeInUpVariant = {
@@ -26,7 +26,7 @@ const fadeInUpVariant = {
   }),
 };
 
-export function HeroSection({ currentPhase, onPhaseChange }: HeroSectionProps) {
+export function HeroSection({ currentPhase = 'offline', onPhaseChange }: HeroSectionProps) {
   const { theme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
   const [isMobile, setIsMobile] = React.useState(false);
@@ -44,6 +44,30 @@ export function HeroSection({ currentPhase, onPhaseChange }: HeroSectionProps) {
   // Dark mode dots MUST be beige (#F5DABF) as requested
   const baseColor = isDark ? '#F5DABF' : '#6C151E';
   const accentColor = isDark ? '#E45464' : '#8F2632';
+
+  const handleCardClick = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (onPhaseChange) {
+      onPhaseChange('offline');
+    } else {
+      const el = document.getElementById('explore-schedule-card') || document.getElementById('explore-schedule');
+      if (el) {
+        const lenis = (window as any).__lenis;
+        const navbarHeight = window.innerWidth >= 1280 ? 90 : window.innerWidth >= 640 ? 84 : 78;
+        const offset = -navbarHeight - 12;
+        if (lenis && typeof lenis.scrollTo === 'function') {
+          lenis.scrollTo(el, { offset, duration: 1.0 });
+        } else {
+          const rect = el.getBoundingClientRect();
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          window.scrollTo({ top: rect.top + scrollTop + offset, behavior: 'smooth' });
+        }
+      }
+    }
+  };
 
   return (
     <section 
@@ -77,9 +101,9 @@ export function HeroSection({ currentPhase, onPhaseChange }: HeroSectionProps) {
               custom={0.05}
               variants={fadeInUpVariant}
             >
-              <span className="h-px w-8 bg-[#A7192A] dark:bg-[#EF7885]" />
-              <p className="font-bold uppercase tracking-[0.28em] leading-none text-xs sm:text-sm text-[#A7192A] dark:text-[#EF7885]">
-                QUANTUM TIMELINE &middot; ONLINE &amp; ON-CAMPUS
+              <span className="h-px w-6 sm:w-8 bg-[#A7192A] dark:bg-[#EF7885] shrink-0" />
+              <p className="font-bold uppercase tracking-[0.14em] sm:tracking-[0.28em] leading-snug text-[11px] sm:text-xs md:text-sm text-[#A7192A] dark:text-[#EF7885]">
+                <span>QUANTUM TIMELINE</span> &middot; <span className="whitespace-nowrap">SRM UNIVERSITY-AP &middot; 26&ndash;30 OCT 2026</span>
               </p>
             </motion.div>
 
@@ -95,8 +119,8 @@ export function HeroSection({ currentPhase, onPhaseChange }: HeroSectionProps) {
               <StaggeredTextReveal text="Schedule." delay={0.3} stagger={0.025} letterClassName="font-serif italic font-semibold text-[#6C151E] dark:text-[#F5DABF]" />
             </motion.h1>
 
-            {/* Subheadline & Description */}
-            <div className="max-w-[680px] space-y-2.5">
+            {/* Subheadline */}
+            <div className="max-w-[680px]">
               <motion.div 
                 className="font-bold tracking-[-0.01em] text-base sm:text-lg md:text-xl text-[#211818] dark:text-[#F8F2F0] uppercase"
                 initial="hidden"
@@ -104,31 +128,54 @@ export function HeroSection({ currentPhase, onPhaseChange }: HeroSectionProps) {
                 custom={0.25}
                 variants={fadeInUpVariant}
               >
-                <StaggeredTextReveal text="Two phases. One global community." delay={0.4} stagger={0.015} letterClassName="text-[#211818] dark:text-[#F8F2F0]" />
+                <StaggeredTextReveal text="Five days of quantum innovation on campus." delay={0.4} stagger={0.015} letterClassName="text-[#211818] dark:text-[#F8F2F0]" />
               </motion.div>
-              <motion.p 
-                className="font-sans font-normal text-[#4E4441] dark:text-[#D6CDCA] text-base sm:text-lg leading-relaxed max-w-[660px]"
-                initial="hidden"
-                animate="visible"
-                custom={0.35}
-                variants={fadeInUpVariant}
-              >
-                Explore a full week of immersive masterclasses, keynote talks, hackathons, and networking — hosted across Online and SRM University-AP phases.
-              </motion.p>
             </div>
 
-            {/* Phase Selector Control Cards */}
+            {/* On-Campus Showcase Focus Card */}
             <motion.div 
-              className="pt-2"
+              className="pt-2 max-w-[680px]"
               initial="hidden"
               animate="visible"
-              custom={0.45}
+              custom={0.35}
               variants={fadeInUpVariant}
             >
-              <div className="mb-2.5 font-bold uppercase tracking-[0.24em] text-[11px] text-[#A7192A] dark:text-[#EF7885]">
-                SELECT FESTIVAL PHASE
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={handleCardClick}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleCardClick();
+                  }
+                }}
+                className="group relative overflow-hidden rounded-2xl border border-[#6C151E]/25 dark:border-[rgba(108,21,30,0.4)] bg-gradient-to-br from-white/95 via-[#FDFBF7]/90 to-[#F5DABF]/20 dark:from-[#1C0709] dark:via-[#13090A] dark:to-[#22070A] p-4 sm:p-5 shadow-xl hover:shadow-2xl hover:border-[#6C151E]/60 dark:hover:border-white/30 backdrop-blur-md transition-all duration-[600ms] ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.98] cursor-pointer"
+              >
+                {/* Fluid Expanding Hover Circle */}
+                <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full opacity-0 pointer-events-none transition-all duration-[2400ms] ease-[cubic-bezier(0.25,1,0.35,1)] group-hover:w-[1200px] group-hover:h-[1200px] group-hover:opacity-100 bg-[#6C151E] dark:bg-[#8F2632]" />
+
+                <div className="relative z-[1] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#6C151E] dark:text-[#F5DABF] group-hover:text-white transition-colors duration-300">
+                        On-Campus Flagship Experience
+                      </span>
+                    </div>
+                    <p className="mt-1 font-serif text-lg sm:text-xl font-bold text-[#13090A] dark:text-[#FAF7F3] group-hover:text-[#F5DABF] transition-colors duration-300">
+                      26 &ndash; 30 October 2026
+                    </p>
+                    <p className="text-xs text-[#665B57] dark:text-[#BEB5B4] group-hover:text-white/85 transition-colors duration-300 mt-0.5">
+                      Auditorium (X-Lab), CV Raman Block &amp; V Block Atrium
+                    </p>
+                  </div>
+
+                  <div className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#6C151E] group-hover:bg-white text-white group-hover:text-[#6C151E] px-4 py-2.5 text-xs font-bold uppercase tracking-wider shadow-md transition-all duration-300 group-hover:shadow-lg whitespace-nowrap self-start sm:self-center">
+                    <span>View Schedule</span>
+                    <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
+                  </div>
+                </div>
               </div>
-              <PhaseSelector currentPhase={currentPhase} onPhaseChange={onPhaseChange} variant="cards" />
             </motion.div>
           </div>
 

@@ -34,13 +34,6 @@ interface EventMetaItem {
 
 const EVENT_META: EventMetaItem[] = [
   {
-    title: '8 – 10 OCT 2026',
-    subtitle: 'Online Phase',
-    icon: CalendarDays,
-    href: '/schedule#online',
-    ariaLabel: 'Online Phase Schedule: 8 to 10 October 2026',
-  },
-  {
     title: '26 – 30 OCT 2026',
     subtitle: 'On-Campus Phase',
     icon: CalendarDays,
@@ -51,6 +44,15 @@ const EVENT_META: EventMetaItem[] = [
     title: 'SRM University-AP',
     subtitle: 'Amaravati, India',
     icon: MapPin,
+    href: '/venues',
+    ariaLabel: 'SRM University-AP Campus Venues',
+  },
+  {
+    title: '5 Full Event Days',
+    subtitle: 'Auditorium & Labs',
+    icon: CalendarDays,
+    href: '/schedule',
+    ariaLabel: 'Explore 5-Day On-Campus Schedule',
   },
 ];
 
