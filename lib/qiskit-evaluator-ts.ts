@@ -501,9 +501,42 @@ function polyfitLinear(x: number[], y: number[]): number[] {
 }
 
 /**
+ * Validates untrusted Python code against prototype pollution, constructor escapes, and OS access.
+ */
+function validateUntrustedPythonCode(pyCode: string): void {
+  const forbiddenPatterns = [
+    /\bconstructor\b/i,
+    /\b__proto__\b/i,
+    /\bprototype\b/i,
+    /\bprocess\b/i,
+    /\brequire\b/i,
+    /\bglobal\b/i,
+    /\bglobalThis\b/i,
+    /\beval\b/i,
+    /\bFunction\b/i,
+    /\bimportlib\b/i,
+    /\b__subclasses__\b/i,
+    /\b__builtins__\b/i,
+    /\bos\./i,
+    /\bsys\./i,
+    /\bsubprocess\./i,
+    /\bchild_process\b/i,
+    /\bexec\b/i,
+    /\bcompile\b/i,
+  ];
+
+  for (const pattern of forbiddenPatterns) {
+    if (pattern.test(pyCode)) {
+      throw new Error(`Security violation: Disallowed access attempt detected (${pattern.source})`);
+    }
+  }
+}
+
+/**
  * Creates sandbox scope with simulated Qiskit environment and evaluates user code.
  */
 function executeUserFunction(pyCode: string, targetFunctionName: string): any {
+  validateUntrustedPythonCode(pyCode);
   const js = transpilePythonToJS(pyCode);
 
   const npModule = {

@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from '@/lib/auth';
+import { getServerSession, COOKIE_NAME, signSessionCookie } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { invalidateEmailCache, invalidateHackathonTeamCache } from '@/lib/redis';
-
-const COOKIE_NAME = 'qff_auth_session';
-
-export const runtime = 'edge';
 
 function getCookieDomain(req: NextRequest): string | undefined {
   const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || req.nextUrl.hostname;
@@ -114,7 +110,7 @@ export async function PATCH(request: NextRequest) {
 
     response.cookies.set({
       name: COOKIE_NAME,
-      value: encodeURIComponent(JSON.stringify(updatedSession)),
+      value: signSessionCookie(updatedSession),
       httpOnly: true,
       secure: isSecure,
       sameSite: 'lax',

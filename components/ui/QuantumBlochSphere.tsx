@@ -109,8 +109,10 @@ export function QuantumBlochSphere({ className = '', size = 360 }: QuantumBlochS
     if (!ctx) return;
 
     let animId: number;
-    let currentTheta = theta;
-    let currentPhi = phi;
+    let currentTheta = targetThetaRef.current;
+    let currentPhi = targetPhiRef.current;
+    let lastReportedTheta = currentTheta;
+    let lastReportedPhi = currentPhi;
 
     // Helper: 3D point rotation
     const project = (
@@ -161,10 +163,28 @@ export function QuantumBlochSphere({ className = '', size = 360 }: QuantumBlochS
       ctx.clearRect(0, 0, w, h);
 
       // Smooth state animation towards target
-      currentTheta += (targetThetaRef.current - currentTheta) * 0.1;
-      currentPhi += (targetPhiRef.current - currentPhi) * 0.1;
-      setTheta(currentTheta);
-      setPhi(currentPhi);
+      const dTheta = targetThetaRef.current - currentTheta;
+      const dPhi = targetPhiRef.current - currentPhi;
+      if (Math.abs(dTheta) > 0.0005) {
+        currentTheta += dTheta * 0.1;
+      } else {
+        currentTheta = targetThetaRef.current;
+      }
+      if (Math.abs(dPhi) > 0.0005) {
+        currentPhi += dPhi * 0.1;
+      } else {
+        currentPhi = targetPhiRef.current;
+      }
+
+      if (
+        Math.abs(currentTheta - lastReportedTheta) > 0.005 ||
+        Math.abs(currentPhi - lastReportedPhi) > 0.005
+      ) {
+        lastReportedTheta = currentTheta;
+        lastReportedPhi = currentPhi;
+        setTheta(currentTheta);
+        setPhi(currentPhi);
+      }
 
       // Gentle auto-rotation when user is not interacting
       if (!isDraggingRef.current && !isInteractingRef.current) {

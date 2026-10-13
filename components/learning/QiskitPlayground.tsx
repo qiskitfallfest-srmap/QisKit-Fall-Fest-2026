@@ -320,7 +320,53 @@ export function QiskitPlayground({
     }
   }, [isRunning, isSubmitting, challenge.id, code]);
 
-  // 6. Submit Solution (Asynchronous Evaluation)
+  // 6. Polling Worker for Asynchronous Submission Status
+  const pollSubmissionStatus = useCallback((subId: string) => {
+    let attempts = 0;
+    const maxAttempts = 30;
+
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+    }
+
+    pollingIntervalRef.current = setInterval(async () => {
+      attempts += 1;
+      try {
+        const res = await fetch(`/api/qiskit/submission/${subId}`);
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          if (data.status === 'completed' || data.status === 'failed' || data.status === 'timeout') {
+            clearInterval(pollingIntervalRef.current!);
+            setIsSubmitting(false);
+            setSubmission(data);
+            if (data.status === 'completed' && (data.score || 0) > 0 && onSubmissionSuccess) {
+              onSubmissionSuccess(data.score);
+            }
+          } else {
+            setSubmission((prev) => ({
+              ...(prev || { submissionId: subId }),
+              status: data.status,
+            }));
+          }
+        }
+
+        if (attempts >= maxAttempts) {
+          clearInterval(pollingIntervalRef.current!);
+          setIsSubmitting(false);
+          setSubmission((prev) => ({
+            ...(prev || { submissionId: subId }),
+            status: 'timeout',
+            errorMessage: 'Evaluation timed out waiting for judge results.',
+          }));
+        }
+      } catch (e) {
+        console.warn('Error polling submission:', e);
+      }
+    }, 1000);
+  }, [onSubmissionSuccess]);
+
+  // 7. Submit Solution (Asynchronous Evaluation)
   const handleSubmitCode = useCallback(async () => {
     if (isRunning || isSubmitting) return;
 
@@ -382,62 +428,14 @@ export function QiskitPlayground({
       });
       setIsSubmitting(false);
     }
-  }, [isRunning, isSubmitting, challenge.id, code]);
-
-
-
-
-
-  // 7. Polling Worker for Asynchronous Submission Status
-  const pollSubmissionStatus = useCallback((subId: string) => {
-    let attempts = 0;
-    const maxAttempts = 30;
-
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
-    }
-
-    pollingIntervalRef.current = setInterval(async () => {
-      attempts += 1;
-      try {
-        const res = await fetch(`/api/qiskit/submission/${subId}`);
-        const data = await res.json();
-
-        if (res.ok && data.success) {
-          if (data.status === 'completed' || data.status === 'failed' || data.status === 'timeout') {
-            clearInterval(pollingIntervalRef.current!);
-            setIsSubmitting(false);
-            setSubmission(data);
-            if (data.status === 'completed' && (data.score || 0) > 0 && onSubmissionSuccess) {
-              onSubmissionSuccess(data.score);
-            }
-          } else {
-            setSubmission((prev) => ({
-              ...(prev || { submissionId: subId }),
-              status: data.status,
-            }));
-          }
-        }
-
-        if (attempts >= maxAttempts) {
-          clearInterval(pollingIntervalRef.current!);
-          setIsSubmitting(false);
-          setSubmission((prev) => ({
-            ...(prev || { submissionId: subId }),
-            status: 'timeout',
-            errorMessage: 'Evaluation timed out waiting for judge results.',
-          }));
-        }
-      } catch (e) {
-        console.warn('Error polling submission:', e);
-      }
-    }, 1000);
-  }, [onSubmissionSuccess]);
+  }, [isRunning, isSubmitting, challenge.id, code, pollSubmissionStatus]);
 
   // Keep refs synchronized with latest handlers
-  runCodeRef.current = handleRunCode;
-  submitCodeRef.current = handleSubmitCode;
-  saveDraftRef.current = triggerSaveDraft;
+  useEffect(() => {
+    runCodeRef.current = handleRunCode;
+    submitCodeRef.current = handleSubmitCode;
+    saveDraftRef.current = triggerSaveDraft;
+  });
 
   // Keyboard shortcut: Cmd/Ctrl + Enter to Run, Cmd/Ctrl + Shift + Enter to Submit, Cmd/Ctrl + S to Save
   const handleKeyDown = (e: React.KeyboardEvent) => {

@@ -64,6 +64,11 @@ const GRAIN =
 const clamp = (n: number, min: number, max: number) =>
   Math.min(max, Math.max(min, n));
 
+const DEFAULT_HERO_ITEM: HeroCarouselItem = {
+  title: 'Quantum Event',
+  image: '/images/events/world-class-workshops-dark.webp',
+};
+
 /**
  * Robust extractor for Track, Date, Time, Venue, and Host across all 60 events.
  */
@@ -296,10 +301,9 @@ export function HeroCarousel({
     return () => clearInterval(timer);
   }, [autoplay, paused, index, last, items.length, autoplayDelay, go]);
 
-  const active = items[index] || items[0] || {
-    title: 'Quantum Event',
-    image: '/images/events/world-class-workshops-dark.webp',
-  };
+  const active = React.useMemo(() => {
+    return items[index] || items[0] || DEFAULT_HERO_ITEM;
+  }, [items, index]);
 
   const parsed = React.useMemo(() => parseEventDetails(active), [active]);
   const lines = React.useMemo(

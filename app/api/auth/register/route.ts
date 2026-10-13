@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { redis, invalidateEmailCache } from '@/lib/redis';
-import { SUPER_ADMIN_EMAILS } from '@/lib/auth';
-
-const COOKIE_NAME = 'qff_auth_session';
-
-export const runtime = 'edge';
+import { COOKIE_NAME, signSessionCookie, SUPER_ADMIN_EMAILS } from '@/lib/auth';
 
 function getCookieDomain(req: NextRequest): string | undefined {
   const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || req.nextUrl.hostname;
@@ -113,7 +109,7 @@ export async function POST(request: NextRequest) {
       email,
       fullName,
       role: assignedRole,
-      isAdmin: isSuperAdmin,
+      isAdmin: false,
     };
 
     const response = NextResponse.json({
@@ -125,10 +121,10 @@ export async function POST(request: NextRequest) {
     const isSecure = isRequestSecure(request);
     const domain = getCookieDomain(request);
 
-    // Set cookie for 14 days
+    // Set signed tamper-proof cookie for 14 days
     response.cookies.set({
       name: COOKIE_NAME,
-      value: encodeURIComponent(JSON.stringify(sessionData)),
+      value: signSessionCookie(sessionData),
       httpOnly: true,
       secure: isSecure,
       sameSite: 'lax',

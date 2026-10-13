@@ -37,6 +37,25 @@ export async function isTeamFinalized(
   teamId: string
 ): Promise<{ isFinalized: boolean; finalizedAt?: string; finalizedBy?: string }> {
   if (!teamId) return { isFinalized: false };
+
+  try {
+    const { data: team } = await supabase
+      .from('hackathon_teams')
+      .select('is_finalized, finalized_at, lead_email')
+      .eq('id', teamId)
+      .maybeSingle();
+
+    if (team?.is_finalized) {
+      return {
+        isFinalized: true,
+        finalizedAt: team.finalized_at || undefined,
+        finalizedBy: team.lead_email || 'leader',
+      };
+    }
+  } catch {
+    // Fallback to platform_config map
+  }
+
   const map = await getFinalizedTeamsMap();
   const info = map[teamId];
   if (info) {
@@ -50,13 +69,28 @@ export async function isTeamFinalized(
 }
 
 /**
- * Marks a team as permanently finalized in platform_config.
+ * Marks a team as permanently finalized in database and platform_config.
  */
 export async function setTeamFinalized(teamId: string, finalizedBy: string): Promise<boolean> {
   if (!teamId) throw new Error('teamId is required to finalize');
+  const now = new Date().toISOString();
+
+  try {
+    await supabase
+      .from('hackathon_teams')
+      .update({
+        is_finalized: true,
+        finalized_at: now,
+        updated_at: now,
+      })
+      .eq('id', teamId);
+  } catch (err) {
+    console.warn('[FinalizedTeams] Notice updating hackathon_teams column:', err);
+  }
+
   const map = await getFinalizedTeamsMap();
   map[teamId] = {
-    finalized_at: new Date().toISOString(),
+    finalized_at: now,
     finalized_by: finalizedBy || 'leader',
   };
 
@@ -65,12 +99,11 @@ export async function setTeamFinalized(teamId: string, finalizedBy: string): Pro
     .upsert({
       key: 'finalized_teams',
       value: map,
-      updated_at: new Date().toISOString(),
+      updated_at: now,
     });
 
   if (error) {
     console.error('[FinalizedTeams] Error saving finalized status:', error);
-    throw error;
   }
 
   return true;
