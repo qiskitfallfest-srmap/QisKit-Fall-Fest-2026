@@ -110,8 +110,8 @@ export function trackPageView(path: string, referrer?: string) {
   });
 }
 
-export function trackUnstopClick(source: string = 'general') {
-  trackEvent('unstop_registration_click', { source });
+export function trackRegistrationClick(source: string = 'general') {
+  trackEvent('portal_registration_click', { source });
 }
 
 export function trackLectureView(sessionId: string, title: string) {

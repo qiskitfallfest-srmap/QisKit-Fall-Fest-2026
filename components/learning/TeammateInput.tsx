@@ -189,7 +189,7 @@ export function TeammateInput({
                 <span>Email not found in registered whitelist</span>
               </div>
               <p className="text-[11.5px] leading-relaxed text-amber-900/90 dark:text-amber-200/90 pl-5">
-                Tell your team member to register on Unstop and join the WhatsApp group for quickly resolving the issue.
+                Tell your team member to sign in directly at the learning portal to register in 30 seconds, or reach out on WhatsApp for quick assistance.
               </p>
               <div className="flex flex-wrap items-center gap-2 pl-5 pt-0.5">
                 <a
@@ -198,7 +198,7 @@ export function TeammateInput({
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-200/80 hover:bg-amber-300/90 dark:bg-amber-900/60 dark:hover:bg-amber-900 text-amber-950 dark:text-amber-100 font-semibold text-[11px] transition-colors"
                 >
-                  <span>Register on Unstop</span>
+                  <span>Register on Portal</span>
                   <ExternalLink className="w-3 h-3" />
                 </a>
                 <a

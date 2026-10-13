@@ -288,11 +288,11 @@ export function getSessionAction(session: Session, phase?: SchedulePhase): Sessi
     };
   }
 
-  // All remaining on-campus sessions direct to official Unstop registration
+  // All remaining on-campus sessions direct to official platform registration
   return {
-    href: REGISTRATION_URL,
-    cardLabel: 'Register',
-    detailLabel: 'Register on Unstop',
-    isExternal: true,
+    href: '/learning',
+    cardLabel: 'Register Free',
+    detailLabel: 'Register on Learning Portal',
+    isExternal: false,
   };
 }

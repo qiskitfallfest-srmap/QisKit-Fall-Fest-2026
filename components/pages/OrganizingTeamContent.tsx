@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { Footer } from '@/components/shared/Footer';
 import { REGISTRATION_URL } from '@/lib/constants';
-import { trackUnstopClick } from '@/lib/analytics';
+import { trackRegistrationClick } from '@/lib/analytics';
 
 // ─────────────────────────────────────────────────────────────
 // TYPES & DATA STRUCTURES
@@ -596,10 +596,10 @@ const ORGANIZING_TRACKS: Track[] = [
       {
         id: 'TP-02',
         number: 'TP-02',
-        name: 'Participant Registration & Unstop Support',
+        name: 'Participant Registration & Portal Operations',
         trackId: 'TP',
         trackName: 'Technology & Participant Experience',
-        description: 'Verifying academic enrollment, resolving Unstop participant ticket queries, and processing hackathon team submissions.',
+        description: 'Verifying academic enrollment, resolving participant queries, and managing platform registration workflows.',
         lead: {
           name: 'Pravin Nair',
           role: 'Registration Supervisor',
@@ -611,7 +611,7 @@ const ORGANIZING_TRACKS: Track[] = [
         members: [
           {
             name: 'Kavya Menon',
-            role: 'Unstop Portal Liaison',
+            role: 'Portal Registration Liaison',
             department: 'Student Operations',
             initials: 'KM',
             linkedin: 'https://linkedin.com',
@@ -625,7 +625,7 @@ const ORGANIZING_TRACKS: Track[] = [
           },
         ],
         responsibilities: [
-          'Synchronizing confirmed rosters with external Unstop portal',
+          'Synchronizing confirmed participant rosters and access credentials',
           'Issuing formal university invitation & OD clearance letters',
           'Managing on-site rapid check-in QR code scanning desks',
         ],
@@ -1576,7 +1576,7 @@ export default function OrganizingTeamPage() {
 
       {/* ─────────────────────────────────────────────────────────────
           SECTION 05: CTA — A STRONGER QUANTUM TOMORROW
-          Deep burgundy CTA section with external Unstop registration redirect
+          Deep burgundy CTA section with learning portal registration redirect
           ───────────────────────────────────────────────────────────── */}
       <section
         id="section-05-cta"
@@ -1601,22 +1601,20 @@ export default function OrganizingTeamPage() {
             </h2>
 
             <p className="text-base sm:text-lg font-sans text-[#E5E5E7]/85 max-w-2xl mx-auto leading-relaxed font-light">
-              Join hundreds of quantum researchers, students, and algorithm developers at SRM University-AP. Registration is open exclusively through Unstop.
+              Join hundreds of quantum researchers, students, and algorithm developers at SRM University-AP. Registration is open directly on the official learning portal.
             </p>
           </div>
 
           {/* Action CTAs */}
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 pt-4">
-            <a
-              href={REGISTRATION_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => trackUnstopClick('organizing_team_page')}
+            <Link
+              href="/learning"
+              onClick={() => trackRegistrationClick('organizing_team_page')}
               className="group inline-flex items-center gap-3 px-8 py-4 rounded-xl text-base font-semibold bg-[#F5F3F0] text-[#3A0B10] hover:bg-white hover:shadow-2xl transition-all duration-300"
             >
-              <span>Register on Unstop</span>
+              <span>Register Free</span>
               <ArrowUpRight size={18} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform text-[#6C151E]" />
-            </a>
+            </Link>
 
             <Link
               href="/team"
@@ -1628,7 +1626,7 @@ export default function OrganizingTeamPage() {
 
           {/* Technical subnote */}
           <div className="pt-6 text-xs font-mono text-[#C7C8CC]/60 max-w-md mx-auto">
-            Official registration handled exclusively through Unstop • Co-hosted by SRM University-AP and IBM Quantum
+            Official registration hosted on the learning portal • Co-hosted by SRM University-AP and IBM Quantum
           </div>
 
         </div>

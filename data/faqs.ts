@@ -119,10 +119,10 @@ export const GENERAL_FAQS: FAQItem[] = [
     number: 4,
     question: 'Who can participate in the event?',
     answer:
-      'Students and individuals interested in quantum computing can participate. Register on Unstop, then message us on WhatsApp with your Gmail address to get portal access.',
+      'Students, researchers, academics, and industry professionals interested in quantum computing can participate. Simply sign in with Google directly on the official platform (https://www.qffsrmap2026.com/learning) to complete your 30-second registration and gain instant access.',
     category: 'General & Overview',
     section: 'general',
-    tags: ['Eligibility', 'Students', 'Unstop'],
+    tags: ['Eligibility', 'Students', 'Registration'],
   },
   {
     id: 'faq-05',
@@ -149,7 +149,7 @@ export const GENERAL_FAQS: FAQItem[] = [
     number: 7,
     question: 'What events are being conducted?',
     answer:
-      'Online competitions (submit via the portal):\n• Tech Reels Competition — 45–90 sec quantum video, prize up to ₹10,000 — deadline 14 Oct (Extended)\n• Digital Poster Creation — infographic on Quantum Materials or Sensing, prize up to ₹5,000 — deadline 14 Oct (Extended)\n• Essay Competition — 800–1,200 words on a quantum topic, prize up to ₹5,000 — deadline 14 Oct (Extended)\n• Flagship Hackathon — Phase 1 online sprint deadline: 13 October 2026\n\nOffline phase (26–30 October at SRM-AP):\n• Quantum Quiddles quiz, QTalk presentations, Guess the QTech, workshops, and the Hackathon Phase 2 finale.',
+      'Online competitions (submit via the portal):\n• Tech Reels Competition — 45–90 sec quantum video, prize up to ₹10,000 — deadline 14 Oct (Extended)\n• Digital Poster Creation — infographic on Quantum Materials or Sensing, prize up to ₹5,000 — deadline 14 Oct (Extended)\n• Essay Competition — 800–1,200 words on a quantum topic, prize up to ₹5,000 — deadline 14 Oct (Extended)\n• Flagship Hackathon — Phase 1 online sprint deadline: 14 October 2026\n\nOffline phase (26–30 October at SRM-AP):\n• Quantum Quiddles quiz, QTalk presentations, Guess the QTech, workshops, and the Hackathon Phase 2 finale.',
     category: 'Events & Competitions',
     section: 'general',
     isTopQuestion: true,
@@ -179,13 +179,13 @@ export const GENERAL_FAQS: FAQItem[] = [
   {
     id: 'faq-10',
     number: 10,
-    question: 'Is Unstop still required after registration?',
+    question: 'How do I access the learning platform and competitions?',
     answer:
-      'No. Unstop was only for the initial sign-up. All submissions, team formation, hackathon access, and activities now happen exclusively on the official website: https://www.qffsrmap2026.com/learning/\n\nIf the portal says “You are not in the registered whitelist,” message us on WhatsApp with your Gmail and we will add you within 30 minutes.',
+      'All submissions, workshops, team formation, coding challenges, and festival activities happen directly on the official platform: https://www.qffsrmap2026.com/learning\n\nSimply sign in with your Google account. If your account is not yet on the roster, you can complete the quick 30-second on-page registration form to gain instant, automated access without any waiting period.',
     category: 'Registration & Fees',
     section: 'general',
     isTopQuestion: true,
-    tags: ['Unstop', 'Portal', 'Login'],
+    tags: ['Registration', 'Portal', 'Login'],
   },
   {
     id: 'faq-11',
@@ -200,13 +200,13 @@ export const GENERAL_FAQS: FAQItem[] = [
   {
     id: 'faq-12',
     number: 12,
-    question: 'I see “You are not in the registered whitelist.” What do I do?',
+    question: 'How does instant registration work on the learning portal?',
     answer:
-      'This means your Gmail has not yet been added to the portal. Steps to fix:\n1. Send your Gmail address via the WhatsApp group.\n2. We will add you within 30 minutes during working hours.\n3. Log in at https://www.qffsrmap2026.com/learning/ once added.\n\nDo not register again — just send us your Gmail.',
+      'Registration is completely automated and instant:\n1. Sign in with Google at https://www.qffsrmap2026.com/learning\n2. If you are a new participant, fill in your degree, institution, and background in the quick 30-second form.\n3. Click "Complete Registration & Enter Hub" for immediate access.\n\nIf you ever encounter an issue, our organizing committee is available 24/7 on the official WhatsApp support group.',
     category: 'Registration & Fees',
     section: 'general',
     isTopQuestion: true,
-    tags: ['Whitelist', 'Authentication', 'Troubleshooting'],
+    tags: ['Instant Registration', 'Authentication', 'Troubleshooting'],
   },
   {
     id: 'faq-13',
@@ -233,7 +233,7 @@ export const GENERAL_FAQS: FAQItem[] = [
     number: 15,
     question: 'How do I form a hackathon team and what is the team size?',
     answer:
-      "For general registration: teams can range from 2 to 4 members according to the Universal Challenge Framework (up to 6 accommodated during initial portal setup).\n\nSteps:\n1. Log in at https://www.qffsrmap2026.com/learning/hackathon\n2. Select your domain track and problem statement\n3. Enter your team name and add teammates by their Gmail addresses\n4. Teammates receive an invitation to accept on the portal\n\nEvery teammate's Gmail must be whitelisted first. If a teammate shows 'Not Found in Whitelist,' send us their Gmail on WhatsApp.\n\nPhase 1 deadline: 13 October 2026, 11:59 PM IST.",
+      "Hackathon teams must strictly have 2 to 6 members (1 team leader + 1 to 5 teammates). Solo participation is prohibited by the platform validation.\n\nSteps:\n1. Log in at https://www.qffsrmap2026.com/learning/hackathon\n2. Select your domain track and problem statement\n3. Enter your team name and invite teammates using their registered Google email addresses\n4. Invited teammates sign in to accept the invitation on the portal\n\nNote: If a teammate has not registered yet, they can simply sign in at https://www.qffsrmap2026.com/learning to complete their 30-second registration.\n\nPhase 1 submission deadline: 14 October 2026, 11:59 PM IST.",
     category: 'Events & Competitions',
     section: 'general',
     isTopQuestion: true,
@@ -293,11 +293,11 @@ export const TECHNICAL_FAQS: FAQItem[] = [
     number: 2,
     question: 'How many people can be in a hackathon team?',
     answer:
-      'The Universal Challenge Framework specifies teams of 2–4 members. Phase 2 continues with the same team unless the organizers explicitly announce otherwise.',
+      'Official hackathon teams must strictly have 2 to 6 members (1 Team Leader and 1 to 5 Teammates). Solo participation is prohibited by the platform backend. Phase 2 continues with the same verified roster unless the organizing committee explicitly announces otherwise.',
     category: 'General Rules & Phase 1',
     section: 'technical',
     isTopQuestion: true,
-    tags: ['Team Size', '2-4 Members', 'Phase 2'],
+    tags: ['Team Size', '2-6 Members', 'Phase 2'],
   },
   {
     id: 'tech-03',

@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { Footer } from '@/components/shared/Footer';
 import { REGISTRATION_URL } from '@/lib/constants';
-import { trackUnstopClick } from '@/lib/analytics';
+import { trackRegistrationClick } from '@/lib/analytics';
 
 interface TeamMember {
   name: string;
@@ -123,8 +123,8 @@ const CAPABILITIES = [
     title: 'Innovate',
     subtitle: 'Interactive Quantum Experiences',
     icon: Cpu,
-    description: 'Developing dynamic schedule agendas, campus venue navigators, countdown timers, and seamless integration with the external Unstop registration portal.',
-    tags: ['Quantum Circuits', 'Interactive Maps', 'Dynamic Agendas', 'Unstop Integration'],
+    description: 'Developing dynamic schedule agendas, campus venue navigators, countdown timers, and integrated learning portal registration.',
+    tags: ['Quantum Circuits', 'Interactive Maps', 'Dynamic Agendas', 'Portal Integration'],
   },
 ];
 
@@ -256,7 +256,7 @@ export default function WebsiteTeamPage() {
                     </div>
                     <div>
                       <span className="text-white/70">registration:</span>{' '}
-                      <span className="text-[#E5E5E7]">&quot;Exclusive via Unstop&quot;</span>,
+                      <span className="text-[#E5E5E7]">&quot;Instant via Learning Portal&quot;</span>,
                     </div>
                     <div>
                       <span className="text-white/70">status:</span>{' '}
@@ -472,7 +472,7 @@ export default function WebsiteTeamPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="h-1.5 w-1.5 rounded-full bg-[#6C151E] dark:bg-[#B08D57]" />
-                  <span>External Unstop registration integration with zero mock stubs</span>
+                  <span>Automated instant on-site registration integration with zero mock stubs</span>
                 </div>
               </div>
 
@@ -539,7 +539,7 @@ export default function WebsiteTeamPage() {
 
       {/* ─────────────────────────────────────────────────────────────
           SECTION 04: CTA — A Stronger Quantum Tomorrow
-          Deep burgundy CTA section with external Unstop registration redirect
+          Deep burgundy CTA section with learning portal registration redirect
           ───────────────────────────────────────────────────────────── */}
       <section
         id="section-04-cta"
@@ -564,22 +564,20 @@ export default function WebsiteTeamPage() {
             </h2>
 
             <p className="text-base sm:text-lg font-sans text-[#E5E5E7]/85 max-w-2xl mx-auto leading-relaxed font-light">
-              Join hundreds of quantum researchers, students, and algorithm developers at SRM University-AP. Registration is open exclusively through Unstop.
+              Join hundreds of quantum researchers, students, and algorithm developers at SRM University-AP. Registration is open directly on the official learning portal.
             </p>
           </div>
 
           {/* Action CTAs */}
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 pt-4">
-            <a
-              href={REGISTRATION_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => trackUnstopClick('website_team_page')}
+            <Link
+              href="/learning"
+              onClick={() => trackRegistrationClick('website_team_page')}
               className="group inline-flex items-center gap-3 px-8 py-4 rounded-xl text-base font-semibold bg-[#F5F3F0] text-[#3A0B10] hover:bg-white hover:shadow-2xl transition-all duration-300"
             >
-              <span>Register on Unstop</span>
+              <span>Register Free</span>
               <ArrowUpRight size={18} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform text-[#6C151E]" />
-            </a>
+            </Link>
 
             <Link
               href="/team"
@@ -591,7 +589,7 @@ export default function WebsiteTeamPage() {
 
           {/* Technical subnote */}
           <div className="pt-6 text-xs font-mono text-[#C7C8CC]/60 max-w-md mx-auto">
-            Official registration handled exclusively through Unstop • Co-hosted by SRM University-AP and IBM Quantum
+            Official registration hosted on the learning portal • Co-hosted by SRM University-AP and IBM Quantum
           </div>
 
         </div>

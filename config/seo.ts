@@ -21,7 +21,7 @@ export const SITE_CONFIG = {
   primaryDomain: 'https://www.qffsrmap2026.com',
   campusMirrorDomain: 'https://qis-kit-fall-fest-2026.vercel.app',
   officialEventUrl: 'https://events.srmap.edu.in/event/qiskit-fall-fest-2026/',
-  registrationUrl: 'https://unstop.com', // Launches 25 September 2026
+  registrationUrl: 'https://www.qffsrmap2026.com/learning',
   description:
     'Qiskit Fall Fest SRMAP 2026 — SRM University-AP × IBM Quantum. A premier 5-day technology summit and quantum hackathon celebrating a decade of quantum on cloud.',
   locale: 'en_US',

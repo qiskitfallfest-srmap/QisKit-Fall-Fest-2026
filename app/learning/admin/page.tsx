@@ -531,7 +531,7 @@ export default function AdminConsolePage() {
                     <div>
                       <h2 className="text-base font-bold">Upload CSV to Seed Participants</h2>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Upload registration sheets (Unstop, Google Forms, etc.). Safely adds unique new members and updates names without deleting any previous participants.
+                        Upload registration sheets (Google Forms, CSV exports, etc.). Safely adds unique new members and updates names without deleting any previous participants.
                       </p>
                     </div>
                   </div>
@@ -604,7 +604,7 @@ export default function AdminConsolePage() {
                         </span>
                       </div>
                       <p className="text-2xs text-slate-400 dark:text-slate-500">
-                        Automatically detects Candidate Email & Name columns (e.g. Unstop Regn_...csv)
+                        Automatically detects Candidate Email & Name columns (e.g. Registrations / Responses CSV)
                       </p>
                     </div>
                   </div>

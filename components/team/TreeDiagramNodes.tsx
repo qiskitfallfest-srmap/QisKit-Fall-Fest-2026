@@ -154,8 +154,8 @@ export const TRACKS_DATA: TrackItem[] = [
         id: 'cell-11',
         number: 11,
         label: '11. Registration Cell',
-        description: 'Managing the Unstop registration funnel, attendee credential verification, and waitlist allocations.',
-        focusArea: 'Unstop Funnel & Badging Passes',
+        description: 'Managing the participant registration funnel, attendee credential verification, and credential allocations.',
+        focusArea: 'Participant Registration & Badging Passes',
       },
       {
         id: 'cell-12',

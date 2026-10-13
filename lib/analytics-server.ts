@@ -254,7 +254,7 @@ export async function recordAnalyticsEvent(payload: AnalyticsEventPayload): Prom
       visitors: current.todayUniqueVisitors,
     };
   } else {
-    // Custom interaction event (e.g. unstop_registration_click)
+    // Custom interaction event (e.g. portal_registration_click)
     current.events[event] = (current.events[event] || 0) + 1;
   }
 

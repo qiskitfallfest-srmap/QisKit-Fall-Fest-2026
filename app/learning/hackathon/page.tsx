@@ -304,7 +304,7 @@ export default function HackathonWorkspacePage() {
         return;
       }
       if (m.status === 'not_whitelisted') {
-        setTeamFormError(`Teammate ${m.email} is not in the registered whitelist. Tell your team member to register on Unstop and join the WhatsApp group to quickly resolve the issue.`);
+        setTeamFormError(`Teammate ${m.email} is not yet registered. Ask your team member to sign in directly at the learning portal to register in 30 seconds, or contact WhatsApp support.`);
         return;
       }
       if (m.status === 'already_in_team') {
@@ -476,7 +476,7 @@ export default function HackathonWorkspacePage() {
     }
 
     if (newMemberStatus === 'not_whitelisted') {
-      setMemberActionErr(`Teammate ${newMemberEmail} is not authorized on the whitelist. Tell your team member to register on Unstop and join the WhatsApp group to quickly resolve the issue.`);
+      setMemberActionErr(`Teammate ${newMemberEmail} is not yet registered. Ask your team member to sign in directly at the learning portal to register in 30 seconds, or contact WhatsApp support.`);
       return;
     }
     if (newMemberStatus === 'already_in_team') {
@@ -1236,7 +1236,7 @@ export default function HackathonWorkspacePage() {
                       </div>
                       {(memberActionErr.toLowerCase().includes('whitelist') ||
                         memberActionErr.toLowerCase().includes('authorized') ||
-                        memberActionErr.toLowerCase().includes('unstop')) && (
+                        memberActionErr.toLowerCase().includes('register')) && (
                         <div className="flex flex-wrap items-center gap-2 pl-6 pt-1">
                           <a
                             href={REGISTRATION_URL}
@@ -1244,7 +1244,7 @@ export default function HackathonWorkspacePage() {
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-rose-100 hover:bg-rose-200 dark:bg-rose-900/40 dark:hover:bg-rose-900/70 text-rose-900 dark:text-rose-200 font-semibold text-xs transition-colors"
                           >
-                            <span>Register on Unstop</span>
+                            <span>Register on Portal</span>
                             <ExternalLink className="w-3 h-3" />
                           </a>
                           <a
@@ -1341,7 +1341,7 @@ export default function HackathonWorkspacePage() {
                                 <span>Email not found in registered whitelist</span>
                               </div>
                               <p className="text-[11.5px] leading-relaxed text-amber-900/90 dark:text-amber-200/90 pl-5">
-                                Tell your team member to register on Unstop and join the WhatsApp group for quickly resolving the issue.
+                                Tell your team member to sign in directly at the learning portal to register in 30 seconds, or reach out on WhatsApp for quick assistance.
                               </p>
                               <div className="flex flex-wrap items-center gap-2 pl-5 pt-0.5">
                                 <a
@@ -1350,7 +1350,7 @@ export default function HackathonWorkspacePage() {
                                   rel="noopener noreferrer"
                                   className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-200/80 hover:bg-amber-300/90 dark:bg-amber-900/60 dark:hover:bg-amber-900 text-amber-950 dark:text-amber-100 font-semibold text-[11px] transition-colors"
                                 >
-                                  <span>Register on Unstop</span>
+                                  <span>Register on Portal</span>
                                   <ExternalLink className="w-3 h-3" />
                                 </a>
                                 <a
@@ -1868,7 +1868,7 @@ export default function HackathonWorkspacePage() {
                           <span className="leading-relaxed">{teamFormError}</span>
                         </div>
                         {(teamFormError.toLowerCase().includes('whitelist') ||
-                          teamFormError.toLowerCase().includes('unstop')) && (
+                          teamFormError.toLowerCase().includes('register')) && (
                           <div className="flex flex-wrap items-center gap-2 pl-6 pt-0.5">
                             <a
                               href={REGISTRATION_URL}
@@ -1876,7 +1876,7 @@ export default function HackathonWorkspacePage() {
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-rose-100 hover:bg-rose-200 dark:bg-rose-900/40 dark:hover:bg-rose-900/70 text-rose-900 dark:text-rose-200 font-semibold text-xs transition-colors"
                             >
-                              <span>Register on Unstop</span>
+                              <span>Register on Portal</span>
                               <ExternalLink className="w-3 h-3" />
                             </a>
                             <a

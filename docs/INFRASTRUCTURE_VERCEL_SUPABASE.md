@@ -145,7 +145,7 @@ To allow future offloading of large images and assets from the Next.js bundle to
   ```
 
 ### 4.5 Provisioned Database Table (`public.registrations`)
-Created a PostgreSQL table to support on-platform registrations, RSVPs, or interest forms alongside external Unstop registration:
+Created a PostgreSQL table to support on-platform self-registrations, participant onboarding, and profile capture:
 ```sql
 CREATE TABLE IF NOT EXISTS public.registrations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

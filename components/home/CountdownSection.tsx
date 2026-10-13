@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { REGISTRATION_URL } from '@/lib/constants';
-import { trackUnstopClick } from '@/lib/analytics';
+import { trackRegistrationClick } from '@/lib/analytics';
 import { ResponsivePicture } from '@/components/shared/ResponsivePicture';
 
 type PhaseId = 'online' | 'on-campus';
@@ -282,9 +282,7 @@ export function CountdownSection() {
               target={activePhase.joinUrl.startsWith('http') ? '_blank' : undefined}
               rel={activePhase.joinUrl.startsWith('http') ? 'noopener noreferrer' : undefined}
               onClick={() => {
-                if (activePhase.joinUrl.includes('unstop.com') || activePhase.joinUrl === REGISTRATION_URL) {
-                  trackUnstopClick('countdown_live');
-                }
+                trackRegistrationClick('countdown_live');
               }}
               className="
                 group relative inline-flex items-center justify-center gap-3

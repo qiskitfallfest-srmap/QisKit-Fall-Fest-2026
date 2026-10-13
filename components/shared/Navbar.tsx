@@ -17,7 +17,7 @@ import {
 } from 'motion/react';
 import clsx from 'clsx';
 import { REGISTRATION_URL } from '@/lib/constants';
-import { trackUnstopClick } from '@/lib/analytics';
+import { trackRegistrationClick } from '@/lib/analytics';
 
 export const NAVBAR_JOIN_HREF = '/learning';
 export { REGISTRATION_URL };
@@ -514,7 +514,7 @@ export function Navbar() {
           <Link
             href={NAVBAR_JOIN_HREF}
             data-cursor="cta"
-            onClick={() => trackUnstopClick('navbar_desktop')}
+            onClick={() => trackRegistrationClick('navbar_desktop')}
             onMouseEnter={() => setIsJoinHovered(true)}
             onMouseLeave={() => setIsJoinHovered(false)}
             style={{

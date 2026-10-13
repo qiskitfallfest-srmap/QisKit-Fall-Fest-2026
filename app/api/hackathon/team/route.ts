@@ -236,7 +236,7 @@ export async function POST(request: NextRequest) {
         const whitelistCheck = await isEmailWhitelisted(member.email);
         if (!whitelistCheck.whitelisted) {
           return {
-            error: `Teammate ${member.email} is not in the registered whitelist. Tell your team member to register on Unstop and join the WhatsApp group to quickly resolve the issue.`,
+            error: `Teammate ${member.email} is not yet registered. Ask your team member to sign in directly at the learning portal to register in 30 seconds, or contact WhatsApp support.`,
           };
         }
 

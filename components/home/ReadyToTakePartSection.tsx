@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { REGISTRATION_URL } from '@/lib/constants';
-import { trackUnstopClick } from '@/lib/analytics';
+import { trackRegistrationClick } from '@/lib/analytics';
 import { ResponsivePicture } from '@/components/shared/ResponsivePicture';
 
 export function ReadyToTakePartSection() {
@@ -461,11 +461,9 @@ export function ReadyToTakePartSection() {
             <a
               ref={btnRef}
               href={REGISTRATION_URL}
-              target="_blank"
-              rel="noopener noreferrer"
               data-cursor="cta"
-              aria-label="Register Now on Unstop (opens in a new tab)"
-              onClick={() => trackUnstopClick('ready_to_take_part')}
+              aria-label="Register Free on Learning Portal"
+              onClick={() => trackRegistrationClick('ready_to_take_part')}
               className="readyCtaBtn group"
             >
               {/* Directional satin-light sweep */}

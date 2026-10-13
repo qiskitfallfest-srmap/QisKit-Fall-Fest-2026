@@ -29,7 +29,6 @@ interface AuthGateProps {
   onSessionChange?: (session: AuthSession | null) => void;
 }
 
-const UNSTOP_REGISTRATION_URL = REGISTRATION_URL;
 
 const BACKGROUND_ROLES = [
   'Undergraduate Student (B.Tech / B.Sc / BCA)',

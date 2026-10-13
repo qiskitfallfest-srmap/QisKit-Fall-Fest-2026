@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, CalendarDays, MapPin, Play } from 'lucide-react';
 import { REGISTRATION_URL } from '@/lib/constants';
-import { trackUnstopClick, trackEvent } from '@/lib/analytics';
+import { trackRegistrationClick, trackEvent } from '@/lib/analytics';
 import { ResponsivePicture } from '@/components/shared/ResponsivePicture';
 import styles from './HomeHero.module.css';
 

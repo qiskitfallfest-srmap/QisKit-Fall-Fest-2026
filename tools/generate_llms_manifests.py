@@ -47,7 +47,7 @@ Campus / Fallback Production Mirror: https://qis-kit-fall-fest-2026.vercel.app/
 Host Institution: SRM University-AP, Amaravati, Andhra Pradesh, India (Partner Plus Host)
 Online Phase: 5 October 2026 to 13 October 2026
 Campus Phase: 26 October 2026 to 30 October 2026
-Registration Platform: Unstop (Official Public Launch: 25 September 2026)
+Registration Platform: Official Platform (https://www.qffsrmap2026.com/learning)
 
 ## Full AI Manifests & Markdown Dossiers
 
@@ -125,13 +125,13 @@ Theme: A Decade of Quantum on Cloud (Celebrating 10 Years of Cloud Quantum Compu
 - [Hackathon Problem Statement Executive Summary](file:///02%20_%20Hackathon%20&%20Competitions%20Cell/Hackathon/QFF%20PS%20Executive%20Summary.md): Universal Challenge Framework, Processors A/B/C/D specifications, and problem statements across 5 tracks.
 - [Events and Competitions Guide](file:///02%20_%20Hackathon%20&%20Competitions%20Cell/Hackathon/Events_and_Competitions_Guide_QFF_2026.md): Operational guide covering 59 active events with rules, eligibility, scoring models, and venue allocations.
 - [Online & Offline Event Classification](file:///01%20_%20Technical%20Programs%20%20Cell/Planning/QFF_Online+Offline_Event_Structure.md): Definitive breakdown of the 38 offline campus events and 21 online virtual events.
-- [Website Task Tracker](file:///03%20_%20Website%20&%20Technology%20Cell/Todo/Website%20Todo.md): Current sprint deliverables for web platform, SEO, GEO, and Unstop integration.
+- [Website Task Tracker](file:///03%20_%20Website%20&%20Technology%20Cell/Todo/Website%20Todo.md): Current sprint deliverables for web platform, SEO, GEO, and registration portal.
 
 ## Cell Organization & Directory Layout
 
 - [01 _ Technical Programs Cell](file:///01%20_%20Technical%20Programs%20%20Cell/): Masterclass courses, academic session syllabi, workshop slides, and speaker coordination.
 - [02 _ Hackathon & Competitions Cell](file:///02%20_%20Hackathon%20&%20Competitions%20Cell/): Universal Challenge Framework, problem statements, judging rubrics, automated evaluation scripts, and submission trackers.
-- [03 _ Website & Technology Cell](file:///03%20_%20Website%20&%20Technology%20Cell/): Website deliverables, UI specifications, Unstop API coordination, and technical documentation.
+- [03 _ Website & Technology Cell](file:///03%20_%20Website%20&%20Technology%20Cell/): Website deliverables, UI specifications, learning portal operations, and technical documentation.
 - [tools/](file:///tools/): Deterministic execution scripts (`convert_documents.py`, `generate_llms_manifests.py`, `verify_llms_manifests.py`).
 - [workflows/](file:///workflows/): Standard operating procedures (`update_llms_manifests.md`).
 
@@ -378,18 +378,18 @@ TOTAL ACTIVE PORTFOLIO: 59 EVENTS
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **1** | Quantum Basics Workshop | Online | Zoom / Webex | 5 Oct 2026 | Masterclass Session 1: Foundational quantum mechanics, qubits, gates, and statevector simulation. |
 | **2** | Hardware Quantum Tech Expo | Offline | Quantum Lab / Atrium | 29 Oct 2026 | Physical showcase of quantum hardware components, cryostat models, dilution systems, and educational rigs. |
-| **3** | Hackathon Phase 1 | Online | GitHub / Unstop | 5-13 Oct 2026 | Universal Challenge Framework: Algorithm-Architecture Co-Design across 5 tracks. Submissions close 13 Oct. |
+| **3** | Hackathon Phase 1 | Online | GitHub / Learning Portal | 5-14 Oct 2026 | Universal Challenge Framework: Algorithm-Architecture Co-Design across 5 tracks. Submissions close 14 Oct. |
 | **4** | Conclave / Debate: Quantum vs Classical | Offline | Auditorium | 28 Oct 2026 | Structured debate on quantum advantage timelines, NISQ limits, and quantum-classical hybrid architectures. |
-| **5** | Essay Competition | Online | Unstop Portal | 5-13 Oct 2026 | Academic essay writing on quantum computing societal impact, cybersecurity threats, and the quantum economy. |
-| **6** | Digital Poster Creation | Online | Unstop Portal | 5-13 Oct 2026 | Creative technical infographic and poster design competition communicating complex quantum principles. |
+| **5** | Essay Competition | Online | Learning Portal | 5-14 Oct 2026 | Academic essay writing on quantum computing societal impact, cybersecurity threats, and the quantum economy. |
+| **6** | Digital Poster Creation | Online | Learning Portal | 5-14 Oct 2026 | Creative technical infographic and poster design competition communicating complex quantum principles. |
 | **7** | Hardware Circuit Optimization Challenge | Offline | Quantum Lab | 27 Oct 2026 | Hands-on circuit depth and two-qubit gate minimization challenge on simulated hardware constraints. |
 | **8** | Photo Booth - Quantum Image World | Offline | Student Center | 26-30 Oct 2026 | Interactive photography and visual engagement installation themed around quantum phenomena. |
 | **9** | Tech Marathon | Offline | Auditorium | 27 Oct 2026 | Multi-stage continuous quantum problem solving and coding sprint for campus participants. |
-| **10** | Python Coding Challenge in Qiskit | Online | Unstop / JupyterHub | 8 Oct 2026 | Timed algorithmic coding competition implementing quantum functions and circuit primitives. |
+| **10** | Python Coding Challenge in Qiskit | Online | Learning Portal / JupyterHub | 8-15 Oct 2026 | Timed algorithmic coding competition implementing quantum functions and circuit primitives. |
 | **11** | *Hardware Challenges [DROPPED]* | Dropped | N/A | N/A | Formally dropped per GT-03 and GT-04 to preserve physical lab resources. |
 | **12** | Play Activity | Offline | Classrooms | 26 Oct 2026 | Experiential physical mechanics game translating quantum superposition and measurement to group dynamics. |
-| **13** | Tech Reels Competition | Online | Instagram / Unstop | 5-13 Oct 2026 | Short-form video competition communicating quantum principles in under 60 seconds. |
-| **14** | ML Competition | Online | Kaggle / Unstop | 9-13 Oct 2026 | Quantum-classical hybrid machine learning challenge using variational quantum classifiers. |
+| **13** | Tech Reels Competition | Online | Instagram / Learning Portal | 5-14 Oct 2026 | Short-form video competition communicating quantum principles in under 60 seconds. |
+| **14** | ML Competition | Online | Kaggle / Learning Portal | 9-14 Oct 2026 | Quantum-classical hybrid machine learning challenge using variational quantum classifiers. |
 | **15** | Quiz Hot Chair Competition | Offline | Seminar Hall 1 | 28 Oct 2026 | Rapid-fire buzzer quiz testing instantaneous recall of quantum physics, linear algebra, and Qiskit SDK. |
 | **16** | Drama - Quantum on Stage | Offline | Auditorium | 29 Oct 2026 | Theatrical performance dramatizing historic milestones in quantum physics (Solvay Conference, EPR paradox). |
 | **17** | Innovation Challenge | Hybrid | Auditorium / Zoom | 27 Oct 2026 | Pitch competition for novel commercial, industrial, or scientific use cases leveraging quantum algorithms. |
@@ -444,7 +444,7 @@ def build_faq_markdown() -> str:
 **Host Institution:** SRM University-AP (Amaravati)  
 **Host Designation:** Partner Plus Host  
 **Official Website:** https://www.qffsrmap2026.com/  
-**Registration:** Unstop  
+**Registration:** Official Learning Portal (https://www.qffsrmap2026.com/learning)  
 
 ---
 
@@ -457,7 +457,7 @@ Qiskit Fall Fest is a global celebration of quantum computing sponsored by IBM Q
 Undergraduate and postgraduate students, researchers, PhD scholars, and developers across computer science, electrical engineering, physics, mathematics, and chemistry. Both beginners and experienced developers are welcome.
 
 ### How do I register?
-Official registrations are hosted on **Unstop** (launching 25 September 2026). Links to individual event tracks and the masterclass are available on the festival website: https://www.qffsrmap2026.com/
+Official registrations are hosted directly on the **Learning Portal**: https://www.qffsrmap2026.com/learning with instant on-site self-registration.
 
 ### Is there a registration fee?
 Participation in Qiskit Fall Fest 2026 sessions, workshops, and hackathons is completely free of charge.
@@ -540,7 +540,7 @@ Host Designation: Partner Plus Host (SRM University-AP in partnership with IBM Q
 Theme: A Decade of Quantum on Cloud (10 Years of Cloud Quantum Computing, 2016-2026)
 Online Phase: 5 October 2026 to 13 October 2026
 Campus Phase: 26 October 2026 to 30 October 2026
-Registration Platform: Unstop (Launching 25 September 2026)
+Registration Platform: Official Platform (https://www.qffsrmap2026.com/learning)
 
 ---
 

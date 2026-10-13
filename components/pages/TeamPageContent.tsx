@@ -11,7 +11,7 @@ import { TextBlockAnimation } from '@/components/ui/text-block-animation';
 import { MagicText } from '@/components/ui/magic-text';
 import { OrganizationalTreeChart } from '@/components/team/OrganizationalTreeChart';
 import { REGISTRATION_URL } from '@/lib/constants';
-import { trackUnstopClick } from '@/lib/analytics';
+import { trackRegistrationClick } from '@/lib/analytics';
 
 interface StatItem {
   id: string;
@@ -400,7 +400,7 @@ export default function TeamPage() {
 
       {/* ─────────────────────────────────────────────────────────────
           SECTION 05: BE PART OF OUR JOURNEY / CTA
-          Burgundy CTA section with external Unstop registration redirect
+          Burgundy CTA section with learning portal registration redirect
           ───────────────────────────────────────────────────────────── */}
       <section
         id="section-05-be-part-of-our-journey"
@@ -423,22 +423,20 @@ export default function TeamPage() {
               Be Part of Our Journey<span className="text-[#B08D57]">.</span>
             </h2>
             <p className="text-base sm:text-lg font-sans text-[#E5E5E7]/85 max-w-2xl mx-auto leading-relaxed font-light">
-              Registration is exclusively managed via Unstop. Secure your seat for keynotes, workshops, and the 24-hour quantum hackathon before quotas fill.
+              Registration is open directly on the official learning portal. Secure your seat for keynotes, workshops, and the 24-hour quantum hackathon.
             </p>
           </div>
 
           {/* Action CTAs */}
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 pt-4">
-            <a
-              href={REGISTRATION_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => trackUnstopClick('team_page')}
+            <Link
+              href="/learning"
+              onClick={() => trackRegistrationClick('team_page')}
               className="group inline-flex items-center gap-3 px-8 py-4 rounded-xl text-base font-semibold bg-[#F5F3F0] text-[#3A0B10] hover:bg-white hover:shadow-2xl transition-all duration-300"
             >
-              <span>Register on Unstop</span>
+              <span>Register Free</span>
               <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform text-[#6C151E]" />
-            </a>
+            </Link>
 
             <Link
               href="/experience"

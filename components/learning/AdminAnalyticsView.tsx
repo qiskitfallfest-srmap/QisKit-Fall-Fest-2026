@@ -200,11 +200,11 @@ export function AdminAnalyticsView() {
           <span className="text-[11px] text-slate-400 dark:text-slate-500 block mt-1">HyperLogLog cardinality</span>
         </div>
 
-        {/* Unstop Registrations CTA */}
+        {/* Registration CTA */}
         <div className="p-5 rounded-xl bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] shadow-xs relative overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              Unstop CTA Clicks
+              Registration CTA Clicks
             </span>
             <div className="p-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400">
               <Flame className="w-4 h-4" />
@@ -212,10 +212,14 @@ export function AdminAnalyticsView() {
           </div>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-[#FAF6F3]">
-              {data?.eventCounts?.unstop_registration_click?.toLocaleString() || 0}
+              {(
+                Object.entries(data?.eventCounts || {})
+                  .filter(([k]) => k.endsWith('registration_click'))
+                  .reduce((sum, [, count]) => sum + (typeof count === 'number' ? count : 0), 0)
+              ).toLocaleString()}
             </span>
             <span className="text-[11px] text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 rounded font-medium">
-              Outbound Portal
+              Portal Onboarding
             </span>
           </div>
           <span className="text-[11px] text-slate-400 dark:text-slate-500 block mt-1">Primary conversion lead</span>
@@ -439,14 +443,16 @@ export function AdminAnalyticsView() {
             <div className="p-3 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-slate-50/70 dark:bg-[#1C0A0D] flex items-center justify-between">
               <div>
                 <span className="text-xs font-bold text-slate-900 dark:text-[#FAF6F3] block">
-                  Outbound Unstop Registrations
+                  Registration Portal Clicks
                 </span>
                 <span className="text-[11px] text-slate-500 dark:text-slate-400 block">
-                  Users directed to IBM / Unstop portal
+                  Users engaging with registration CTAs
                 </span>
               </div>
               <span className="text-sm font-bold font-mono text-burgundy dark:text-[#E89BA5]">
-                {data?.eventCounts?.unstop_registration_click || 0}
+                {Object.entries(data?.eventCounts || {})
+                  .filter(([k]) => k.endsWith('registration_click'))
+                  .reduce((sum, [, count]) => sum + (typeof count === 'number' ? count : 0), 0)}
               </span>
             </div>
 

@@ -137,12 +137,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 5. Verify teammate email is whitelisted on Unstop
+    // 5. Verify teammate email is registered / whitelisted
     const whitelistCheck = await isEmailWhitelisted(trimmedEmail);
     if (!whitelistCheck.whitelisted) {
       return NextResponse.json(
         {
-          error: `Teammate ${trimmedEmail} is not in the registered whitelist. Tell your team member to register on Unstop and join the WhatsApp group to quickly resolve the issue.`,
+          error: `Teammate ${trimmedEmail} is not yet registered. Ask your team member to sign in directly at the learning portal to register in 30 seconds, or contact WhatsApp support.`,
         },
         { status: 400 }
       );

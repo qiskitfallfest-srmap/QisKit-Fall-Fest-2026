@@ -307,7 +307,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         title: 'Pravin Nair',
         subtitle: 'Operations & Registration Co-Lead',
         meta: [
-          { label: 'Responsibility', value: 'Unstop Funnel & On-Site Passes' },
+          { label: 'Responsibility', value: 'Participant Funnel & On-Site Passes' },
           { label: 'Team', value: 'Participant Services' },
           { label: 'Program', value: 'B.Tech CSE' },
         ],
@@ -522,7 +522,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
     badge: 'TRACK 04 • TECHNOLOGY & PARTICIPANT EXPERIENCE',
     title: 'Track 4: Technology & Participant Experience',
     subtitle: 'Registration Funnels, On-Site Experience & Tech Expo',
-    description: 'Overseeing participant journeys from Unstop registration and badging to on-site helpdesks, accommodation, and the Hardware Quantum Tech Expo.',
+    description: 'Overseeing participant journeys from platform registration and badging to on-site helpdesks, accommodation, and the Hardware Quantum Tech Expo.',
     linkHref: '/team/organizing',
     linkText: 'Inspect Track 4 Roster',
     slides: [
@@ -530,9 +530,9 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         src: GENERIC_PERSON_AVATAR,
         alt: 'Pravin Nair',
         title: 'Pravin Nair',
-        subtitle: 'Registration Supervisor • Unstop Lead',
+        subtitle: 'Registration Supervisor • Participant Operations Lead',
         meta: [
-          { label: 'Focus', value: 'Unstop Funnel & Badging Verification' },
+          { label: 'Focus', value: 'Participant Ingestion & Badging Verification' },
           { label: 'Division', value: 'TP-02 Registration' },
           { label: 'Affiliation', value: 'Student Chapter' },
         ],
@@ -1100,8 +1100,8 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
     id: 'cell-11',
     badge: 'CELL 11 • TECHNOLOGY & PARTICIPANT EXPERIENCE',
     title: '11. Registration Cell',
-    subtitle: 'Unstop Funnel & Badging Passes',
-    description: 'Managing the Unstop registration funnel, attendee credential verification, and waitlist allocations.',
+    subtitle: 'Participant Registration & Badging Passes',
+    description: 'Managing the participant registration funnel, attendee credential verification, and credential allocations.',
     linkHref: '/team/organizing',
     linkText: 'Open Full Organizing Roster',
     slides: [
@@ -1111,7 +1111,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         title: 'Pravin Nair',
         subtitle: 'Registration Supervisor',
         meta: [
-          { label: 'Focus', value: 'Unstop Funnel Allocations' },
+          { label: 'Focus', value: 'Participant Funnel Allocations' },
           { label: 'Role', value: 'Registration Head' },
           { label: 'Department', value: 'Student Affairs' },
         ],
@@ -1120,7 +1120,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         src: GENERIC_PERSON_AVATAR,
         alt: 'Kavya Menon',
         title: 'Kavya Menon',
-        subtitle: 'Unstop Portal Liaison',
+        subtitle: 'Portal Registration Liaison',
         meta: [
           { label: 'Focus', value: 'Application Ingestion & Waitlists' },
           { label: 'Role', value: 'Portal Manager' },

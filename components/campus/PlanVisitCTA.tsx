@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { trackUnstopClick } from '@/lib/analytics';
+import { trackRegistrationClick } from '@/lib/analytics';
 
 export function PlanVisitCTA() {
   return (
@@ -60,13 +60,11 @@ export function PlanVisitCTA() {
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
 
-          <a
-            href="https://unstop.com/college-fests/qiskit-fall-fest-srmap-2026-srm-university-amaravati-515345"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/learning"
             data-cursor="cta"
-            aria-label="Register Now on Unstop"
-            onClick={() => trackUnstopClick('plan_visit_cta')}
+            aria-label="Register Free on Learning Portal"
+            onClick={() => trackRegistrationClick('plan_visit_cta')}
             className="
               w-full sm:w-auto inline-flex items-center justify-center gap-2
               px-7 py-3 rounded-full font-sans text-xs font-semibold tracking-wide
@@ -75,9 +73,9 @@ export function PlanVisitCTA() {
               shadow-lg shadow-black/30 transition-all duration-200
             "
           >
-            <span>Register on Unstop</span>
+            <span>Register Free</span>
             <ArrowRight className="w-3.5 h-3.5" />
-          </a>
+          </Link>
         </div>
       </div>
     </section>
