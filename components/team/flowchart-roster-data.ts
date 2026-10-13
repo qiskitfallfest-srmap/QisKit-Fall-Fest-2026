@@ -1,5 +1,7 @@
 import { CoverflowSlide } from '@/components/ui/coverflow-carousel';
 
+export const GENERIC_PERSON_AVATAR = '/logo-icon-person-on-white-background-free-vector.webp';
+
 export interface FlowchartModalData {
   id: string;
   badge: string;
@@ -25,7 +27,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
     linkText: 'View Complete Committee Hierarchy',
     slides: [
       {
-        src: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Dr. K. S. Ramanujan',
         title: 'Dr. K. S. Ramanujan',
         subtitle: 'Faculty Co-Lead • Quantum Algorithms',
@@ -36,7 +38,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Prof. Meera Sundaram',
         title: 'Prof. Meera Sundaram',
         subtitle: 'Curriculum Chair & Associate Professor',
@@ -47,7 +49,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1580894732444-8ecded7900cd?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Dr. Vasudha Rao',
         title: 'Dr. Vasudha Rao',
         subtitle: 'IBM University Liaison Chair',
@@ -58,7 +60,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Col. V. R. Patnaik',
         title: 'Col. V. R. Patnaik',
         subtitle: 'Venue Operations & Logistics Director',
@@ -69,7 +71,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: '/images/team/srihaas-pigilam.jpg',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Srihaas Pigilam',
         title: 'Srihaas Pigilam',
         subtitle: 'Student General Chair & Engineering Lead',
@@ -90,74 +92,176 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
     badge: 'LEVEL 03 • ACADEMIC OVERSIGHT',
     title: 'Faculty Advisory Board (FAB)',
     subtitle: 'Guidance & Portfolios',
-    description: 'Senior professors and department deans providing strategic academic oversight, ethical governance, and IBM Quantum curricular alignment.',
+    description: 'Distinguished faculty mentors and professors providing strategic academic oversight, research guidance, and technical evaluation across all tracks of Qiskit Fall Fest 2026.',
     linkHref: '/team/organizing',
     linkText: 'Inspect Faculty Advisory Mandate',
     slides: [
       {
-        src: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=800&q=80',
-        alt: 'Dr. K. S. Ramanujan',
-        title: 'Dr. K. S. Ramanujan',
-        subtitle: 'Faculty Co-Lead • Quantum Algorithms',
+        src: '/images/team/faculty/shaik-johny-basha.jpg',
+        alt: 'Mr. Shaik Johny Basha',
+        title: 'Mr. Shaik Johny Basha',
+        subtitle: 'Assistant Professor, Department of CSE',
+        email: 'johnybasha.s@srmap.edu.in',
+        linkedin: 'https://www.linkedin.com/in/shaik-johny-basha-831945108',
+        bio: 'Faculty member in the Department of Computer Science & Engineering at SRM University-AP. Supporting academic governance, technical workshops, and student research mentorship.',
         meta: [
-          { label: 'Portfolio', value: 'Algorithmic Track & Benchmarks' },
           { label: 'Department', value: 'Computer Science & Engineering' },
-          { label: 'Research', value: 'Error Mitigation & Co-Design' },
+          { label: 'Designation', value: 'Assistant Professor' },
+          { label: 'Role', value: 'Faculty Advisory Board' },
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=800&q=80',
-        alt: 'Prof. Meera Sundaram',
-        title: 'Prof. Meera Sundaram',
-        subtitle: 'Curriculum Chair & Associate Professor',
+        src: '/images/team/faculty/v-udaya-sankar.jpg',
+        alt: 'Dr. V. Udaya Sankar',
+        title: 'Dr. V. Udaya Sankar',
+        subtitle: 'Assistant Professor, Dept. of Electronics and Communication Engineering',
+        email: 'udayasankar.v@srmap.edu.in',
+        linkedin: 'https://www.linkedin.com/in/dr-v-udaya-sankar-b373219/',
+        bio: 'My area of research interest includes Game theory and optimization, Machine learning algorithms, Baseband Signal Processing for Advanced Wireless communications, Small Cell Networks, Visual Inspection Systems, Quantum Computing and Communications.',
         meta: [
-          { label: 'Portfolio', value: 'Pedagogy & 10-Session Syllabus' },
-          { label: 'Department', value: 'Physics & Computational Sciences' },
-          { label: 'Research', value: 'Fault-Tolerant Circuit Synthesis' },
+          { label: 'Department', value: 'Electronics & Communication Engineering' },
+          { label: 'Designation', value: 'Assistant Professor' },
+          { label: 'Focus', value: 'Quantum Computing & Wireless Comms' },
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1580894732444-8ecded7900cd?auto=format&fit=crop&w=800&q=80',
-        alt: 'Dr. Vasudha Rao',
-        title: 'Dr. Vasudha Rao',
-        subtitle: 'IBM University Liaison Chair',
+        src: '/images/team/faculty/kunal-biswas.jpg',
+        alt: 'Dr. Kunal Biswas',
+        title: 'Dr. Kunal Biswas',
+        subtitle: 'Assistant Professor, Dept. of Computer Science & Engineering',
+        email: 'kunal.b@srmap.edu.in',
+        linkedin: 'https://www.linkedin.com/in/kunalbiswas29',
+        bio: 'Machine Learning Researcher with a PhD in Computer Science having extensive research experience in Multimodal AI, Computer Vision, and Natural Language Processing.',
         meta: [
-          { label: 'Portfolio', value: 'IBM Global Network Charter' },
-          { label: 'Office', value: 'Dean of International Alliances' },
-          { label: 'Focus', value: 'Quantum Hardware Credentials' },
-        ],
-      },
-      {
-        src: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80',
-        alt: 'Prof. S. R. Mukhopadhyay',
-        title: 'Prof. S. R. Mukhopadhyay',
-        subtitle: 'Speaker Protocol Dean & Plenary Liaison',
-        meta: [
-          { label: 'Portfolio', value: 'Keynote & Plenary Scientists' },
-          { label: 'Council', value: 'Senior Advisory Council' },
-          { label: 'Affiliation', value: 'Distinguished Fellow' },
-        ],
-      },
-      {
-        src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
-        alt: 'Dr. Arvind Chidambaram',
-        title: 'Dr. Arvind Chidambaram',
-        subtitle: 'Mentorship Director & Associate Professor',
-        meta: [
-          { label: 'Portfolio', value: 'Hackathon Technical Jury' },
           { label: 'Department', value: 'Computer Science & Engineering' },
-          { label: 'Focus', value: 'Doctoral Code Mentors' },
+          { label: 'Designation', value: 'Assistant Professor' },
+          { label: 'Focus', value: 'Multimodal AI, CV & NLP' },
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80',
-        alt: 'Dr. Leela Krishnan',
-        title: 'Dr. Leela Krishnan',
-        subtitle: 'Editorial & Science Publishing Chair',
+        src: '/images/team/faculty/manjula-r.jpg',
+        alt: 'Dr. Manjula R',
+        title: 'Dr. Manjula R',
+        subtitle: 'Assistant Professor, Dept. of Computer Science & Engineering',
+        email: 'manjula.r@srmap.edu.in',
+        linkedin: 'https://www.linkedin.com/in/manjularaja/',
+        bio: 'Dr. Manjula R. is an Assistant Professor in the Department of Computer Science and Engineering at SRM University-AP, with research expertise in nano communication and networking, in-vivo wireless nanosensor networks, terahertz and optical communication, biomedical sensing, and Internet of Bio-Nano Things (IoBNT). Her current research focuses on developing next-generation communication, sensing, and privacy-aware solutions for cardiac healthcare and medical Internet of Things (IoT) systems. She is a Senior Member of IEEE and Fellow of IE and IETE.',
         meta: [
-          { label: 'Portfolio', value: 'Conference Archive & Proceedings' },
-          { label: 'Department', value: 'School of Sciences & Humanities' },
-          { label: 'Focus', value: 'Scientific Documentation' },
+          { label: 'Department', value: 'Computer Science & Engineering' },
+          { label: 'Designation', value: 'Assistant Professor' },
+          { label: 'Focus', value: 'IoBNT, Nano Comms & Sensing' },
+        ],
+      },
+      {
+        src: '/images/team/faculty/puppala-naga-sravanthi.jpg',
+        alt: 'Dr. Puppala Naga Sravanthi',
+        title: 'Dr. Puppala Naga Sravanthi',
+        subtitle: 'Assistant Professor, Department of CSE',
+        email: 'nagasravanthi.p@srmap.edu.in',
+        linkedin: 'https://www.linkedin.com/in/dr-naga-sravanthi-puppala-388494364/',
+        bio: 'Specialized in Blockchain architectures, decentralized protocols, and distributed ledger systems for secure applications.',
+        meta: [
+          { label: 'Department', value: 'Computer Science & Engineering' },
+          { label: 'Designation', value: 'Assistant Professor' },
+          { label: 'Focus', value: 'Blockchain & Distributed Systems' },
+        ],
+      },
+      {
+        src: '/images/team/faculty/achala-shakya.jpg',
+        alt: 'Dr. Achala Shakya',
+        title: 'Dr. Achala Shakya',
+        subtitle: 'Assistant Professor, Department of Computer Science and Engineering',
+        email: 'achala.s@srmap.edu.in',
+        linkedin: 'https://www.linkedin.com/in/dr-achala-shakya-682970126/',
+        bio: 'Dr. Achala Shakya is an Assistant Professor in the Department of Computer Science and Engineering. Her research interests include remote sensing, hyperspectral image analysis, machine learning, and deep learning, with a particular focus on land use/land cover classification and change detection using satellite imagery. She is interested in developing practical AI and data-driven approaches for solving real-world problems in geospatial and environmental applications.',
+        meta: [
+          { label: 'Department', value: 'Computer Science & Engineering' },
+          { label: 'Designation', value: 'Assistant Professor' },
+          { label: 'Focus', value: 'Remote Sensing & Hyperspectral AI' },
+        ],
+      },
+      {
+        src: '/images/team/faculty/junaid-alam.jpg',
+        alt: 'Mr. Junaid Alam',
+        title: 'Mr. Junaid Alam',
+        subtitle: 'Assistant Professor, Department of Computer Science and Engineering',
+        email: 'junaidalam.r@srmap.edu.in',
+        linkedin: 'https://www.linkedin.com/in/junaidalam-iiita/',
+        bio: 'I am specialized in applied cryptography and cybersecurity, with research interests spanning verifiable data auditing, privacy-preserving computation, zero-knowledge proofs, blockchain security, and post-quantum cryptography. My work focuses on developing reliable, privacy-preserving, and cryptographically verifiable solutions for distributed systems, edge computing, and secure data storage.',
+        meta: [
+          { label: 'Department', value: 'Computer Science & Engineering' },
+          { label: 'Designation', value: 'Assistant Professor' },
+          { label: 'Focus', value: 'Post-Quantum Crypto & Security' },
+        ],
+      },
+      {
+        src: '/images/team/faculty/mallavalli-sitharam.jpg',
+        alt: 'Dr. Mallavalli Sitharam',
+        title: 'Dr. Mallavalli Sitharam',
+        subtitle: 'Assistant Professor, Department of CSE',
+        email: 'sitharam.m@srmap.edu.in',
+        linkedin: 'https://www.linkedin.com/in/dr-m-sitha-ram-381a981b6/',
+        bio: 'Dr. M. Sitha Ram is an Assistant Professor in the Department of Computer Science and Engineering at SRM University, Andhra Pradesh. He obtained his Ph.D. from Andhra University in 2020. His research focuses on machine learning, deep learning, wireless sensor networks, and information security. He has published several papers in SCI/SCIE and Scopus-indexed journals and conferences. He is a recipient of UGC-JRF and SRF fellowships and has contributed to innovation through patents in emerging technologies.',
+        meta: [
+          { label: 'Department', value: 'Computer Science & Engineering' },
+          { label: 'Designation', value: 'Assistant Professor' },
+          { label: 'Focus', value: 'Wireless Sensor Networks & InfoSec' },
+        ],
+      },
+      {
+        src: '/images/team/faculty/rashmi-rathi-upadhyay.jpg',
+        alt: 'Dr. Rashmi Rathi Upadhyay',
+        title: 'Dr. Rashmi Rathi Upadhyay',
+        subtitle: 'Assistant Professor, Department of Computer Science and Engineering',
+        email: 'rashmirathi.u@srmap.edu.in',
+        linkedin: 'https://www.linkedin.com/in/rashmirathiupadhyay',
+        bio: 'Dr. Rashmi Rathi Upadhyay is an Assistant Professor in the Department of Computer Science and Engineering at SRM University-AP, India. His research focuses on Artificial Intelligence, Machine Learning, Deep Learning, Computer Vision, and Medical Image Analysis, with applications in healthcare and biometric security. He is actively involved in promoting technological innovation and student engagement, having organized and conducted multiple hackathons and technical events, contributed to the organization of the Smart India Hackathon, and currently serving as a Proctor Ambassador for IEEE Xtreme.',
+        meta: [
+          { label: 'Department', value: 'Computer Science & Engineering' },
+          { label: 'Designation', value: 'Assistant Professor' },
+          { label: 'Focus', value: 'Medical Image Analysis & AI' },
+        ],
+      },
+      {
+        src: '/images/team/faculty/parakrant-sarkar.jpg',
+        alt: 'Dr. Parakrant Sarkar',
+        title: 'Dr. Parakrant Sarkar',
+        subtitle: 'Assistant Professor, Department of Computer Science and Engineering',
+        email: 'parakrant.s@srmap.edu.in',
+        linkedin: 'https://parakrant.github.io/',
+        bio: 'My research focuses on machine learning and signal processing, with applications in audio, music, and multimodal data. I am interested in developing methods that improve the quality and understanding of real-world signals.',
+        meta: [
+          { label: 'Department', value: 'Computer Science & Engineering' },
+          { label: 'Designation', value: 'Assistant Professor' },
+          { label: 'Focus', value: 'Signal Processing & Multimodal AI' },
+        ],
+      },
+      {
+        src: '/images/team/faculty/suresh-kumar-kanaparthi.jpg',
+        alt: 'Dr. Suresh Kumar Kanaparthi',
+        title: 'Dr. Suresh Kumar Kanaparthi',
+        subtitle: 'Assistant Professor (SG), Dept. of Computer Science & Engineering',
+        email: 'sureshkumar.k@srmap.edu.in',
+        linkedin: 'https://www.linkedin.com/in/prof-dr-suresh-kr-kanaparthi-acharya-72572a1a/',
+        bio: 'Research interests encompass Artificial Intelligence, Machine Learning, Deep Learning, Pattern Recognition, quantum machine learning, Computer Vision and Image Processing.',
+        meta: [
+          { label: 'Department', value: 'Computer Science & Engineering' },
+          { label: 'Designation', value: 'Assistant Professor (SG)' },
+          { label: 'Focus', value: 'Quantum Machine Learning & CV' },
+        ],
+      },
+      {
+        src: '/images/team/faculty/tarkeshwar-mahto.jpg',
+        alt: 'Dr. Tarkeshwar Mahto',
+        title: 'Dr. Tarkeshwar Mahto',
+        subtitle: 'Associate Professor, Dept. of Electrical and Electronics Engineering',
+        email: 'tarkeshwar.m@srmap.edu.in',
+        linkedin: 'https://www.linkedin.com/in/dr-tarkeshwar-mahto-aab55527/',
+        bio: 'Dr. Tarkeshwar Mahto is an associate professor in the Department of Electrical and Electronics Engineering at SRM University AP, Andhra Pradesh, India. He received his M. Tech from NIT Hamirpur, HP in 2012 and Ph. D. from IIT(ISM) Dhanbad in 2017. He has published more than 25 peer-reviewed papers in scholarly journals. His present research interests are Grid Integrated RES, application of ML/DL in Electrical Engineering and Power Electronics convertors for microgrids & EVs.',
+        meta: [
+          { label: 'Department', value: 'Electrical & Electronics Engineering' },
+          { label: 'Designation', value: 'Associate Professor' },
+          { label: 'Focus', value: 'Grid RES, Power Electronics & Microgrids' },
         ],
       },
     ],
@@ -176,7 +280,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
     linkText: 'Inspect Student Coordination Hierarchy',
     slides: [
       {
-        src: '/images/team/srihaas-pigilam.jpg',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Srihaas Pigilam',
         title: 'Srihaas Pigilam',
         subtitle: 'Student General Chair & Engineering Lead',
@@ -187,7 +291,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Aditi Sharma',
         title: 'Aditi Sharma',
         subtitle: 'Hackathon Student Chair',
@@ -198,7 +302,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Pravin Nair',
         title: 'Pravin Nair',
         subtitle: 'Operations & Registration Co-Lead',
@@ -209,7 +313,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: '/images/team/pradnish-chintada.jpg',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Pradnish Chintada',
         title: 'Pradnish Chintada',
         subtitle: 'Lead UI/UX & Frontend Architecture',
@@ -220,7 +324,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Kalyan Sundaram',
         title: 'Kalyan Sundaram',
         subtitle: 'Participant Experience Lead',
@@ -246,7 +350,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
     linkText: 'Inspect Track 1 Roster',
     slides: [
       {
-        src: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Dr. K. S. Ramanujan',
         title: 'Dr. K. S. Ramanujan',
         subtitle: 'Faculty Track Lead • Quantum Algorithms',
@@ -257,7 +361,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Prof. Meera Sundaram',
         title: 'Prof. Meera Sundaram',
         subtitle: 'Curriculum Chair & Workshop Lead',
@@ -268,7 +372,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Dr. Arvind Chidambaram',
         title: 'Dr. Arvind Chidambaram',
         subtitle: 'Mentorship Director • Technical Jury',
@@ -279,7 +383,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: '/images/team/srihaas-pigilam.jpg',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Srihaas Pigilam',
         title: 'Srihaas Pigilam',
         subtitle: 'Website & Technology Lead',
@@ -305,7 +409,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
     linkText: 'Inspect Track 2 Roster',
     slides: [
       {
-        src: 'https://images.unsplash.com/photo-1580894732444-8ecded7900cd?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Dr. Vasudha Rao',
         title: 'Dr. Vasudha Rao',
         subtitle: 'IBM University Liaison Chair',
@@ -316,7 +420,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Prof. S. R. Mukhopadhyay',
         title: 'Prof. S. R. Mukhopadhyay',
         subtitle: 'Speaker Protocol Dean & Plenary Liaison',
@@ -327,7 +431,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Rajeshwar Mittal',
         title: 'Rajeshwar Mittal',
         subtitle: 'Corporate Relations & Sponsor Lead',
@@ -338,7 +442,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Archana Hegde',
         title: 'Archana Hegde',
         subtitle: 'Hospitality & Protocol Lead',
@@ -364,7 +468,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
     linkText: 'Inspect Track 3 Roster',
     slides: [
       {
-        src: 'https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Pallavi Nambiar',
         title: 'Pallavi Nambiar',
         subtitle: 'Creative Director • Brand & Visual Media',
@@ -375,7 +479,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Farhan Siddiqui',
         title: 'Farhan Siddiqui',
         subtitle: 'Media Production & Broadcast Lead',
@@ -386,7 +490,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Dr. Leela Krishnan',
         title: 'Dr. Leela Krishnan',
         subtitle: 'Editorial Chair & Scientific Chronicler',
@@ -397,7 +501,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Deepak Varghese',
         title: 'Deepak Varghese',
         subtitle: 'Community & National Outreach Lead',
@@ -423,7 +527,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
     linkText: 'Inspect Track 4 Roster',
     slides: [
       {
-        src: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Pravin Nair',
         title: 'Pravin Nair',
         subtitle: 'Registration Supervisor • Unstop Lead',
@@ -434,7 +538,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Kalyan Sundaram',
         title: 'Kalyan Sundaram',
         subtitle: 'Participant Experience Lead',
@@ -445,7 +549,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Sunita Reddy',
         title: 'Sunita Reddy',
         subtitle: 'Digital Badging & Certification Lead',
@@ -456,7 +560,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Sanjay Kulkarni',
         title: 'Sanjay Kulkarni',
         subtitle: 'Hardware Expo & Lab Installations Lead',
@@ -482,7 +586,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
     linkText: 'Inspect Track 5 Roster',
     slides: [
       {
-        src: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Col. V. R. Patnaik',
         title: 'Col. V. R. Patnaik',
         subtitle: 'Venue Operations & Logistics Director',
@@ -493,7 +597,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'R. Ramanathan',
         title: 'R. Ramanathan',
         subtitle: 'Catering Operations Supervisor',
@@ -504,7 +608,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Maj. Gen. (Retd.) B. Sharma',
         title: 'Maj. Gen. (Retd.) B. Sharma',
         subtitle: 'Chief Security Officer',
@@ -515,7 +619,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Suresh Babu',
         title: 'Suresh Babu',
         subtitle: 'Stage Tech & Acoustics Specialist',
@@ -541,7 +645,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
     linkText: 'Open Full Organizing Roster',
     slides: [
       {
-        src: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Dr. K. S. Ramanujan',
         title: 'Dr. K. S. Ramanujan',
         subtitle: 'Faculty Co-Lead (Quantum Algorithms)',
@@ -552,7 +656,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Aditi Sharma',
         title: 'Aditi Sharma',
         subtitle: 'Hackathon Problem Lead',
@@ -563,7 +667,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Rohan Varma',
         title: 'Rohan Varma',
         subtitle: 'Benchmarking Specialist',
@@ -574,7 +678,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Pooja Nair',
         title: 'Pooja Nair',
         subtitle: 'Algorithm Evaluator',
@@ -597,7 +701,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
     linkText: 'Open Full Organizing Roster',
     slides: [
       {
-        src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Dr. Arvind Chidambaram',
         title: 'Dr. Arvind Chidambaram',
         subtitle: 'Mentorship Director & Associate Professor',
@@ -608,7 +712,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Divya Patel',
         title: 'Divya Patel',
         subtitle: 'Mentor Coordinator',
@@ -619,7 +723,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Vikram Sethi',
         title: 'Vikram Sethi',
         subtitle: 'Jury Secretary',
@@ -642,7 +746,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
     linkText: 'Open Website Team Roster',
     slides: [
       {
-        src: '/images/team/srihaas-pigilam.jpg',
+        src: '/images/team/srihaas-pigilam.webp',
         alt: 'Srihaas Pigilam',
         title: 'Srihaas Pigilam',
         subtitle: 'Team Leader',
@@ -653,7 +757,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: '/images/team/pradnish-chintada.jpg',
+        src: '/images/team/pradnish-chintada.webp',
         alt: 'Pradnish Chintada',
         title: 'Pradnish Chintada',
         subtitle: 'Lead UI/UX and Frontend',
@@ -664,7 +768,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: '/images/team/shaik-subhani.jpg',
+        src: '/images/team/shaik-subhani.webp',
         alt: 'Shaik Mahaboob Subhani',
         title: 'Shaik Mahaboob Subhani',
         subtitle: 'Co-lead UI/UX and Components',
@@ -675,7 +779,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: '/images/team/robert-bandaru.jpg',
+        src: '/images/team/robert-bandaru.webp',
         alt: 'Robert Bandaru',
         title: 'Robert Bandaru',
         subtitle: 'UI/UX and documentation',
@@ -686,7 +790,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: '/images/team/sandeep-nambi.jpg',
+        src: '/images/team/sandeep-nambi.webp',
         alt: 'Sandeep Nambi',
         title: 'Sandeep Nambi',
         subtitle: 'UI/UX Technical and Documentation',
@@ -709,7 +813,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
     linkText: 'Open Full Organizing Roster',
     slides: [
       {
-        src: 'https://images.unsplash.com/photo-1580894732444-8ecded7900cd?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Dr. Vasudha Rao',
         title: 'Dr. Vasudha Rao',
         subtitle: 'IBM University Liaison Chair',
@@ -720,7 +824,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Rajeshwar Mittal',
         title: 'Rajeshwar Mittal',
         subtitle: 'Corporate Relations Lead',
@@ -731,7 +835,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Karthik Raja',
         title: 'Karthik Raja',
         subtitle: 'Academic Outreach Lead',
@@ -754,7 +858,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
     linkText: 'Open Full Organizing Roster',
     slides: [
       {
-        src: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Prof. S. R. Mukhopadhyay',
         title: 'Prof. S. R. Mukhopadhyay',
         subtitle: 'Speaker Protocol Dean & Plenary Liaison',
@@ -765,7 +869,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Archana Hegde',
         title: 'Archana Hegde',
         subtitle: 'Hospitality Lead',
@@ -776,7 +880,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Gaurav Malhotra',
         title: 'Gaurav Malhotra',
         subtitle: 'Keynote Coordinator',
@@ -799,7 +903,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
     linkText: 'Open Full Organizing Roster',
     slides: [
       {
-        src: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Deepak Varghese',
         title: 'Deepak Varghese',
         subtitle: 'Community Manager & Outreach Lead',
@@ -810,7 +914,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Nisha Agarwal',
         title: 'Nisha Agarwal',
         subtitle: 'PR Associate',
@@ -833,7 +937,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
     linkText: 'Open Full Organizing Roster',
     slides: [
       {
-        src: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Dr. Leela Krishnan',
         title: 'Dr. Leela Krishnan',
         subtitle: 'Editorial Chair & Science Publisher',
@@ -844,7 +948,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Anandita Bose',
         title: 'Anandita Bose',
         subtitle: 'Science Writer',
@@ -855,7 +959,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Varun Teja',
         title: 'Varun Teja',
         subtitle: 'Conference Chronicler',
@@ -878,7 +982,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
     linkText: 'Open Full Organizing Roster',
     slides: [
       {
-        src: 'https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Pallavi Nambiar',
         title: 'Pallavi Nambiar',
         subtitle: 'Creative Director',
@@ -889,7 +993,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: '/images/team/pradnish-chintada.jpg',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Pradnish Chintada',
         title: 'Pradnish Chintada',
         subtitle: 'Digital Brand System Architect',
@@ -912,7 +1016,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
     linkText: 'Open Full Organizing Roster',
     slides: [
       {
-        src: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Farhan Siddiqui',
         title: 'Farhan Siddiqui',
         subtitle: 'Media Production Lead',
@@ -923,7 +1027,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Rahul Dev',
         title: 'Rahul Dev',
         subtitle: 'Cinematographer',
@@ -934,7 +1038,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Megha Pillai',
         title: 'Megha Pillai',
         subtitle: 'Live Stream Engineer',
@@ -957,7 +1061,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
     linkText: 'Open Full Organizing Roster',
     slides: [
       {
-        src: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Sanjay Kulkarni',
         title: 'Sanjay Kulkarni',
         subtitle: 'Lab Systems Specialist',
@@ -968,7 +1072,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Tariq Mansoor',
         title: 'Tariq Mansoor',
         subtitle: 'Network & Hardware Rig Engineer',
@@ -979,7 +1083,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Ananya Iyer',
         title: 'Ananya Iyer',
         subtitle: 'Poster Session Curator',
@@ -1002,7 +1106,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
     linkText: 'Open Full Organizing Roster',
     slides: [
       {
-        src: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Pravin Nair',
         title: 'Pravin Nair',
         subtitle: 'Registration Supervisor',
@@ -1013,7 +1117,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Kavya Menon',
         title: 'Kavya Menon',
         subtitle: 'Unstop Portal Liaison',
@@ -1024,7 +1128,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Ashwin Pillai',
         title: 'Ashwin Pillai',
         subtitle: 'Credential Verification Officer',
@@ -1047,7 +1151,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
     linkText: 'Open Full Organizing Roster',
     slides: [
       {
-        src: 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Kalyan Sundaram',
         title: 'Kalyan Sundaram',
         subtitle: 'Helpdesk Coordinator',
@@ -1058,7 +1162,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Siddhi Gupta',
         title: 'Siddhi Gupta',
         subtitle: 'Accessibility Desk Lead',
@@ -1069,7 +1173,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Mohit Jain',
         title: 'Mohit Jain',
         subtitle: 'Attendee Support Associate',
@@ -1092,7 +1196,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
     linkText: 'Open Full Organizing Roster',
     slides: [
       {
-        src: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Col. V. R. Patnaik',
         title: 'Col. V. R. Patnaik',
         subtitle: 'Venue Operations Director',
@@ -1103,7 +1207,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Suresh Babu',
         title: 'Suresh Babu',
         subtitle: 'Acoustics & Stage Tech Lead',
@@ -1114,7 +1218,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Dinesh Reddy',
         title: 'Dinesh Reddy',
         subtitle: 'Workstation Setup Lead',
@@ -1137,7 +1241,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
     linkText: 'Open Full Organizing Roster',
     slides: [
       {
-        src: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'K. Venkatesh',
         title: 'K. Venkatesh',
         subtitle: 'Finance Comptroller & Chief Auditor',
@@ -1148,7 +1252,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Ritu Sachdeva',
         title: 'Ritu Sachdeva',
         subtitle: 'Procurement Officer',
@@ -1171,7 +1275,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
     linkText: 'Open Full Organizing Roster',
     slides: [
       {
-        src: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Sameer Khan',
         title: 'Sameer Khan',
         subtitle: 'Volunteer Corps Marshal',
@@ -1182,7 +1286,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Lavanya Chandran',
         title: 'Lavanya Chandran',
         subtitle: 'Shift & Roster Coordinator',
@@ -1205,7 +1309,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
     linkText: 'Open Full Organizing Roster',
     slides: [
       {
-        src: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'R. Ramanathan',
         title: 'R. Ramanathan',
         subtitle: 'Catering Operations Supervisor',
@@ -1216,7 +1320,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Vinod Chandran',
         title: 'Vinod Chandran',
         subtitle: 'Midnight Refreshments Lead',
@@ -1227,7 +1331,7 @@ export const FLOWCHART_ROSTER_DATA: Record<string, FlowchartModalData> = {
         ],
       },
       {
-        src: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80',
+        src: GENERIC_PERSON_AVATAR,
         alt: 'Geetha S.',
         title: 'Geetha S.',
         subtitle: 'Nutrition & Dietary Compliance',

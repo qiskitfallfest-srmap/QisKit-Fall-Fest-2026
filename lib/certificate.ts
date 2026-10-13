@@ -17,7 +17,7 @@ export interface EligibilityResult {
   totalSessions: number;
   sessionsCompleted: number;
   quizzesPassed: number;
-  competitionsSubmitted: number;
+  competitionsSubmitted?: number;
   averageQuizScore: number;
   missingTasks: string[];
 }
@@ -87,7 +87,7 @@ export async function checkCertificateEligibility(
     }
   }
 
-  // 4. Evaluate sessions & quizzes
+  // 4. Evaluate sessions & quizzes (Strict Requirement: All Videos Watched + All Quizzes Passed)
   const missingTasks: string[] = [];
   let sessionsCompleted = 0;
   let quizzesPassed = 0;
@@ -95,13 +95,14 @@ export async function checkCertificateEligibility(
 
   for (const session of CURRICULUM_SESSIONS) {
     const prog = progressMap.get(session.id);
-    const videoDone = prog?.video_completed === true;
     const quizDone = prog?.quiz_passed === true;
+    const videoDone = prog?.video_completed === true;
+    const cleanSessionTitle = session.title.replace(/^Session \d+:\s*/, '');
 
     if (videoDone) {
       sessionsCompleted++;
     } else {
-      missingTasks.push(`Session ${session.sessionNumber} Video Lecture incomplete`);
+      missingTasks.push(`Session ${session.sessionNumber} Video Lecture (${cleanSessionTitle}) not watched`);
     }
 
     if (quizDone) {
@@ -112,31 +113,13 @@ export async function checkCertificateEligibility(
     }
   }
 
-  // 5. Evaluate competitions (reels, poster, essay)
-  const requiredCompTypes = ['reels', 'poster', 'essay'] as const;
-  const compLabels: Record<string, string> = {
-    reels: 'Day 1 Quantum Tech Reels',
-    poster: 'Day 2 Digital Poster',
-    essay: 'Day 3 Essay Competition',
-  };
-
-  let competitionsSubmitted = 0;
-  for (const cType of requiredCompTypes) {
-    if (submittedTypes.has(cType)) {
-      competitionsSubmitted++;
-    } else {
-      missingTasks.push(`${compLabels[cType]} submission missing`);
-    }
-  }
-
   const totalSessions = CURRICULUM_SESSIONS.length;
   const averageQuizScore =
     quizzesPassed > 0 ? Math.round((totalScore / totalSessions) * 10) / 10 : 0;
 
   const eligible =
     sessionsCompleted === totalSessions &&
-    quizzesPassed === totalSessions &&
-    competitionsSubmitted === requiredCompTypes.length;
+    quizzesPassed === totalSessions;
 
   return {
     eligible,
@@ -144,7 +127,7 @@ export async function checkCertificateEligibility(
     totalSessions,
     sessionsCompleted,
     quizzesPassed,
-    competitionsSubmitted,
+    competitionsSubmitted: submittedTypes.size,
     averageQuizScore,
     missingTasks,
   };
@@ -258,19 +241,19 @@ export function generateCertificateSVG({
 
   <!-- Course description -->
   <text x="960" y="580" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="500" fill="#334155">
-    for rigorous completion of the 6-part progressive curriculum in Quantum Circuit Synthesis,
+    for rigorous completion of the ${CURRICULUM_SESSIONS.length}-part progressive curriculum in Quantum Circuit Synthesis,
   </text>
   <text x="960" y="612" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="500" fill="#334155">
     Hardware Architectures, Quantum Sensing, QML, and Post-Quantum Cryptography,
   </text>
   <text x="960" y="644" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="500" fill="#334155">
-    including all daily creative competitions and technical mastery evaluations.
+    including all curriculum video lectures and technical concept evaluations.
   </text>
 
   <!-- Distinction Badge Box -->
   <rect x="760" y="685" width="400" height="42" rx="21" fill="#f8fafc" stroke="#d4af37" stroke-width="1.5"/>
   <text x="960" y="712" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" letter-spacing="1" fill="#800020">
-    ★ ${distinction.toUpperCase()} (${averageScore}%) ★
+    ${distinction.toUpperCase()} (${averageScore}%)
   </text>
 
   <!-- Signatures Section -->
@@ -358,24 +341,31 @@ export async function mintCertificate({
     verificationUrl,
   });
 
-  // Upload SVG asset to Supabase Storage bucket 'certificates'
+  // Upload SVG asset to Supabase Storage bucket 'certificates' (optional bucket fallback)
   const filePath = `masterclass/2026/${serialNumber}.svg`;
-  const { error: uploadError } = await supabase.storage
-    .from('certificates')
-    .upload(filePath, Buffer.from(svgContent, 'utf-8'), {
-      contentType: 'image/svg+xml',
-      upsert: true,
-      cacheControl: '31536000',
-    });
-
   let certificateUrl = `${siteUrl}/verify-certificate/${serialNumber}`;
-  if (!uploadError) {
-    const { data: publicUrlData } = supabase.storage
+
+  try {
+    const { error: uploadError } = await supabase.storage
       .from('certificates')
-      .getPublicUrl(filePath);
-    if (publicUrlData?.publicUrl) {
-      certificateUrl = publicUrlData.publicUrl;
+      .upload(filePath, Buffer.from(svgContent, 'utf-8'), {
+        contentType: 'image/svg+xml',
+        upsert: true,
+        cacheControl: '31536000',
+      });
+
+    if (!uploadError) {
+      const { data: publicUrlData } = supabase.storage
+        .from('certificates')
+        .getPublicUrl(filePath);
+      if (publicUrlData?.publicUrl) {
+        certificateUrl = publicUrlData.publicUrl;
+      }
+    } else {
+      console.warn('[Mint Certificate] Storage upload warning:', uploadError.message);
     }
+  } catch (storageErr) {
+    console.warn('[Mint Certificate] Storage upload exception, using verification URL fallback:', storageErr);
   }
 
   // Insert into issued_certificates table

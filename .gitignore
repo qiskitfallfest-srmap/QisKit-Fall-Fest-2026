@@ -38,3 +38,11 @@ yarn-error.log*
 .vscode/
 /dt_venue*
 scratch/
+*.csv
+
+# Python
+__pycache__/
+*.pyc
+
+# Local scratch & temporary backups
+.tmp/

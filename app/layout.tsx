@@ -1,8 +1,7 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { ThemeProvider } from '@/components/shared/ThemeProvider';
 import { Navbar } from '@/components/shared/Navbar';
 import { LoadScreen } from '@/components/shared/LoadScreen';
-import { CustomCursor } from '@/components/shared/CustomCursor';
 import { SmoothScrollProvider } from '@/components/shared/SmoothScrollProvider';
 import { JsonLd } from '@/components/shared/JsonLd';
 import {
@@ -12,10 +11,21 @@ import {
   generateEventSeriesSchema,
 } from '@/config/seo';
 import { OAuthRedirectHandler } from '@/components/shared/OAuthRedirectHandler';
+import { DeadlineToast } from '@/components/shared/DeadlineToast';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { AnalyticsProvider } from '@/components/shared/AnalyticsProvider';
 import './globals.css'; // Global styles
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#F5F3F0' },
+    { media: '(prefers-color-scheme: dark)', color: '#3A0B10' },
+  ],
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_CONFIG.primaryDomain),
@@ -62,7 +72,7 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: `${SITE_CONFIG.primaryDomain}/og-image.png`,
+        url: `${SITE_CONFIG.primaryDomain}/og-image.webp`,
         width: 1200,
         height: 630,
         alt: `${SITE_CONFIG.brandName} - SRM University-AP x IBM Quantum`,
@@ -75,7 +85,7 @@ export const metadata: Metadata = {
     creator: SITE_CONFIG.social.twitterCreator,
     title: `${SITE_CONFIG.brandName} | SRM University-AP`,
     description: SITE_CONFIG.description,
-    images: [`${SITE_CONFIG.primaryDomain}/og-image.png`],
+    images: [`${SITE_CONFIG.primaryDomain}/og-image.webp`],
   },
   robots: {
     index: true,
@@ -87,6 +97,9 @@ export const metadata: Metadata = {
       'max-image-preview': 'large',
       'max-snippet': -1,
     },
+  },
+  verification: {
+    google: 'ImpHmHcChqS0XzVkf0aleBq0z7bdm9VO274Mj3mMQGY',
   },
 };
 
@@ -103,8 +116,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <SmoothScrollProvider>
             <AnalyticsProvider />
             <OAuthRedirectHandler />
-            <CustomCursor />
             <LoadScreen />
+            <DeadlineToast />
             <Navbar />
             {children}
             <Analytics />

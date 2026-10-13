@@ -408,7 +408,7 @@ export function Navbar() {
             {/* Qiskit Globe Mark */}
             <div className="relative h-[48px] w-[48px] sm:h-[54px] sm:w-[54px] xl:h-[52px] xl:w-[52px] shrink-0">
               <Image
-                src="/images/branding/HOME-09-FOOTER-QISKIT-DARK.png"
+                src="/images/branding/HOME-09-FOOTER-QISKIT-DARK.webp"
                 alt="Qiskit Mark"
                 width={54}
                 height={54}
@@ -416,7 +416,7 @@ export function Navbar() {
                 referrerPolicy="no-referrer"
               />
               <Image
-                src="/images/branding/HOME-09-FOOTER-QISKIT-LIGHT.png"
+                src="/images/branding/HOME-09-FOOTER-QISKIT-LIGHT.webp"
                 alt="Qiskit Mark"
                 width={54}
                 height={54}
@@ -554,7 +554,7 @@ export function Navbar() {
           {/* Official SRM University-AP Production Logo */}
           <div className="relative h-[56px] w-[124px] 2xl:w-[140px] shrink-0">
             <Image
-              src="/brand/srmap/SRMAP-Logo-Main.png"
+              src="/brand/srmap/SRMAP-Logo-Main.webp"
               alt="SRM University-AP"
               width={140}
               height={56}

@@ -26,7 +26,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { CoverflowCarousel } from '@/components/ui/coverflow-carousel';
-import { FLOWCHART_ROSTER_DATA, FlowchartModalData } from './flowchart-roster-data';
+import { FLOWCHART_ROSTER_DATA, FlowchartModalData, GENERIC_PERSON_AVATAR } from './flowchart-roster-data';
 
 // ─────────────────────────────────────────────────────────────
 // DATA SPECIFICATION — 100% VERBATIM MATCH TO DIAGRAM
@@ -81,7 +81,7 @@ export function OrganizationalTreeChart() {
         linkText: fallbackCell.id === 'cell-3' ? 'Open Website Team Roster' : 'Open Full Organizing Roster',
         slides: [
           {
-            src: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=800&q=80',
+            src: GENERIC_PERSON_AVATAR,
             alt: fallbackCell.label,
             title: fallbackCell.label,
             subtitle: fallbackCell.focusArea,
@@ -674,10 +674,17 @@ export function OrganizationalTreeChart() {
               key={track.id}
               className="rounded-2xl border border-[#3A0B10]/15 dark:border-white/10 bg-white dark:bg-[#200508] shadow-sm overflow-hidden"
             >
-              <button
-                type="button"
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => setSelectedTrackId(selectedTrackId === track.id ? null : track.id)}
-                className="w-full p-4 flex items-center justify-between text-left hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSelectedTrackId(selectedTrackId === track.id ? null : track.id);
+                  }
+                }}
+                className="w-full p-4 flex items-center justify-between text-left hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-[#3A0B10]/10 dark:bg-white/10 text-[#800020] dark:text-[#B08D57]">
@@ -710,7 +717,7 @@ export function OrganizationalTreeChart() {
                     className={cn("transition-transform duration-200 text-[#3A0B10]/60 dark:text-white/60", isExpanded ? "rotate-180" : "rotate-0")}
                   />
                 </div>
-              </button>
+              </div>
 
               {isExpanded && (
                 <div className="p-4 pt-0 border-t border-[#3A0B10]/10 dark:border-white/10 space-y-2 mt-2">
@@ -953,7 +960,7 @@ export function OrganizationalTreeChart() {
                 exit={{ opacity: 0, scale: 0.95, y: 15 }}
                 transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                 onClick={(e) => e.stopPropagation()}
-                className="relative w-[95vw] max-w-5xl flex flex-col rounded-3xl bg-white dark:bg-[#1A0407] border-2 border-[#800020]/30 dark:border-[#B08D57]/40 shadow-2xl overflow-hidden my-auto shrink-0"
+                className="relative w-[95vw] max-w-5xl max-h-[92vh] flex flex-col rounded-3xl bg-white dark:bg-[#1A0407] border-2 border-[#800020]/30 dark:border-[#B08D57]/40 shadow-2xl overflow-hidden my-auto shrink-0"
               >
                 {/* Modal Header */}
                 <div className="flex items-center justify-between gap-4 px-6 sm:px-8 py-3.5 sm:py-4 border-b border-[#3A0B10]/10 dark:border-white/10 shrink-0 bg-[#FAF9F6]/95 dark:bg-black/40 backdrop-blur-sm">
@@ -1021,8 +1028,8 @@ export function OrganizationalTreeChart() {
                   </div>
                 </div>
 
-                {/* Modal Body: ONLY THE CAROUSEL COMPONENT - NO EXTRA TEXT - NO VERTICAL SCROLL */}
-                <div className="w-full overflow-hidden px-4 sm:px-8 py-4 sm:py-5 flex flex-col items-center justify-center bg-gradient-to-b from-transparent via-[#800020]/[0.02] to-[#800020]/[0.04] dark:via-white/[0.01] dark:to-white/[0.02]">
+                {/* Modal Body: CAROUSEL COMPONENT WITH CLEAN SCROLLING SUPPORT */}
+                <div className="w-full overflow-y-auto max-h-[calc(92vh-80px)] px-4 sm:px-8 py-4 sm:py-5 flex flex-col items-center justify-center bg-gradient-to-b from-transparent via-[#800020]/[0.02] to-[#800020]/[0.04] dark:via-white/[0.01] dark:to-white/[0.02]">
                   <CoverflowCarousel
                     slides={activeModalData.slides}
                     cardWidth="clamp(160px, 18vw, 220px)"

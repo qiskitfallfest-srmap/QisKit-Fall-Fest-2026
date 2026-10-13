@@ -4,6 +4,8 @@ import { SUPER_ADMIN_EMAILS } from '@/lib/auth';
 
 const COOKIE_NAME = 'qff_auth_session';
 
+export const runtime = 'edge';
+
 export async function GET(request: NextRequest) {
   const sessionCookie = request.cookies.get(COOKIE_NAME);
   if (!sessionCookie || !sessionCookie.value) {
@@ -26,11 +28,21 @@ export async function GET(request: NextRequest) {
 
     const role = isSuperAdmin ? 'admin' : whitelist.role || 'participant';
 
+    const isCleanWhitelistName =
+      Boolean(whitelist.fullName) &&
+      !whitelist.fullName!.includes('|') &&
+      !/^\d{5,}-/.test(whitelist.fullName!);
+
+    const resolvedFullName =
+      (parsed.fullName && !parsed.fullName.includes('|'))
+        ? parsed.fullName
+        : (isCleanWhitelistName ? whitelist.fullName! : (parsed.fullName || whitelist.fullName || email.split('@')[0]));
+
     return NextResponse.json({
       authenticated: true,
       session: {
         email,
-        fullName: parsed.fullName || whitelist.fullName || email.split('@')[0],
+        fullName: resolvedFullName,
         role,
         isAdmin: isSuperAdmin || role === 'admin',
       },
@@ -60,7 +72,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error:
-            'You are not eligible participant. Please register in Unstop and check back after October 7, 11:59 PM.',
+            'You are not eligible participant. Please register in Unstop and check back after few hours.',
           registrationUrl:
             'https://unstop.com/college-fests/qiskit-fall-fest-srmap-2026-srm-university-amaravati-515345',
         },
@@ -69,9 +81,19 @@ export async function POST(request: NextRequest) {
     }
 
     const role = isSuperAdmin ? 'admin' : whitelist.role || 'participant';
+    const isCleanWhitelistName =
+      Boolean(whitelist.fullName) &&
+      !whitelist.fullName!.includes('|') &&
+      !/^\d{5,}-/.test(whitelist.fullName!);
+
+    const resolvedFullName =
+      (fullName && !fullName.includes('|'))
+        ? fullName
+        : (isCleanWhitelistName ? whitelist.fullName! : (fullName || whitelist.fullName || email.split('@')[0]));
+
     const sessionData = {
       email,
-      fullName: fullName || whitelist.fullName || email.split('@')[0],
+      fullName: resolvedFullName,
       role,
       isAdmin: isSuperAdmin || role === 'admin',
     };

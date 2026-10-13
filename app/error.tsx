@@ -1,8 +1,40 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { RotateCw, ArrowLeft } from 'lucide-react';
+
+function isChunkLoadError(err: unknown): boolean {
+  if (!err) return false;
+  const msg =
+    typeof err === 'object' && 'message' in err && typeof (err as any).message === 'string'
+      ? (err as any).message
+      : String(err);
+  const name =
+    typeof err === 'object' && 'name' in err && typeof (err as any).name === 'string'
+      ? (err as any).name
+      : '';
+
+  return (
+    name === 'ChunkLoadError' ||
+    /Loading chunk [\d\w-]+ failed/i.test(msg) ||
+    /Failed to fetch dynamically imported module/i.test(msg) ||
+    /Importing a module script failed/i.test(msg) ||
+    /error loading dynamically imported module/i.test(msg)
+  );
+}
+
+function isDomMutationError(err: unknown): boolean {
+  if (!err) return false;
+  const msg =
+    typeof err === 'object' && 'message' in err && typeof (err as any).message === 'string'
+      ? (err as any).message
+      : String(err);
+  return (
+    msg.includes("Failed to execute 'removeChild' on 'Node'") ||
+    msg.includes("Failed to execute 'insertBefore' on 'Node'")
+  );
+}
 
 export default function Error({
   error,
@@ -11,10 +43,46 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const hasAutoRetriedRef = useRef(false);
+  const manualRetryCountRef = useRef(0);
+
   useEffect(() => {
     // Log error securely without exposing stack trace to the UI
     console.error('Application error occurred:', error?.message || error);
-  }, [error]);
+
+    // 1. Auto-recover from stale deployment ChunkLoadError (once per 15s window)
+    if (typeof window !== 'undefined' && isChunkLoadError(error)) {
+      try {
+        const lastReload = Number(sessionStorage.getItem('qff_chunk_reload_ts') || '0');
+        const now = Date.now();
+        if (now - lastReload > 15000) {
+          sessionStorage.setItem('qff_chunk_reload_ts', String(now));
+          window.location.reload();
+          return;
+        }
+      } catch {
+        // Ignore sessionStorage restrictions
+      }
+    }
+
+    // 2. Auto-recover once from browser-extension / translation DOM reconciliation errors
+    if (!hasAutoRetriedRef.current && isDomMutationError(error)) {
+      hasAutoRetriedRef.current = true;
+      reset();
+    }
+  }, [error, reset]);
+
+  const handleRetry = () => {
+    manualRetryCountRef.current += 1;
+    if (
+      typeof window !== 'undefined' &&
+      (isChunkLoadError(error) || manualRetryCountRef.current > 1)
+    ) {
+      window.location.reload();
+      return;
+    }
+    reset();
+  };
 
   return (
     <main
@@ -75,7 +143,7 @@ export default function Error({
 
         <div className="mt-8 flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full justify-center">
           <button
-            onClick={() => reset()}
+            onClick={handleRetry}
             data-cursor="cta"
             className="
               group w-full sm:w-auto inline-flex items-center justify-center gap-2

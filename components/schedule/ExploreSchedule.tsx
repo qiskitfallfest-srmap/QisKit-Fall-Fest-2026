@@ -67,6 +67,14 @@ export function ExploreSchedule({ currentPhase = 'offline', onPhaseChange, targe
     return null;
   }, [selectedId, activeDay]);
 
+  const [activePanelSession, setActivePanelSession] = useState<Session | null>(null);
+
+  useEffect(() => {
+    if (selectedSession) {
+      setActivePanelSession(selectedSession);
+    }
+  }, [selectedSession]);
+
   const selectDay = (index: number) => {
     setDayIndex(index);
     setSelectedId(null);
@@ -74,6 +82,7 @@ export function ExploreSchedule({ currentPhase = 'offline', onPhaseChange, targe
 
   const renderDetailContent = (session: Session) => {
     const action = getSessionAction(session, currentPhase);
+
     return (
       <aside className="rounded-3xl border border-[#D9D0CB] dark:border-[rgba(108,21,30,0.4)] bg-white dark:bg-[#1C0709] p-5 sm:p-6 shadow-2xl space-y-5 transition-colors">
       
@@ -255,9 +264,9 @@ export function ExploreSchedule({ currentPhase = 'offline', onPhaseChange, targe
             <div>
               <div className="font-bold uppercase tracking-[0.14em] sm:tracking-[0.28em] text-[11px] sm:text-xs text-[#A7192A] dark:text-[#EF7885] inline-flex items-center gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap">
                 <span className="block h-px w-4 sm:w-5 bg-[#A7192A] dark:bg-[#EF7885] shrink-0" />
-                <span>On-Campus Phase</span>
+                <span>{phaseInfo.title}</span>
                 <span>&middot;</span>
-                <span className="whitespace-nowrap">26&ndash;30 October 2026</span>
+                <span className="whitespace-nowrap">{phaseInfo.dateRange}</span>
               </div>
 
               <h2 className="mt-2 font-serif text-[clamp(2rem,3.5vw,3.5rem)] font-bold leading-[0.96] tracking-[-0.04em] text-[#A7192A] dark:text-[#EA8793]">
@@ -268,6 +277,17 @@ export function ExploreSchedule({ currentPhase = 'offline', onPhaseChange, targe
               <p className="mt-3 max-w-[720px] font-sans font-normal text-sm sm:text-base leading-relaxed text-[#4E4441] dark:text-[#D6CDCA]">
                 Browse verified on-campus sessions across all 5 days, filter by track, and plan your Fall Fest experience at SRM University-AP.
               </p>
+
+              {currentPhase === 'online' && (
+                <div className="mt-3.5 inline-flex flex-wrap items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-950 dark:text-amber-200 text-xs">
+                  <span className="font-mono font-bold uppercase tracking-wider text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-900 dark:text-amber-300">
+                    Deadline Extended
+                  </span>
+                  <span>
+                    Creative competitions (Tech Reels, Digital Poster, Technical Essay) are open until 14 Oct, 11:59 PM IST.
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Venue Location Pill */}
@@ -375,28 +395,31 @@ export function ExploreSchedule({ currentPhase = 'offline', onPhaseChange, targe
           {/* LEFT TIMELINE COLUMN (12 cols when collapsed, 7 cols when session selected on desktop) */}
           <div 
             className={`transition-[grid-column,width,max-width] duration-300 ease-in-out flex flex-col space-y-4 ${
-              selectedSession ? 'lg:col-span-7' : 'lg:col-span-12'
+              activePanelSession ? 'lg:col-span-7' : 'lg:col-span-12'
             }`}
           >
             
-            <div className="flex items-center justify-between px-2 pb-2 border-b border-[#D9D0CB] dark:border-white/10">
-              <h3
-                id={activeDay ? `heading-${activeDay.id}` : undefined}
-                className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-[#13090A] dark:text-[#F6F2F1] scroll-mt-24 sm:scroll-mt-28"
-              >
-                {activeDay?.weekday}, {activeDay?.date} 2026
-                <span className="ml-2 text-xs font-sans font-normal text-[#665B57] dark:text-[#BEB5B4]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1 pb-2 border-b border-[#D9D0CB] dark:border-white/10">
+              <div className="flex flex-wrap items-baseline gap-x-2">
+                <h3
+                  id={activeDay ? `heading-${activeDay.id}` : undefined}
+                  className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-[#13090A] dark:text-[#F6F2F1] scroll-mt-24 sm:scroll-mt-28"
+                >
+                  {activeDay?.weekday}, {activeDay?.date} 2026
+                </h3>
+                <span className="text-xs sm:text-sm font-sans font-normal text-[#665B57] dark:text-[#BEB5B4] whitespace-nowrap">
                   ({visibleSessions.length} session{visibleSessions.length === 1 ? '' : 's'})
                 </span>
-              </h3>
-              <div className="flex items-center gap-3">
+              </div>
+
+              <div className="flex items-center gap-3 shrink-0">
                 {!selectedSession && visibleSessions.length > 0 && (
                   <span className="hidden sm:inline-block text-[11px] font-mono font-medium text-[#6C151E]/80 dark:text-[#E45464]/80">
                     &bull; Click any card to expand full session details
                   </span>
                 )}
-                <span className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-[#6C151E] dark:text-[#E45464]">
-                  All Times IST
+                <span className="font-mono text-[11px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-[#6C151E] dark:text-[#E45464] whitespace-nowrap shrink-0">
+                  ALL TIMES IST
                 </span>
               </div>
             </div>
@@ -427,9 +450,11 @@ export function ExploreSchedule({ currentPhase = 'offline', onPhaseChange, targe
                             <span className="font-mono text-sm font-semibold text-[#6C151E] dark:text-[#E45464]">
                               {session.time}
                             </span>
-                            <span className="font-mono text-xs text-[#665B57] dark:text-[#BEB5B4]">
-                              &mdash; {session.end}
-                            </span>
+                            {session.end && (
+                              <span className="font-mono text-xs text-[#665B57] dark:text-[#BEB5B4]">
+                                &mdash; {session.end}
+                              </span>
+                            )}
                           </div>
 
                           {/* Session Content */}
@@ -468,8 +493,7 @@ export function ExploreSchedule({ currentPhase = 'offline', onPhaseChange, targe
                                   </Link>
                                 )
                               ) : (
-                                <span>{session.title}</span>
-                              )}
+                                <span>{session.title}</span>                              )}
                             </h4>
 
                             <p className="font-sans font-normal text-xs sm:text-sm leading-relaxed text-[#665B57] dark:text-[#BEB5B4] line-clamp-2">
@@ -502,16 +526,24 @@ export function ExploreSchedule({ currentPhase = 'offline', onPhaseChange, targe
                                 <span>{action.cardLabel}</span>
                                 <ArrowRight size={13} />
                               </Link>
-                            )
-                          )}
+                            )                          )}
 
-                          <div className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
-                            isSelected
-                              ? 'bg-[#6C151E] text-white'
-                              : 'bg-[#6C151E]/10 text-[#6C151E] dark:bg-white/10 dark:text-white group-hover:bg-[#6C151E] group-hover:text-white'
-                          }`}>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedId(isSelected ? null : session.id);
+                            }}
+                            className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors shrink-0 ${
+                              isSelected
+                                ? 'bg-[#6C151E] text-white'
+                                : 'bg-[#6C151E]/10 text-[#6C151E] dark:bg-white/10 dark:text-white hover:bg-[#6C151E] hover:text-white'
+                            }`}
+                            title={isSelected ? "Close details" : "View session details"}
+                            aria-label={isSelected ? "Close session details" : "View session details"}
+                          >
                             <ArrowRight size={15} className={`transition-transform duration-200 ${isSelected ? 'rotate-90' : ''}`} />
-                          </div>
+                          </button>
                         </div>
 
                       </div>
@@ -547,15 +579,22 @@ export function ExploreSchedule({ currentPhase = 'offline', onPhaseChange, targe
           </div>
 
           {/* RIGHT SELECTED SESSION DETAIL PANEL (5 cols desktop, slides in cleanly when session clicked) */}
-          <div className="hidden lg:block lg:col-span-5 sticky top-24">
-            <AnimatePresence mode="wait">
+          <div className={`hidden lg:block transition-all duration-300 ease-in-out ${activePanelSession ? 'lg:col-span-5 sticky top-24' : 'hidden'}`}>
+            <AnimatePresence
+              mode="wait"
+              onExitComplete={() => {
+                if (!selectedSession) {
+                  setActivePanelSession(null);
+                }
+              }}
+            >
               {selectedSession && (
                 <motion.div 
                   key={selectedSession.id}
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                  transition={{ duration: 0.22, ease: 'easeOut' }}
                 >
                   {renderDetailContent(selectedSession)}
                 </motion.div>

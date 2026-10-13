@@ -9,6 +9,8 @@ export const PROBLEM_STATEMENTS: ProblemStatement[] = [
     vertical: 'Quantum Chemistry',
     title: 'PS-C1: H₂ Ground-State Energy Estimation',
     subtitle: 'Variational Quantum Eigensolver in Minimal STO-3G Basis',
+    description:
+      'This problem introduces quantum chemistry through the task of estimating the ground-state energy of the H₂ molecule. Teams will formulate the molecular problem for a quantum computer and use a variational quantum approach such as VQE to search for a low-energy state. The challenge is not simply to obtain a number, but to understand how the quantum circuit represents the chemistry problem and how accurately it reproduces a reference result. Participants will also examine the cost of their circuit on different processor architectures. The problem provides a focused entry point into quantum simulation, chemistry, and hardware-aware algorithm design.',
     objective:
       'Compute the electronic ground-state energy of the hydrogen molecule (H2) at equilibrium bond distance (R = 0.735 Å) using the Variational Quantum Eigensolver (VQE). Measure how transpilation onto constrained topologies inflates circuit depth and degrades convergence.',
     mathematicalFormulation:
@@ -39,6 +41,8 @@ export const PROBLEM_STATEMENTS: ProblemStatement[] = [
     vertical: 'Quantum Chemistry',
     title: 'PS-C2: Diatomic Potential Energy Curve Scanning',
     subtitle: 'Full Dissociation Curve of H₂ or LiH Across Bond Distances',
+    description:
+      'Instead of studying a molecule at only one geometry, this problem asks teams to investigate how the energy of a diatomic molecule changes as its bond length is varied. Participants build a quantum workflow that repeatedly solves the molecular problem for different geometries and uses those results to construct a potential-energy curve. The task therefore combines parameter scanning, variational optimization, and interpretation of molecular behaviour. Teams should examine whether the quantum method remains reliable across the different configurations. The challenge also highlights how circuit depth, connectivity, and hardware-related effects can influence the quality of the calculated curve.',
     objective:
       'Map the complete potential energy surface (PES) for the dissociation of H2 (or LiH) across internuclear distances from 0.5 Å to 2.5 Å in increments of 0.1 Å. Characterize where classical Hartree-Fock breaks down and how quantum circuit depth scales along the curve.',
     mathematicalFormulation:
@@ -69,6 +73,8 @@ export const PROBLEM_STATEMENTS: ProblemStatement[] = [
     vertical: 'Quantum Chemistry',
     title: 'PS-C3: Hardware-Efficient Water Molecule (H₂O)',
     subtitle: 'Compact Active Space & Qubit Tapering for Triatomic Systems',
+    description:
+      'This problem moves from the simple H₂ example toward the more demanding H₂O molecule while keeping the computation within near-term quantum resources. Teams must reduce and encode the chemistry problem appropriately and construct a hardware-efficient variational circuit. The focus is on finding a practical balance between representing the molecular system accurately and keeping the circuit executable on constrained quantum processors. Participants can investigate choices such as active-space reduction and ansatz design. The challenge demonstrates why quantum chemistry algorithms must be designed together with the limitations of the underlying hardware.',
     objective:
       'Simulate the electronic ground state of the water molecule (H2O) by applying active space reduction (freeze-core approximation) and qubit tapering to compress the fermionic space into a compact representation runnable under 8 qubits.',
     mathematicalFormulation:
@@ -99,6 +105,8 @@ export const PROBLEM_STATEMENTS: ProblemStatement[] = [
     vertical: 'Quantum Chemistry',
     title: 'Open Innovation: Quantum Molecular Science',
     subtitle: 'Novel Proposals in Excited States, Reaction Barriers, or Solvation',
+    description:
+      'Design your own quantum-chemistry problem that can be investigated at a realistic small scale. Possible directions include studying another molecule, an excited state, or a different molecular property. The important part is to define a meaningful scientific question and explain what quantity your quantum computation is intended to estimate or predict. Your approach should make clear why a quantum formulation is interesting for the selected problem and how you would evaluate the result. The problem should remain concrete and reproducible rather than being only a broad research proposal.',
     objective:
       'Design and validate a novel quantum computational chemistry pipeline targeting excited electronic states (Variational Quantum Deflation - VQD), transition state barriers, or solvated molecular systems.',
     mathematicalFormulation:
@@ -133,6 +141,8 @@ export const PROBLEM_STATEMENTS: ProblemStatement[] = [
     vertical: 'Quantum Optimization',
     title: 'PS-O1: Max-Cut on Weighted Graphs',
     subtitle: 'QAOA Circuit Construction & SWAP Bottleneck Analysis',
+    description:
+      'Max-Cut is a standard graph-optimization problem in which the goal is to divide the vertices of a graph into two groups so that the total weight of edges crossing between the groups is maximized. Teams will formulate the problem for a quantum optimization algorithm such as QAOA and search for a high-quality cut. The challenge also asks participants to look beyond the final objective value and understand the cost of implementing the algorithm on different processor connectivities. This makes Max-Cut a useful test of both quantum optimization and algorithm–architecture co-design.',
     objective:
       'Formulate the Maximum Cut (Max-Cut) problem on a non-trivial 6-vertex weighted graph. Implement the Quantum Approximate Optimization Algorithm (QAOA) with depth p=1 and p=2, and analyze the severe SWAP routing overhead on planar vs non-planar graphs.',
     mathematicalFormulation:
@@ -163,6 +173,8 @@ export const PROBLEM_STATEMENTS: ProblemStatement[] = [
     vertical: 'Quantum Optimization',
     title: 'PS-O2: Constrained Portfolio Selection',
     subtitle: 'Quadratic Unconstrained Binary Optimization (QUBO) with Budget Penalties',
+    description:
+      'This problem translates a small investment portfolio-selection task into a quantum optimization problem. Teams must balance competing considerations such as expected return, risk, and constraints on which assets can be selected. The mathematical formulation needs to be converted into a form suitable for a quantum optimization method, such as a QUBO-based approach. Participants then evaluate how well the quantum method finds a useful portfolio compared with an appropriate reference or baseline. The challenge connects quantum optimization with a practical finance use case while exposing the difficulties of encoding real-world constraints into quantum circuits.',
     objective:
       'Formulate a multi-asset Markowitz mean-variance portfolio selection problem as a QUBO. Map asset selection and capital allocation constraints into penalty terms, and solve using QAOA.',
     mathematicalFormulation:
@@ -193,6 +205,8 @@ export const PROBLEM_STATEMENTS: ProblemStatement[] = [
     vertical: 'Quantum Optimization',
     title: 'PS-O3: Combinatorial 0-1 Knapsack Problem',
     subtitle: 'Slack Variable Hamiltonian Mapping & Constraint Verification',
+    description:
+      'The Knapsack problem asks you to select items that provide the highest possible value while staying within a limited weight or resource budget. Although the problem is easy to state, its combinatorial nature makes it a useful benchmark for quantum optimization. Teams must formulate the objective and constraints in a form that can be handled by a quantum optimization method, including appropriate treatment of the inequality constraint. They will then examine the quality of the solution and the resources required by the resulting circuit. The challenge introduces more involved constraint encoding and penalty design than a simple unconstrained optimization problem.',
     objective:
       'Implement the NP-hard 0-1 Knapsack problem on a quantum processor using QAOA. Encode inequality capacity constraints using logarithmic slack bit decomposition and benchmark circuit compilation complexity.',
     mathematicalFormulation:
@@ -223,6 +237,8 @@ export const PROBLEM_STATEMENTS: ProblemStatement[] = [
     vertical: 'Quantum Optimization',
     title: 'Open Innovation: Quantum Combinatorial Optimization',
     subtitle: 'Industrial Scheduling, Vehicle Routing, or Network Flow',
+    description:
+      'Create your own optimization problem that can be meaningfully expressed and solved using a quantum optimization approach. Suitable directions include scheduling, routing, logistics, resource allocation, clustering, or another combinatorial problem. Your challenge should define a clear objective together with the important constraints that a valid solution must satisfy. You should then explain how the problem can be mapped into a quantum-compatible formulation such as a QUBO. The emphasis is on strong problem modelling: participants should demonstrate that the quantum formulation faithfully represents the original real-world problem.',
     objective:
       'Propose and implement a custom industrial combinatorial optimization problem (such as Job Shop Scheduling, Traveling Salesperson, Maximum Independent Set, or Traffic Routing) using QAOA or Quantum Annealing simulation.',
     mathematicalFormulation:
@@ -256,6 +272,8 @@ export const PROBLEM_STATEMENTS: ProblemStatement[] = [
     vertical: 'Quantum Simulation',
     title: 'PS-S1: Transverse-Field Ising Model (TFIM) Ground State',
     subtitle: 'Quantum Phase Transitions & Spin Correlation Observables',
+    description:
+      'This problem explores a fundamental many-body physics model: the transverse-field Ising chain. Teams will construct the corresponding Hamiltonian and use a quantum algorithm such as VQE to estimate properties of its ground state. The task can include quantities such as ground-state energy and magnetization, providing a way to compare the quantum calculation with an exact or classical reference for small systems. Participants will also study how the structure of the Hamiltonian maps onto the available quantum circuit. The challenge demonstrates how quantum computers can be used to represent and investigate interacting physical systems.',
     objective:
       'Simulate a 1D chain of interacting quantum spins under the Transverse-Field Ising Model. Characterize the quantum phase transition between the ferromagnetic and paramagnetic phases at critical transverse field strength.',
     mathematicalFormulation:
@@ -286,6 +304,8 @@ export const PROBLEM_STATEMENTS: ProblemStatement[] = [
     vertical: 'Quantum Simulation',
     title: 'PS-S2: Real-Time Non-Equilibrium Quantum Dynamics',
     subtitle: 'Trotterized Unitary Time Evolution & Dynamical Phase Transitions',
+    description:
+      'Rather than finding only a ground state, this problem asks teams to simulate how a quantum spin system changes over time. Participants construct a time-evolution circuit, for example using a Trotterized approximation, and track one or more physical observables as the system evolves. The challenge therefore introduces non-equilibrium quantum simulation and the practical difficulty of representing repeated time steps with finite-depth circuits. Teams should examine the trade-off between simulation accuracy and circuit cost. The effect of connectivity and additional hardware operations provides another important dimension of the problem.',
     objective:
       'Simulate the out-of-equilibrium unitary time evolution |ψ(t)⟩ = e^{-i H t} |ψ(0)⟩ following a sudden quantum quench in a spin system. Track the propagation of quantum information (entanglement light cone).',
     mathematicalFormulation:
@@ -316,6 +336,8 @@ export const PROBLEM_STATEMENTS: ProblemStatement[] = [
     vertical: 'Quantum Simulation',
     title: 'PS-S3: Trotter Error vs Realistic Device Noise Trade-offs',
     subtitle: 'Algorithmic Discretization Error vs Physical Decoherence',
+    description:
+      'This problem focuses on a central NISQ-era question: how much does hardware noise degrade a quantum simulation as the circuit becomes deeper? Teams start with a Trotterized time-evolution simulation and compare its behaviour under ideal and noisy execution. They investigate how errors accumulate as more operations and time steps are introduced and how processor connectivity can add further overhead. The goal is to understand the trade-off between a more accurate digital simulation and the noise introduced by a larger circuit. The resulting analysis should connect physical simulation accuracy with realistic hardware limitations.',
     objective:
       'Investigate the fundamental tension in quantum simulation: increasing Trotter steps reduces mathematical discretization error (O(Δt²)) but increases physical circuit depth, exposing the state to decoherence and gate noise.',
     mathematicalFormulation:
@@ -346,6 +368,8 @@ export const PROBLEM_STATEMENTS: ProblemStatement[] = [
     vertical: 'Quantum Simulation',
     title: 'Open Innovation: Quantum Many-Body Simulation',
     subtitle: 'Lattice Gauge Theories, Topological Matter, or Floquet Systems',
+    description:
+      'Propose a small but meaningful quantum-simulation problem of your own. You could investigate a molecular system, a many-body model, a field-inspired system, or another physical process that can be represented through a suitable Hamiltonian or quantum evolution model. Clearly define the physical quantity or behaviour you want to study and the system you will simulate. Your proposal should explain how the problem can be encoded into a quantum circuit and how the result can be validated. The aim is to demonstrate both physical modelling and practical quantum-simulation design.',
     objective:
       'Formulate and execute a novel simulation of an advanced quantum physics model (such as the Fermi-Hubbard model, Kitaev honeycomb lattice, Z2 lattice gauge theory, or periodically driven Floquet systems).',
     mathematicalFormulation:
@@ -379,6 +403,8 @@ export const PROBLEM_STATEMENTS: ProblemStatement[] = [
     vertical: 'Quantum Machine Learning',
     title: 'PS-Q1: Biomedical Signal Classifier',
     subtitle: 'Variational Quantum Classification for Arrhythmia & Biosignals',
+    description:
+      'This problem explores a near-term application of hybrid quantum–classical machine learning using biomedical signals. Teams work with a classification task such as distinguishing different types or conditions in a suitable ECG, EEG, or related signal dataset. Classical preprocessing and feature extraction can be combined with a variational quantum circuit that acts as part of the learning model. Participants should evaluate how effectively the hybrid approach learns the classification task and compare it with a classical machine-learning baseline. The challenge connects signal processing, machine learning, and quantum circuit design in a practical diagnostic-support setting.',
     objective:
       'Construct a Variational Quantum Classifier (VQC) to classify biomedical signals (such as MIT-BIH ECG heartbeat arrhythmia or EEG seizure detection) into diagnostic categories using parameterized quantum circuits.',
     mathematicalFormulation:
@@ -409,6 +435,8 @@ export const PROBLEM_STATEMENTS: ProblemStatement[] = [
     vertical: 'Quantum Machine Learning',
     title: 'PS-Q2: High-Dimensional Quantum Kernel Classifier',
     subtitle: 'ZZFeatureMap Support Vector Machine (QSVC) on Benchmark Data',
+    description:
+      'Quantum kernels provide a way to use quantum circuits to construct feature representations that can then be used by classical learning algorithms. In this problem, teams develop a quantum feature map and use it to build a kernel-based classifier, such as a quantum-kernel SVM. The central question is whether the chosen quantum representation provides useful classification performance for the selected dataset. A tuned classical baseline is important so that the comparison is meaningful rather than assuming a quantum advantage. Participants therefore investigate both statistical performance and the computational cost of constructing and evaluating the quantum kernel.',
     objective:
       'Implement a Quantum Support Vector Classifier (QSVC) using non-linear quantum kernels generated by ZZFeatureMaps. Evaluate kernel matrix computation overhead and investigate quantum advantage over classical RBF kernels.',
     mathematicalFormulation:
@@ -439,6 +467,8 @@ export const PROBLEM_STATEMENTS: ProblemStatement[] = [
     vertical: 'Quantum Machine Learning',
     title: 'PS-Q3: Noise-Resilient Quantum Classifier with Error Mitigation',
     subtitle: 'Zero-Noise Extrapolation (ZNE) & Readout Mitigation in QML',
+    description:
+      'This problem investigates what happens when a quantum machine-learning model is exposed to realistic device noise. Teams develop a variational quantum classifier and first establish its behaviour under ideal or controlled conditions before studying the degradation caused by noise. They then explore techniques such as error mitigation or other noise-aware strategies to recover classification performance. The challenge is to quantify the relationship between circuit structure, noise, and prediction accuracy rather than simply reporting a final score. It provides a practical introduction to one of the major difficulties faced by near-term quantum machine learning.',
     objective:
       'Build a robust variational quantum classifier that maintains high classification accuracy in the presence of realistic device gate noise. Implement Zero-Noise Extrapolation (ZNE) and readout error mitigation to protect model predictions.',
     mathematicalFormulation:
@@ -469,6 +499,8 @@ export const PROBLEM_STATEMENTS: ProblemStatement[] = [
     vertical: 'Quantum Machine Learning',
     title: 'Open Innovation: Quantum Machine Learning Frontiers',
     subtitle: 'Quantum GANs, Quantum Autoencoders, or Graph Neural Networks',
+    description:
+      'Develop your own quantum machine-learning problem around a clearly defined dataset and learning objective. Possible directions include classification, regression, generative modelling, materials-property prediction, or another data-driven application where a quantum model can be meaningfully tested. You should identify the features, target task, quantum model, and evaluation method. A suitable classical baseline should also be included so that the contribution of the quantum component can be assessed fairly. The emphasis is on designing a complete and testable QML experiment rather than simply applying a quantum circuit to a dataset.',
     objective:
       'Develop and validate an advanced QML architecture such as a Quantum Generative Adversarial Network (Q-GAN), Quantum Convolutional Neural Network (QCNN), or Quantum Autoencoder for state compression.',
     mathematicalFormulation:
@@ -502,6 +534,8 @@ export const PROBLEM_STATEMENTS: ProblemStatement[] = [
     vertical: 'Post-Quantum Cryptography',
     title: 'PS-P1: Quantum-Safe Secure Communication Channel',
     subtitle: 'Hybrid Classical-Post-Quantum Ephemeral Key Exchange',
+    description:
+      'This problem addresses the practical migration from classical public-key cryptography to post-quantum cryptography. Teams design a secure communication workflow in which vulnerable RSA/ECC-style key establishment or authentication mechanisms are replaced with quantum-safe primitives such as ML-KEM and ML-DSA. The goal is to demonstrate how a modern secure channel can be constructed while considering the practical overhead introduced by the new algorithms. Participants should examine the protocol flow as well as measurable performance characteristics. The challenge provides an applied introduction to how real systems may need to change in preparation for future quantum threats.',
     objective:
       'Architect a quantum-resistant cryptographic key exchange channel combining classical Elliptic Curve Diffie-Hellman (ECDH) with the NIST FIPS 203 ML-KEM (Kyber) standard. Implement simulated quantum cryptanalysis attacks against the classical component.',
     mathematicalFormulation:
@@ -532,6 +566,8 @@ export const PROBLEM_STATEMENTS: ProblemStatement[] = [
     vertical: 'Post-Quantum Cryptography',
     title: 'PS-P2: Enterprise Cryptographic Inventory & Migration Framework',
     subtitle: 'NIST PQC Migration Readiness & Quantum Vulnerability Scoring',
+    description:
+      'Before an organization can migrate to post-quantum cryptography, it needs to know where classical cryptography is being used. In this problem, teams build a tool that analyses a software project or synthetic codebase and identifies cryptographic algorithms, libraries, protocols, and usage locations that may require attention. The tool should help assess the risk associated with those dependencies and recommend appropriate migration actions or quantum-safe alternatives. The challenge therefore combines static analysis with security risk assessment. It focuses on the practical first step of turning a large and potentially complex software environment into an actionable PQC migration plan.',
     objective:
       'Develop an automated cryptographic asset discovery and vulnerability assessment framework. Scan network certificates, TLS configurations, and codebases to classify algorithms by quantum risk and generate a structured migration roadmap to ML-KEM and ML-DSA.',
     mathematicalFormulation:
@@ -562,6 +598,8 @@ export const PROBLEM_STATEMENTS: ProblemStatement[] = [
     vertical: 'Post-Quantum Cryptography',
     title: 'PS-P3: Reversible Quantum Arithmetic & Carry-Chain Bottlenecks',
     subtitle: 'Hardware Routing Benchmark of Quantum Modular Adders & Multipliers',
+    description:
+      'Post-quantum algorithms provide stronger protection against future quantum attacks, but they also introduce practical performance trade-offs. This problem asks teams to benchmark PQC algorithms and compare their behaviour with relevant classical alternatives under different resource conditions. Measurements can consider execution time, memory requirements, key and message sizes, and other system-level costs. The comparison should reveal how the algorithms behave across environments such as server, edge, and constrained IoT-style platforms. The challenge is therefore about producing a careful systems-level measurement rather than simply identifying which cryptographic algorithm is fastest.',
     objective:
       'Synthesize and benchmark reversible quantum arithmetic circuits (Cuccaro carry-ripple adders, modular multipliers) that form the core computational engine of Shor’s algorithm. Quantify how sequential carry chains inflate SWAP overhead on planar topologies.',
     mathematicalFormulation:
@@ -592,6 +630,8 @@ export const PROBLEM_STATEMENTS: ProblemStatement[] = [
     vertical: 'Post-Quantum Cryptography',
     title: 'Open Innovation: Post-Quantum Cryptographic Systems',
     subtitle: 'Lattice Cryptanalysis, Fault Resistance, or Quantum Hash Functions',
+    description:
+      'Create a practical problem related to the deployment, analysis, or migration of post-quantum cryptography. Possible directions include a hybrid TLS 1.3 handshake, a timing side-channel audit and hardening exercise, or a harvest-now-decrypt-later migration-risk model for a synthetic organization. Your proposal should define the system being studied, the relevant threat model, and the cryptographic algorithms involved. It should also explain why a classical-only approach is no longer sufficient for the scenario. The final problem should result in a concrete technical implementation or measurable analysis rather than only a theoretical discussion.',
     objective:
       'Propose and evaluate an advanced post-quantum cryptographic mechanism (such as quantum random number generation, lattice basis reduction analysis via quantum algorithms, side-channel analysis of PQC implementations, or quantum-safe zero-knowledge proofs).',
     mathematicalFormulation:

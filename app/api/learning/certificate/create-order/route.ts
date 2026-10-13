@@ -30,8 +30,7 @@ export async function POST() {
     if (!eligibility.eligible) {
       return NextResponse.json(
         {
-          error:
-            'You are not yet eligible to obtain an official certificate. Please complete all 6 sessions, quizzes, and 3 daily challenges.',
+          error: `You are not yet eligible to obtain an official certificate. Please complete all ${eligibility.totalSessions} sessions, quizzes, and 3 daily challenges.`,
           missingTasks: eligibility.missingTasks,
         },
         { status: 403 }

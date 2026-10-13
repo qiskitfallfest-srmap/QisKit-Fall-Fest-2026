@@ -8,9 +8,9 @@ import { REGISTRATION_URL } from '@/lib/constants';
 import SingularityHorizon from '@/components/ui/singularity-horizon';
 
 const LEGAL_DOCUMENTS = {
-  privacy: { path: '/documents/privacy-policy.pdf', available: false },
-  terms: { path: '/documents/terms-of-use.pdf', available: false },
-  accessibility: { path: '/documents/accessibility-statement.pdf', available: false }
+  privacy: { path: '/privacy', available: true },
+  terms: { path: '/terms', available: true },
+  accessibility: { path: '/accessibility', available: true }
 };
 
 const FOOTER_LINKS = [
@@ -117,15 +117,13 @@ export function Footer() {
     const doc = LEGAL_DOCUMENTS[key];
     if (doc.available) {
       return (
-        <a 
+        <Link 
           href={doc.path} 
-          target="_blank" 
-          rel="noopener noreferrer" 
           className="group relative hover:text-[#781421] dark:hover:text-[#EF7481] transition-colors duration-200 py-0.5 outline-none focus-visible:ring-1 focus-visible:ring-burgundy rounded-[2px]"
         >
           <span>{label}</span>
           <span className="absolute bottom-0 left-0 w-full h-[1px] bg-[#781421] dark:bg-[#EF7481] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-200 ease-out" />
-        </a>
+        </Link>
       );
     }
     return (
@@ -296,9 +294,10 @@ export function Footer() {
               <div className="flex flex-row items-center gap-[20px] sm:gap-[24px] xl:gap-[28px]">
                 <div className="relative w-[82px] h-[82px] min-[480px]:w-[88px] min-[480px]:h-[88px] sm:w-[96px] sm:h-[96px] md:w-[104px] md:h-[104px] lg:w-[116px] lg:h-[116px] xl:w-[134px] xl:h-[134px] 2xl:w-[148px] 2xl:h-[148px] min-[1920px]:w-[154px] min-[1920px]:h-[154px] flex-shrink-0">
                   <Image 
-                    src="/images/footer/HOME-09-FALL-FEST-2026-BADGE.png" 
+                    src="/images/footer/HOME-09-FALL-FEST-2026-BADGE.webp" 
                     alt="Qiskit Fall Fest 2026 Badge" 
                     fill 
+                    sizes="(max-width: 768px) 104px, 148px"
                     className="object-contain" 
                     referrerPolicy="no-referrer"
                   />
@@ -326,9 +325,10 @@ export function Footer() {
               >
                 <div className="relative w-[44px] h-[44px] sm:w-[46px] sm:h-[46px] lg:w-[48px] lg:h-[48px] xl:w-[50px] xl:h-[50px] min-[1920px]:w-[52px] min-[1920px]:h-[52px] flex-shrink-0 transition-transform duration-220 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]">
                   <Image 
-                    src="/images/footer/srm-ap-emblem.png" 
+                    src="/images/footer/srm-ap-emblem.webp" 
                     alt="SRM University-AP Emblem" 
                     fill 
+                    sizes="52px"
                     className="object-contain" 
                     referrerPolicy="no-referrer"
                   />
@@ -386,9 +386,10 @@ export function Footer() {
                   {/* Light Theme: Dark Positive Logotype with -ml compensation for internal transparent whitespace */}
                   <div className="dark:hidden h-[68px] w-[188px] sm:h-[74px] sm:w-[205px] lg:h-[80px] lg:w-[222px] xl:h-[86px] xl:w-[240px] min-[1920px]:h-[92px] min-[1920px]:w-[254px] -ml-[28px] sm:-ml-[30px] xl:-ml-[32px] -my-[22px] sm:-my-[24px] lg:-my-[26px] xl:-my-[28px] relative flex items-center transition-all duration-[280ms] ease-out group-hover:scale-[1.035] group-hover:opacity-100">
                     <Image
-                      src="/images/branding/IBM_Quantum_logotype_pos_RGB.png"
+                      src="/images/branding/IBM_Quantum_logotype_pos_RGB.webp"
                       alt="IBM Quantum"
                       fill
+                      sizes="(max-width: 768px) 205px, 254px"
                       className="object-contain object-left select-none"
                       referrerPolicy="no-referrer"
                     />
@@ -396,9 +397,10 @@ export function Footer() {
                   {/* Dark Theme: Light Reverse Logotype */}
                   <div className="hidden dark:block h-[24px] w-[130px] sm:h-[26px] sm:w-[142px] lg:h-[28px] lg:w-[154px] xl:h-[30px] xl:w-[166px] min-[1920px]:h-[32px] min-[1920px]:w-[176px] relative transition-all duration-[280ms] ease-out group-hover:scale-[1.035] group-hover:opacity-100">
                     <Image
-                      src="/images/branding/IBM_Quantum_logotype_rev_RGB.png"
+                      src="/images/branding/IBM_Quantum_logotype_rev_RGB.webp"
                       alt="IBM Quantum"
                       fill
+                      sizes="(max-width: 768px) 142px, 176px"
                       className="object-contain object-left select-none"
                       referrerPolicy="no-referrer"
                     />
@@ -433,17 +435,19 @@ export function Footer() {
                   <div className="relative h-[29px] w-[29px] sm:h-[31px] sm:w-[31px] lg:h-[33px] lg:w-[33px] xl:h-[36px] xl:w-[36px] min-[1920px]:h-[38px] min-[1920px]:w-[38px] transition-transform duration-[280ms] ease-out group-hover:scale-[1.035]">
                     {/* Light Theme: Dark Qiskit Mark */}
                     <Image 
-                      src="/images/footer/HOME-09-FOOTER-QISKIT-DARK.png" 
+                      src="/images/footer/HOME-09-FOOTER-QISKIT-DARK.webp" 
                       alt="" 
                       fill 
+                      sizes="38px"
                       className="object-contain dark:hidden" 
                       referrerPolicy="no-referrer"
                     />
                     {/* Dark Theme: Light Qiskit Mark */}
                     <Image 
-                      src="/images/footer/HOME-09-FOOTER-QISKIT-LIGHT.png" 
+                      src="/images/footer/HOME-09-FOOTER-QISKIT-LIGHT.webp" 
                       alt="" 
                       fill 
+                      sizes="38px"
                       className="object-contain hidden dark:block" 
                       referrerPolicy="no-referrer"
                     />

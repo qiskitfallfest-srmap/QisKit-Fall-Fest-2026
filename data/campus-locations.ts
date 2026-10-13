@@ -53,7 +53,7 @@ export const CAMPUS_LOCATIONS: CampusLocation[] = [
     isKeyVenue: true,
     description:
       "Houses the university's main auditorium for keynote presentations, ceremonies, and plenary sessions.",
-    image: '/images/venues/x-lab.jpg',
+    image: '/images/venues/x-lab.webp',
     map: {
       footprintId: 'bldg-x-lab',
       x: 380,
@@ -75,7 +75,7 @@ export const CAMPUS_LOCATIONS: CampusLocation[] = [
     isKeyVenue: true,
     description:
       'Dedicated academic and research block primarily housing PhD scholars, research chambers, and advanced seminar spaces.',
-    image: '/images/venues/jc-bose.jpg',
+    image: '/images/venues/jc-bose.webp',
     map: {
       footprintId: 'bldg-jc-bose',
       x: 525,
@@ -97,7 +97,7 @@ export const CAMPUS_LOCATIONS: CampusLocation[] = [
     isKeyVenue: true,
     description:
       'Academic building housing student laboratories, computing centers, and the Quantum Computing Lab. Connected to Homi J. Bhabha Block via the 5th-floor skybridge.',
-    image: '/images/venues/v-block.jpg',
+    image: '/images/venues/v-block.webp',
     map: {
       footprintId: 'bldg-v-block',
       x: 370,
@@ -119,7 +119,7 @@ export const CAMPUS_LOCATIONS: CampusLocation[] = [
     isKeyVenue: true,
     description:
       'Houses the CR-CS Department, Examination Department, Finance Department, and central university offices. Connected to V-Block via the 5th-floor skybridge.',
-    image: '/images/venues/homi-bhabha.png',
+    image: '/images/venues/homi-bhabha.webp',
     map: {
       footprintId: 'bldg-homi-bhabha',
       x: 515,
@@ -141,7 +141,7 @@ export const CAMPUS_LOCATIONS: CampusLocation[] = [
     isKeyVenue: true,
     description:
       'Central dining concourse and commercial hub featuring Total Fresh Supermarket, Domino\'s, Belgian Waffle, Baskin Robbins, US Pizza, Hello Idly, and Chat & Chill.',
-    image: '/images/venues/food-court.png',
+    image: '/images/venues/food-court.webp',
     map: {
       footprintId: 'bldg-food-court',
       x: 560,
@@ -163,7 +163,7 @@ export const CAMPUS_LOCATIONS: CampusLocation[] = [
     isKeyVenue: true,
     description:
       'Major multi-story academic block featuring student classrooms, engineering labs, and the university Mini Auditorium.',
-    image: '/images/venues/sr-block.jpg',
+    image: '/images/venues/sr-block.webp',
     map: {
       footprintId: 'bldg-sr-block',
       x: 250,
@@ -184,7 +184,7 @@ export const CAMPUS_LOCATIONS: CampusLocation[] = [
     categoryLabel: 'Academic Block',
     description:
       'Academic building situated in the southwestern campus area.',
-    image: '/images/venues/c-block.jpg',
+    image: '/images/venues/c-block.webp',
     map: {
       footprintId: 'bldg-c-block',
       x: 80,
@@ -205,7 +205,7 @@ export const CAMPUS_LOCATIONS: CampusLocation[] = [
     categoryLabel: 'Sports & Athletics',
     description:
       'Campus athletics ground with running track and open sports field.',
-    image: '/images/venues/ground.png',
+    image: '/images/venues/ground.webp',
     map: {
       footprintId: 'bldg-ground',
       x: 345,
@@ -226,7 +226,7 @@ export const CAMPUS_LOCATIONS: CampusLocation[] = [
     categoryLabel: 'Dining',
     description:
       'Student dining facility located near the north residential towers.',
-    image: '/images/venues/campus-generic.png',
+    image: '/images/venues/campus-generic.webp',
     map: {
       footprintId: 'bldg-annapurna-mess',
       x: 520,
@@ -247,7 +247,7 @@ export const CAMPUS_LOCATIONS: CampusLocation[] = [
     categoryLabel: 'Student Hostels',
     description:
       'Student residential towers: Kaveri, Godavari, Krishna, Yamuna, and Narmada.',
-    image: '/images/venues/campus-generic.png',
+    image: '/images/venues/campus-generic.webp',
     map: {
       footprintId: 'bldg-north-hostels',
       x: 395,
@@ -268,7 +268,7 @@ export const CAMPUS_LOCATIONS: CampusLocation[] = [
     categoryLabel: 'Student Hostels',
     description:
       'Student residential blocks: Theestha, Vedavathi, Ganga, and Brahmaputra.',
-    image: '/images/venues/campus-generic.png',
+    image: '/images/venues/campus-generic.webp',
     map: {
       footprintId: 'bldg-west-hostels',
       x: 155,
@@ -289,7 +289,7 @@ export const CAMPUS_LOCATIONS: CampusLocation[] = [
     categoryLabel: 'Main Entrance',
     description:
       'Main entry gateway on the eastern perimeter with festival arrival and registration check-in.',
-    image: '/images/venues/hero-secondary.png',
+    image: '/images/venues/hero-secondary.webp',
     map: {
       footprintId: 'bldg-gate-3',
       x: 740,

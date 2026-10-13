@@ -171,12 +171,10 @@
   0% {
     opacity: 0;
     transform: translateY(18px);
-    filter: blur(4px);
   }
   100% {
     opacity: 1;
     transform: translateY(0);
-    filter: blur(0);
   }
 }
 
@@ -463,6 +461,36 @@
   margin-left: 0;
   padding-left: 0;
   text-align: left;
+  color: #851722;
+}
+
+:global(.dark) .headline {
+  color: #F07B88;
+}
+
+.gradientTitle {
+  display: inline-block;
+  color: #851722;
+}
+
+:global(.dark) .gradientTitle {
+  color: #F07B88;
+}
+
+@supports (-webkit-background-clip: text) or (background-clip: text) {
+  .gradientTitle {
+    background-image: linear-gradient(90deg, #A7192A 0%, #851722 38%, #241617 85%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  :global(.dark) .gradientTitle {
+    background-image: linear-gradient(90deg, #F07B88 0%, #F5A3AC 42%, #FDF5F2 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 }
 
 /* Tablet */

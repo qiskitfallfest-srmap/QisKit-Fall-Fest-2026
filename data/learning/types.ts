@@ -19,19 +19,67 @@ export interface LectureSession {
   youtubeId: string; // Youtube video embed ID
   youtubeUrl: string;
   speaker: Speaker;
+  coSpeakers?: Speaker[];
   description: string;
   prerequisites: string;
   learnPoints: string[];
   lectureNotesUrl?: string;
   slidesUrl?: string;
+  liveMeetingUrl?: string;
+  isLive?: boolean;
+  liveNotice?: string;
+  customEmbedUrl?: string;
+  defaultStartSeconds?: number;
+}
+
+export interface SessionChapter {
+  id: string;
+  timestamp: string;
+  startSeconds: number;
+  endTimestamp?: string;
+  title: string;
+  speaker: string;
+  tag?: string;
+  summary: string;
+}
+
+export interface TranscriptSection {
+  id: string;
+  timestampRange: string;
+  startSeconds: number;
+  speaker: string;
+  speakerRole: string;
+  title: string;
+  keyTakeaways: string[];
+  paragraphs: string[];
+  equations?: {
+    label: string;
+    formula: string;
+  }[];
+  codeSnippet?: {
+    language: string;
+    title: string;
+    code: string;
+  };
+}
+
+export interface SessionTranscriptData {
+  sessionId: string;
+  streamUrl: string;
+  youtubeId: string;
+  totalBroadcastDuration: string;
+  recordedDate: string;
+  overview: string;
+  chapters: SessionChapter[];
+  sections: TranscriptSection[];
 }
 
 export interface QuizQuestion {
   id: string;
   question: string;
   options: string[];
-  correctIndex: number;
-  explanation: string;
+  correctIndex?: number;
+  explanation?: string;
 }
 
 export interface SessionQuiz {
@@ -39,6 +87,9 @@ export interface SessionQuiz {
   title: string;
   passingScore: number; // e.g. 75%
   questions: QuizQuestion[];
+  isLocked?: boolean;
+  updatedAt?: string;
+  updatedBy?: string;
 }
 
 export interface DailyCompetition {
@@ -48,9 +99,12 @@ export interface DailyCompetition {
   subtitle: string;
   description: string;
   guidelines: string[];
-  submissionType: 'url' | 'document';
+  submissionType: 'url' | 'document' | 'url_or_document';
+  acceptedFileTypes?: string[];
+  maxFileSizeMb?: number;
   urlPlaceholder: string;
   submissionDeadline: string;
+  prize: string;
 }
 
 export type VerticalType =
@@ -65,6 +119,7 @@ export interface ProblemStatement {
   vertical: VerticalType;
   title: string;
   subtitle: string;
+  description: string;
   objective: string;
   mathematicalFormulation: string;
   quantumFormulation: string;
@@ -96,6 +151,7 @@ export interface TeamMemberRecord {
   teamId: string;
   email: string;
   fullName: string;
+  university?: string;
   role: 'leader' | 'member';
   status: 'invited' | 'accepted' | 'declined';
   invitedAt: string;
@@ -107,6 +163,7 @@ export interface HackathonTeamRecord {
   name: string;
   leadEmail: string;
   leadName: string;
+  leadUniversity?: string;
   vertical: VerticalType;
   problemStatementId: string;
   githubRepoUrl?: string;

@@ -5,8 +5,8 @@ import Image from 'next/image';
 import { Box, GraduationCap, Lightbulb, UsersRound } from 'lucide-react';
 
 const PILLARS_ASSETS = {
-  artworkLight: '/ABOUT-04-PILLARS-EARTH-LIGHT.png',
-  artworkDark: '/ABOUT-04-PILLARS-EARTH-DARK.png',
+  artworkLight: '/ABOUT-04-PILLARS-EARTH-LIGHT.webp',
+  artworkDark: '/ABOUT-04-PILLARS-EARTH-DARK.webp',
 };
 
 interface PillarCardProps {

@@ -45,7 +45,7 @@ const WEBSITE_TEAM_MEMBERS: TeamMember[] = [
     linkedin: 'https://linkedin.com',
     initials: 'SP',
     avatarGradient: 'from-[#6C151E] via-[#521018] to-[#3A0B10]',
-    image: '/images/team/srihaas-pigilam.jpg',
+    image: '/images/team/srihaas-pigilam.webp',
   },
   {
     name: 'Pradnish Chintada',
@@ -57,7 +57,7 @@ const WEBSITE_TEAM_MEMBERS: TeamMember[] = [
     linkedin: 'https://linkedin.com',
     initials: 'PC',
     avatarGradient: 'from-[#521018] via-[#3A0B10] to-[#16171B]',
-    image: '/images/team/pradnish-chintada.jpg',
+    image: '/images/team/pradnish-chintada.webp',
   },
   {
     name: 'Shaik Mahaboob Subhani',
@@ -69,7 +69,7 @@ const WEBSITE_TEAM_MEMBERS: TeamMember[] = [
     linkedin: 'https://linkedin.com',
     initials: 'SMS',
     avatarGradient: 'from-[#1B1425] via-[#451220] to-[#16171B]',
-    image: '/images/team/shaik-subhani.jpg',
+    image: '/images/team/shaik-subhani.webp',
   },
   {
     name: 'Robert Bandaru',
@@ -81,7 +81,7 @@ const WEBSITE_TEAM_MEMBERS: TeamMember[] = [
     linkedin: 'https://linkedin.com',
     initials: 'RB',
     avatarGradient: 'from-[#2E1015] via-[#4A0D15] to-[#16171B]',
-    image: '/images/team/robert-bandaru.jpg',
+    image: '/images/team/robert-bandaru.webp',
   },
   {
     name: 'Sandeep Nambi',
@@ -93,7 +93,7 @@ const WEBSITE_TEAM_MEMBERS: TeamMember[] = [
     linkedin: 'https://linkedin.com',
     initials: 'SN',
     avatarGradient: 'from-[#3A0B10] via-[#6C151E] to-[#521018]',
-    image: '/images/team/sandeep-nambi.jpg',
+    image: '/images/team/sandeep-nambi.webp',
   },
 ];
 

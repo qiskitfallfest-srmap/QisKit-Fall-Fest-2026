@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { invalidateEmailCache } from '@/lib/redis';
+import { isTeamFinalized } from '@/lib/finalized-teams';
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession();
@@ -40,6 +41,16 @@ export async function POST(request: NextRequest) {
         { error: `This invitation has already been ${invite.status}.` },
         { status: 400 }
       );
+    }
+
+    if (action === 'accept') {
+      const finStatus = await isTeamFinalized(invite.team_id);
+      if (finStatus.isFinalized) {
+        return NextResponse.json(
+          { error: 'This team roster has already been finalized and locked.' },
+          { status: 400 }
+        );
+      }
     }
 
     const newStatus = action === 'accept' ? 'accepted' : 'declined';

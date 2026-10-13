@@ -7,8 +7,8 @@ import { ArrowRight } from 'lucide-react';
 import styles from './NextDecadeSection.module.css';
 
 const NEXT_DECADE_ASSETS = {
-  backgroundLight: '/images/home/next-decade/HOME-03-NEXT-DECADE-BACKGROUND-LIGHT.png',
-  backgroundDark: '/images/home/next-decade/HOME-03-NEXT-DECADE-BACKGROUND-DARK.png',
+  backgroundLight: '/images/home/next-decade/HOME-03-NEXT-DECADE-BACKGROUND-LIGHT.webp',
+  backgroundDark: '/images/home/next-decade/HOME-03-NEXT-DECADE-BACKGROUND-DARK.webp',
 };
 
 const STATS = [
@@ -68,6 +68,7 @@ export function NextDecadeSection() {
           src={NEXT_DECADE_ASSETS.backgroundLight}
           alt="The Next Decade Together Background Light"
           fill
+          sizes="100vw"
           priority={false}
           className={`${styles.bgImageLight} dark:hidden`}
         />
@@ -75,6 +76,7 @@ export function NextDecadeSection() {
           src={NEXT_DECADE_ASSETS.backgroundDark}
           alt="The Next Decade Together Background Dark"
           fill
+          sizes="100vw"
           priority={false}
           className={`${styles.bgImageDark} hidden dark:block`}
         />

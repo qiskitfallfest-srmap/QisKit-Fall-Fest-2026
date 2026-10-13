@@ -13,8 +13,8 @@ import {
   Navigation,
   ArrowRight,
   X,
-  Compass,
 } from 'lucide-react';
+import { GyroCompass } from './GyroCompass';
 import {
   CampusLocation,
   CAMPUS_LOCATIONS,
@@ -322,16 +322,15 @@ export function InteractiveCampusMap({
 
         {/* Top-Right: Map Controls (Zoom, Reset, Fullscreen) */}
         <div className={`absolute z-30 flex flex-col gap-2 ${isFullscreen ? 'top-5 right-5 sm:top-6 sm:right-6' : 'top-3 right-3 sm:top-4 sm:right-4'}`}>
-          {/* Compass / North Indicator (Standalone) */}
-          <button
-            onClick={handleReset}
-            title="North / Reset View"
-            aria-label="Face North"
-            className="w-10 h-10 sm:w-11 sm:h-11 flex flex-col items-center justify-center rounded-full bg-white/95 dark:bg-[#1C0D11]/95 backdrop-blur-md border border-stone-300/80 dark:border-[#B08D57]/30 shadow-lg hover:bg-stone-100 dark:hover:bg-white/10 text-[#6C151E] dark:text-[#B08D57] transition-all cursor-pointer group pointer-events-auto self-end ring-2 ring-transparent hover:ring-[#B08D57]/30"
-          >
-            <span className="text-[10px] sm:text-[11px] font-black leading-none mb-0.5">N</span>
-            <Compass className="w-5 h-5 sm:w-5 sm:h-5 group-hover:-rotate-12 transition-transform duration-300" />
-          </button>
+          {/* Live Gyroscope Compass with Real-Time Needle (Map stays static, needle alive with gyro) */}
+          <div className="self-end pointer-events-auto">
+            <GyroCompass
+              onReset={handleReset}
+              size="md"
+              showReadout={true}
+              title="Live Campus Compass (North)"
+            />
+          </div>
 
           {/* Zoom and Fullscreen Controls */}
           <div className="flex items-center gap-1 sm:gap-1.5 p-1 rounded-xl bg-white/95 dark:bg-[#1C0D11]/95 backdrop-blur-md border border-stone-300/80 dark:border-[#B08D57]/30 shadow-lg pointer-events-auto">

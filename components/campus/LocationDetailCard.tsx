@@ -6,8 +6,8 @@ import Link from 'next/link';
 import {
   MapPin,
   ArrowRight,
-  Navigation,
 } from 'lucide-react';
+import { LiveDirectionNeedleIcon } from './GyroCompass';
 import { CampusLocation } from '@/data/campus-locations';
 
 interface LocationDetailCardProps {
@@ -87,7 +87,7 @@ export function LocationDetailCard({
                 : 'bg-stone-100 dark:bg-white/5 border-stone-200 dark:border-stone-700 text-[#16171B] dark:text-[#F5F3F0] hover:bg-stone-200 dark:hover:bg-white/10'}
             `}
           >
-            <Navigation className="w-3.5 h-3.5 text-[#B08D57]" />
+            <LiveDirectionNeedleIcon className="w-4 h-4 text-[#B08D57]" />
             <span>{showRoute ? 'Walking Path from Gate 3: Active' : 'Show Walking Path from Gate 3'}</span>
           </button>
         )}

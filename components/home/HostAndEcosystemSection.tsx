@@ -34,7 +34,7 @@ const ENTITIES: EcosystemEntity[] = [
       <div className="flex items-center gap-3.5">
         <div className="relative w-[42px] h-[42px] sm:w-[46px] sm:h-[46px] shrink-0">
           <Image
-            src="/images/footer/srm-ap-emblem.png"
+            src="/images/footer/srm-ap-emblem.webp"
             alt="SRM University-AP Emblem"
             fill
             sizes="46px"
@@ -66,7 +66,7 @@ const ENTITIES: EcosystemEntity[] = [
         {/* Light Theme: Dark Positive Logotype with -ml compensation for internal transparent whitespace */}
         <div className="dark:hidden relative h-[76px] w-[200px] sm:h-[82px] sm:w-[216px] -ml-[28px] sm:-ml-[30px] -my-[22px] sm:-my-[24px] flex items-center">
           <Image
-            src="/images/branding/IBM_Quantum_logotype_pos_RGB.png"
+            src="/images/branding/IBM_Quantum_logotype_pos_RGB.webp"
             alt="IBM Quantum"
             fill
             sizes="216px"
@@ -78,7 +78,7 @@ const ENTITIES: EcosystemEntity[] = [
         {/* Dark Theme: Light Reverse Logotype */}
         <div className="hidden dark:block relative h-[28px] w-[155px] sm:h-[30px] sm:w-[166px]">
           <Image
-            src="/images/branding/IBM_Quantum_logotype_rev_RGB.png"
+            src="/images/branding/IBM_Quantum_logotype_rev_RGB.webp"
             alt="IBM Quantum"
             fill
             sizes="166px"
@@ -101,7 +101,7 @@ const ENTITIES: EcosystemEntity[] = [
       <div className="flex items-center gap-3">
         <div className="relative w-[34px] h-[34px] sm:w-[38px] sm:h-[38px] shrink-0">
           <Image
-            src="/qiskit-purple-60.png"
+            src="/qiskit-purple-60.webp"
             alt="Qiskit Purple Mark"
             fill
             sizes="38px"

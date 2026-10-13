@@ -82,21 +82,21 @@ export const ROUTE_RELEASE_CONFIG: Record<string, RouteConfig> = {
   faqs: {
     path: '/faqs',
     name: 'FAQs',
-    status: 'coming-soon',
+    status: 'live',
     title: `Frequently Asked Questions | ${SITE_CONFIG.brandName}`,
     description: 'Answers to registration, hardware access quotas, prerequisites, and participation inquiries for Qiskit Fall Fest SRMAP 2026.',
   },
   privacy: {
     path: '/privacy',
     name: 'Privacy Policy',
-    status: 'coming-soon',
+    status: 'live',
     title: `Privacy Statement | ${SITE_CONFIG.brandName}`,
     description: 'Official privacy statement and data handling principles for Qiskit Fall Fest SRMAP 2026.',
   },
   terms: {
     path: '/terms',
     name: 'Terms of Service',
-    status: 'coming-soon',
+    status: 'live',
     title: `Terms & Participation Rules | ${SITE_CONFIG.brandName}`,
     description: 'Event participation rules, hackathon conduct, and legal terms for Qiskit Fall Fest SRMAP 2026.',
   },
@@ -157,7 +157,7 @@ export function getRouteMetadata(routeKey: string): Metadata {
       type: 'website',
       images: [
         {
-          url: `${SITE_CONFIG.primaryDomain}/og-image.png`,
+          url: `${SITE_CONFIG.primaryDomain}/og-image.webp`,
           width: 1200,
           height: 630,
           alt: `${config.title} - ${SITE_CONFIG.brandName}`,
@@ -168,7 +168,7 @@ export function getRouteMetadata(routeKey: string): Metadata {
       card: 'summary_large_image',
       title: config.title,
       description: config.description,
-      images: [`${SITE_CONFIG.primaryDomain}/og-image.png`],
+      images: [`${SITE_CONFIG.primaryDomain}/og-image.webp`],
     },
     robots: {
       index: true,

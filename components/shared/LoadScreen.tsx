@@ -42,15 +42,15 @@ export type LoadingScreenProps = LoadScreenProps;
  * Critical hero assets physically verified in /public
  */
 const CRITICAL_ASSETS = [
-  '/hero/HOME-01-HERO-BACKGROUND-LIGHT.png',
-  '/hero/HOME-01-HERO-BACKGROUND-DAR.png',
-  '/hero/HOME-01-HERO-CRYOSTAT-ORBITAL-LIGHT-02.png',
-  '/hero/HOME-01-HERO-GLOBE-LEFT-LIGHT.png',
-  '/hero/HOME-01-HERO-GLOBE-LEFT-DARK.png',
-  '/hero/HOME-01-HERO-GLOBE-RIGHT-LIGHT.png',
-  '/hero/HOME-01-HERO-GLOBE-RIGHT-DARK.png',
-  '/hero/HOME-01-HERO-DECADE-10-LIGHT.png',
-  '/hero/HOME-01-HERO-DECADE-10-DARK.png',
+  '/hero/HOME-01-HERO-BACKGROUND-LIGHT.webp',
+  '/hero/HOME-01-HERO-BACKGROUND-DARK.webp',
+  '/hero/HOME-01-HERO-CRYOSTAT-ORBITAL-LIGHT-02.webp',
+  '/hero/HOME-01-HERO-GLOBE-LEFT-LIGHT.webp',
+  '/hero/HOME-01-HERO-GLOBE-LEFT-DARK.webp',
+  '/hero/HOME-01-HERO-GLOBE-RIGHT-LIGHT.webp',
+  '/hero/HOME-01-HERO-GLOBE-RIGHT-DARK.webp',
+  '/hero/HOME-01-HERO-DECADE-10-LIGHT.webp',
+  '/hero/HOME-01-HERO-DECADE-10-DARK.webp',
 ];
 
 const HARD_TIMEOUT_MS = 1600;

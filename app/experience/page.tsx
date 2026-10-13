@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     siteName: SITE_CONFIG.brandName,
     images: [
       {
-        url: `${baseUrl}/og-image.png`,
+        url: `${baseUrl}/og-image.webp`,
         width: 1200,
         height: 630,
         alt: `${SITE_CONFIG.brandName} Experience Tracks`,
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     title: `Experience Tracks: Learn, Build & Connect | ${SITE_CONFIG.brandName}`,
     description:
       'Interactive quantum computing masterclasses, hands-on hackathons, and research gala at SRM University-AP with IBM Quantum.',
-    images: [`${baseUrl}/og-image.png`],
+    images: [`${baseUrl}/og-image.webp`],
   },
 };
 

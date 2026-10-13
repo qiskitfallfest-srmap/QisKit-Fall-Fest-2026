@@ -10,18 +10,18 @@ import { ResponsivePicture } from '@/components/shared/ResponsivePicture';
 import styles from './HomeHero.module.css';
 
 const HERO_ASSETS = {
-  backgroundLight: '/hero/HOME-01-HERO-BACKGROUND-LIGHT.png',
-  backgroundDark: '/hero/HOME-01-HERO-BACKGROUND-DARK.png',
+  backgroundLight: '/hero/HOME-01-HERO-BACKGROUND-LIGHT.webp',
+  backgroundDark: '/hero/HOME-01-HERO-BACKGROUND-DARK.webp',
 
   // Single cryostat asset for both light and dark themes (actual dimensions: 1024 × 1535)
-  cryostat: '/hero/HOME-01-HERO-CRYOSTAT-ORBITAL-LIGHT-02.png',
+  cryostat: '/hero/HOME-01-HERO-CRYOSTAT-ORBITAL-LIGHT-02.webp',
 
   // Right decorative globe assets (left globe has been completely removed)
-  globeRightLight: '/hero/HOME-01-HERO-GLOBE-RIGHT-LIGHT.png',
-  globeRightDark: '/hero/HOME-01-HERO-GLOBE-RIGHT-DARK.png',
+  globeRightLight: '/hero/HOME-01-HERO-GLOBE-RIGHT-LIGHT.webp',
+  globeRightDark: '/hero/HOME-01-HERO-GLOBE-RIGHT-DARK.webp',
 
-  decadeLight: '/hero/HOME-01-HERO-DECADE-10-LIGHT.png',
-  decadeDark: '/hero/HOME-01-HERO-DECADE-10-DARK.png',
+  decadeLight: '/hero/HOME-01-HERO-DECADE-10-LIGHT.webp',
+  decadeDark: '/hero/HOME-01-HERO-DECADE-10-DARK.webp',
 };
 
 interface EventMetaItem {
@@ -85,16 +85,16 @@ export function HomeHero() {
         <picture className="w-full h-full block dark:hidden">
           <source
             media="(min-width: 1280px)"
-            srcSet="/hero/HOME-HERO-BG-DESKTOP.png"
-            type="image/png"
+            srcSet="/hero/HOME-HERO-BG-DESKTOP.webp"
+            type="image/webp"
           />
           <source
             media="(min-width: 1024px)"
-            srcSet="/hero/HOME-HERO-BG-LAPTOP.png"
-            type="image/png"
+            srcSet="/hero/HOME-HERO-BG-LAPTOP.webp"
+            type="image/webp"
           />
           <img
-            src="/hero/HOME-01-HERO-BACKGROUND-LIGHT.png"
+            src="/hero/HOME-01-HERO-BACKGROUND-LIGHT.webp"
             alt="Qiskit Fall Fest 2026 Background"
             fetchPriority="high"
             className="w-full h-full object-cover object-center select-none"
@@ -104,7 +104,7 @@ export function HomeHero() {
         {/* Dark Theme Background Picture */}
         <picture className="w-full h-full hidden dark:block">
           <img
-            src="/hero/HOME-01-HERO-BACKGROUND-DARK.png"
+            src="/hero/HOME-01-HERO-BACKGROUND-DARK.webp"
             alt="Qiskit Fall Fest 2026 Background"
             fetchPriority="high"
             className="w-full h-full object-cover object-center select-none"
@@ -143,25 +143,26 @@ export function HomeHero() {
             </span>
           </p>
 
-          {/* Headline with typography entrance and subtle luminous shimmer */}
+          {/* Main Headline */}
           <h1
             id="home-hero-title"
             className={`
               ${styles.headline}
-              ${styles.headlineShimmer}
               font-serif
               font-bold
               tracking-[-0.045em]
               m-0
-              text-transparent
-              bg-clip-text
-              bg-[linear-gradient(90deg,#A7192A_0%,#851722_38%,#241617_85%)]
-              dark:bg-[linear-gradient(90deg,#F07B88_0%,#F5A3AC_42%,#FDF5F2_100%)]
             `}
           >
-            <span className={styles.animTitleLine1}>QISKIT</span>
-            <span className={`${styles.animTitleLine2} whitespace-nowrap`}>FALL FEST</span>
-            <span className={styles.animTitleLine3}>2026</span>
+            <span className={styles.animTitleLine1}>
+              <span className={styles.gradientTitle}>QISKIT</span>
+            </span>
+            <span className={`${styles.animTitleLine2} whitespace-nowrap`}>
+              <span className={styles.gradientTitle}>FALL FEST</span>
+            </span>
+            <span className={styles.animTitleLine3}>
+              <span className={styles.gradientTitle}>2026</span>
+            </span>
           </h1>
 
           {/* Host with continuous typewriter loop */}
@@ -274,13 +275,13 @@ export function HomeHero() {
               </span>
             </a>
 
-            {/* Watch Video Link */}
+            {/* Watch Live Link */}
             <a
-              href="https://youtu.be/EByii89QzVQ?si=td8WOckyuKGbos_O"
+              href="https://www.youtube.com/live/ev-L2YibRR4"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Watch Qiskit Fall Fest video"
-              onClick={() => trackEvent('watch_video_click', { url: 'https://youtu.be/EByii89QzVQ' })}
+              aria-label="Watch Qiskit Fall Fest live"
+              onClick={() => trackEvent('watch_video_click', { url: 'https://www.youtube.com/live/ev-L2YibRR4' })}
               className={`
                 ${styles.watchVideoBtn}
                 group
@@ -320,7 +321,7 @@ export function HomeHero() {
                   fill="currentColor"
                 />
               </span>
-              <span>Watch Video</span>
+              <span>Watch Live</span>
             </a>
           </div>
         </div>

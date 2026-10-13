@@ -2,7 +2,8 @@
 
 import * as React from 'react';
 import Image from 'next/image';
-import { Map, Compass, ArrowRight } from 'lucide-react';
+import { Map, ArrowRight } from 'lucide-react';
+import { LiveDirectionNeedleIcon } from './GyroCompass';
 
 export function CampusHero() {
   const handleScrollToAtlas = (e: React.MouseEvent) => {
@@ -38,7 +39,7 @@ export function CampusHero() {
         className="pointer-events-none absolute inset-0 z-0 select-none overflow-hidden"
       >
         <Image
-          src="/images/venues/hero-1.png"
+          src="/images/venues/hero-1.webp"
           alt="SRM University-AP Campus Aerial Overview"
           fill
           priority
@@ -124,7 +125,7 @@ export function CampusHero() {
                   shadow-sm transition-all duration-200 cursor-pointer
                 "
               >
-                <Compass className="w-4 h-4" />
+                <LiveDirectionNeedleIcon className="w-4 h-4 text-[#B08D57]" />
                 <span>Logistics & Parking</span>
                 <span className="w-5 h-5 rounded-full bg-stone-200 dark:bg-white/10 flex items-center justify-center">
                   <ArrowRight className="w-3 h-3" />

@@ -95,7 +95,7 @@ export function HeroSection({ currentPhase = 'offline', onPhaseChange }: HeroSec
             
             {/* Eyebrow */}
             <motion.div 
-              className="inline-flex items-center gap-3"
+              className="inline-flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap"
               initial="hidden"
               animate="visible"
               custom={0.05}

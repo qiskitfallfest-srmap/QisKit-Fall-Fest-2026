@@ -101,7 +101,7 @@ export interface SessionActionInfo {
   isExternal?: boolean;
 }
 
-export function getSessionAction(session: Session, phase: SchedulePhase): SessionActionInfo | null {
+export function getSessionAction(session: Session, phase?: SchedulePhase): SessionActionInfo | null {
   const url = session.learningUrl;
   const sId = (session.id || '').toLowerCase();
   const title = (session.title || '').toLowerCase();
@@ -144,7 +144,9 @@ export function getSessionAction(session: Session, phase: SchedulePhase): Sessio
     sId.includes('session-3') ||
     sId.includes('s3') ||
     title.includes('session 3') ||
-    title.includes('transpilation')
+    title.includes('connectivity') ||
+    title.includes('transpilation') ||
+    title.includes('architecture')
   ) {
     return {
       href: '/learning/session/session-3',
@@ -153,16 +155,21 @@ export function getSessionAction(session: Session, phase: SchedulePhase): Sessio
     };
   }
 
-  // Masterclass Session 4
+  // Masterclass Session 4 (4A / 4B / Photonic Technologies)
   if (
     sId.includes('session-4') ||
     sId.includes('s4') ||
-    title.includes('session 4')
+    title.includes('session 4') ||
+    title.includes('sensing') ||
+    title.includes('optics') ||
+    title.includes('photonic')
   ) {
+    const isSensing = title.includes('sensing') || sId.includes('4a');
+    const isOptics = title.includes('optics') || sId.includes('4b') || title.includes('photonic');
     return {
       href: '/learning/session/session-4',
-      cardLabel: 'Enter Session 4',
-      detailLabel: 'Launch Learning Session 4',
+      cardLabel: isSensing ? 'Enter Session 4A' : isOptics ? 'Enter Session 4B' : 'Enter Session 4',
+      detailLabel: isSensing ? 'Launch Session 4A (Sensing)' : isOptics ? 'Launch Session 4B (Optics)' : 'Launch Learning Session 4',
     };
   }
 
@@ -171,6 +178,7 @@ export function getSessionAction(session: Session, phase: SchedulePhase): Sessio
     sId.includes('session-5') ||
     sId.includes('s5') ||
     title.includes('session 5') ||
+    title.includes('machine learning') ||
     title.includes('qml')
   ) {
     return {
@@ -184,7 +192,9 @@ export function getSessionAction(session: Session, phase: SchedulePhase): Sessio
   if (
     sId.includes('session-6') ||
     sId.includes('s6') ||
-    title.includes('session 6')
+    title.includes('session 6') ||
+    title.includes('cryptography') ||
+    title.includes('cyber security')
   ) {
     return {
       href: '/learning/session/session-6',
@@ -194,16 +204,24 @@ export function getSessionAction(session: Session, phase: SchedulePhase): Sessio
   }
 
   // LMS Quizzes
-  if (sId.includes('quiz') || title.includes('quiz')) {
+  if (
+    url?.includes('/quiz') ||
+    sId.includes('quiz') ||
+    title.includes('quiz')
+  ) {
     return {
-      href: '/learning/session/session-1/quiz',
+      href: url || '/learning/session/session-1/quiz',
       cardLabel: 'Take LMS Quiz',
       detailLabel: 'Start LMS Concept Quiz',
     };
   }
 
   // Tech Reels (Day 1 Online Game)
-  if (sId.includes('reels') || title.includes('reels')) {
+  if (
+    url?.includes('challenge=1') ||
+    sId.includes('reels') ||
+    title.includes('reels')
+  ) {
     return {
       href: '/learning?challenge=1',
       cardLabel: 'View Challenge',
@@ -212,7 +230,11 @@ export function getSessionAction(session: Session, phase: SchedulePhase): Sessio
   }
 
   // Digital Poster (Day 2 Online Game)
-  if (sId.includes('poster') || title.includes('poster')) {
+  if (
+    url?.includes('challenge=2') ||
+    sId.includes('poster') ||
+    title.includes('poster')
+  ) {
     return {
       href: '/learning?challenge=2',
       cardLabel: 'View Challenge',
@@ -221,7 +243,11 @@ export function getSessionAction(session: Session, phase: SchedulePhase): Sessio
   }
 
   // Essay Competition (Day 3 Online Game)
-  if (sId.includes('essay') || title.includes('essay')) {
+  if (
+    url?.includes('challenge=3') ||
+    sId.includes('essay') ||
+    title.includes('essay')
+  ) {
     return {
       href: '/learning?challenge=3',
       cardLabel: 'View Challenge',
@@ -231,6 +257,7 @@ export function getSessionAction(session: Session, phase: SchedulePhase): Sessio
 
   // Hackathon Workspace & Milestones (Phase 1 & Phase 2)
   if (
+    url === '/learning/hackathon' ||
     sId.includes('hackathon') ||
     sId.includes('hack') ||
     title.includes('hackathon')
@@ -250,6 +277,15 @@ export function getSessionAction(session: Session, phase: SchedulePhase): Sessio
     sId.includes('lunch')
   ) {
     return null;
+  }
+
+  // Online phase fallback
+  if (phase === 'online') {
+    return {
+      href: '/learning',
+      cardLabel: 'Learning Hub',
+      detailLabel: 'Go to Learning Hub',
+    };
   }
 
   // All remaining on-campus sessions direct to official Unstop registration
