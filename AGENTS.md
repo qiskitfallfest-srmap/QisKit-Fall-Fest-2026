@@ -64,8 +64,8 @@ This file is automatically loaded by AI agents working in this workspace.
 
 1. **Active Deadlines & Instant Registration:**
    - **Final Festival Registration Deadline:** Officially extended to **Saturday, 17 October 2026, 11:59 PM IST** with instant on-site self-registration.
-   - **Creative Competitions (Day 1 Tech Reels, Day 2 Digital Poster, Day 3 Technical Essay):** Submissions open until **Wednesday, 14 October 2026, 11:59 PM IST**.
-   - **Hackathon Phase 1 Online Window:** Submissions close **14 October 2026, 11:59 PM IST**.
+   - **Creative Competitions (Day 1 Tech Reels, Day 2 Digital Poster, Day 3 Technical Essay):** Submissions open until **Saturday, 17 October 2026, 11:59 PM IST**.
+   - **Hackathon Phase 1 Online Window:** Submissions close **Saturday, 17 October 2026, 11:59 PM IST**.
    - **Qiskit Coding Challenges (P1 to P9):** Browser challenges open until **15 October 2026**.
 
 2. **Instant On-Site Registration Architecture (GT-28):**

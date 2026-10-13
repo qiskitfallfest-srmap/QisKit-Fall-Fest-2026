@@ -284,7 +284,7 @@ export function ExploreSchedule({ currentPhase = 'offline', onPhaseChange, targe
                     Deadline Extended
                   </span>
                   <span>
-                    Creative competitions (Tech Reels, Digital Poster, Technical Essay) are open until 14 Oct, 11:59 PM IST.
+                    Creative competitions (Tech Reels, Digital Poster, Technical Essay) are open until 17 Oct, 11:59 PM IST.
                   </span>
                 </div>
               )}

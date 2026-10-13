@@ -443,14 +443,14 @@ function LearningDashboardContent() {
         ));
 
     return (
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 font-sans space-y-4">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 font-sans space-y-6">
         {/* Top Navigation & Challenge Switcher */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link
             href="/learning"
             className="inline-flex items-center gap-1.5 font-mono text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-burgundy dark:hover:text-[#E89BA5] transition-colors uppercase tracking-wider"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
+            <ArrowLeft className="w-4 h-4" />
             <span>Back to Learning Hub</span>
           </Link>
 
@@ -463,7 +463,7 @@ function LearningDashboardContent() {
                   key={c.day}
                   href={`/learning?challenge=${c.day}`}
                   className={clsx(
-                    'px-2.5 py-1 rounded-md font-mono text-[11px] font-semibold flex items-center gap-1 transition-colors',
+                    'px-3 py-1.5 rounded-md font-mono text-xs font-semibold flex items-center gap-1.5 transition-colors',
                     isActive
                       ? 'bg-burgundy text-white'
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1C0A0D]'
@@ -472,7 +472,7 @@ function LearningDashboardContent() {
                   {isDone && (
                     <CheckCircle2
                       className={clsx(
-                        'w-3 h-3 shrink-0',
+                        'w-3.5 h-3.5 shrink-0',
                         isActive ? 'text-white' : 'text-emerald-600 dark:text-emerald-400'
                       )}
                     />
@@ -484,100 +484,100 @@ function LearningDashboardContent() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl shadow-xs p-5 sm:p-7 space-y-6">
-          <div className="border-b border-slate-100 dark:border-[#3D1418] pb-4 flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+        <div className="bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-2xl shadow-xs p-6 sm:p-8 space-y-7">
+          <div className="border-b border-slate-100 dark:border-[#3D1418] pb-5 flex flex-col sm:flex-row sm:items-start justify-between gap-3">
             <div>
-              <div className="flex flex-wrap items-center gap-2 mb-1">
-                <span className="font-mono text-[10px] font-bold text-burgundy dark:text-[#E89BA5] uppercase tracking-wider">
-                  Challenge · Day 0{day} · Deadline: 14 October 2026 (11:59 PM IST)
+              <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                <span className="font-mono text-xs font-bold text-burgundy dark:text-[#E89BA5] uppercase tracking-wider">
+                  Challenge · Day 0{day} · Deadline: 17 October 2026 (11:59 PM IST)
                 </span>
-                <span className="px-2 py-0.5 rounded-full font-mono text-[9px] font-bold uppercase tracking-wider bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800/80">
+                <span className="px-2.5 py-0.5 rounded-full font-mono text-[10px] font-bold uppercase tracking-wider bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800/80">
                   Extended
                 </span>
               </div>
-              <h1 className="font-serif text-xl sm:text-2xl font-bold text-[#181313] dark:text-[#FAF6F3] tracking-tight">
+              <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#181313] dark:text-[#FAF6F3] tracking-tight">
                 {challenge.title}
               </h1>
-              <p className="font-sans text-slate-600 dark:text-slate-300 text-xs sm:text-sm mt-1">
+              <p className="font-sans text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed mt-1.5">
                 {challenge.description}
               </p>
             </div>
 
             {isCurrentChallengeSubmitted ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-mono text-[11px] font-bold shrink-0 self-start">
-                <CheckCircle2 className="w-3.5 h-3.5" />
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-mono text-xs font-bold shrink-0 self-start">
+                <CheckCircle2 className="w-4 h-4" />
                 <span>Submitted</span>
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 font-mono text-[11px] font-bold shrink-0 self-start">
-                <Clock className="w-3.5 h-3.5" />
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 font-mono text-xs font-bold shrink-0 self-start">
+                <Clock className="w-4 h-4" />
                 <span>Pending</span>
               </span>
             )}
           </div>
 
           {/* Highlighted Prize Banner - Styled in Burgundy Shades */}
-          <div className="relative overflow-hidden p-4 sm:p-5 rounded-2xl border-2 border-burgundy/30 dark:border-burgundy/60 bg-linear-to-r from-burgundy/10 via-burgundy/[0.04] to-transparent dark:from-[#260C11] dark:via-[#1A080C] dark:to-[#120507] shadow-sm flex items-center justify-between gap-4">
-            <div className="absolute top-0 right-0 -mt-6 -mr-6 w-32 h-32 bg-burgundy/15 dark:bg-burgundy/25 rounded-full blur-2xl pointer-events-none" />
+          <div className="relative overflow-hidden p-5 sm:p-6 rounded-2xl border-2 border-burgundy/30 dark:border-burgundy/60 bg-linear-to-r from-burgundy/10 via-burgundy/[0.04] to-transparent dark:from-[#260C11] dark:via-[#1A080C] dark:to-[#120507] shadow-sm flex items-center justify-between gap-4">
+            <div className="absolute top-0 right-0 -mt-6 -mr-6 w-36 h-36 bg-burgundy/15 dark:bg-burgundy/25 rounded-full blur-2xl pointer-events-none" />
 
-            <div className="relative z-10 flex items-center gap-3.5 sm:gap-4">
-              <div className="w-12 h-12 rounded-xl bg-linear-to-br from-burgundy via-burgundy-deep to-[#3D0A12] text-white flex items-center justify-center shrink-0 shadow-md ring-2 ring-burgundy/20 dark:ring-burgundy/50">
-                <Trophy className="w-6 h-6 text-white" />
+            <div className="relative z-10 flex items-center gap-4 sm:gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-burgundy via-burgundy-deep to-[#3D0A12] text-white flex items-center justify-center shrink-0 shadow-md ring-2 ring-burgundy/20 dark:ring-burgundy/50">
+                <Trophy className="w-7 h-7 text-white" />
               </div>
               <div>
-                <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-burgundy dark:text-[#E89BA5] block">
+                <span className="font-mono text-xs font-bold uppercase tracking-wider text-burgundy dark:text-[#E89BA5] block">
                   Award & Cash Prize
                 </span>
-                <div className="flex flex-wrap items-baseline gap-2 mt-0.5">
-                  <span className="font-serif text-2xl sm:text-3xl font-black text-burgundy dark:text-[#FAF6F3] tracking-tight">
+                <div className="flex flex-wrap items-baseline gap-2.5 mt-0.5">
+                  <span className="font-serif text-2xl sm:text-3xl lg:text-4xl font-black text-burgundy dark:text-[#FAF6F3] tracking-tight">
                     {challenge.prize || 'Up to ₹5,000'}
                   </span>
-                  <span className="text-xs font-semibold text-burgundy/80 dark:text-[#E89BA5]/80 font-mono">
+                  <span className="text-xs sm:text-sm font-semibold text-burgundy/80 dark:text-[#E89BA5]/80 font-mono">
                     (Top Performing Entries)
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="relative z-10 hidden sm:flex items-center px-3.5 py-1.5 rounded-full bg-burgundy/10 dark:bg-burgundy/25 border border-burgundy/25 dark:border-burgundy/50 text-burgundy dark:text-[#E89BA5] text-xs font-bold font-mono shadow-2xs">
+            <div className="relative z-10 hidden sm:flex items-center px-4 py-2 rounded-full bg-burgundy/10 dark:bg-burgundy/25 border border-burgundy/25 dark:border-burgundy/50 text-burgundy dark:text-[#E89BA5] text-xs font-bold font-mono shadow-2xs">
               <span>Prize Award</span>
             </div>
           </div>
 
-          <div className="bg-slate-50 dark:bg-[#1C0A0D] rounded-lg p-4 border border-slate-200/80 dark:border-[#3D1418] space-y-3">
-            <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-burgundy dark:text-[#E89BA5] block">
+          <div className="bg-slate-50 dark:bg-[#1C0A0D] rounded-xl p-5 sm:p-6 border border-slate-200/80 dark:border-[#3D1418] space-y-4">
+            <span className="font-mono text-xs font-bold uppercase tracking-wider text-burgundy dark:text-[#E89BA5] block">
               Guidelines
             </span>
-            <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
+            <ul className="space-y-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
               {(challenge.guidelines || []).map((g, idx) => (
-                <li key={idx} className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-burgundy dark:bg-[#E89BA5] mt-1.5 shrink-0" />
+                <li key={idx} className="flex items-start gap-2.5">
+                  <span className="w-2 h-2 rounded-full bg-burgundy dark:bg-[#E89BA5] mt-1.5 shrink-0" />
                   <span>{g}</span>
                 </li>
               ))}
             </ul>
-            <div className="pt-2 border-t border-slate-200/60 dark:border-[#3D1418] flex items-center justify-between text-xs">
-              <span className="text-slate-500 dark:text-slate-400">Deadline:</span>
+            <div className="pt-3 border-t border-slate-200/60 dark:border-[#3D1418] flex items-center justify-between text-xs sm:text-sm">
+              <span className="text-slate-500 dark:text-slate-400 font-medium">Deadline:</span>
               <div className="flex items-center gap-2">
-                <span className="line-through text-slate-400 dark:text-slate-500 text-[11px] font-mono">12 Oct</span>
-                <span className="font-mono font-bold text-burgundy dark:text-[#E89BA5]">
+                <span className="line-through text-slate-400 dark:text-slate-500 text-xs font-mono">12 Oct</span>
+                <span className="font-mono font-bold text-xs sm:text-sm text-burgundy dark:text-[#E89BA5]">
                   {challenge.submissionDeadline}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-5">
             {/* Guest Preview Mode Notice */}
             {!sessionUser && (
-              <div className="p-4 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-300/80 dark:border-amber-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-2xs">
-                <div className="flex items-start sm:items-center gap-2.5 min-w-0">
-                  <Lock className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5 sm:mt-0" />
+              <div className="p-4 sm:p-5 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-300/80 dark:border-amber-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs sm:text-sm shadow-2xs">
+                <div className="flex items-start sm:items-center gap-3 min-w-0">
+                  <Lock className="w-5 h-5 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5 sm:mt-0" />
                   <div>
-                    <p className="font-semibold text-amber-950 dark:text-amber-200">
+                    <p className="font-semibold text-sm sm:text-base text-amber-950 dark:text-amber-200">
                       Preview Mode · Sign in required to submit
                     </p>
-                    <p className="text-[11px] text-amber-800/90 dark:text-amber-300/90 mt-0.5">
+                    <p className="text-xs sm:text-sm text-amber-900/90 dark:text-amber-300/90 mt-1 leading-relaxed">
                       You are previewing this daily competition. Sign in with Google to enable submission links, upload files, and compete for prizes.
                     </p>
                   </div>
@@ -585,26 +585,26 @@ function LearningDashboardContent() {
                 <button
                   type="button"
                   onClick={() => handleGoogleSignInDirect()}
-                  className="px-4 py-2 rounded-lg bg-burgundy hover:bg-burgundy-deep text-white font-semibold text-xs transition-colors shrink-0 flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                  className="px-4.5 py-2.5 rounded-lg bg-burgundy hover:bg-burgundy-deep text-white font-semibold text-xs sm:text-sm transition-colors shrink-0 flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
                 >
                   <span>Sign In with Google</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
             )}
 
             {/* Mode Switcher for Digital Poster (Day 2) & Essay (Day 3) */}
             {supportsDocUpload && (
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                  <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                     Submission Method
                   </span>
-                  <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400">
+                  <span className="font-mono text-xs text-slate-500 dark:text-slate-400">
                     Accepts .pdf or .docx (max {MAX_DOCUMENT_SIZE_MB} MB) or public URL
                   </span>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-[#1C0A0D] rounded-xl border border-slate-200 dark:border-[#3D1418]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-1.5 bg-slate-100 dark:bg-[#1C0A0D] rounded-xl border border-slate-200 dark:border-[#3D1418]">
                   <button
                     type="button"
                     onClick={() => {
@@ -612,13 +612,13 @@ function LearningDashboardContent() {
                       setCompErrorMsg((prev) => ({ ...prev, [challenge.type]: '' }));
                     }}
                     className={clsx(
-                      'py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer',
+                      'py-2.5 px-4 rounded-lg text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer',
                       activeMode === 'file'
                         ? 'bg-white dark:bg-burgundy text-slate-900 dark:text-white shadow-xs'
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                     )}
                   >
-                    <Upload className="w-3.5 h-3.5" />
+                    <Upload className="w-4 h-4" />
                     <span>Upload Document (.pdf / .docx)</span>
                   </button>
                   <button
@@ -628,13 +628,13 @@ function LearningDashboardContent() {
                       setCompErrorMsg((prev) => ({ ...prev, [challenge.type]: '' }));
                     }}
                     className={clsx(
-                      'py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer',
+                      'py-2.5 px-4 rounded-lg text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer',
                       activeMode === 'url'
                         ? 'bg-white dark:bg-burgundy text-slate-900 dark:text-white shadow-xs'
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                     )}
                   >
-                    <Link2 className="w-3.5 h-3.5" />
+                    <Link2 className="w-4 h-4" />
                     <span>Public Link (URL)</span>
                   </button>
                 </div>
@@ -662,26 +662,26 @@ function LearningDashboardContent() {
                 )}
 
                 {/* Mandatory Brand Kit Download Card */}
-                <div className="p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-[#3D1418] bg-slate-50/70 dark:bg-[#1A090C] space-y-3.5">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 dark:border-[#3D1418] pb-3">
+                <div className="p-4 sm:p-6 rounded-xl border border-slate-200 dark:border-[#3D1418] bg-slate-50/70 dark:bg-[#1A090C] space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 dark:border-[#3D1418] pb-3.5">
                     <div>
-                      <h3 className="font-sans text-xs sm:text-sm font-bold text-slate-900 dark:text-[#FAF6F3]">
+                      <h3 className="font-sans text-sm sm:text-base font-bold text-slate-900 dark:text-[#FAF6F3]">
                         Official Brand Assets & Logos (Mandatory)
                       </h3>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
                         Download both high-resolution logos and feature them in your reel (intro card, corner watermark, or outro).
                       </p>
                     </div>
-                    <span className="font-mono text-[10px] font-semibold text-burgundy dark:text-[#E89BA5] px-2.5 py-1 rounded bg-burgundy/10 dark:bg-burgundy/20 border border-burgundy/20 dark:border-burgundy/40 shrink-0 self-start sm:self-auto">
+                    <span className="font-mono text-xs font-semibold text-burgundy dark:text-[#E89BA5] px-2.5 py-1 rounded bg-burgundy/10 dark:bg-burgundy/20 border border-burgundy/20 dark:border-burgundy/40 shrink-0 self-start sm:self-auto">
                       Required for Evaluation
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-0.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-0.5">
                     {/* Logo 1: Qiskit Fall Fest 2026 SRM AP Badge */}
-                    <div className="p-3 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] flex items-center justify-between gap-3 shadow-2xs">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-12 h-12 rounded-lg bg-slate-100 dark:bg-[#280C10] p-1 flex items-center justify-center shrink-0 border border-slate-200/80 dark:border-[#3D1418]">
+                    <div className="p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] flex items-center justify-between gap-3 shadow-2xs">
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div className="w-14 h-14 rounded-xl bg-slate-100 dark:bg-[#280C10] p-1.5 flex items-center justify-center shrink-0 border border-slate-200/80 dark:border-[#3D1418]">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src="/brand/qiskit-fall-fest-2026-badge.png"
@@ -690,10 +690,10 @@ function LearningDashboardContent() {
                           />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                          <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
                             Qiskit Fall Fest Badge
                           </p>
-                          <p className="font-mono text-[10px] text-slate-500 dark:text-slate-400">
+                          <p className="font-mono text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                             PNG · High-Res 1080p
                           </p>
                         </div>
@@ -701,17 +701,17 @@ function LearningDashboardContent() {
                       <a
                         href="/brand/qiskit-fall-fest-2026-badge.png"
                         download="Qiskit-Fall-Fest-2026-SRMAP-Badge.png"
-                        className="px-2.5 py-1.5 rounded-md bg-slate-100 dark:bg-[#2A0F13] hover:bg-burgundy hover:text-white dark:hover:bg-burgundy text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-colors shrink-0"
+                        className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-[#2A0F13] hover:bg-burgundy hover:text-white dark:hover:bg-burgundy text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition-colors shrink-0"
                       >
-                        <Download className="w-3.5 h-3.5" />
+                        <Download className="w-4 h-4" />
                         <span>Download</span>
                       </a>
                     </div>
 
                     {/* Logo 2: SRM University-AP Official Logo */}
-                    <div className="p-3 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] flex items-center justify-between gap-3 shadow-2xs">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-12 h-12 rounded-lg bg-slate-100 dark:bg-[#280C10] p-1 flex items-center justify-center shrink-0 border border-slate-200/80 dark:border-[#3D1418]">
+                    <div className="p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] flex items-center justify-between gap-3 shadow-2xs">
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div className="w-14 h-14 rounded-xl bg-slate-100 dark:bg-[#280C10] p-1.5 flex items-center justify-center shrink-0 border border-slate-200/80 dark:border-[#3D1418]">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src="/brand/srm-ap-logo.png"
@@ -720,10 +720,10 @@ function LearningDashboardContent() {
                           />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                          <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
                             SRM University-AP Logo
                           </p>
-                          <p className="font-mono text-[10px] text-slate-500 dark:text-slate-400">
+                          <p className="font-mono text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                             PNG · Transparent
                           </p>
                         </div>
@@ -731,36 +731,36 @@ function LearningDashboardContent() {
                       <a
                         href="/brand/srm-ap-logo.png"
                         download="SRM-University-AP-Official-Logo.png"
-                        className="px-2.5 py-1.5 rounded-md bg-slate-100 dark:bg-[#2A0F13] hover:bg-burgundy hover:text-white dark:hover:bg-burgundy text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-colors shrink-0"
+                        className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-[#2A0F13] hover:bg-burgundy hover:text-white dark:hover:bg-burgundy text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition-colors shrink-0"
                       >
-                        <Download className="w-3.5 h-3.5" />
+                        <Download className="w-4 h-4" />
                         <span>Download</span>
                       </a>
                     </div>
                   </div>
 
                   {/* Social Tagging Quick Reference */}
-                  <div className="p-3 rounded-lg bg-slate-100/70 dark:bg-[#200A0E] border border-slate-200/70 dark:border-[#3D1418] text-xs space-y-1.5">
-                    <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200">
-                      <Share2 className="w-3.5 h-3.5 text-burgundy dark:text-[#E89BA5]" />
+                  <div className="p-3.5 sm:p-4 rounded-xl bg-slate-100/70 dark:bg-[#200A0E] border border-slate-200/70 dark:border-[#3D1418] text-xs space-y-2">
+                    <div className="flex items-center gap-2 font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200">
+                      <Share2 className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
                       <span>Social Posting & Tagging Instructions:</span>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1 font-mono text-[11px]">
-                      <div className="p-2.5 rounded bg-white dark:bg-[#150709] border border-slate-200/60 dark:border-[#3D1418] space-y-0.5">
-                        <p className="font-bold text-slate-800 dark:text-slate-200 font-sans text-xs">Instagram Reel</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 pt-1 font-mono text-xs">
+                      <div className="p-3 rounded-xl bg-white dark:bg-[#150709] border border-slate-200/60 dark:border-[#3D1418] space-y-1">
+                        <p className="font-bold text-slate-800 dark:text-slate-200 font-sans text-xs sm:text-sm">Instagram Reel</p>
                         <p className="text-slate-600 dark:text-slate-300">
                           Tag: <span className="text-burgundy dark:text-[#E89BA5] font-bold">@qiskitfallfest</span> & <span className="text-burgundy dark:text-[#E89BA5] font-bold">@srmuap</span>
                         </p>
-                        <p className="text-slate-500 dark:text-slate-400 text-[10px]">
+                        <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">
                           #QiskitFallFest2026 #QiskitFallFestSRMAP #SRMUniversityAP
                         </p>
                       </div>
-                      <div className="p-2.5 rounded bg-white dark:bg-[#150709] border border-slate-200/60 dark:border-[#3D1418] space-y-0.5">
-                        <p className="font-bold text-slate-800 dark:text-slate-200 font-sans text-xs">LinkedIn Video Post</p>
+                      <div className="p-3 rounded-xl bg-white dark:bg-[#150709] border border-slate-200/60 dark:border-[#3D1418] space-y-1">
+                        <p className="font-bold text-slate-800 dark:text-slate-200 font-sans text-xs sm:text-sm">LinkedIn Video Post</p>
                         <p className="text-slate-600 dark:text-slate-300">
                           Mention: <span className="text-burgundy dark:text-[#E89BA5] font-bold">SRM University-AP</span> & <span className="text-burgundy dark:text-[#E89BA5] font-bold">Qiskit</span>
                         </p>
-                        <p className="text-slate-500 dark:text-slate-400 text-[10px]">
+                        <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">
                           #QiskitFallFest2026 #QiskitFallFestSRMAP #SRMUniversityAP
                         </p>
                       </div>
@@ -774,37 +774,37 @@ function LearningDashboardContent() {
             {challenge.type === 'poster' && (
               <div className="space-y-4">
                 {/* Strict AI Prohibition & Plagiarism Alert */}
-                <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-200 text-xs space-y-1.5 shadow-2xs">
-                  <div className="flex items-center gap-2 font-bold text-rose-900 dark:text-rose-200">
+                <div className="p-4 sm:p-5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-200 text-xs sm:text-sm space-y-2 shadow-2xs">
+                  <div className="flex items-center gap-2 font-bold text-xs sm:text-sm text-rose-900 dark:text-rose-200">
                     <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
                     <span>Strict Policy: Generative AI Prohibited & Plagiarism Checked</span>
                   </div>
-                  <p className="text-rose-800 dark:text-rose-300 leading-relaxed pl-6">
+                  <p className="text-rose-800 dark:text-rose-300 text-xs sm:text-sm leading-relaxed pl-6">
                     Posters generated using artificial intelligence (e.g., Midjourney, DALL-E, Canva Magic Media, or automated generators) are strictly prohibited. Visual layouts, diagrams, and content are screened for plagiarism. Only authentic, original participant work is eligible for awards.
                   </p>
                 </div>
 
                 {/* Mandatory Brand Assets Download Card */}
-                <div className="p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-[#3D1418] bg-slate-50/70 dark:bg-[#1A090C] space-y-3.5">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 dark:border-[#3D1418] pb-3">
+                <div className="p-4 sm:p-6 rounded-xl border border-slate-200 dark:border-[#3D1418] bg-slate-50/70 dark:bg-[#1A090C] space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 dark:border-[#3D1418] pb-3.5">
                     <div>
-                      <h3 className="font-sans text-xs sm:text-sm font-bold text-slate-900 dark:text-[#FAF6F3]">
+                      <h3 className="font-sans text-sm sm:text-base font-bold text-slate-900 dark:text-[#FAF6F3]">
                         Official Brand Assets & Logos (Mandatory)
                       </h3>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
                         Download both high-resolution logos and include them in your digital poster layout (header, footer, or corner).
                       </p>
                     </div>
-                    <span className="font-mono text-[10px] font-semibold text-burgundy dark:text-[#E89BA5] px-2.5 py-1 rounded bg-burgundy/10 dark:bg-burgundy/20 border border-burgundy/20 dark:border-burgundy/40 shrink-0 self-start sm:self-auto">
+                    <span className="font-mono text-xs font-semibold text-burgundy dark:text-[#E89BA5] px-2.5 py-1 rounded bg-burgundy/10 dark:bg-burgundy/20 border border-burgundy/20 dark:border-burgundy/40 shrink-0 self-start sm:self-auto">
                       Required for Evaluation
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-0.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-0.5">
                     {/* Logo 1: Qiskit Fall Fest 2026 SRM AP Badge */}
-                    <div className="p-3 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] flex items-center justify-between gap-3 shadow-2xs">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-12 h-12 rounded-lg bg-slate-100 dark:bg-[#280C10] p-1 flex items-center justify-center shrink-0 border border-slate-200/80 dark:border-[#3D1418]">
+                    <div className="p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] flex items-center justify-between gap-3 shadow-2xs">
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div className="w-14 h-14 rounded-xl bg-slate-100 dark:bg-[#280C10] p-1.5 flex items-center justify-center shrink-0 border border-slate-200/80 dark:border-[#3D1418]">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src="/brand/qiskit-fall-fest-2026-badge.png"
@@ -813,10 +813,10 @@ function LearningDashboardContent() {
                           />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                          <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
                             Qiskit Fall Fest Badge
                           </p>
-                          <p className="font-mono text-[10px] text-slate-500 dark:text-slate-400">
+                          <p className="font-mono text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                             PNG · High-Res 1080p
                           </p>
                         </div>
@@ -824,17 +824,17 @@ function LearningDashboardContent() {
                       <a
                         href="/brand/qiskit-fall-fest-2026-badge.png"
                         download="Qiskit-Fall-Fest-2026-SRMAP-Badge.png"
-                        className="px-2.5 py-1.5 rounded-md bg-slate-100 dark:bg-[#2A0F13] hover:bg-burgundy hover:text-white dark:hover:bg-burgundy text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-colors shrink-0"
+                        className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-[#2A0F13] hover:bg-burgundy hover:text-white dark:hover:bg-burgundy text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition-colors shrink-0"
                       >
-                        <Download className="w-3.5 h-3.5" />
+                        <Download className="w-4 h-4" />
                         <span>Download</span>
                       </a>
                     </div>
 
                     {/* Logo 2: SRM University-AP Official Logo */}
-                    <div className="p-3 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] flex items-center justify-between gap-3 shadow-2xs">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-12 h-12 rounded-lg bg-slate-100 dark:bg-[#280C10] p-1 flex items-center justify-center shrink-0 border border-slate-200/80 dark:border-[#3D1418]">
+                    <div className="p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] flex items-center justify-between gap-3 shadow-2xs">
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div className="w-14 h-14 rounded-xl bg-slate-100 dark:bg-[#280C10] p-1.5 flex items-center justify-center shrink-0 border border-slate-200/80 dark:border-[#3D1418]">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src="/brand/srm-ap-logo.png"
@@ -843,10 +843,10 @@ function LearningDashboardContent() {
                           />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                          <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
                             SRM University-AP Logo
                           </p>
-                          <p className="font-mono text-[10px] text-slate-500 dark:text-slate-400">
+                          <p className="font-mono text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                             PNG · Transparent
                           </p>
                         </div>
@@ -854,9 +854,9 @@ function LearningDashboardContent() {
                       <a
                         href="/brand/srm-ap-logo.png"
                         download="SRM-University-AP-Official-Logo.png"
-                        className="px-2.5 py-1.5 rounded-md bg-slate-100 dark:bg-[#2A0F13] hover:bg-burgundy hover:text-white dark:hover:bg-burgundy text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-colors shrink-0"
+                        className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-[#2A0F13] hover:bg-burgundy hover:text-white dark:hover:bg-burgundy text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition-colors shrink-0"
                       >
-                        <Download className="w-3.5 h-3.5" />
+                        <Download className="w-4 h-4" />
                         <span>Download</span>
                       </a>
                     </div>
@@ -867,33 +867,33 @@ function LearningDashboardContent() {
 
             {/* Essay Competition Dedicated Anti-AI & Plagiarism Warning */}
             {challenge.type === 'essay' && (
-              <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-200 text-xs space-y-1.5 shadow-2xs">
-                <div className="flex items-center gap-2 font-bold text-rose-900 dark:text-rose-200">
+              <div className="p-4 sm:p-5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-200 text-xs sm:text-sm space-y-2 shadow-2xs">
+                <div className="flex items-center gap-2 font-bold text-xs sm:text-sm text-rose-900 dark:text-rose-200">
                   <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
                   <span>Strict Policy: AI-Generated Content Prohibited (Automated Plagiarism Screening Active)</span>
                 </div>
-                <p className="text-rose-800 dark:text-rose-300 leading-relaxed pl-6">
+                <p className="text-rose-800 dark:text-rose-300 text-xs sm:text-sm leading-relaxed pl-6">
                   Essays must be 100% human-authored by the registered participant. The use of generative AI tools (ChatGPT, Claude, Gemini, etc.) or uncredited copied text is strictly prohibited. Every submission is analyzed via automated AI-detection engines and academic plagiarism scanners. Flagged submissions will be disqualified immediately.
                 </p>
               </div>
             )}
 
-            <form onSubmit={(e) => handleCompetitionSubmit(e, challenge.type)} className="space-y-3">
+            <form onSubmit={(e) => handleCompetitionSubmit(e, challenge.type)} className="space-y-4">
               {supportsDocUpload && activeMode === 'file' ? (
-                <div className="space-y-3">
-                  <div className="rounded-xl border-2 border-dashed border-slate-300 dark:border-[#4A181E] bg-slate-50/70 dark:bg-[#1C0A0D]/70 p-4 sm:p-5 transition-colors hover:border-burgundy/50 dark:hover:border-[#E89BA5]/50">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="flex items-start gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-lg bg-burgundy/10 dark:bg-burgundy/20 text-burgundy dark:text-[#E89BA5] flex items-center justify-center shrink-0">
-                          <FileText className="w-5 h-5" />
+                <div className="space-y-3.5">
+                  <div className="rounded-xl border-2 border-dashed border-slate-300 dark:border-[#4A181E] bg-slate-50/70 dark:bg-[#1C0A0D]/70 p-5 sm:p-6 transition-colors hover:border-burgundy/50 dark:hover:border-[#E89BA5]/50">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex items-start sm:items-center gap-3.5 min-w-0">
+                        <div className="w-12 h-12 rounded-xl bg-burgundy/10 dark:bg-burgundy/20 text-burgundy dark:text-[#E89BA5] flex items-center justify-center shrink-0">
+                          <FileText className="w-6 h-6" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-xs font-semibold text-slate-900 dark:text-[#FAF6F3] truncate">
+                          <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-[#FAF6F3] truncate">
                             {currentSelectedFile
                               ? currentSelectedFile.name
                               : `Select your ${challenge.type === 'poster' ? 'poster' : 'essay'} file (.pdf or .docx)`}
                           </p>
-                          <p className="font-mono text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                          <p className="font-mono text-xs text-slate-500 dark:text-slate-400 mt-1">
                             {currentSelectedFile
                               ? `${formatFileSize(currentSelectedFile.size)} · Ready to upload`
                               : `Supported formats: PDF (.pdf) or Word (.docx) · Max ${MAX_DOCUMENT_SIZE_MB} MB`}
@@ -908,15 +908,15 @@ function LearningDashboardContent() {
                             onClick={() =>
                               setSelectedFiles((prev) => ({ ...prev, [challenge.type]: null }))
                             }
-                            className="p-1.5 rounded-lg border border-slate-200 dark:border-[#3D1418] text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-white dark:hover:bg-[#150709] transition-colors cursor-pointer"
+                            className="p-2 rounded-lg border border-slate-200 dark:border-[#3D1418] text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-white dark:hover:bg-[#150709] transition-colors cursor-pointer"
                             title="Remove selected file"
                           >
-                            <X className="w-3.5 h-3.5" />
+                            <X className="w-4 h-4" />
                           </button>
                         )}
                         <label
                           className={clsx(
-                            'px-3.5 py-2 rounded-lg border text-xs font-semibold inline-flex items-center gap-1.5 transition-colors',
+                            'px-4 py-2.5 rounded-lg border text-xs sm:text-sm font-semibold inline-flex items-center gap-1.5 transition-colors',
                             !sessionUser
                               ? 'border-slate-200 dark:border-[#2D1014] bg-slate-100 dark:bg-[#1A090C] text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-70'
                               : 'border-slate-300 dark:border-[#4A181E] bg-white dark:bg-[#150709] hover:bg-slate-50 dark:hover:bg-[#240C10] text-slate-800 dark:text-[#FAF6F3] cursor-pointer'
@@ -925,7 +925,7 @@ function LearningDashboardContent() {
                         >
                           <Upload
                             className={clsx(
-                              'w-3.5 h-3.5',
+                              'w-4 h-4',
                               !sessionUser ? 'text-slate-400 dark:text-slate-500' : 'text-burgundy dark:text-[#E89BA5]'
                             )}
                           />
@@ -950,7 +950,7 @@ function LearningDashboardContent() {
                       disabled={!sessionUser || isSubmittingComp[challenge.type] || !currentSelectedFile}
                       title={!sessionUser ? 'Please sign in with Google to submit your document' : undefined}
                       className={clsx(
-                        'w-full sm:w-auto px-5 py-2.5 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5',
+                        'w-full sm:w-auto px-6 py-2.5 text-xs sm:text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2',
                         !sessionUser
                           ? 'bg-slate-200 dark:bg-[#250D11] text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-300/70 dark:border-[#3D1418]'
                           : 'bg-burgundy hover:bg-burgundy-deep text-white cursor-pointer disabled:opacity-50'
@@ -958,15 +958,15 @@ function LearningDashboardContent() {
                     >
                       {isSubmittingComp[challenge.type] ? (
                         <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <Loader2 className="w-4 h-4 animate-spin" />
                           <span>Uploading Document...</span>
                         </>
                       ) : (
                         <>
                           {!sessionUser ? (
-                            <Lock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                            <Lock className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                           ) : (
-                            <Send className="w-3.5 h-3.5" />
+                            <Send className="w-4 h-4" />
                           )}
                           <span>
                             {!sessionUser
@@ -981,20 +981,20 @@ function LearningDashboardContent() {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200">
+                    <label className="block text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200">
                       {challenge.type === 'reels'
                         ? 'Instagram Reel or LinkedIn Video URL (Public)'
                         : 'Work URL (Public Link)'}
                     </label>
                     {challenge.type === 'reels' && (
-                      <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400">
+                      <span className="font-mono text-xs text-slate-500 dark:text-slate-400">
                         Instagram Reel or LinkedIn Post preferred
                       </span>
                     )}
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2.5">
                     <input
                       type="url"
                       disabled={!sessionUser}
@@ -1009,7 +1009,7 @@ function LearningDashboardContent() {
                       placeholder={!sessionUser ? 'Sign in with Google to submit your public URL' : challenge.urlPlaceholder}
                       required={Boolean(sessionUser)}
                       className={clsx(
-                        'flex-1 px-3 py-2 text-xs font-mono border rounded-lg focus:outline-none',
+                        'flex-1 px-4 py-2.5 text-xs sm:text-sm font-mono border rounded-lg focus:outline-none',
                         !sessionUser
                           ? 'border-slate-200 dark:border-[#2D1014] bg-slate-100 dark:bg-[#150709] text-slate-400 dark:text-slate-500 cursor-not-allowed'
                           : 'border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] focus:ring-1 focus:ring-burgundy'
@@ -1020,7 +1020,7 @@ function LearningDashboardContent() {
                       disabled={!sessionUser || isSubmittingComp[challenge.type]}
                       title={!sessionUser ? 'Please sign in with Google to submit your link' : undefined}
                       className={clsx(
-                        'px-4 py-2 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5 shrink-0',
+                        'px-5 py-2.5 text-xs sm:text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 shrink-0',
                         !sessionUser
                           ? 'bg-slate-200 dark:bg-[#250D11] text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-300/70 dark:border-[#3D1418]'
                           : 'bg-burgundy hover:bg-burgundy-deep text-white cursor-pointer disabled:opacity-50'
@@ -1028,15 +1028,15 @@ function LearningDashboardContent() {
                     >
                       {isSubmittingComp[challenge.type] ? (
                         <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <Loader2 className="w-4 h-4 animate-spin" />
                           <span>Saving...</span>
                         </>
                       ) : (
                         <>
                           {!sessionUser ? (
-                            <Lock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                            <Lock className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                           ) : (
-                            <Send className="w-3.5 h-3.5" />
+                            <Send className="w-4 h-4" />
                           )}
                           <span>
                             {!sessionUser
@@ -1055,7 +1055,7 @@ function LearningDashboardContent() {
                     </button>
                   </div>
                   {challenge.type === 'reels' && (
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
                       Accepted: Live Instagram Reel or LinkedIn Video link. Ensure your post is set to Public for evaluation.
                     </p>
                   )}
@@ -1063,30 +1063,30 @@ function LearningDashboardContent() {
               )}
 
               {compErrorMsg[challenge.type] && (
-                <div className="p-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 flex items-start gap-2 text-rose-800 dark:text-rose-200 text-xs font-medium">
+                <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 flex items-start gap-2 text-rose-800 dark:text-rose-200 text-xs sm:text-sm font-medium">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" />
                   <span>{compErrorMsg[challenge.type]}</span>
                 </div>
               )}
 
               {compSuccessMsg[challenge.type] && (
-                <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center gap-2 text-emerald-800 dark:text-emerald-300 text-xs font-medium">
+                <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center gap-2 text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm font-medium">
                   <CheckCircle2 className="w-4 h-4 shrink-0" />
                   <span>{compSuccessMsg[challenge.type]}</span>
                 </div>
               )}
 
               {recordedSub && (
-                <div className="p-3.5 rounded-lg bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-start sm:items-center gap-2.5 min-w-0">
+                <div className="p-4 sm:p-4.5 rounded-xl bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] text-xs sm:text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+                  <div className="flex items-start sm:items-center gap-3 min-w-0">
                     {isRecordedUploadedDoc ? (
-                      <FileText className="w-4 h-4 text-burgundy dark:text-[#E89BA5] shrink-0 mt-0.5 sm:mt-0" />
+                      <FileText className="w-5 h-5 text-burgundy dark:text-[#E89BA5] shrink-0 mt-0.5 sm:mt-0" />
                     ) : (
-                      <Link2 className="w-4 h-4 text-burgundy dark:text-[#E89BA5] shrink-0 mt-0.5 sm:mt-0" />
+                      <Link2 className="w-5 h-5 text-burgundy dark:text-[#E89BA5] shrink-0 mt-0.5 sm:mt-0" />
                     )}
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                        <span className="text-xs text-slate-500 dark:text-slate-400">
                           Recorded Submission ({isRecordedUploadedDoc ? 'Uploaded Document' : 'Public Link'}):
                         </span>
                         {challenge.type === 'reels' &&
@@ -1098,7 +1098,7 @@ function LearningDashboardContent() {
                             </span>
                           )}
                       </div>
-                      <span className="font-mono text-xs font-semibold text-slate-900 dark:text-[#FAF6F3] truncate block mt-0.5">
+                      <span className="font-mono text-xs sm:text-sm font-semibold text-slate-900 dark:text-[#FAF6F3] truncate block mt-0.5">
                         {recordedSub.submission_title || recordedSub.submission_url}
                       </span>
                     </div>
@@ -1107,10 +1107,10 @@ function LearningDashboardContent() {
                     href={recordedSub.submission_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-3 py-1.5 rounded-md bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] font-mono text-xs text-burgundy dark:text-[#E89BA5] font-semibold hover:underline inline-flex items-center gap-1.5 shrink-0 self-start sm:self-auto"
+                    className="px-3.5 py-2 rounded-lg bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] font-mono text-xs sm:text-sm text-burgundy dark:text-[#E89BA5] font-semibold hover:underline inline-flex items-center gap-1.5 shrink-0 self-start sm:self-auto"
                   >
                     <span>{isRecordedUploadedDoc ? 'Open Document' : 'Open Link'}</span>
-                    <ExternalLink className="w-3 h-3 shrink-0" />
+                    <ExternalLink className="w-3.5 h-3.5 shrink-0" />
                   </a>
                 </div>
               )}
