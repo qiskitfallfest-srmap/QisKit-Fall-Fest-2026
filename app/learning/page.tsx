@@ -4,7 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import clsx from 'clsx';
-import { AuthGate } from '@/components/learning/AuthGate';
+import { AuthGate, handleGoogleSignInDirect } from '@/components/learning/AuthGate';
 import { supabase } from '@/lib/supabase';
 import { CURRICULUM_SESSIONS, ONLINE_PROGRAMME_SCHEDULE } from '@/data/learning/curriculum';
 import { SESSION_TRANSCRIPTS } from '@/data/learning/transcripts';
@@ -110,6 +110,23 @@ function LearningDashboardContent() {
     fetchCompetitions();
     fetchProgress();
     fetchSessionUser();
+
+    const handleAuthChange = (e: any) => {
+      if (e?.detail) {
+        setSessionUser({
+          email: e.detail.email,
+          fullName: e.detail.fullName || e.detail.email,
+        });
+        fetchProgress();
+        fetchCompetitions();
+      } else {
+        setSessionUser(null);
+        setProgress({});
+        setCompetitions({});
+      }
+    };
+    window.addEventListener('qff_auth_change', handleAuthChange);
+    return () => window.removeEventListener('qff_auth_change', handleAuthChange);
   }, []);
 
   async function fetchSessionUser() {
@@ -121,27 +138,31 @@ function LearningDashboardContent() {
           email: data.session.email,
           fullName: data.session.fullName || data.session.email,
         });
+      } else {
+        setSessionUser(null);
       }
     } catch (e) {
-      console.error('Error fetching session user:', e);
+      setSessionUser(null);
     }
   }
 
   async function fetchProgress() {
     try {
       const res = await fetch('/api/learning/progress', { cache: 'no-store' });
+      if (!res.ok) return;
       const data = await res.json();
       if (data?.progress) {
         setProgress(data.progress);
       }
     } catch (e) {
-      console.error('Error loading progress:', e);
+      // Quietly ignore for unauthenticated preview mode
     }
   }
 
   async function fetchCompetitions() {
     try {
       const res = await fetch('/api/learning/competition-submit', { cache: 'no-store' });
+      if (!res.ok) return;
       const data = await res.json();
       if (data.submissions) {
         setCompetitions(data.submissions);
@@ -208,6 +229,13 @@ function LearningDashboardContent() {
 
   async function handleCompetitionSubmit(e: React.FormEvent, type: 'reels' | 'poster' | 'essay') {
     e.preventDefault();
+    if (!sessionUser) {
+      setCompErrorMsg((prev) => ({
+        ...prev,
+        [type]: 'Please sign in with Google to submit your entry.',
+      }));
+      return;
+    }
     const supportsDocumentUpload = type === 'poster' || type === 'essay';
     const currentMode = supportsDocumentUpload ? submissionModes[type] || 'file' : 'url';
 
@@ -540,6 +568,31 @@ function LearningDashboardContent() {
           </div>
 
           <div className="space-y-4">
+            {/* Guest Preview Mode Notice */}
+            {!sessionUser && (
+              <div className="p-4 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-300/80 dark:border-amber-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-2xs">
+                <div className="flex items-start sm:items-center gap-2.5 min-w-0">
+                  <Lock className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5 sm:mt-0" />
+                  <div>
+                    <p className="font-semibold text-amber-950 dark:text-amber-200">
+                      Preview Mode · Sign in required to submit
+                    </p>
+                    <p className="text-[11px] text-amber-800/90 dark:text-amber-300/90 mt-0.5">
+                      You are previewing this daily competition. Sign in with Google to enable submission links, upload files, and compete for prizes.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleGoogleSignInDirect()}
+                  className="px-4 py-2 rounded-lg bg-burgundy hover:bg-burgundy-deep text-white font-semibold text-xs transition-colors shrink-0 flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                >
+                  <span>Sign In with Google</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
             {/* Mode Switcher for Digital Poster (Day 2) & Essay (Day 3) */}
             {supportsDocUpload && (
               <div className="space-y-2">
@@ -861,11 +914,25 @@ function LearningDashboardContent() {
                             <X className="w-3.5 h-3.5" />
                           </button>
                         )}
-                        <label className="px-3.5 py-2 rounded-lg border border-slate-300 dark:border-[#4A181E] bg-white dark:bg-[#150709] hover:bg-slate-50 dark:hover:bg-[#240C10] text-slate-800 dark:text-[#FAF6F3] text-xs font-semibold cursor-pointer transition-colors inline-flex items-center gap-1.5">
-                          <Upload className="w-3.5 h-3.5 text-burgundy dark:text-[#E89BA5]" />
+                        <label
+                          className={clsx(
+                            'px-3.5 py-2 rounded-lg border text-xs font-semibold inline-flex items-center gap-1.5 transition-colors',
+                            !sessionUser
+                              ? 'border-slate-200 dark:border-[#2D1014] bg-slate-100 dark:bg-[#1A090C] text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-70'
+                              : 'border-slate-300 dark:border-[#4A181E] bg-white dark:bg-[#150709] hover:bg-slate-50 dark:hover:bg-[#240C10] text-slate-800 dark:text-[#FAF6F3] cursor-pointer'
+                          )}
+                          title={!sessionUser ? 'Please sign in with Google to select and upload a document' : undefined}
+                        >
+                          <Upload
+                            className={clsx(
+                              'w-3.5 h-3.5',
+                              !sessionUser ? 'text-slate-400 dark:text-slate-500' : 'text-burgundy dark:text-[#E89BA5]'
+                            )}
+                          />
                           <span>{currentSelectedFile ? 'Change File' : 'Choose File'}</span>
                           <input
                             type="file"
+                            disabled={!sessionUser}
                             accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                             onChange={(e) =>
                               handleFileSelect(e, challenge.type as 'poster' | 'essay')
@@ -880,8 +947,14 @@ function LearningDashboardContent() {
                   <div className="flex justify-end">
                     <button
                       type="submit"
-                      disabled={isSubmittingComp[challenge.type] || !currentSelectedFile}
-                      className="w-full sm:w-auto px-5 py-2.5 bg-burgundy hover:bg-burgundy-deep text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer"
+                      disabled={!sessionUser || isSubmittingComp[challenge.type] || !currentSelectedFile}
+                      title={!sessionUser ? 'Please sign in with Google to submit your document' : undefined}
+                      className={clsx(
+                        'w-full sm:w-auto px-5 py-2.5 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5',
+                        !sessionUser
+                          ? 'bg-slate-200 dark:bg-[#250D11] text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-300/70 dark:border-[#3D1418]'
+                          : 'bg-burgundy hover:bg-burgundy-deep text-white cursor-pointer disabled:opacity-50'
+                      )}
                     >
                       {isSubmittingComp[challenge.type] ? (
                         <>
@@ -890,9 +963,17 @@ function LearningDashboardContent() {
                         </>
                       ) : (
                         <>
-                          <Send className="w-3.5 h-3.5" />
+                          {!sessionUser ? (
+                            <Lock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                          ) : (
+                            <Send className="w-3.5 h-3.5" />
+                          )}
                           <span>
-                            {recordedSub ? 'Upload & Replace Submission' : 'Upload & Submit Document'}
+                            {!sessionUser
+                              ? 'Upload & Submit Document (Sign In Required)'
+                              : recordedSub
+                              ? 'Upload & Replace Submission'
+                              : 'Upload & Submit Document'}
                           </span>
                         </>
                       )}
@@ -916,6 +997,7 @@ function LearningDashboardContent() {
                   <div className="flex flex-col sm:flex-row gap-2">
                     <input
                       type="url"
+                      disabled={!sessionUser}
                       value={competitionUrls[challenge.type] || ''}
                       onChange={(e) => {
                         setCompErrorMsg((prev) => ({ ...prev, [challenge.type]: '' }));
@@ -924,14 +1006,25 @@ function LearningDashboardContent() {
                           [challenge.type]: e.target.value,
                         }));
                       }}
-                      placeholder={challenge.urlPlaceholder}
-                      required
-                      className="flex-1 px-3 py-2 text-xs font-mono border border-slate-300 dark:border-[#3D1418] rounded-lg bg-white dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] focus:outline-none focus:ring-1 focus:ring-burgundy"
+                      placeholder={!sessionUser ? 'Sign in with Google to submit your public URL' : challenge.urlPlaceholder}
+                      required={Boolean(sessionUser)}
+                      className={clsx(
+                        'flex-1 px-3 py-2 text-xs font-mono border rounded-lg focus:outline-none',
+                        !sessionUser
+                          ? 'border-slate-200 dark:border-[#2D1014] bg-slate-100 dark:bg-[#150709] text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                          : 'border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] focus:ring-1 focus:ring-burgundy'
+                      )}
                     />
                     <button
                       type="submit"
-                      disabled={isSubmittingComp[challenge.type]}
-                      className="px-4 py-2 bg-burgundy hover:bg-burgundy-deep text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+                      disabled={!sessionUser || isSubmittingComp[challenge.type]}
+                      title={!sessionUser ? 'Please sign in with Google to submit your link' : undefined}
+                      className={clsx(
+                        'px-4 py-2 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5 shrink-0',
+                        !sessionUser
+                          ? 'bg-slate-200 dark:bg-[#250D11] text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-300/70 dark:border-[#3D1418]'
+                          : 'bg-burgundy hover:bg-burgundy-deep text-white cursor-pointer disabled:opacity-50'
+                      )}
                     >
                       {isSubmittingComp[challenge.type] ? (
                         <>
@@ -940,12 +1033,18 @@ function LearningDashboardContent() {
                         </>
                       ) : (
                         <>
-                          <Send className="w-3.5 h-3.5" />
+                          {!sessionUser ? (
+                            <Lock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                          ) : (
+                            <Send className="w-3.5 h-3.5" />
+                          )}
                           <span>
-                            {challenge.type === 'reels' &&
-                            recordedSub?.submission_url &&
-                            (recordedSub.submission_url.includes('drive.google.com') ||
-                              recordedSub.submission_url.includes('drive.google'))
+                            {!sessionUser
+                              ? 'Submit Link (Sign In Required)'
+                              : challenge.type === 'reels' &&
+                              recordedSub?.submission_url &&
+                              (recordedSub.submission_url.includes('drive.google.com') ||
+                                recordedSub.submission_url.includes('drive.google'))
                               ? 'Update with Social Link'
                               : recordedSub
                               ? 'Update Link'
@@ -1028,35 +1127,55 @@ function LearningDashboardContent() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-[#3D1418]">
         <div>
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight">
-            Learning Hub
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight">
+              Learning Hub
+            </h1>
+            {!sessionUser && (
+              <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 uppercase tracking-wider">
+                Preview Mode
+              </span>
+            )}
+          </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-            {sessionUser?.fullName ? `Welcome back, ${(sessionUser.fullName || '').split(' ')[0]}.` : 'Complete sessions sequentially.'}
+            {sessionUser?.fullName
+              ? `Welcome back, ${(sessionUser.fullName || '').split(' ')[0]}.`
+              : 'Preview daily challenges and programme curriculum. Sign in to submit and track progress.'}
           </p>
         </div>
 
-        <button
-          onClick={openCertificateModal}
-          className={clsx(
-            'px-3.5 py-2 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 self-start sm:self-auto cursor-pointer border',
-            isCertificateEligible
-              ? 'bg-burgundy text-white hover:bg-burgundy-deep border-burgundy shadow-xs'
-              : 'bg-slate-100 dark:bg-[#1C0A0D] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#250D11] border-slate-200 dark:border-[#3D1418]'
-          )}
-        >
-          {isCertificateEligible ? (
-            <>
-              <Award className="w-4 h-4 text-emerald-400" />
-              <span>Certificate (Unlocked)</span>
-            </>
-          ) : (
-            <>
-              <Lock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
-              <span>Certificate (Locked · {completedSessionsCount}/{totalSessionsCount} Videos, {passedQuizzesCount}/{totalSessionsCount} Quizzes)</span>
-            </>
-          )}
-        </button>
+        {!sessionUser ? (
+          <button
+            type="button"
+            onClick={() => handleGoogleSignInDirect()}
+            className="px-4 py-2 text-xs font-semibold rounded-lg bg-burgundy hover:bg-burgundy-deep text-white transition-colors flex items-center gap-1.5 self-start sm:self-auto cursor-pointer shadow-xs"
+          >
+            <span>Sign In with Google</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        ) : (
+          <button
+            onClick={openCertificateModal}
+            className={clsx(
+              'px-3.5 py-2 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 self-start sm:self-auto cursor-pointer border',
+              isCertificateEligible
+                ? 'bg-burgundy text-white hover:bg-burgundy-deep border-burgundy shadow-xs'
+                : 'bg-slate-100 dark:bg-[#1C0A0D] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#250D11] border-slate-200 dark:border-[#3D1418]'
+            )}
+          >
+            {isCertificateEligible ? (
+              <>
+                <Award className="w-4 h-4 text-emerald-400" />
+                <span>Certificate (Unlocked)</span>
+              </>
+            ) : (
+              <>
+                <Lock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                <span>Certificate (Locked · {completedSessionsCount}/{totalSessionsCount} Videos, {passedQuizzesCount}/{totalSessionsCount} Quizzes)</span>
+              </>
+            )}
+          </button>
+        )}
       </div>
 
       {/* Official Deadline Extension Announcement Banner */}
@@ -1400,7 +1519,11 @@ function LearningDashboardContent() {
                         : 'text-burgundy dark:text-[#E89BA5]'
                     )}
                   >
-                    {isSubmitted ? 'Submitted' : 'Submit Entry'}
+                    {isSubmitted
+                      ? 'Submitted'
+                      : sessionUser
+                      ? 'Submit Entry'
+                      : 'Preview Challenge'}
                   </span>
                   <ArrowRight className="w-3 h-3 text-slate-400 group-hover:text-burgundy dark:group-hover:text-[#E89BA5] transition-colors" />
                 </div>
@@ -1586,8 +1709,12 @@ function LearningDashboardContent() {
                           href={`/learning?challenge=${currentDayProgramme.day}`}
                           className="px-3 py-1.5 rounded-lg bg-purple-50 dark:bg-purple-950/50 text-purple-800 dark:text-purple-300 hover:bg-purple-600 hover:text-white text-xs font-semibold transition-colors flex items-center gap-1 border border-purple-200 dark:border-purple-900"
                         >
-                          <Send className="w-3 h-3" />
-                          <span>Submit Work</span>
+                          {sessionUser ? (
+                            <Send className="w-3 h-3" />
+                          ) : (
+                            <Trophy className="w-3 h-3" />
+                          )}
+                          <span>{sessionUser ? 'Submit Work' : 'Preview Challenge'}</span>
                         </Link>
                       )}
                     </div>
@@ -1604,7 +1731,7 @@ function LearningDashboardContent() {
 
 export default function LearningDashboardPage() {
   return (
-    <AuthGate>
+    <AuthGate allowGuest>
       <Suspense fallback={<div className="p-8 text-center text-xs text-slate-500">Loading...</div>}>
         <LearningDashboardContent />
       </Suspense>
