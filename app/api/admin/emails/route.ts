@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { redis, invalidateEmailCache } from '@/lib/redis';
+import { logError, logInfo } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession();
@@ -219,7 +220,7 @@ export async function POST(request: NextRequest) {
         try {
           await redis.set(
             `whitelist:${item.email}`,
-            { role: item.role, fullName: item.full_name || '' },
+            { whitelisted: true, role: item.role, fullName: item.full_name || '' },
             { ex: 3600 }
           );
         } catch (cacheErr) {
@@ -230,6 +231,13 @@ export async function POST(request: NextRequest) {
         await redis.del('admin:config_and_stats', 'admin:stats_overview');
       } catch {}
     }
+
+    logInfo('admin.whitelist.added', {
+      admin: session.email,
+      added: newAddedCount,
+      existing: existingPreservedCount,
+      emails: allEmails.length <= 20 ? allEmails : undefined,
+    });
 
     const message = `Successfully processed ${dedupedEmailList.length} unique participant(s): ${newAddedCount} new member(s) added, ${existingPreservedCount} existing member(s) preserved. No previous members were deleted.`;
 
@@ -242,7 +250,7 @@ export async function POST(request: NextRequest) {
       duplicateCount: intraBatchDuplicates,
     });
   } catch (error: any) {
-    console.error('Error adding whitelist emails:', error);
+    await logError('admin.whitelist.add_failed', error);
     return NextResponse.json(
       { error: error?.message || 'Failed to add emails to whitelist' },
       { status: 500 }

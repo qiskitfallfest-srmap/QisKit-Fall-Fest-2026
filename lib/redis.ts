@@ -1,5 +1,6 @@
 import { Redis } from '@upstash/redis';
 import { supabase } from './supabase';
+import { logError } from './logger';
 
 const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
 const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -37,7 +38,8 @@ export const CACHE_TTL = {
 export async function cacheAside<T>(
   key: string,
   ttlSeconds: number,
-  fetcher: () => Promise<T>
+  fetcher: () => Promise<T>,
+  shouldCache: (result: T) => boolean = () => true
 ): Promise<T> {
   if (redis) {
     try {
@@ -53,7 +55,7 @@ export async function cacheAside<T>(
   // Cache miss or Redis unavailable - query source of truth
   const result = await fetcher();
 
-  if (redis && result !== null && result !== undefined) {
+  if (redis && result !== null && result !== undefined && shouldCache(result)) {
     try {
       await redis.set(key, result, { ex: ttlSeconds });
     } catch (cacheErr) {
@@ -96,29 +98,42 @@ export async function isEmailWhitelisted(
   const normalizedEmail = email.trim().toLowerCase();
   const cacheKey = `whitelist:${normalizedEmail}`;
 
-  return cacheAside(cacheKey, CACHE_TTL.WHITELIST, async () => {
-    try {
-      const { data, error } = await supabase
-        .from('allowed_emails')
-        .select('email, role, full_name, is_active')
-        .ilike('email', normalizedEmail)
-        .eq('is_active', true)
-        .maybeSingle();
+  const result = await cacheAside(
+    cacheKey,
+    CACHE_TTL.WHITELIST,
+    async (): Promise<{ whitelisted: boolean; role?: string; fullName?: string }> => {
+      try {
+        const { data, error } = await supabase
+          .from('allowed_emails')
+          .select('email, role, full_name, is_active')
+          .ilike('email', normalizedEmail)
+          .eq('is_active', true)
+          .maybeSingle();
 
-      if (error || !data) {
+        if (error) {
+          await logError('whitelist.lookup_failed', error, { email: normalizedEmail });
+          return { whitelisted: false };
+        }
+        if (!data) {
+          return { whitelisted: false };
+        }
+
+        return {
+          whitelisted: true,
+          role: data.role,
+          fullName: data.full_name || '',
+        };
+      } catch (err) {
+        await logError('whitelist.lookup_failed', err, { email: normalizedEmail });
         return { whitelisted: false };
       }
+    },
+    // Never cache rejections: a student added moments later must pass immediately.
+    (r) => r.whitelisted
+  );
 
-      return {
-        whitelisted: true,
-        role: data.role,
-        fullName: data.full_name || '',
-      };
-    } catch (err) {
-      console.error('Database whitelist check error:', err);
-      return { whitelisted: false };
-    }
-  });
+  // Older cache entries were written as { role, fullName } without the flag.
+  return { ...result, whitelisted: result.whitelisted ?? Boolean(result.role) };
 }
 
 /**
