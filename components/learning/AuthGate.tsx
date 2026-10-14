@@ -697,10 +697,10 @@ export function AuthGate({ children, onSessionChange, allowGuest = false }: Auth
             <span>Deadline Extended: 17 Oct 2026</span>
           </div>
           <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight leading-snug">
-            Qiskit Fall Fest 2026 Portal
+            Hackathon &amp; Competition Arena
           </h2>
           <p className="font-sans text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
-            Online Phase Learning Platform & Hackathon Workspace
+            Flagship Quantum Hackathon, Qiskit Challenges &amp; Masterclasses
           </p>
         </div>
 

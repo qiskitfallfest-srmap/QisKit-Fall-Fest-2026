@@ -1128,7 +1128,7 @@ function LearningDashboardContent() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight leading-snug">
-              Learning Portal & Activities Workspace
+              Hackathon &amp; Competition Arena
             </h1>
             {!sessionUser && (
               <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 uppercase tracking-wider">
@@ -1138,8 +1138,8 @@ function LearningDashboardContent() {
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
             {sessionUser?.fullName
-              ? `Welcome back, ${(sessionUser.fullName || '').split(' ')[0]}. Access your masterclasses, coding challenges, competitions, and hackathon workspace.`
-              : 'Explore masterclasses, coding challenges, creative competitions, and the optional hackathon. Sign in with Google to participate.'}
+              ? `Welcome back, ${(sessionUser.fullName || '').split(' ')[0]}. Compete in the flagship hackathon, solve live Qiskit challenges, or submit competition entries.`
+              : 'Official arena for the Flagship Quantum Hackathon (Phase 1), Qiskit Coding Challenges, Creative Competitions, and Masterclasses. Sign in with Google to enter.'}
           </p>
         </div>
 
