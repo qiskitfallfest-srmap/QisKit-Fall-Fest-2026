@@ -7,6 +7,8 @@
  * 2. Automatically dispatches a personalized Registration Confirmation & Portal Pass email.
  * 3. Records sync status and email status in the spreadsheet to prevent duplicate communication.
  * 4. Adds a custom menu in Google Sheets for 1-click batch syncing of past submissions.
+ * 5. Serves as a Web App (doPost) so participants registering directly on the website also receive
+ *    the exact same branded pass email and appear under a "Website_Registrations" sheet tab.
  *
  * Setup Instructions:
  * 1. Open your Google Form or the linked Google Sheet.
@@ -14,13 +16,22 @@
  * 3. Delete any code in the editor and paste this entire file.
  * 4. Replace WEBHOOK_SECRET below if you changed it in your environment variables.
  * 5. Click "Save" (disk icon).
- * 6. Set up the automated trigger:
+ * 6. Set up the automated trigger for Form submissions:
  *    - Click the clock icon ("Triggers") on the left sidebar.
  *    - Click "+ Add Trigger" (bottom right).
- *    - Choose which function to run: "onFormSubmit"
+ *    - Choose function to run: "onFormSubmit"
  *    - Select event source: "From spreadsheet" (or "From form")
  *    - Select event type: "On form submit"
  *    - Click "Save" and authorize Google permissions.
+ * 7. Deploy as Web App (for Website Registration Email Relay):
+ *    - Click "Deploy" (top right blue button) -> "New deployment".
+ *    - Click the gear icon next to "Select type" and choose "Web app".
+ *    - Description: "Qiskit Fall Fest 2026 Web Relay"
+ *    - Execute as: "Me (your email address)"
+ *    - Who has access: "Anyone"
+ *    - Click "Deploy", authorize access, and copy the Web App URL.
+ *    - Add this URL to Vercel and .env.local as:
+ *      GOOGLE_APPS_SCRIPT_WEBAPP_URL=https://script.google.com/macros/s/.../exec
  */
 
 var WEBHOOK_URL = 'https://www.qffsrmap2026.com/api/webhooks/google-form';
@@ -243,7 +254,7 @@ function sendWelcomeEmail(recipientEmail, participantName) {
     + '3. Your profile is pre-authorized, so you will enter directly without extra forms.\n\n'
     + 'Festival Tracks (Choose any):\n'
     + '- Flagship Quantum Hackathon (Team Track - 2 to 6 members · ₹1,00,000 Prize Pool)\n'
-    - '- Python Coding Challenges in Qiskit (Individual · Leaderboard)\n'
+    + '- Python Coding Challenges in Qiskit (Individual · Leaderboard)\n'
     + '- Creative Competitions: Reels, Poster, Essay (Individual · ₹20,000 Prize Pool)\n'
     + '- Masterclasses & Quizzes (Individual · Verified Certificate)\n\n'
     + 'Join WhatsApp Community: https://chat.whatsapp.com/HoLFUpcm46L0qDE6VBdboW\n\n'
@@ -342,5 +353,97 @@ function testSendToGyan() {
   } catch (e) {
     // Silent if executed without active spreadsheet UI
   }
+}
+
+/**
+ * Web App entrypoint to handle incoming HTTP POST requests from Next.js website registrations.
+ * Dispatches the branded pass email and logs the registration in a "Website_Registrations" sheet.
+ */
+function doPost(e) {
+  try {
+    var rawData = (e && e.postData && e.postData.contents) ? e.postData.contents : '{}';
+    var data = JSON.parse(rawData);
+    
+    // Validate secret token from JSON payload or URL query parameter
+    var token = data.secretToken || (e && e.parameter && e.parameter.secret);
+    if (token !== WEBHOOK_SECRET) {
+      return ContentService.createTextOutput(JSON.stringify({
+        success: false,
+        error: 'Unauthorized: Invalid secret token'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    var email = String(data.email || '').trim().toLowerCase();
+    var name = String(data.name || data.fullName || 'Participant').trim();
+    
+    if (!email || email.indexOf('@') === -1) {
+      return ContentService.createTextOutput(JSON.stringify({
+        success: false,
+        error: 'Invalid recipient email address'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // 1. Dispatch the branded confirmation pass email
+    sendWelcomeEmail(email, name);
+    
+    // 2. Record registration under "Website_Registrations" sheet tab
+    try {
+      var ss = SpreadsheetApp.getActiveSpreadsheet();
+      var sheet = ss.getSheetByName('Website_Registrations');
+      if (!sheet) {
+        sheet = ss.insertSheet('Website_Registrations');
+        sheet.appendRow([
+          'Timestamp',
+          'Full Name',
+          'Email',
+          'Institution',
+          'Role',
+          'Phone',
+          'Year of Study',
+          'Interests',
+          'Email_Status'
+        ]);
+        sheet.getRange(1, 1, 1, 9).setFontWeight('bold').setBackground('#f5efea');
+      }
+      
+      var timestamp = Utilities.formatDate(new Date(), 'Asia/Kolkata', 'yyyy-MM-dd HH:mm:ss');
+      sheet.appendRow([
+        timestamp,
+        name,
+        email,
+        data.college || data.institution || 'SRM University-AP',
+        data.role || 'Undergraduate Student',
+        data.phone || '',
+        data.yearOfStudy || '',
+        Array.isArray(data.interests) ? data.interests.join(', ') : (data.interests || ''),
+        'SENT (' + timestamp + ' IST)'
+      ]);
+    } catch (sheetErr) {
+      Logger.log('Sheet recording note: ' + sheetErr);
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      message: 'Confirmation email dispatched and recorded successfully.'
+    })).setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (err) {
+    Logger.log('doPost error: ' + err);
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      error: err.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * Health check endpoint for testing the Web App URL in a browser.
+ */
+function doGet(e) {
+  return ContentService.createTextOutput(JSON.stringify({
+    status: 'online',
+    service: 'IBM Qiskit Fall Fest 2026 Email & Sync Relay',
+    timestamp: new Date().toISOString()
+  })).setMimeType(ContentService.MimeType.JSON);
 }
 

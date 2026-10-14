@@ -214,11 +214,11 @@ export function HomeHero() {
               sm:flex-nowrap
             `}
           >
-            {/* Primary CTA linking to the hackathon and competition workspace */}
+            {/* Primary CTA: Register For Online Events */}
             <Link
               href="/learning"
               data-cursor="cta"
-              onClick={() => trackEvent('cta_click', { placement: 'home_hero', target: '/learning' })}
+              onClick={() => trackEvent('cta_click', { placement: 'home_hero_register', target: '/learning' })}
               className={`
                 ${styles.registerBtn}
                 group
@@ -249,18 +249,18 @@ export function HomeHero() {
                 shrink-0
               `}
             >
-              {/* Expanding Chamber: strictly clipped inside button (380ms expansion / 320ms retraction) */}
+              {/* Expanding Chamber: strictly clipped inside button */}
               <span
                 aria-hidden="true"
                 className="pointer-events-none absolute right-[9px] top-1/2 -translate-y-1/2 h-[32px] w-[32px] rounded-full bg-[#FFF7F2] transition-transform duration-[320ms] group-hover:duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[22] -z-0"
               />
 
-              {/* CTA Label (280ms text transition) */}
+              {/* CTA Label */}
               <span className="relative z-10 font-[650] leading-tight text-left transition-colors duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:text-[#A61629] dark:group-hover:text-[#921426]">
-                Enter Hackathon/Competition Workspace
+                Register For Online Events
               </span>
 
-              {/* Circular Arrow Chamber & Icon (300ms translation) */}
+              {/* Circular Arrow Chamber & Icon */}
               <span
                 aria-hidden="true"
                 className="relative z-10 flex h-[32px] w-[32px] items-center justify-center rounded-full bg-[#FFF7F2] text-[#A61629] dark:text-[#921426] border-0 border-transparent shadow-none"
@@ -271,6 +271,30 @@ export function HomeHero() {
                   className="transition-transform duration-[300ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-[2px]"
                 />
               </span>
+            </Link>
+
+            {/* Secondary CTA: Enter Hackathon & Competition Arena */}
+            <Link
+              href="/learning"
+              data-cursor="cta"
+              onClick={() => trackEvent('cta_click', { placement: 'home_hero_arena', target: '/learning' })}
+              className={`
+                ${styles.arenaBtn}
+                group
+                outline-none
+                focus-visible:ring-2
+                focus-visible:ring-[#A7192A]/40
+                focus-visible:ring-offset-2
+                focus-visible:rounded-[6px]
+                dark:focus-visible:ring-offset-[#100405]
+              `}
+            >
+              <span>Enter Hackathon Arena</span>
+              <ArrowRight
+                size={15}
+                strokeWidth={2.2}
+                className="transition-transform duration-200 group-hover:translate-x-0.5 text-[#A61629] dark:text-[#F07B88]"
+              />
             </Link>
           </div>
         </div>

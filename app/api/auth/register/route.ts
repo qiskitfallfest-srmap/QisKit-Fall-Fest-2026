@@ -110,6 +110,40 @@ export async function POST(request: NextRequest) {
     }
     logInfo('auth.register.success', { email, institution });
 
+    // 3b. Dispatch Confirmation Pass Email via Google Apps Script Web App Relay
+    const appsScriptUrl = process.env.GOOGLE_APPS_SCRIPT_WEBAPP_URL;
+    if (appsScriptUrl) {
+      try {
+        const syncSecret = process.env.GOOGLE_FORM_SYNC_SECRET || 'qff-srmap-2026-sync-secret';
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+        const emailRes = await fetch(appsScriptUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'send_welcome_email',
+            secretToken: syncSecret,
+            name: fullName,
+            email,
+            institution,
+            role,
+            phone,
+            yearOfStudy,
+            interests,
+            source: 'website_direct',
+          }),
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        const emailResult = await emailRes.json().catch(() => null);
+        logInfo('auth.register.email_relay', { email, ok: emailRes.ok, result: emailResult });
+      } catch (emailErr) {
+        logWarn('auth.register.email_relay_failed', { email, error: serializeError(emailErr) });
+      }
+    }
+
     // 4. Create authenticated session cookie
     const sessionData = {
       email,
