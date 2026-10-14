@@ -768,36 +768,6 @@
   }
 }
 
-.watchVideoBtn {
-  font-size: 13.5px;
-  gap: 10px;
-}
-
-@media (min-width: 1024px) {
-  .watchVideoBtn {
-    font-size: 14px;
-  }
-}
-
-@media (min-width: 1280px) and (min-height: 901px) {
-  .watchVideoBtn {
-    font-size: 15px;
-    gap: 12px;
-  }
-}
-
-.watchVideoCircle {
-  width: 38px;
-  height: 38px;
-}
-
-@media (min-width: 1280px) and (min-height: 901px) {
-  .watchVideoCircle {
-    width: 42px;
-    height: 42px;
-  }
-}
-
 /* -------------------------------------------------------------------------
    9. CRYOSTAT
    ------------------------------------------------------------------------- */

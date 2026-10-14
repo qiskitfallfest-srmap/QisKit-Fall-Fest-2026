@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, CalendarDays, MapPin, Play } from 'lucide-react';
+import { ArrowRight, CalendarDays, MapPin } from 'lucide-react';
 import { REGISTRATION_URL } from '@/lib/constants';
 import { trackRegistrationClick, trackEvent } from '@/lib/analytics';
 import { ResponsivePicture } from '@/components/shared/ResponsivePicture';
@@ -272,55 +272,6 @@ export function HomeHero() {
                 />
               </span>
             </Link>
-
-            {/* Watch Live Link */}
-            <a
-              href="https://www.youtube.com/live/ev-L2YibRR4"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Watch Qiskit Fall Fest live"
-              onClick={() => trackEvent('watch_video_click', { url: 'https://www.youtube.com/live/ev-L2YibRR4' })}
-              className={`
-                ${styles.watchVideoBtn}
-                group
-                inline-flex
-                items-center
-                font-semibold
-                text-[#23191A]
-                dark:text-[#F5EDEB]
-                cursor-pointer
-                shrink-0
-                outline-none
-                focus-visible:ring-2
-                focus-visible:ring-[#A7192A]/35
-                focus-visible:ring-offset-2
-                focus-visible:rounded-[5px]
-                dark:focus-visible:ring-offset-[#100405]
-              `}
-            >
-              <span
-                className={`
-                  ${styles.watchVideoCircle}
-                  flex
-                  items-center
-                  justify-center
-                  rounded-full
-                  border
-                  border-[#981728]
-                  dark:border-[#ED7B87]
-                  transition-transform
-                  duration-200
-                  group-hover:scale-105
-                `}
-              >
-                <Play
-                  size={13}
-                  className="ml-0.5 text-[#981728] dark:text-[#ED7B87]"
-                  fill="currentColor"
-                />
-              </span>
-              <span>Watch Live</span>
-            </a>
           </div>
         </div>
 
