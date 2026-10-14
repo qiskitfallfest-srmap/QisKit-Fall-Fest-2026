@@ -245,16 +245,6 @@ export function LearningSidebar() {
   // Navigation Items Renderer
   const renderNavContent = () => (
     <>
-      {/* Section 1: Learning Phase Header */}
-      <div className="pt-1 pb-2 px-1">
-        <div className="flex items-center gap-2 px-2">
-          <span className="font-mono text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
-            Learning Phase
-          </span>
-          <div className="flex-1 h-px bg-slate-200/80 dark:bg-[#3D1418]" />
-        </div>
-      </div>
-
       <Link
         href="/learning"
         onClick={() => setIsMobileMenuOpen(false)}
@@ -274,7 +264,7 @@ export function LearningSidebar() {
                 : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
             )}
           />
-          <span>Overview & Programme</span>
+          <span>Workspace Overview</span>
         </div>
         <ChevronRight
           className={clsx(
@@ -285,6 +275,212 @@ export function LearningSidebar() {
           )}
         />
       </Link>
+
+      {/* Section 1: Hackathon Phase Header */}
+      <div className="pt-3 pb-2 px-1">
+        <div className="flex items-center gap-2 px-2">
+          <span className="font-mono text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
+            Hackathon Phase
+          </span>
+          <div className="flex-1 h-px bg-slate-200/80 dark:bg-[#3D1418]" />
+        </div>
+      </div>
+
+      <Link
+        href="/learning/hackathon"
+        onClick={() => setIsMobileMenuOpen(false)}
+        className={clsx(
+          'w-full flex items-center justify-between px-3 py-2 mb-2 rounded-lg transition-colors text-xs sm:text-sm font-semibold group',
+          isHackathon
+            ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] border border-burgundy/20 dark:border-burgundy/40'
+            : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1C0A0D] border border-transparent'
+        )}
+      >
+        <div className="flex items-center gap-2">
+          <Users
+            className={clsx(
+              'w-3.5 h-3.5 shrink-0',
+              isHackathon
+                ? 'text-burgundy dark:text-[#E89BA5]'
+                : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
+            )}
+          />
+          <span>Hackathon Workspace</span>
+        </div>
+        <ChevronRight
+          className={clsx(
+            'w-3.5 h-3.5 shrink-0',
+            isHackathon
+              ? 'text-burgundy dark:text-[#E89BA5]'
+              : 'text-slate-300 dark:text-slate-600'
+          )}
+        />
+      </Link>
+      {/* Section 2: Competitions Category */}
+      <div className="pt-3 pb-1 px-1">
+        <div className="flex items-center gap-2 px-2">
+          <span className="font-mono text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
+            Competitions
+          </span>
+          <div className="flex-1 h-px bg-slate-200/80 dark:bg-[#3D1418]" />
+        </div>
+      </div>
+
+      {/* Flagship: Python Coding Challenge in Qiskit */}
+      <Link
+        href="/learning/qiskit-challenge"
+        onClick={() => setIsMobileMenuOpen(false)}
+        className={clsx(
+          'w-full flex items-center justify-between px-3 py-2 mb-2 rounded-lg transition-colors text-xs sm:text-sm font-semibold group',
+          isCodingChallenge
+            ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] border border-burgundy/20 dark:border-burgundy/40 shadow-xs'
+            : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1C0A0D] border border-transparent'
+        )}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <Terminal
+            className={clsx(
+              'w-3.5 h-3.5 shrink-0',
+              isCodingChallenge
+                ? 'text-burgundy dark:text-[#E89BA5]'
+                : isChallengeLocked
+                ? 'text-amber-500'
+                : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
+            )}
+          />
+          <div className="flex flex-col min-w-0">
+            <span className="truncate">Python Coding Challenge in Qiskit</span>
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono font-normal">
+              9 Problems · 100 pts
+            </span>
+          </div>
+        </div>
+        {isChallengeLocked ? (
+          <span className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-mono font-semibold bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-500/20 flex items-center gap-1">
+            <Lock className="w-2.5 h-2.5" />
+            Soon
+          </span>
+        ) : (
+          <span className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+            ACTIVE
+          </span>
+        )}
+      </Link>
+
+      <div className="mb-2">
+        {/* Expandable Challenges Accordion Button */}
+        <button
+          type="button"
+          onClick={() => setIsChallengesOpen((prev) => !prev)}
+          className={clsx(
+            'w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors text-xs sm:text-sm font-semibold group cursor-pointer border',
+            isChallengesOpen
+              ? 'bg-slate-100/90 dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] border-slate-200/60 dark:border-[#3D1418]'
+              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1C0A0D] border-transparent'
+          )}
+        >
+          <div className="flex items-center gap-2 min-w-0 pr-2">
+            {Object.keys(competitions).length === 3 ? (
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+            ) : (
+              <Trophy
+                className={clsx(
+                  'w-3.5 h-3.5 shrink-0',
+                  isChallengesOpen
+                    ? 'text-burgundy dark:text-[#E89BA5]'
+                    : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
+                )}
+              />
+            )}
+            <span className="truncate">Daily Competitions</span>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span
+              className={clsx(
+                'font-mono text-[9px] px-1.5 py-0.5 rounded font-bold border',
+                Object.keys(competitions).length === 3
+                  ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/70'
+                  : 'bg-burgundy/10 dark:bg-burgundy/25 text-burgundy dark:text-[#E89BA5] border-burgundy/20 dark:border-burgundy/40'
+              )}
+            >
+              {session ? `${Object.keys(competitions).length}/3 Done` : '3 Tasks'}
+            </span>
+            {isChallengesOpen ? (
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            ) : (
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 shrink-0" />
+            )}
+          </div>
+        </button>
+
+        {/* Expandable Challenges Sub-items */}
+        {isChallengesOpen && (
+          <div className="mt-1.5 ml-3 pl-3 border-l-2 border-slate-200/80 dark:border-[#3D1418] space-y-1.5 py-1">
+            {Object.values(DAILY_COMPETITIONS).map((comp) => {
+              const isCompActive =
+                pathname === '/learning' && activeChallengeDay === String(comp.day);
+              const isCompSubmitted = Boolean(competitions[comp.type]);
+              return (
+                <Link
+                  key={comp.day}
+                  href={`/learning?challenge=${comp.day}`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={clsx(
+                    'group flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg text-xs transition-colors border shadow-2xs',
+                    isCompActive
+                      ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/25 dark:text-[#E89BA5] border-burgundy/30 dark:border-burgundy/50 font-semibold ring-1 ring-burgundy/20'
+                      : 'bg-white/80 dark:bg-[#150709] text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-[#3D1418] hover:bg-slate-50 dark:hover:bg-[#1F0A0E] hover:border-slate-300 dark:hover:border-[#521C23]'
+                  )}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    {isCompSubmitted && !isCompActive ? (
+                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                    ) : (
+                      <Award
+                        className={clsx(
+                          'w-3.5 h-3.5 shrink-0',
+                          isCompActive
+                            ? 'text-burgundy dark:text-[#E89BA5]'
+                            : 'text-burgundy/80 dark:text-[#E89BA5]/80 group-hover:text-burgundy'
+                        )}
+                      />
+                    )}
+                    <span className="truncate text-xs leading-snug font-semibold text-slate-800 dark:text-[#FAF6F3]">
+                      {comp.title}
+                    </span>
+                  </div>
+                  {isCompSubmitted ? (
+                    <span className="shrink-0 px-1.5 py-0.5 rounded font-mono text-[9px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80">
+                      Done
+                    </span>
+                  ) : (
+                    <span
+                      className={clsx(
+                        'shrink-0 px-1.5 py-0.5 rounded font-mono text-[9px] font-bold uppercase tracking-wider',
+                        isCompActive
+                          ? 'bg-burgundy text-white'
+                          : 'bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] border border-burgundy/20 dark:border-burgundy/40'
+                      )}
+                    >
+                      17 Oct
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Section 3: Learning Phase Header */}
+      <div className="pt-3 pb-2 px-1">
+        <div className="flex items-center gap-2 px-2">
+          <span className="font-mono text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
+            Learning Phase
+          </span>
+          <div className="flex-1 h-px bg-slate-200/80 dark:bg-[#3D1418]" />
+        </div>
+      </div>
 
       {DAYS.map((day) => {
         const isDayOpen = openDays.includes(day.id);
@@ -473,163 +669,7 @@ export function LearningSidebar() {
         );
       })}
 
-      {/* Section 2: Challenges Category */}
-      <div className="pt-3 pb-1 px-1">
-        <div className="flex items-center gap-2 px-2">
-          <span className="font-mono text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
-            Challenges
-          </span>
-          <div className="flex-1 h-px bg-slate-200/80 dark:bg-[#3D1418]" />
-        </div>
-      </div>
-
-      {/* Flagship: Python Coding Challenge in Qiskit */}
-      <Link
-        href="/learning/qiskit-challenge"
-        onClick={() => setIsMobileMenuOpen(false)}
-        className={clsx(
-          'w-full flex items-center justify-between px-3 py-2 mb-2 rounded-lg transition-colors text-xs sm:text-sm font-semibold group',
-          isCodingChallenge
-            ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] border border-burgundy/20 dark:border-burgundy/40 shadow-xs'
-            : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1C0A0D] border border-transparent'
-        )}
-      >
-        <div className="flex items-center gap-2 min-w-0">
-          <Terminal
-            className={clsx(
-              'w-3.5 h-3.5 shrink-0',
-              isCodingChallenge
-                ? 'text-burgundy dark:text-[#E89BA5]'
-                : isChallengeLocked
-                ? 'text-amber-500'
-                : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
-            )}
-          />
-          <div className="flex flex-col min-w-0">
-            <span className="truncate">Python Coding Challenge in Qiskit</span>
-            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono font-normal">
-              9 Problems · 100 pts
-            </span>
-          </div>
-        </div>
-        {isChallengeLocked ? (
-          <span className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-mono font-semibold bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-500/20 flex items-center gap-1">
-            <Lock className="w-2.5 h-2.5" />
-            Soon
-          </span>
-        ) : (
-          <span className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-            ACTIVE
-          </span>
-        )}
-      </Link>
-
-      <div className="mb-2">
-        {/* Expandable Challenges Accordion Button */}
-        <button
-          type="button"
-          onClick={() => setIsChallengesOpen((prev) => !prev)}
-          className={clsx(
-            'w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors text-xs sm:text-sm font-semibold group cursor-pointer border',
-            isChallengesOpen
-              ? 'bg-slate-100/90 dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] border-slate-200/60 dark:border-[#3D1418]'
-              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1C0A0D] border-transparent'
-          )}
-        >
-          <div className="flex items-center gap-2 min-w-0 pr-2">
-            {Object.keys(competitions).length === 3 ? (
-              <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-            ) : (
-              <Trophy
-                className={clsx(
-                  'w-3.5 h-3.5 shrink-0',
-                  isChallengesOpen
-                    ? 'text-burgundy dark:text-[#E89BA5]'
-                    : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
-                )}
-              />
-            )}
-            <span className="truncate">Daily Competitions</span>
-          </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span
-              className={clsx(
-                'font-mono text-[9px] px-1.5 py-0.5 rounded font-bold border',
-                Object.keys(competitions).length === 3
-                  ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/70'
-                  : 'bg-burgundy/10 dark:bg-burgundy/25 text-burgundy dark:text-[#E89BA5] border-burgundy/20 dark:border-burgundy/40'
-              )}
-            >
-              {session ? `${Object.keys(competitions).length}/3 Done` : '3 Tasks'}
-            </span>
-            {isChallengesOpen ? (
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-            ) : (
-              <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 shrink-0" />
-            )}
-          </div>
-        </button>
-
-        {/* Expandable Challenges Sub-items */}
-        {isChallengesOpen && (
-          <div className="mt-1.5 ml-3 pl-3 border-l-2 border-slate-200/80 dark:border-[#3D1418] space-y-1.5 py-1">
-            {Object.values(DAILY_COMPETITIONS).map((comp) => {
-              const isCompActive =
-                pathname === '/learning' && activeChallengeDay === String(comp.day);
-              const isCompSubmitted = Boolean(competitions[comp.type]);
-              return (
-                <Link
-                  key={comp.day}
-                  href={`/learning?challenge=${comp.day}`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={clsx(
-                    'group flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg text-xs transition-colors border shadow-2xs',
-                    isCompActive
-                      ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/25 dark:text-[#E89BA5] border-burgundy/30 dark:border-burgundy/50 font-semibold ring-1 ring-burgundy/20'
-                      : 'bg-white/80 dark:bg-[#150709] text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-[#3D1418] hover:bg-slate-50 dark:hover:bg-[#1F0A0E] hover:border-slate-300 dark:hover:border-[#521C23]'
-                  )}
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    {isCompSubmitted && !isCompActive ? (
-                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                    ) : (
-                      <Award
-                        className={clsx(
-                          'w-3.5 h-3.5 shrink-0',
-                          isCompActive
-                            ? 'text-burgundy dark:text-[#E89BA5]'
-                            : 'text-burgundy/80 dark:text-[#E89BA5]/80 group-hover:text-burgundy'
-                        )}
-                      />
-                    )}
-                    <span className="truncate text-xs leading-snug font-semibold text-slate-800 dark:text-[#FAF6F3]">
-                      {comp.title}
-                    </span>
-                  </div>
-                  {isCompSubmitted ? (
-                    <span className="shrink-0 px-1.5 py-0.5 rounded font-mono text-[9px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80">
-                      Done
-                    </span>
-                  ) : (
-                    <span
-                      className={clsx(
-                        'shrink-0 px-1.5 py-0.5 rounded font-mono text-[9px] font-bold uppercase tracking-wider',
-                        isCompActive
-                          ? 'bg-burgundy text-white'
-                          : 'bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] border border-burgundy/20 dark:border-burgundy/40'
-                      )}
-                    >
-                      17 Oct
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Section 3: Certification */}
+      {/* Section 4: Certification */}
       <div className="pt-3 pb-1 px-1">
         <div className="flex items-center gap-2 px-2">
           <span className="font-mono text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
@@ -682,46 +722,6 @@ export function LearningSidebar() {
         )}
       </button>
 
-      {/* Section 4: Hackathon Phase Header */}
-      <div className="pt-3 pb-2 px-1">
-        <div className="flex items-center gap-2 px-2">
-          <span className="font-mono text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
-            Hackathon Phase
-          </span>
-          <div className="flex-1 h-px bg-slate-200/80 dark:bg-[#3D1418]" />
-        </div>
-      </div>
-
-      <Link
-        href="/learning/hackathon"
-        onClick={() => setIsMobileMenuOpen(false)}
-        className={clsx(
-          'w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors text-xs sm:text-sm font-semibold group',
-          isHackathon
-            ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] border border-burgundy/20 dark:border-burgundy/40'
-            : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1C0A0D] border border-transparent'
-        )}
-      >
-        <div className="flex items-center gap-2">
-          <Users
-            className={clsx(
-              'w-3.5 h-3.5 shrink-0',
-              isHackathon
-                ? 'text-burgundy dark:text-[#E89BA5]'
-                : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
-            )}
-          />
-          <span>Hackathon Workspace</span>
-        </div>
-        <ChevronRight
-          className={clsx(
-            'w-3.5 h-3.5 shrink-0',
-            isHackathon
-              ? 'text-burgundy dark:text-[#E89BA5]'
-              : 'text-slate-300 dark:text-slate-600'
-          )}
-        />
-      </Link>
     </>
   );
 

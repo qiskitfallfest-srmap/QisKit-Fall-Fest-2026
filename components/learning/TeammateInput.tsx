@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { CheckCircle2, AlertCircle, XCircle, Loader2, Trash2, Plus, ExternalLink, MessageCircle } from 'lucide-react';
-import { REGISTRATION_URL, WHATSAPP_COMMUNITY_URL } from '@/lib/constants';
+import { CheckCircle2, XCircle, Loader2, Trash2, Plus } from 'lucide-react';
+import { UnregisteredTeammateNotice } from '@/components/learning/UnregisteredTeammateNotice';
 
 interface TeammateData {
   email: string;
@@ -183,36 +183,7 @@ export function TeammateInput({
           )}
 
           {validationState.status === 'not_whitelisted' && (
-            <div className="w-full rounded-lg border border-amber-300/80 dark:border-amber-700/60 bg-amber-50/90 dark:bg-amber-950/40 p-2.5 space-y-1.5 animate-in fade-in duration-200">
-              <div className="flex items-center gap-1.5 font-semibold text-amber-800 dark:text-amber-300">
-                <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
-                <span>Email not found in registered whitelist</span>
-              </div>
-              <p className="text-[11.5px] leading-relaxed text-amber-900/90 dark:text-amber-200/90 pl-5">
-                Tell your team member to sign in directly at the learning portal to register in 30 seconds, or reach out on WhatsApp for quick assistance.
-              </p>
-              <div className="flex flex-wrap items-center gap-2 pl-5 pt-0.5">
-                <a
-                  href={REGISTRATION_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-200/80 hover:bg-amber-300/90 dark:bg-amber-900/60 dark:hover:bg-amber-900 text-amber-950 dark:text-amber-100 font-semibold text-[11px] transition-colors"
-                >
-                  <span>Register on Portal</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-                <a
-                  href={WHATSAPP_COMMUNITY_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-950/60 dark:hover:bg-emerald-900 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800 font-semibold text-[11px] transition-colors"
-                >
-                  <MessageCircle className="w-3 h-3 text-[#25D366]" />
-                  <span>Join WhatsApp Group</span>
-                  <ExternalLink className="w-3 h-3 text-[#25D366]" />
-                </a>
-              </div>
-            </div>
+            <UnregisteredTeammateNotice email={emailInput.trim().toLowerCase()} />
           )}
 
           {validationState.status === 'already_in_team' && (

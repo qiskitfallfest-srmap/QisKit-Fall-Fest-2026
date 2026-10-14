@@ -19,7 +19,6 @@ import {
   ExternalLink,
   PlayCircle,
   Clock,
-  BookOpen,
   ArrowRight,
   ArrowLeft,
   Calendar,
@@ -451,7 +450,7 @@ function LearningDashboardContent() {
             className="inline-flex items-center gap-1.5 font-mono text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-burgundy dark:hover:text-[#E89BA5] transition-colors uppercase tracking-wider"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Back to Learning Hub</span>
+            <span>Back to Workspace</span>
           </Link>
 
           <div className="flex items-center gap-1.5 p-1 bg-white dark:bg-[#150709] rounded-lg border border-slate-200 dark:border-[#3D1418]">
@@ -1129,7 +1128,7 @@ function LearningDashboardContent() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight">
-              Learning Hub
+              Hackathon & Competitions Workspace
             </h1>
             {!sessionUser && (
               <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 uppercase tracking-wider">
@@ -1140,7 +1139,7 @@ function LearningDashboardContent() {
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
             {sessionUser?.fullName
               ? `Welcome back, ${(sessionUser.fullName || '').split(' ')[0]}.`
-              : 'Preview daily challenges and programme curriculum. Sign in to submit and track progress.'}
+              : 'Form your hackathon team and submit competition entries. Sign in with Google to participate.'}
           </p>
         </div>
 
@@ -1181,63 +1180,102 @@ function LearningDashboardContent() {
       {/* Official Deadline Extension Announcement Banner */}
       <DeadlineExtensionBanner />
 
-      {/* 3 Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="p-4 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Lectures</span>
-            <BookOpen className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
-          </div>
-          <div className="mt-2 flex items-baseline gap-1">
-            <span className="font-serif text-2xl font-bold text-slate-900 dark:text-[#FAF6F3]">
-              {completedSessionsCount}
+      {/* Flagship Hackathon Feature Card */}
+      <div className="p-5 sm:p-6 bg-white dark:bg-[#150709] border-2 border-burgundy/40 dark:border-burgundy/60 rounded-xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-mono text-[10px] font-bold text-white uppercase tracking-wider px-2 py-0.5 rounded bg-burgundy">
+              Flagship Hackathon · Phase 1
             </span>
-            <span className="text-xs text-slate-400">/ {totalSessionsCount}</span>
+            <span className="font-mono text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+              Closes 17 Oct 2026, 11:59 PM IST
+            </span>
           </div>
-          <div className="mt-2.5 w-full h-1 bg-slate-100 dark:bg-[#250D11] rounded-full overflow-hidden">
-            <div
-              className="h-full bg-burgundy dark:bg-[#E89BA5] rounded-full transition-all duration-500"
-              style={{ width: `${Math.min(100, Math.round((completedSessionsCount / totalSessionsCount) * 100))}%` }}
-            />
-          </div>
+          <h2 className="font-serif text-lg sm:text-xl font-bold text-slate-900 dark:text-[#FAF6F3]">
+            Flagship Hackathon Workspace
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-sans max-w-xl leading-relaxed">
+            Form a team of 2 to 6 members, choose your domain track and problem statement, and register your
+            repository for Phase 1. Every teammate must sign in to this portal once before they can be added.
+          </p>
         </div>
 
-        <div className="p-4 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Quizzes</span>
-            <Award className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
-          </div>
-          <div className="mt-2 flex items-baseline gap-1">
-            <span className="font-serif text-2xl font-bold text-slate-900 dark:text-[#FAF6F3]">
-              {passedQuizzesCount}
-            </span>
-            <span className="text-xs text-slate-400">/ {totalSessionsCount}</span>
-          </div>
-          <div className="mt-2.5 w-full h-1 bg-slate-100 dark:bg-[#250D11] rounded-full overflow-hidden">
-            <div
-              className="h-full bg-burgundy dark:bg-[#E89BA5] rounded-full transition-all duration-500"
-              style={{ width: `${Math.min(100, Math.round((passedQuizzesCount / totalSessionsCount) * 100))}%` }}
-            />
-          </div>
-        </div>
+        <Link
+          href="/learning/hackathon"
+          className="px-4 py-2.5 bg-burgundy text-white hover:bg-burgundy-deep text-xs sm:text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5 shrink-0 shadow-sm"
+        >
+          <Users className="w-4 h-4" />
+          <span>Open Hackathon Workspace</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
+      </div>
 
-        <div className="p-4 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Challenges</span>
-            <CheckCircle2 className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
-          </div>
-          <div className="mt-2 flex items-baseline gap-1">
-            <span className="font-serif text-2xl font-bold text-slate-900 dark:text-[#FAF6F3]">
-              {submittedCompsCount}
-            </span>
-            <span className="text-xs text-slate-400">/ 3</span>
-          </div>
-          <div className="mt-2.5 w-full h-1 bg-slate-100 dark:bg-[#250D11] rounded-full overflow-hidden">
-            <div
-              className="h-full bg-burgundy dark:bg-[#E89BA5] rounded-full transition-all duration-500"
-              style={{ width: `${Math.min(100, Math.round((submittedCompsCount / 3) * 100))}%` }}
-            />
-          </div>
+      {/* Daily Competitions Grid */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Daily Competitions (3)
+          </h3>
+          <span className="font-mono text-[11px] text-slate-400 dark:text-slate-500">
+            {submittedCompsCount} / 3 Submitted
+          </span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {Object.values(DAILY_COMPETITIONS).map((comp) => {
+            const sub = competitions[comp.type];
+            const isSubmitted = Boolean(sub);
+            const supportsDoc =
+              comp.submissionType === 'url_or_document' ||
+              comp.type === 'poster' ||
+              comp.type === 'essay';
+            return (
+              <Link
+                key={comp.day}
+                href={`/learning?challenge=${comp.day}`}
+                className="p-3.5 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl hover:border-burgundy/40 dark:hover:border-[#E89BA5]/40 transition-colors flex flex-col justify-between gap-2.5 group"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-1.5">
+                    <span className="font-mono text-[10px] font-bold text-burgundy dark:text-[#E89BA5] uppercase">
+                      Day 0{comp.day} · {comp.prize}
+                    </span>
+                    {isSubmitted ? (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    ) : (
+                      <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                    )}
+                  </div>
+                  <h4 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-[#FAF6F3] group-hover:text-burgundy dark:group-hover:text-[#E89BA5] transition-colors mt-1 line-clamp-1">
+                    {comp.title}
+                  </h4>
+                  <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5 truncate">
+                    {isSubmitted && sub?.submission_title
+                      ? `File: ${sub.submission_title}`
+                      : supportsDoc
+                      ? 'Accepts .pdf, .docx, or URL'
+                      : 'Accepts Public Video URL'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-[11px] font-mono pt-2 border-t border-slate-100 dark:border-[#250D11]">
+                  <span
+                    className={clsx(
+                      'font-semibold',
+                      isSubmitted
+                        ? 'text-emerald-700 dark:text-emerald-400'
+                        : 'text-burgundy dark:text-[#E89BA5]'
+                    )}
+                  >
+                    {isSubmitted
+                      ? 'Submitted'
+                      : sessionUser
+                      ? 'Submit Entry'
+                      : 'Preview Challenge'}
+                  </span>
+                  <ArrowRight className="w-3 h-3 text-slate-400 group-hover:text-burgundy dark:group-hover:text-[#E89BA5] transition-colors" />
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </div>
 
@@ -1268,6 +1306,17 @@ function LearningDashboardContent() {
           <span>Enter Challenge</span>
           <ArrowRight className="w-3.5 h-3.5" />
         </Link>
+      </div>
+
+      {/* Masterclass Learning Track */}
+      <div className="pt-6 border-t border-slate-200 dark:border-[#3D1418]">
+        <h2 className="font-serif text-lg font-bold text-slate-900 dark:text-[#FAF6F3]">
+          Masterclass Recordings & Certificate
+        </h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          Online phase lectures and concept check quizzes remain available. Complete all of them to unlock the
+          Optional Verified Certificate.
+        </p>
       </div>
 
       {/* Masterclass Certificate Status Card */}
@@ -1459,75 +1508,6 @@ function LearningDashboardContent() {
                   </Link>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Daily Creative Challenges Grid */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Daily Creative Challenges (3)
-          </h3>
-          <span className="font-mono text-[11px] text-slate-400 dark:text-slate-500">
-            {submittedCompsCount} / 3 Submitted
-          </span>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {Object.values(DAILY_COMPETITIONS).map((comp) => {
-            const sub = competitions[comp.type];
-            const isSubmitted = Boolean(sub);
-            const supportsDoc =
-              comp.submissionType === 'url_or_document' ||
-              comp.type === 'poster' ||
-              comp.type === 'essay';
-            return (
-              <Link
-                key={comp.day}
-                href={`/learning?challenge=${comp.day}`}
-                className="p-3.5 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl hover:border-burgundy/40 dark:hover:border-[#E89BA5]/40 transition-colors flex flex-col justify-between gap-2.5 group"
-              >
-                <div>
-                  <div className="flex items-center justify-between gap-1.5">
-                    <span className="font-mono text-[10px] font-bold text-burgundy dark:text-[#E89BA5] uppercase">
-                      Day 0{comp.day} · {comp.prize}
-                    </span>
-                    {isSubmitted ? (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                    ) : (
-                      <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                    )}
-                  </div>
-                  <h4 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-[#FAF6F3] group-hover:text-burgundy dark:group-hover:text-[#E89BA5] transition-colors mt-1 line-clamp-1">
-                    {comp.title}
-                  </h4>
-                  <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5 truncate">
-                    {isSubmitted && sub?.submission_title
-                      ? `File: ${sub.submission_title}`
-                      : supportsDoc
-                      ? 'Accepts .pdf, .docx, or URL'
-                      : 'Accepts Public Video URL'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-[11px] font-mono pt-2 border-t border-slate-100 dark:border-[#250D11]">
-                  <span
-                    className={clsx(
-                      'font-semibold',
-                      isSubmitted
-                        ? 'text-emerald-700 dark:text-emerald-400'
-                        : 'text-burgundy dark:text-[#E89BA5]'
-                    )}
-                  >
-                    {isSubmitted
-                      ? 'Submitted'
-                      : sessionUser
-                      ? 'Submit Entry'
-                      : 'Preview Challenge'}
-                  </span>
-                  <ArrowRight className="w-3 h-3 text-slate-400 group-hover:text-burgundy dark:group-hover:text-[#E89BA5] transition-colors" />
-                </div>
-              </Link>
             );
           })}
         </div>
