@@ -280,7 +280,7 @@ export function LearningSidebar() {
       <div className="pt-3 pb-2 px-1">
         <div className="flex items-center gap-2 px-2">
           <span className="font-mono text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
-            Hackathon Phase
+            Hackathon (Optional Track)
           </span>
           <div className="flex-1 h-px bg-slate-200/80 dark:bg-[#3D1418]" />
         </div>

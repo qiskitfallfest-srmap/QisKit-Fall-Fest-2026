@@ -1128,7 +1128,7 @@ function LearningDashboardContent() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight leading-snug">
-              Hackathon & Competitions Workspace
+              Learning Portal & Activities Workspace
             </h1>
             {!sessionUser && (
               <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 uppercase tracking-wider">
@@ -1138,8 +1138,8 @@ function LearningDashboardContent() {
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
             {sessionUser?.fullName
-              ? `Welcome back, ${(sessionUser.fullName || '').split(' ')[0]}.`
-              : 'Form your hackathon team and submit competition entries. Sign in with Google to participate.'}
+              ? `Welcome back, ${(sessionUser.fullName || '').split(' ')[0]}. Access your masterclasses, coding challenges, competitions, and hackathon workspace.`
+              : 'Explore masterclasses, coding challenges, creative competitions, and the optional hackathon. Sign in with Google to participate.'}
           </p>
         </div>
 
@@ -1185,7 +1185,7 @@ function LearningDashboardContent() {
         <div className="space-y-1.5">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-mono text-[10px] font-bold text-white uppercase tracking-wider px-2 py-0.5 rounded bg-burgundy">
-              Flagship Hackathon · Phase 1
+              Flagship Hackathon · Phase 1 (Optional Team Track)
             </span>
             <span className="font-mono text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
               Closes 17 Oct 2026, 11:59 PM IST
@@ -1196,7 +1196,7 @@ function LearningDashboardContent() {
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-sans max-w-xl leading-relaxed">
             Form a team of 2 to 6 members, choose your domain track and problem statement, and register your
-            repository for Phase 1. Every teammate must sign in to this portal once before they can be added.
+            repository for Phase 1. <em>Hackathon participation is optional—you can also participate exclusively in Masterclasses, Qiskit Challenges, or Creative Competitions without joining a team.</em>
           </p>
         </div>
 

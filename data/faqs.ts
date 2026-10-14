@@ -270,6 +270,17 @@ export const GENERAL_FAQS: FAQItem[] = [
     section: 'general',
     tags: ['Skills', 'Learning', 'Career', 'Qiskit'],
   },
+  {
+    id: 'faq-19',
+    number: 19,
+    question: 'Is participating in the Hackathon compulsory? Can I participate only in Masterclasses, Quizzes, or Competitions?',
+    answer:
+      'No, the Hackathon is completely optional. IBM Qiskit Fall Fest 2026 is designed with 4 flexible, independent tracks so you can participate according to your personal interest:\n\n1. Masterclasses & Quizzes (Individual & Self-Paced): Watch 5 lecture sessions and complete concept check quizzes to earn an official verified certificate.\n2. Python Coding Challenges in Qiskit (Individual): Solve 9 interactive quantum coding problems in your browser.\n3. Creative Competitions (Individual · ₹20,000 Prize Pool): Submit entries for Tech Reels (₹10,000), Digital Poster (₹5,000), or Technical Essay (₹5,000).\n4. Flagship Quantum Hackathon (Team Track · 2 to 6 members): Form a team to solve domain challenge statements.\n\nYou do not need to register a hackathon team to enjoy and complete any of the other tracks.',
+    category: 'Events & Competitions',
+    section: 'general',
+    isTopQuestion: true,
+    tags: ['Hackathon Optional', 'Tracks', 'Competitions', 'Masterclasses'],
+  },
 ];
 
 // =============================================================================
