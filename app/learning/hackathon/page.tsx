@@ -1748,9 +1748,6 @@ export default function HackathonWorkspacePage() {
                     </div>
                   </div>
 
-                  {/* Mandatory Drive Notice across all statements */}
-                  <ProblemStatementDriveNotice />
-
                   {/* Vertical Selection Dropdown */}
                   <div>
                     <label className="block text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
