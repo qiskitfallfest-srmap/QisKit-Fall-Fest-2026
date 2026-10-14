@@ -35,7 +35,7 @@ export const ROUTE_RELEASE_CONFIG: Record<string, RouteConfig> = {
     name: 'About',
     status: 'live',
     title: `About the Festival | ${SITE_CONFIG.brandName}`,
-    description: 'Learn about the mission, partnership with IBM Quantum, and vision behind Qiskit Fall Fest SRMAP 2026 at SRM University-AP.',
+    description: 'A complete guide to Qiskit Fall Fest 2026 at SRM University-AP: free online masterclasses, creative competitions, the ₹1,00,000 Quantum Hackathon, and five days of on-campus workshops, expo, QCTF, and games from 26–30 October 2026.',
   },
   experience: {
     path: '/experience',

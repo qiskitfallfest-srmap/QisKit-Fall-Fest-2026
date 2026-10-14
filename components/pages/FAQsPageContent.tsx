@@ -1037,7 +1037,7 @@ export default function FAQsPageContent() {
                                       ₹99 (Certificate Only)
                                     </div>
                                     <p className="text-xs sm:text-sm text-[#16171B]/80 dark:text-[#C4B9B8] mt-1 leading-relaxed">
-                                      Event registration and access to all online and offline sessions are 100% free. The ₹99 nominal fee applies only if requesting an official, cryptographically verified certificate upon completion.
+                                      Online phase participation is free. The optional ₹99 fee applies only if you request an official, cryptographically verified certificate upon completion. On-campus passes are priced separately.
                                     </p>
                                   </div>
                                   <Link

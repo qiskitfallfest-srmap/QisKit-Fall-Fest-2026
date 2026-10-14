@@ -25,9 +25,9 @@ This file is automatically loaded by AI agents working in this workspace.
    - Users sign in directly via Google OAuth / Magic Link on the portal at `https://www.qffsrmap2026.com/learning`.
 
 2. **Fee Structure & Non-Misleading Copy (CRITICAL):**
-   - **Festival Access & Registration is 100% FREE:** Access to all workshops, lectures, quizzes, creative competitions, and hackathon tracks requires zero payment.
-   - **₹99 Fee is Exclusively for Certificates:** The nominal ₹99 charge is solely an optional administrative fee for minting a cryptographically verified completion certificate upon finishing all 5 masterclasses and quizzes.
-   - **Never refer to ₹99 as a "Registration Fee" or "Online Course Fee".** Always label it as "Optional Verified Certificate Fee".
+   - **Online Phase is 100% FREE:** Registration, masterclasses, quizzes, the creative competitions (Reels, Poster, Essay), and Hackathon Phase 1 require zero payment.
+   - **Optional Verified Certificate Fee (₹99):** An optional fee for minting a cryptographically verified completion certificate after finishing all 5 masterclasses and quizzes. Never call it a "Registration Fee" or "Online Course Fee".
+   - **On-Campus Passes (26–30 October 2026):** General Offline Pass from ₹99 (eligible campus activities, exhibitions, keynotes, workshops, debates, open games) and All-Access Flagship Pass at ₹499 (eligible flagship activities such as Hackathon Phase 2, QCTF, and Startup Pitch subject to qualification, lunch on all five days, two snack servings per day, priority workshop seating). Always state that a pass does not guarantee selection for competitive events. The full breakdown lives on `/about` (`components/about/AboutArticle.tsx`) and FAQ 17; keep them synchronized.
    - **FAQ #14 Integrity:** FAQ 14 is dedicated to Day 2/3 Poster & Essay submissions. Never override FAQ 14 with payment or fee blocks (fee cards belong under FAQ 17).
 
 3. **Hackathon Team Size Standards:**

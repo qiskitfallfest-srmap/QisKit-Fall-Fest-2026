@@ -252,13 +252,13 @@ export const GENERAL_FAQS: FAQItem[] = [
   {
     id: 'faq-17',
     number: 17,
-    question: 'Is there any registration or certificate fee?',
+    question: 'Is there any registration, certificate, or pass fee?',
     answer:
-      'Participation across all Qiskit Fall Fest 2026 events, webinars, competitions, and the hackathon is 100% free.\n\nThere is an optional \u20b999 processing fee only if you wish to receive an official, cryptographically verified certificate of completion after completing the masterclasses and passing the quizzes.',
+      'The online phase is free: masterclasses, concept check quizzes, the creative competitions, and Hackathon Phase 1.\n\nOptional Verified Certificate Fee: \u20b999, only if you want an official, cryptographically verified certificate of completion after finishing the masterclasses and passing the quizzes.\n\nOn-campus phase (26\u201330 October 2026) passes are priced separately:\n\u2022 General Offline Pass \u2014 from \u20b999: eligible campus activities, exhibitions, keynotes, workshops, debates, and open-participation games\n\u2022 All-Access Flagship Pass \u2014 \u20b9499: eligible flagship activities (Hackathon Phase 2, QCTF, Startup Pitch, subject to qualification), lunch on all five days, two snack servings per day, and priority workshop seating\n\nPurchasing a pass does not guarantee selection for competitive events that require separate evaluation.',
     category: 'Registration & Fees',
     section: 'general',
     isTopQuestion: true,
-    tags: ['Fee', '₹99', 'Certificate', 'Registration', 'Free'],
+    tags: ['Fee', '₹99', '₹499', 'Certificate', 'Offline Pass', 'Registration', 'Free'],
   },
   {
     id: 'faq-18',
