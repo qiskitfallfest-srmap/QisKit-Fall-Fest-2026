@@ -1610,7 +1610,7 @@ export default function OrganizingTeamPage() {
             <Link
               href="/learning"
               onClick={() => trackRegistrationClick('organizing_team_page')}
-              className="group inline-flex items-center gap-3 px-8 py-4 rounded-xl text-base font-semibold bg-[#F5F3F0] text-[#3A0B10] hover:bg-white hover:shadow-2xl transition-all duration-300"
+              className="group inline-flex items-center gap-3 px-8 py-4 rounded-xl text-base font-semibold bg-[#F5F3F0] text-[#3A0B10] hover:bg-white hover:shadow-lg transition-all duration-300"
             >
               <span>Register Free</span>
               <ArrowUpRight size={18} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform text-[#6C151E]" />

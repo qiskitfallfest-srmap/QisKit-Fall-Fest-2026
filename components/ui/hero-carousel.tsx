@@ -471,7 +471,7 @@ export function HeroCarousel({
             <div className="flex-1 max-w-xl lg:max-w-2xl text-left">
               {/* Category Eyebrow with Red Dot */}
               <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
-                <span className="w-2 h-2 rounded-full bg-[#E57373] shadow-[0_0_8px_#E57373]" />
+                <span className="w-2 h-2 rounded-full bg-[#E57373]" />
                 <span className="font-mono text-xs sm:text-[13px] uppercase tracking-[0.2em] text-[#E57373] font-semibold">
                   {parsed.track}
                 </span>
@@ -623,7 +623,7 @@ export function HeroCarousel({
                           'relative shrink-0 rounded-xl overflow-hidden transition-all duration-300 text-left cursor-pointer group',
                           'w-44 sm:w-56 md:w-64 lg:w-72 h-24 sm:h-28 md:h-32 lg:h-34',
                           isActive
-                            ? 'ring-2 ring-[#E57373] shadow-[0_0_20px_rgba(229,115,115,0.45)] scale-[1.02]'
+                            ? 'ring-2 ring-[#E57373] shadow-lg shadow-black/30 scale-[1.02]'
                             : 'border border-white/10 opacity-70 hover:opacity-100 hover:border-white/30'
                         )}
                       >

@@ -70,7 +70,7 @@ export const LocationCard = ({
       }}
       className={cn(
         "relative w-full h-80 rounded-xl bg-cover bg-center",
-        "shadow-lg transition-shadow duration-300 hover:shadow-2xl",
+        "shadow-md transition-shadow duration-300 hover:shadow-lg",
         className
       )}
     >
@@ -146,7 +146,7 @@ export const TeamBranchCard = ({
       className={cn(
         "group relative flex flex-col rounded-2xl overflow-hidden cursor-pointer",
         "border-2 transition-all duration-300 ease-out",
-        "hover:-translate-y-1.5 hover:shadow-2xl",
+        "hover:-translate-y-1 hover:shadow-lg",
         isSelected
           ? "border-[#3A0B10] dark:border-[#B08D57] shadow-xl ring-2 ring-[#3A0B10]/20 dark:ring-[#B08D57]/20"
           : "border-[#3A0B10]/15 dark:border-white/15 hover:border-[#3A0B10]/40 dark:hover:border-[#B08D57]/40 shadow-md",

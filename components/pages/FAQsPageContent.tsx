@@ -1092,7 +1092,7 @@ export default function FAQsPageContent() {
           {/* =====================================================================
               SECTION 06: CONTACT & SCHEDULE CTA
               ===================================================================== */}
-          <div className="rounded-2xl p-8 sm:p-12 bg-[#3A0B10] text-[#F5F3F0] dark:bg-[#150406] border border-[#6C151E]/40 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="rounded-2xl p-8 sm:p-12 bg-[#3A0B10] text-[#F5F3F0] dark:bg-[#150406] border border-[#6C151E]/40 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-3 max-w-xl">
               <span className="text-xs sm:text-sm font-sans font-bold tracking-widest uppercase text-[#B08D57]">
                 Still Have Questions?

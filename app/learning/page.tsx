@@ -483,7 +483,7 @@ function LearningDashboardContent() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-2xl shadow-xs p-6 sm:p-8 space-y-7">
+        <div className="bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl shadow-xs p-6 sm:p-8 space-y-7">
           <div className="border-b border-slate-100 dark:border-[#3D1418] pb-5 flex flex-col sm:flex-row sm:items-start justify-between gap-3">
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-1.5">
@@ -494,7 +494,7 @@ function LearningDashboardContent() {
                   Extended
                 </span>
               </div>
-              <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#181313] dark:text-[#FAF6F3] tracking-tight">
+              <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#181313] dark:text-[#FAF6F3] tracking-tight leading-snug">
                 {challenge.title}
               </h1>
               <p className="font-sans text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed mt-1.5">
@@ -516,7 +516,7 @@ function LearningDashboardContent() {
           </div>
 
           {/* Highlighted Prize Banner - Styled in Burgundy Shades */}
-          <div className="relative overflow-hidden p-5 sm:p-6 rounded-2xl border-2 border-burgundy/30 dark:border-burgundy/60 bg-linear-to-r from-burgundy/10 via-burgundy/[0.04] to-transparent dark:from-[#260C11] dark:via-[#1A080C] dark:to-[#120507] shadow-sm flex items-center justify-between gap-4">
+          <div className="relative overflow-hidden p-5 sm:p-6 rounded-xl border-2 border-burgundy/30 dark:border-burgundy/60 bg-linear-to-r from-burgundy/10 via-burgundy/[0.04] to-transparent dark:from-[#260C11] dark:via-[#1A080C] dark:to-[#120507] shadow-sm flex items-center justify-between gap-4">
             <div className="absolute top-0 right-0 -mt-6 -mr-6 w-36 h-36 bg-burgundy/15 dark:bg-burgundy/25 rounded-full blur-2xl pointer-events-none" />
 
             <div className="relative z-10 flex items-center gap-4 sm:gap-5">
@@ -573,7 +573,7 @@ function LearningDashboardContent() {
                 <div className="flex items-start sm:items-center gap-3 min-w-0">
                   <Lock className="w-5 h-5 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5 sm:mt-0" />
                   <div>
-                    <p className="font-semibold text-sm sm:text-base text-amber-950 dark:text-amber-200">
+                    <p className="font-semibold text-sm sm:text-base text-amber-950 dark:text-amber-200 leading-relaxed">
                       Preview Mode · Sign in required to submit
                     </p>
                     <p className="text-xs sm:text-sm text-amber-900/90 dark:text-amber-300/90 mt-1 leading-relaxed">
@@ -664,10 +664,10 @@ function LearningDashboardContent() {
                 <div className="p-4 sm:p-6 rounded-xl border border-slate-200 dark:border-[#3D1418] bg-slate-50/70 dark:bg-[#1A090C] space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 dark:border-[#3D1418] pb-3.5">
                     <div>
-                      <h3 className="font-sans text-sm sm:text-base font-bold text-slate-900 dark:text-[#FAF6F3]">
+                      <h3 className="font-sans text-sm sm:text-base font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">
                         Official Brand Assets & Logos (Mandatory)
                       </h3>
-                      <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+                      <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                         Download both high-resolution logos and feature them in your reel (intro card, corner watermark, or outro).
                       </p>
                     </div>
@@ -746,7 +746,7 @@ function LearningDashboardContent() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 pt-1 font-mono text-xs">
                       <div className="p-3 rounded-xl bg-white dark:bg-[#150709] border border-slate-200/60 dark:border-[#3D1418] space-y-1">
-                        <p className="font-bold text-slate-800 dark:text-slate-200 font-sans text-xs sm:text-sm">Instagram Reel</p>
+                        <p className="font-bold text-slate-800 dark:text-slate-200 font-sans text-xs sm:text-sm leading-relaxed">Instagram Reel</p>
                         <p className="text-slate-600 dark:text-slate-300">
                           Tag: <span className="text-burgundy dark:text-[#E89BA5] font-bold">@qiskitfallfest</span> & <span className="text-burgundy dark:text-[#E89BA5] font-bold">@srmuap</span>
                         </p>
@@ -755,7 +755,7 @@ function LearningDashboardContent() {
                         </p>
                       </div>
                       <div className="p-3 rounded-xl bg-white dark:bg-[#150709] border border-slate-200/60 dark:border-[#3D1418] space-y-1">
-                        <p className="font-bold text-slate-800 dark:text-slate-200 font-sans text-xs sm:text-sm">LinkedIn Video Post</p>
+                        <p className="font-bold text-slate-800 dark:text-slate-200 font-sans text-xs sm:text-sm leading-relaxed">LinkedIn Video Post</p>
                         <p className="text-slate-600 dark:text-slate-300">
                           Mention: <span className="text-burgundy dark:text-[#E89BA5] font-bold">SRM University-AP</span> & <span className="text-burgundy dark:text-[#E89BA5] font-bold">Qiskit</span>
                         </p>
@@ -787,10 +787,10 @@ function LearningDashboardContent() {
                 <div className="p-4 sm:p-6 rounded-xl border border-slate-200 dark:border-[#3D1418] bg-slate-50/70 dark:bg-[#1A090C] space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 dark:border-[#3D1418] pb-3.5">
                     <div>
-                      <h3 className="font-sans text-sm sm:text-base font-bold text-slate-900 dark:text-[#FAF6F3]">
+                      <h3 className="font-sans text-sm sm:text-base font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">
                         Official Brand Assets & Logos (Mandatory)
                       </h3>
-                      <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+                      <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                         Download both high-resolution logos and include them in your digital poster layout (header, footer, or corner).
                       </p>
                     </div>
@@ -1054,7 +1054,7 @@ function LearningDashboardContent() {
                     </button>
                   </div>
                   {challenge.type === 'reels' && (
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                       Accepted: Live Instagram Reel or LinkedIn Video link. Ensure your post is set to Public for evaluation.
                     </p>
                   )}
@@ -1127,7 +1127,7 @@ function LearningDashboardContent() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-[#3D1418]">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight">
+            <h1 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight leading-snug">
               Hackathon & Competitions Workspace
             </h1>
             {!sessionUser && (
@@ -1136,7 +1136,7 @@ function LearningDashboardContent() {
               </span>
             )}
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
             {sessionUser?.fullName
               ? `Welcome back, ${(sessionUser.fullName || '').split(' ')[0]}.`
               : 'Form your hackathon team and submit competition entries. Sign in with Google to participate.'}
@@ -1191,7 +1191,7 @@ function LearningDashboardContent() {
               Closes 17 Oct 2026, 11:59 PM IST
             </span>
           </div>
-          <h2 className="font-serif text-lg sm:text-xl font-bold text-slate-900 dark:text-[#FAF6F3]">
+          <h2 className="font-serif text-lg sm:text-xl font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">
             Flagship Hackathon Workspace
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-sans max-w-xl leading-relaxed">
@@ -1290,10 +1290,10 @@ function LearningDashboardContent() {
               9 Problems · 100 Points Total
             </span>
           </div>
-          <h2 className="font-serif text-base sm:text-lg font-bold text-slate-900 dark:text-[#FAF6F3]">
+          <h2 className="font-serif text-base sm:text-lg font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">
             Python Coding Challenge in Qiskit
           </h2>
-          <p className="text-xs text-slate-600 dark:text-slate-300 font-sans max-w-xl">
+          <p className="text-xs text-slate-600 dark:text-slate-300 font-sans max-w-xl leading-relaxed">
             Solve quantum programming problems using Python and Qiskit. Run your code against public tests, pass hidden tests, and earn points on the live leaderboard.
           </p>
         </div>
@@ -1310,10 +1310,10 @@ function LearningDashboardContent() {
 
       {/* Masterclass Learning Track */}
       <div className="pt-6 border-t border-slate-200 dark:border-[#3D1418]">
-        <h2 className="font-serif text-lg font-bold text-slate-900 dark:text-[#FAF6F3]">
+        <h2 className="font-serif text-lg font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">
           Masterclass Recordings & Certificate
         </h2>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
           Online phase lectures and concept check quizzes remain available. Complete all of them to unlock the
           Optional Verified Certificate.
         </p>
@@ -1331,10 +1331,10 @@ function LearningDashboardContent() {
                 Payment Details Updating Soon
               </span>
             </div>
-            <h2 className="font-serif text-base sm:text-lg font-bold text-slate-900 dark:text-[#FAF6F3]">
+            <h2 className="font-serif text-base sm:text-lg font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">
               Masterclass Certificate Unlocked
             </h2>
-            <p className="text-xs text-slate-600 dark:text-slate-300 font-sans max-w-xl">
+            <p className="text-xs text-slate-600 dark:text-slate-300 font-sans max-w-xl leading-relaxed">
               You have completed all {totalSessionsCount} video lectures and passed every concept check quiz. Official UPI payment QR and bank transfer details are being updated by the organizing team.
             </p>
           </div>
@@ -1359,10 +1359,10 @@ function LearningDashboardContent() {
                 {completedSessionsCount + passedQuizzesCount} / {totalSessionsCount * 2} Tasks Complete
               </span>
             </div>
-            <h2 className="font-serif text-base sm:text-lg font-bold text-slate-900 dark:text-[#FAF6F3]">
+            <h2 className="font-serif text-base sm:text-lg font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">
               IBM Quantum Masterclass Certificate
             </h2>
-            <p className="text-xs text-slate-600 dark:text-slate-400 font-sans max-w-xl">
+            <p className="text-xs text-slate-600 dark:text-slate-400 font-sans max-w-xl leading-relaxed">
               Watch all {totalSessionsCount} video lectures ({completedSessionsCount}/{totalSessionsCount}) and pass all {totalSessionsCount} concept check quizzes ({passedQuizzesCount}/{totalSessionsCount}) to unlock your official co-certified digital certificate.
             </p>
           </div>
@@ -1385,10 +1385,10 @@ function LearningDashboardContent() {
             <span className="font-mono text-[10px] font-bold text-burgundy dark:text-[#E89BA5] uppercase tracking-wider block">
               Up Next · Day {nextSession.day}
             </span>
-            <h2 className="font-serif text-base sm:text-lg font-bold text-slate-900 dark:text-[#FAF6F3]">
-              Session {nextSession.sessionNumber}: {nextSession.title}
+            <h2 className="font-serif text-base sm:text-lg font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">
+              {nextSession.title}
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-sans">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-sans leading-relaxed">
               {nextSession.duration} · {nextSession.speaker?.name} ({nextSession.speaker?.institution})
             </p>
           </div>
@@ -1519,11 +1519,11 @@ function LearningDashboardContent() {
           <div>
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
-              <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-[#FAF6F3]">
+              <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">
                 Official 3-Day Programme Schedule
               </h3>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
               SRM AP Partner Plus · Qiskit Fall Fest 2026 Online Phase (8–10 October 2026)
             </p>
           </div>
@@ -1600,7 +1600,7 @@ function LearningDashboardContent() {
                     <div className="flex-1 min-w-0 space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         {isInauguration && (
-                          <span className="px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-mono text-[9px] font-bold uppercase tracking-wider border border-indigo-200/60 dark:border-indigo-900/60">
+                          <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-[#1C0A0D] text-slate-700 dark:text-slate-300 font-mono text-[9px] font-bold uppercase tracking-wider border border-slate-200 dark:border-[#3D1418]">
                             Inaugural Address
                           </span>
                         )}
@@ -1620,7 +1620,7 @@ function LearningDashboardContent() {
                           </span>
                         )}
                         {isCompetition && (
-                          <span className="px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 font-mono text-[9px] font-bold uppercase tracking-wider border border-purple-200 dark:border-purple-900">
+                          <span className="px-2 py-0.5 rounded bg-gold/10 dark:bg-gold/15 text-[#7A5E2E] dark:text-[#D9BE8C] font-mono text-[9px] font-bold uppercase tracking-wider border border-gold/30 dark:border-gold/40">
                             Daily Online Game
                           </span>
                         )}
@@ -1687,7 +1687,7 @@ function LearningDashboardContent() {
                       {isCompetition && (
                         <Link
                           href={`/learning?challenge=${currentDayProgramme.day}`}
-                          className="px-3 py-1.5 rounded-lg bg-purple-50 dark:bg-purple-950/50 text-purple-800 dark:text-purple-300 hover:bg-purple-600 hover:text-white text-xs font-semibold transition-colors flex items-center gap-1 border border-purple-200 dark:border-purple-900"
+                          className="px-3 py-1.5 rounded-lg bg-gold/10 dark:bg-gold/15 text-[#7A5E2E] dark:text-[#D9BE8C] hover:bg-burgundy hover:text-white dark:hover:bg-burgundy dark:hover:text-white text-xs font-semibold transition-colors duration-200 flex items-center gap-1 border border-gold/30 dark:border-gold/40"
                         >
                           {sessionUser ? (
                             <Send className="w-3 h-3" />

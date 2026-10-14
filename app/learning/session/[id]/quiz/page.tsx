@@ -109,7 +109,7 @@ export default function DedicatedQuizPage() {
   if (!session || !quiz) {
     return (
       <div className="min-h-[50vh] flex flex-col items-center justify-center p-4">
-        <h2 className="text-base font-bold text-slate-900 dark:text-[#FAF6F3]">Quiz not found</h2>
+        <h2 className="text-base font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">Quiz not found</h2>
         <Link
           href="/learning"
           className="mt-2 text-xs text-burgundy dark:text-[#E89BA5] font-semibold hover:underline"
@@ -145,7 +145,7 @@ export default function DedicatedQuizPage() {
           </div>
 
           <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-6 sm:pt-12 font-sans">
-            <div className="bg-white dark:bg-[#150709] rounded-2xl shadow-sm border border-slate-200 dark:border-[#3D1418] overflow-hidden text-center p-6 sm:p-10 space-y-6">
+            <div className="bg-white dark:bg-[#150709] rounded-xl shadow-sm border border-slate-200 dark:border-[#3D1418] overflow-hidden text-center p-6 sm:p-10 space-y-6">
               {/* Lock Icon */}
               <div className="relative mx-auto w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center">
                 <div className="absolute inset-0 rounded-full bg-amber-500/10 dark:bg-amber-500/20 animate-ping opacity-60" />
@@ -160,7 +160,7 @@ export default function DedicatedQuizPage() {
                   <Clock className="w-3.5 h-3.5" />
                   Coming Soon · Quiz Locked
                 </div>
-                <h1 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight">
+                <h1 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight leading-snug">
                   {quiz.title || `Session ${session.sessionNumber} Concept Check`}
                 </h1>
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-sans max-w-lg mx-auto">
@@ -368,7 +368,7 @@ export default function DedicatedQuizPage() {
                         )}
                         <div className="space-y-1">
                           <div className="flex flex-wrap items-center gap-2">
-                            <h2 className="font-bold text-base sm:text-lg tracking-tight">
+                            <h2 className="font-bold text-base sm:text-lg tracking-tight leading-snug">
                               {results.passed ? 'Quiz Passed!' : 'Passing Threshold Not Met'}
                             </h2>
                             {/* Attempt Counter Badge */}
@@ -574,7 +574,7 @@ export default function DedicatedQuizPage() {
                         key={q.id}
                         className="p-4 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-slate-50/50 dark:bg-[#1C0A0D]/60 space-y-3"
                       >
-                        <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-[#FAF6F3]">
+                        <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-[#FAF6F3] leading-relaxed">
                           <span className="text-burgundy dark:text-[#E89BA5] mr-1.5 font-bold">Q{idx + 1}.</span>
                           {q.question}
                         </p>

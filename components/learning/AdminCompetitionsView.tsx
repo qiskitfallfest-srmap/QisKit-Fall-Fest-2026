@@ -451,7 +451,7 @@ export function AdminCompetitionsView() {
             <span className="text-2xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Day 1 Reels
             </span>
-            <div className="text-lg font-bold text-indigo-600 dark:text-indigo-400 mt-0.5">
+            <div className="text-lg font-bold text-burgundy dark:text-[#E89BA5] mt-0.5">
               {stats.reels}
             </div>
           </div>
@@ -518,7 +518,7 @@ export function AdminCompetitionsView() {
             onClick={() => setTypeFilter('reels')}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer shrink-0 ${
               typeFilter === 'reels'
-                ? 'bg-indigo-600 text-white dark:bg-indigo-500'
+                ? 'bg-burgundy text-white dark:bg-burgundy'
                 : 'bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1E0B0E]'
             }`}
           >
@@ -636,7 +636,7 @@ export function AdminCompetitionsView() {
                 {filteredSubmissions.map((sub) => {
                   const trackBadge =
                     sub.competition_type === 'reels' ? (
-                      <span className="px-2 py-0.5 rounded text-2xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800 flex items-center gap-1 w-fit">
+                      <span className="px-2 py-0.5 rounded text-2xs font-semibold bg-burgundy/10 text-burgundy border border-burgundy/20 dark:bg-burgundy/25 dark:text-[#E89BA5] dark:border-burgundy/40 flex items-center gap-1 w-fit">
                         <Video className="w-3 h-3" />
                         Day 1 Reel
                       </span>
@@ -668,7 +668,7 @@ export function AdminCompetitionsView() {
                         PDF Document
                       </span>
                     ) : sub.documentType === 'docx' ? (
-                      <span className="px-2 py-0.5 rounded text-2xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800 flex items-center gap-1 w-fit">
+                      <span className="px-2 py-0.5 rounded text-2xs font-semibold bg-slate-100 text-slate-700 border border-slate-200 dark:bg-[#1C0A0D] dark:text-slate-300 dark:border-[#3D1418] flex items-center gap-1 w-fit">
                         <FileText className="w-3 h-3" />
                         Word (DOCX)
                       </span>

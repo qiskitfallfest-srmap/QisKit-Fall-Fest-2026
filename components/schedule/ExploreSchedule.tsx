@@ -84,7 +84,7 @@ export function ExploreSchedule({ currentPhase = 'offline', onPhaseChange, targe
     const action = getSessionAction(session, currentPhase);
 
     return (
-      <aside className="rounded-3xl border border-[#D9D0CB] dark:border-[rgba(108,21,30,0.4)] bg-white dark:bg-[#1C0709] p-5 sm:p-6 shadow-2xl space-y-5 transition-colors">
+      <aside className="rounded-2xl border border-[#D9D0CB] dark:border-[rgba(108,21,30,0.4)] bg-white dark:bg-[#1C0709] p-5 sm:p-6 shadow-md shadow-black/5 dark:shadow-black/30 space-y-5 transition-colors">
       
       {/* Header Track & Day Badge with Close (X) Button */}
       <div className="flex items-center justify-between border-b border-[#D9D0CB]/60 dark:border-white/10 pb-3 text-xs font-bold uppercase tracking-wider">

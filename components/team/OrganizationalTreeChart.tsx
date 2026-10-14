@@ -575,13 +575,13 @@ export function OrganizationalTreeChart() {
           ───────────────────────────────────────────────────────── */}
       <div
         className={cn(
-          "relative w-full rounded-3xl border border-[#3A0B10]/20 dark:border-white/10 bg-white/40 dark:bg-[#1A0507]/60 backdrop-blur-sm p-2 sm:p-5 lg:p-8 transition-all shadow-xl",
+          "relative w-full rounded-2xl border border-[#3A0B10]/20 dark:border-white/10 bg-white/40 dark:bg-[#1A0507]/60 backdrop-blur-sm p-2 sm:p-5 lg:p-8 transition-all shadow-md shadow-black/5",
           activeTab === 'matrix' ? "hidden lg:block" : "block"
         )}
       >
         {/* Subtle decorative circuit dot-grid background */}
         <div
-          className="absolute inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.05] rounded-3xl"
+          className="absolute inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.05] rounded-2xl"
           style={{
             backgroundImage: 'radial-gradient(#800020 1px, transparent 1px)',
             backgroundSize: '24px 24px',
@@ -960,7 +960,7 @@ export function OrganizationalTreeChart() {
                 exit={{ opacity: 0, scale: 0.95, y: 15 }}
                 transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                 onClick={(e) => e.stopPropagation()}
-                className="relative w-[95vw] max-w-5xl max-h-[92vh] flex flex-col rounded-3xl bg-white dark:bg-[#1A0407] border-2 border-[#800020]/30 dark:border-[#B08D57]/40 shadow-2xl overflow-hidden my-auto shrink-0"
+                className="relative w-[95vw] max-w-5xl max-h-[92vh] flex flex-col rounded-2xl bg-white dark:bg-[#1A0407] border-2 border-[#800020]/30 dark:border-[#B08D57]/40 shadow-2xl overflow-hidden my-auto shrink-0"
               >
                 {/* Modal Header */}
                 <div className="flex items-center justify-between gap-4 px-6 sm:px-8 py-3.5 sm:py-4 border-b border-[#3A0B10]/10 dark:border-white/10 shrink-0 bg-[#FAF9F6]/95 dark:bg-black/40 backdrop-blur-sm">

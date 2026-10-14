@@ -61,7 +61,7 @@ export function PhaseSelector({ currentPhase, onPhaseChange, variant = 'cards' }
         onClick={() => onPhaseChange('online')}
         className={`group relative flex items-center justify-between p-4 sm:p-5 rounded-2xl border text-left cursor-pointer overflow-hidden transition-all duration-[600ms] ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.97] ${
           currentPhase === 'online'
-            ? 'border-[#6C151E] bg-gradient-to-br from-[#6C151E] to-[#4A0D14] text-white shadow-xl scale-[1.02]'
+            ? 'border-[#6C151E] bg-gradient-to-br from-[#6C151E] to-[#4A0D14] text-white shadow-md scale-[1.02]'
             : 'border-[rgba(108,21,30,0.16)] bg-white/70 hover:bg-white dark:bg-white/5 dark:hover:bg-white/10 text-[#261F1D] dark:text-[#E8E0DE] hover:border-[#6C151E]/40'
         }`}
       >
@@ -145,7 +145,7 @@ export function PhaseSelector({ currentPhase, onPhaseChange, variant = 'cards' }
         onClick={() => onPhaseChange('offline')}
         className={`group relative flex items-center justify-between p-4 sm:p-5 rounded-2xl border text-left cursor-pointer overflow-hidden transition-all duration-[600ms] ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.97] ${
           currentPhase === 'offline'
-            ? 'border-[#6C151E] bg-gradient-to-br from-[#6C151E] to-[#4A0D14] text-white shadow-xl scale-[1.02]'
+            ? 'border-[#6C151E] bg-gradient-to-br from-[#6C151E] to-[#4A0D14] text-white shadow-md scale-[1.02]'
             : 'border-[rgba(108,21,30,0.16)] bg-white/70 hover:bg-white dark:bg-white/5 dark:hover:bg-white/10 text-[#261F1D] dark:text-[#E8E0DE] hover:border-[#6C151E]/40'
         }`}
       >

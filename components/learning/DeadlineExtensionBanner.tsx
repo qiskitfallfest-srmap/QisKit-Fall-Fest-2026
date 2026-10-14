@@ -32,7 +32,7 @@ export function DeadlineExtensionBanner() {
   }
 
   return (
-    <div className="relative overflow-hidden p-4 sm:p-5 rounded-2xl border border-amber-300 dark:border-amber-800/80 bg-amber-50/80 dark:bg-[#1A0A0D] shadow-xs">
+    <div className="relative overflow-hidden p-4 sm:p-5 rounded-xl border border-amber-300 dark:border-amber-800/80 bg-amber-50/80 dark:bg-[#1A0A0D] shadow-xs">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3.5">
           <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/80 flex items-center justify-center shrink-0 mt-0.5">

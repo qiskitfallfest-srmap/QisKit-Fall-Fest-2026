@@ -240,7 +240,7 @@ export function CertificateModal({
           {loading ? (
             <div className="py-12 flex flex-col items-center justify-center gap-3">
               <div className="w-8 h-8 border-2 border-burgundy border-t-transparent rounded-full animate-spin" />
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
                 Verifying academic completion status...
               </p>
             </div>
@@ -255,7 +255,7 @@ export function CertificateModal({
                   <ShieldCheck className="w-3.5 h-3.5" />
                   Official Certificate Minted
                 </span>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-[#FAF6F3]">
+                <h3 className="text-xl font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">
                   Congratulations, {activeUserName}!
                 </h3>
                 <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 max-w-md mx-auto leading-relaxed">
@@ -396,7 +396,7 @@ export function CertificateModal({
               </div>
 
               {errorMessage && (
-                <p className="text-xs text-rose-600 dark:text-rose-400 font-medium bg-rose-50 dark:bg-rose-950/40 p-2.5 rounded border border-rose-200 dark:border-rose-900">
+                <p className="text-xs text-rose-600 dark:text-rose-400 font-medium bg-rose-50 dark:bg-rose-950/40 p-2.5 rounded border border-rose-200 dark:border-rose-900 leading-relaxed">
                   {errorMessage}
                 </p>
               )}
@@ -689,13 +689,13 @@ export function CertificateModal({
               )}
 
               {successMessage && (
-                <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium bg-emerald-50 dark:bg-emerald-950/40 p-2.5 rounded border border-emerald-200 dark:border-emerald-900">
+                <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium bg-emerald-50 dark:bg-emerald-950/40 p-2.5 rounded border border-emerald-200 dark:border-emerald-900 leading-relaxed">
                   {successMessage}
                 </p>
               )}
 
               {errorMessage && (
-                <p className="text-xs text-rose-600 dark:text-rose-400 font-medium bg-rose-50 dark:bg-rose-950/40 p-2.5 rounded border border-rose-200 dark:border-rose-900">
+                <p className="text-xs text-rose-600 dark:text-rose-400 font-medium bg-rose-50 dark:bg-rose-950/40 p-2.5 rounded border border-rose-200 dark:border-rose-900 leading-relaxed">
                   {errorMessage}
                 </p>
               )}

@@ -368,7 +368,7 @@ export function QuantumBlochSphere({ className = '', size = 360 }: QuantumBlochS
   return (
     <div
       ref={containerRef}
-      className={`relative rounded-3xl p-4 sm:p-5 bg-gradient-to-br from-white/90 via-[#FAF9F6]/90 to-[#F5EBE1]/85 dark:from-[#24080B]/90 dark:via-[#1A0507]/90 dark:to-[#120406]/95 border-2 border-[#3A0B10]/20 dark:border-[#B08D57]/30 shadow-2xl backdrop-blur-md flex flex-col justify-between overflow-hidden select-none ${className}`}
+      className={`relative rounded-2xl p-4 sm:p-5 bg-gradient-to-br from-white/90 via-[#FAF9F6]/90 to-[#F5EBE1]/85 dark:from-[#24080B]/90 dark:via-[#1A0507]/90 dark:to-[#120406]/95 border-2 border-[#3A0B10]/20 dark:border-[#B08D57]/30 shadow-2xl backdrop-blur-md flex flex-col justify-between overflow-hidden select-none ${className}`}
     >
       <div className="flex items-center justify-between pb-2.5 border-b border-[#3A0B10]/10 dark:border-white/10 z-10">
         <div className="flex items-center gap-2">

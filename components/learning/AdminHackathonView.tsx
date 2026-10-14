@@ -611,7 +611,7 @@ export function AdminHackathonView() {
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Ready for Review
             </span>
-            <div className="p-1.5 rounded-lg bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400">
+            <div className="p-1.5 rounded-lg bg-burgundy/10 dark:bg-burgundy/25 text-burgundy dark:text-[#E89BA5]">
               <Github className="w-3.5 h-3.5" />
             </div>
           </div>
@@ -619,7 +619,7 @@ export function AdminHackathonView() {
             <span className="text-2xl font-bold text-slate-900 dark:text-[#FAF6F3]">
               {data?.stats?.teamsWithSubmissions || 0}
             </span>
-            <span className="text-[10px] font-semibold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 px-1 py-0.5 rounded">
+            <span className="text-[10px] font-semibold text-burgundy dark:text-[#E89BA5] bg-burgundy/10 dark:bg-burgundy/25 px-1 py-0.5 rounded">
               Repos Live
             </span>
           </div>
@@ -703,7 +703,7 @@ export function AdminHackathonView() {
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Colleges
             </span>
-            <div className="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400">
+            <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-[#1C0A0D] text-slate-600 dark:text-slate-300">
               <GraduationCap className="w-3.5 h-3.5" />
             </div>
           </div>
@@ -711,7 +711,7 @@ export function AdminHackathonView() {
             <span className="text-2xl font-bold text-slate-900 dark:text-[#FAF6F3]">
               {data?.stats?.uniqueUniversitiesCount || 0}
             </span>
-            <span className="text-[10px] font-medium text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/40 px-1 py-0.5 rounded">
+            <span className="text-[10px] font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[#1C0A0D] px-1 py-0.5 rounded">
               Institutes
             </span>
           </div>
@@ -803,7 +803,7 @@ export function AdminHackathonView() {
               onClick={() => setPipelineFilter('ready')}
               className={`px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                 pipelineFilter === 'ready'
-                  ? 'bg-white dark:bg-[#250D11] text-purple-700 dark:text-purple-300 shadow-xs border border-purple-200 dark:border-purple-800'
+                  ? 'bg-white dark:bg-[#250D11] text-burgundy dark:text-[#E89BA5] shadow-xs border border-burgundy/20 dark:border-burgundy/40'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >

@@ -547,7 +547,7 @@ function QiskitChallengeWorkspace() {
         </div>
 
         <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-6 sm:pt-12 font-sans">
-          <div className="bg-white dark:bg-[#150709] rounded-2xl shadow-sm border border-slate-200 dark:border-[#3D1418] overflow-hidden text-center p-6 sm:p-10 space-y-6">
+          <div className="bg-white dark:bg-[#150709] rounded-xl shadow-sm border border-slate-200 dark:border-[#3D1418] overflow-hidden text-center p-6 sm:p-10 space-y-6">
             {/* Lock Icon */}
             <div className="relative mx-auto w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center">
               <div className="absolute inset-0 rounded-full bg-amber-500/10 dark:bg-amber-500/20 animate-ping opacity-60" />
@@ -562,7 +562,7 @@ function QiskitChallengeWorkspace() {
                 <Clock className="w-3.5 h-3.5" />
                 Coming Soon · Arena Locked
               </div>
-              <h1 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight">
+              <h1 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight leading-snug">
                 Python Coding Challenge in Qiskit
               </h1>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-sans max-w-lg mx-auto">
@@ -577,7 +577,7 @@ function QiskitChallengeWorkspace() {
                 <span className="font-mono text-[10px] uppercase font-bold text-burgundy dark:text-[#E89BA5]">
                   9 Quantum Problems
                 </span>
-                <p className="text-xs text-slate-600 dark:text-slate-300">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                   State prep, Bernstein-Vazirani, ZNE noise mitigation, QAOA & V2 Primitives.
                 </p>
               </div>
@@ -585,7 +585,7 @@ function QiskitChallengeWorkspace() {
                 <span className="font-mono text-[10px] uppercase font-bold text-burgundy dark:text-[#E89BA5]">
                   Real-Time Quantum Judge
                 </span>
-                <p className="text-xs text-slate-600 dark:text-slate-300">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                   Built-in basis gate transpilation, unit testing, and instant score evaluation.
                 </p>
               </div>
@@ -854,7 +854,7 @@ function QiskitChallengeWorkspace() {
                     <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-burgundy/10 text-burgundy dark:bg-burgundy/25 dark:text-[#E89BA5]">
                       {selectedChallenge.problemCode}
                     </span>
-                    <h1 className="font-serif text-xl sm:text-2xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight">
+                    <h1 className="font-serif text-xl sm:text-2xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight leading-snug">
                       {selectedChallenge.title}
                     </h1>
                   </div>
@@ -1128,7 +1128,7 @@ function QiskitChallengeWorkspace() {
               <div className="flex items-center gap-2.5">
                 <List className="w-5 h-5 text-burgundy dark:text-[#E89BA5]" />
                 <div>
-                  <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-[#FAF6F3]">
+                  <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">
                     Qiskit Problem Set (9 Problems)
                   </h3>
                   <p className="text-xs text-slate-500 font-mono">
@@ -1221,7 +1221,7 @@ function QiskitChallengeWorkspace() {
             <div className="px-6 py-4 border-b border-slate-200 dark:border-[#3D1418] flex items-center justify-between bg-slate-50 dark:bg-[#1C0A0D]">
               <div className="flex items-center gap-2.5">
                 <Trophy className="w-5 h-5 text-amber-500" />
-                <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-[#FAF6F3]">
+                <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">
                   Python Coding Challenge in Qiskit Leaderboard
                 </h3>
               </div>
