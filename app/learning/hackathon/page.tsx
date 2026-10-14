@@ -1006,9 +1006,6 @@ export default function HackathonWorkspacePage() {
                       </button>
                     </div>
 
-                    {/* Mandatory Drive Notice across all statements */}
-                    <ProblemStatementDriveNotice />
-
                     {/* Change Vertical Select */}
                     <div>
                       <label className="block text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
@@ -1066,6 +1063,13 @@ export default function HackathonWorkspacePage() {
                                 </p>
                               </div>
                             </div>
+
+                            {/* Mandatory Drive Notice */}
+                            {isChosen && (
+                              <div className="mt-3.5 pt-3.5 border-t border-burgundy/20 dark:border-[#E89BA5]/30 animate-in fade-in slide-in-from-top-1 duration-200">
+                                <ProblemStatementDriveNotice psId={ps.id} />
+                              </div>
+                            )}
                           </label>
                         );
                       })}
@@ -1744,9 +1748,6 @@ export default function HackathonWorkspacePage() {
                     </div>
                   </div>
 
-                  {/* Mandatory Drive Notice across all statements */}
-                  <ProblemStatementDriveNotice />
-
                   {/* Vertical Selection Dropdown */}
                   <div>
                     <label className="block text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
@@ -1805,6 +1806,13 @@ export default function HackathonWorkspacePage() {
                                 </p>
                               </div>
                             </div>
+
+                            {/* Mandatory Drive Notice - Revealed on selection */}
+                            {isSelected && (
+                              <div className="mt-3.5 pt-3.5 border-t border-burgundy/15 dark:border-[#E89BA5]/20 animate-in fade-in slide-in-from-top-1 duration-200">
+                                <ProblemStatementDriveNotice psId={ps.id} />
+                              </div>
+                            )}
                           </label>
                         );
                       })}
