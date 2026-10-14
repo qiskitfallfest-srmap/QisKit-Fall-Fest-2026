@@ -34,6 +34,8 @@ function onOpen() {
   ui.createMenu('Qiskit Fall Fest 2026')
     .addItem('Sync All Unsynced Rows to Portal', 'syncAllUnsyncedRows')
     .addItem('Send Missing Welcome Emails', 'sendMissingWelcomeEmails')
+    .addSeparator()
+    .addItem('Send Test Email to sahgyan9@gmail.com', 'testSendToGyan')
     .addToUi();
 }
 
@@ -173,6 +175,9 @@ function sendWelcomeEmail(recipientEmail, participantName) {
     + '<html><head><meta charset="utf-8"></head>'
     + '<body style="margin:0;padding:24px 12px;background-color:#f5efea;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Helvetica,Arial,sans-serif;color:#231f20;line-height:1.65;">'
     + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:640px;margin:0 auto;background-color:#ffffff;border:1px solid #e4dacb;border-radius:12px;overflow:hidden;box-shadow:0 4px 18px rgba(124,20,21,0.06);">'
+    + '<tr><td style="padding:0;background-color:#faf7f2;text-align:center;">'
+    + '<img src="https://www.qffsrmap2026.com/brand/qiskit-fall-fest-banner.png" alt="IBM Qiskit Fall Fest 2026 — Partner Plus Host at SRM University-AP" width="640" style="display:block;width:100%;max-width:640px;height:auto;border:0;outline:none;">'
+    + '</td></tr>'
     + '<tr><td style="background-color:#7c1415;padding:12px 24px;text-align:center;">'
     + '<span style="font-family:\'Georgia\',serif;font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:#fdf8f0;font-weight:bold;">'
     + 'IBM PARTNER PLUS · SRM UNIVERSITY-AP · REGISTRATION CONFIRMED'
@@ -320,3 +325,22 @@ function findField(record, candidateNames) {
   }
   return '';
 }
+
+/**
+ * Test function: Dispatches the exact confirmation email to sahgyan9@gmail.com
+ * for visual verification and testing.
+ */
+function testSendToGyan() {
+  var testEmail = 'sahgyan9@gmail.com';
+  var testName = 'Gyan Kumar Sah';
+  
+  sendWelcomeEmail(testEmail, testName);
+  Logger.log('Test confirmation email dispatched to: ' + testEmail);
+  
+  try {
+    SpreadsheetApp.getUi().alert('Test Email Sent!\n\nA sample confirmation email has been dispatched to ' + testEmail + '.\nPlease check your Gmail Inbox (and Updates/Spam folders).');
+  } catch (e) {
+    // Silent if executed without active spreadsheet UI
+  }
+}
+
