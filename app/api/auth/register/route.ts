@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { redis, invalidateEmailCache } from '@/lib/redis';
 import { SUPER_ADMIN_EMAILS } from '@/lib/auth';
+import { logError, logInfo, logWarn, serializeError } from '@/lib/logger';
 
 const COOKIE_NAME = 'qff_auth_session';
 
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
       });
 
     if (regError) {
-      console.warn('Warning inserting into registrations:', regError);
+      logWarn('auth.register.registrations_insert_failed', { email, error: serializeError(regError) });
       // Non-fatal if table write fails; continue to ensure student gets access
     }
 
@@ -87,7 +88,7 @@ export async function POST(request: NextRequest) {
       );
 
     if (whitelistError) {
-      console.error('Error upserting to allowed_emails:', whitelistError);
+      await logError('auth.register.whitelist_upsert_failed', whitelistError, { email });
       return NextResponse.json(
         { error: 'Failed to complete registration. Please try again.' },
         { status: 500 }
@@ -100,13 +101,14 @@ export async function POST(request: NextRequest) {
       try {
         await redis.set(
           `whitelist:${email}`,
-          { role: assignedRole, fullName },
+          { whitelisted: true, role: assignedRole, fullName },
           { ex: 3600 }
         );
       } catch (cacheErr) {
-        console.warn('Redis cache set warning:', cacheErr);
+        logWarn('auth.register.cache_set_failed', { email, error: serializeError(cacheErr) });
       }
     }
+    logInfo('auth.register.success', { email, institution });
 
     // 4. Create authenticated session cookie
     const sessionData = {
@@ -139,7 +141,7 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (err: any) {
-    console.error('Registration API error:', err);
+    await logError('auth.register.failed', err);
     return NextResponse.json(
       { error: err?.message || 'Internal server error during registration.' },
       { status: 500 }

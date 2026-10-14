@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
+import { logWarn } from '@/lib/logger';
 import { isEmailWhitelisted, invalidateHackathonTeamCache, invalidateEmailCache } from '@/lib/redis';
 import { isTeamFinalized } from '@/lib/finalized-teams';
 import { saveParticipantUniversities } from '@/lib/participant-universities';
@@ -140,6 +141,7 @@ export async function POST(request: NextRequest) {
     // 5. Verify teammate email is registered / whitelisted
     const whitelistCheck = await isEmailWhitelisted(trimmedEmail);
     if (!whitelistCheck.whitelisted) {
+      logWarn('whitelist.rejected', { route: 'hackathon.team.member.add', email: trimmedEmail, leader: session.email });
       return NextResponse.json(
         {
           error: `Teammate ${trimmedEmail} is not yet registered. Ask your team member to sign in directly at the learning portal to register in 30 seconds, or contact WhatsApp support.`,

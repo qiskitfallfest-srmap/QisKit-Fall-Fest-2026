@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isEmailWhitelisted } from '@/lib/redis';
 import { SUPER_ADMIN_EMAILS } from '@/lib/auth';
+import { logError, logInfo } from '@/lib/logger';
 
 const COOKIE_NAME = 'qff_auth_session';
 
@@ -69,6 +70,7 @@ export async function POST(request: NextRequest) {
     const whitelist = await isEmailWhitelisted(email);
 
     if (!isSuperAdmin && !whitelist.whitelisted) {
+      logInfo('auth.session.registration_required', { email });
       return NextResponse.json(
         {
           authenticated: false,
@@ -137,7 +139,7 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error('Session creation error:', error);
+    await logError('auth.session.failed', error);
     return NextResponse.json(
       { error: 'Failed to authenticate session' },
       { status: 500 }
