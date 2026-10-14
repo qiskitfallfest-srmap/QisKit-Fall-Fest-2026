@@ -428,7 +428,7 @@ export function AuthGate({ children, onSessionChange, allowGuest = false }: Auth
       <div key="auth-gate-loading" className="min-h-[50vh] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-burgundy border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+          <p className="text-sm font-medium text-slate-600 dark:text-slate-400 leading-relaxed">
             Verifying authorized access...
           </p>
         </div>
@@ -453,10 +453,10 @@ export function AuthGate({ children, onSessionChange, allowGuest = false }: Auth
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 font-mono text-[10px] font-bold uppercase tracking-wider mb-2">
               <span>Instant On-Site Registration</span>
             </div>
-            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-[#FAF6F3]">
+            <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">
               Complete Your Festival Profile
             </h2>
-            <p className="font-sans text-xs text-slate-600 dark:text-slate-400 mt-1 max-w-sm mx-auto">
+            <p className="font-sans text-xs text-slate-600 dark:text-slate-400 mt-1 max-w-sm mx-auto leading-relaxed">
               Welcome to IBM Qiskit Fall Fest 2026. Complete these details to instantly unlock masterclasses, quizzes, and Hackathon Phase 1.
             </p>
           </div>
@@ -696,10 +696,10 @@ export function AuthGate({ children, onSessionChange, allowGuest = false }: Auth
           <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300 font-mono text-[10px] font-bold uppercase tracking-wider mb-2">
             <span>Deadline Extended: 17 Oct 2026</span>
           </div>
-          <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight">
+          <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight leading-snug">
             Qiskit Fall Fest 2026 Portal
           </h2>
-          <p className="font-sans text-xs text-slate-600 dark:text-slate-400 mt-1">
+          <p className="font-sans text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
             Online Phase Learning Platform & Hackathon Workspace
           </p>
         </div>

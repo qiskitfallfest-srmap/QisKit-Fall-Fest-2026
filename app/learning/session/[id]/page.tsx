@@ -174,7 +174,7 @@ export default function SessionPlayerPage() {
   if (!session) {
     return (
       <div className="min-h-[50vh] flex flex-col items-center justify-center p-4">
-        <h2 className="text-base font-bold text-slate-900 dark:text-[#FAF6F3]">Session not found</h2>
+        <h2 className="text-base font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">Session not found</h2>
         <Link href="/learning" className="mt-2 text-xs text-burgundy dark:text-[#E89BA5] font-semibold hover:underline">
           Return to Learning Hub
         </Link>
@@ -261,7 +261,7 @@ export default function SessionPlayerPage() {
                     <span className="font-mono text-[10px] font-bold text-red-600 dark:text-red-400 uppercase tracking-widest block">
                       Live Broadcast
                     </span>
-                    <p className="text-xs text-slate-700 dark:text-slate-300 font-medium">
+                    <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
                       {session.liveNotice || 'Live lecture stream is in progress.'}
                     </p>
                   </div>
@@ -440,7 +440,7 @@ export default function SessionPlayerPage() {
                 </div>
               </div>
 
-              <h1 className="font-serif text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight">
+              <h1 className="font-serif text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight leading-snug">
                 {session.title}
               </h1>
 
@@ -471,7 +471,7 @@ export default function SessionPlayerPage() {
                           ? 'Dr. Gangi Reddy Salla — Presentation Slides & Lecture Notes'
                           : `${session.speaker.name} — Presentation Slides & Lecture Notes`}
                       </h3>
-                      <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-400">
+                      <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                         {sessionId === 'session-4'
                           ? 'Official lecture slide deck on Quantum Photonic Technologies, SPDC, single-photon states, and quantum optics.'
                           : sessionId === 'session-6'
@@ -570,7 +570,7 @@ export default function SessionPlayerPage() {
                         Stream Window: {transcriptData.totalBroadcastDuration}
                       </span>
                     </div>
-                    <h2 className="font-serif text-lg sm:text-xl font-bold text-slate-900 dark:text-[#FAF6F3]">
+                    <h2 className="font-serif text-lg sm:text-xl font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">
                       Extracted Lecture Breakdown & Quiz Preparation Notes
                     </h2>
                     <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -816,9 +816,9 @@ export default function SessionPlayerPage() {
 
                 <div className="space-y-3.5">
                   <div className="space-y-1">
-                    <h3 className="font-serif text-base font-bold text-slate-900 dark:text-[#FAF6F3]">{session.speaker.name}</h3>
+                    <h3 className="font-serif text-base font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">{session.speaker.name}</h3>
                     <p className="font-mono text-[11px] font-semibold text-burgundy dark:text-[#E89BA5] uppercase tracking-wide">{session.speaker.role}</p>
-                    <p className="font-sans text-xs text-slate-500 dark:text-slate-400">{session.speaker.institution}</p>
+                    <p className="font-sans text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{session.speaker.institution}</p>
                     <p className="font-sans text-xs text-slate-600 dark:text-slate-300 leading-relaxed pt-1">
                       {session.speaker.bio}
                     </p>
@@ -826,9 +826,9 @@ export default function SessionPlayerPage() {
 
                   {session.coSpeakers?.map((co, cIdx) => (
                     <div key={cIdx} className="space-y-1 pt-3 border-t border-slate-100 dark:border-[#3D1418]">
-                      <h3 className="font-serif text-base font-bold text-slate-900 dark:text-[#FAF6F3]">{co.name}</h3>
+                      <h3 className="font-serif text-base font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">{co.name}</h3>
                       <p className="font-mono text-[11px] font-semibold text-burgundy dark:text-[#E89BA5] uppercase tracking-wide">{co.role}</p>
-                      <p className="font-sans text-xs text-slate-500 dark:text-slate-400">{co.institution}</p>
+                      <p className="font-sans text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{co.institution}</p>
                       <p className="font-sans text-xs text-slate-600 dark:text-slate-300 leading-relaxed pt-1">
                         {co.bio}
                       </p>

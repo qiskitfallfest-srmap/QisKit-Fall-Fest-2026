@@ -19,8 +19,8 @@ export function ProblemStatementDossier({ ps }: ProblemStatementDossierProps) {
             {ps.id}
           </span>
         </div>
-        <h2 className="text-xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight">{ps.title}</h2>
-        <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-1">{ps.subtitle}</p>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight leading-snug">{ps.title}</h2>
+        <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-1 leading-relaxed">{ps.subtitle}</p>
       </div>
 
       <div className="p-6">

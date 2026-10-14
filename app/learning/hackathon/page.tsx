@@ -746,7 +746,7 @@ export default function HackathonWorkspacePage() {
             <div className="min-h-[50vh] flex items-center justify-center">
               <div className="flex flex-col items-center gap-3">
                 <div className="w-8 h-8 border-2 border-burgundy border-t-transparent rounded-full animate-spin" />
-                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Loading hackathon workspace...</p>
+                <p className="text-sm font-medium text-slate-600 dark:text-slate-400 leading-relaxed">Loading hackathon workspace...</p>
               </div>
             </div>
           ) : !isReleased ? (
@@ -756,7 +756,7 @@ export default function HackathonWorkspacePage() {
                 <div className="w-16 h-16 bg-slate-100 dark:bg-[#1C0A0D] text-slate-400 dark:text-slate-500 rounded-full flex items-center justify-center mx-auto ring-8 ring-slate-100 dark:ring-[#1C0A0D]">
                   <Lock className="w-8 h-8" />
                 </div>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight">
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight leading-snug">
                   Hackathon Workspace Locked
                 </h1>
                 <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -782,7 +782,7 @@ export default function HackathonWorkspacePage() {
                 Releases 10 October 2026 · Algorithm-Architecture Co-Design
               </span>
             </div>
-            <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-[#181313] dark:text-[#FAF6F3] tracking-tight">
+            <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-[#181313] dark:text-[#FAF6F3] tracking-tight leading-snug">
               Flagship Hackathon Workspace
             </h1>
             <p className="font-sans text-sm sm:text-base text-slate-600 dark:text-slate-300 mt-1 max-w-2xl leading-relaxed">
@@ -792,7 +792,7 @@ export default function HackathonWorkspacePage() {
           </div>
 
           {/* Highlighted Grand Hackathon Prize Pool Banner (Visible both Before and After Creating Team) - Styled in Burgundy Shades */}
-          <div className="relative overflow-hidden mb-8 p-4 sm:p-5 rounded-2xl border-2 border-burgundy/30 dark:border-burgundy/60 bg-linear-to-r from-burgundy/10 via-burgundy/[0.04] to-transparent dark:from-[#260C11] dark:via-[#1A080C] dark:to-[#120507] shadow-sm">
+          <div className="relative overflow-hidden mb-8 p-4 sm:p-5 rounded-xl border-2 border-burgundy/30 dark:border-burgundy/60 bg-linear-to-r from-burgundy/10 via-burgundy/[0.04] to-transparent dark:from-[#260C11] dark:via-[#1A080C] dark:to-[#120507] shadow-sm">
             <div className="absolute top-0 right-0 -mt-6 -mr-6 w-36 h-36 bg-burgundy/15 dark:bg-burgundy/25 rounded-full blur-2xl pointer-events-none" />
 
             <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -867,7 +867,7 @@ export default function HackathonWorkspacePage() {
                         <span className="text-sm font-bold uppercase tracking-wider text-burgundy dark:text-[#E89BA5] block">
                           Team Invitation
                         </span>
-                        <h3 className="text-base font-bold text-slate-900 dark:text-[#FAF6F3]">{inv.teamName}</h3>
+                        <h3 className="text-base font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">{inv.teamName}</h3>
                         <p className="text-base text-slate-600 dark:text-slate-300 mt-1">
                           Invited by <span className="font-semibold text-slate-800 dark:text-[#FAF6F3]">{inv.leadName}</span> ({inv.leadEmail})
                         </p>
@@ -928,7 +928,7 @@ export default function HackathonWorkspacePage() {
                     <span className="text-sm font-bold uppercase tracking-wider text-burgundy dark:text-[#E89BA5] block mb-1">
                       Your Hackathon Team
                     </span>
-                    <h2 className="text-2xl font-bold text-slate-900 dark:text-[#FAF6F3]">{team.name}</h2>
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">{team.name}</h2>
                     <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600 dark:text-slate-300 mt-1">
                       <span>Track: <span className="font-semibold text-slate-800 dark:text-[#FAF6F3]">{team.vertical}</span></span>
                       <span>·</span>
@@ -1116,7 +1116,7 @@ export default function HackathonWorkspacePage() {
                       <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-[#FAF6F3]">
                         Team Members Roster (2–6 Members)
                       </h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
                         {isFinalized
                           ? 'Your team roster is finalized and permanently locked.'
                           : 'Manage your roster. Add, remove, or resend invites freely before finalization (min 2, max 6 accepted members).'}
@@ -1168,7 +1168,7 @@ export default function HackathonWorkspacePage() {
                         <div className="flex items-start gap-2.5">
                           <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                           <div className="space-y-1">
-                            <p className="font-bold text-slate-900 dark:text-[#FAF6F3] text-sm">
+                            <p className="font-bold text-slate-900 dark:text-[#FAF6F3] text-sm leading-relaxed">
                               {memberActionMsg}
                             </p>
                             <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-xs">
@@ -1640,7 +1640,7 @@ export default function HackathonWorkspacePage() {
               <div className="bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl p-6 shadow-xs space-y-4">
                 <div className="flex items-center gap-2 text-slate-900 dark:text-[#FAF6F3]">
                   <Github className="w-5 h-5 text-burgundy dark:text-[#E89BA5]" />
-                  <h3 className="text-base font-bold">Hackathon Code Submission</h3>
+                  <h3 className="text-base font-bold leading-snug">Hackathon Code Submission</h3>
                 </div>
                 <p className="text-base text-slate-600 dark:text-slate-300 leading-relaxed">
                   Provide your team&apos;s public GitHub, GitLab, or Hugging Face Space repository link.
@@ -1705,7 +1705,7 @@ export default function HackathonWorkspacePage() {
                       <Shield className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
                       <span>Unlocked Problem Statement Dossier ({team.problem_statement_id})</span>
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
                       Confidential to Team {team.name}
                     </p>
                   </div>
@@ -1734,7 +1734,7 @@ export default function HackathonWorkspacePage() {
             <div className="max-w-4xl mx-auto space-y-6">
               <div className="bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl p-6 shadow-xs space-y-6">
                   <div>
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-[#FAF6F3]">
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">
                       Step 1: Choose Domain Track & Problem Statement
                     </h2>
                     <p className="text-base text-slate-600 dark:text-slate-300 mt-1">
@@ -1822,7 +1822,7 @@ export default function HackathonWorkspacePage() {
                   {/* Step 2: Team Details */}
                   <div className="pt-6 border-t border-slate-200 dark:border-[#3D1418] space-y-4">
                     <div>
-                      <h2 className="text-lg font-bold text-slate-900 dark:text-[#FAF6F3]">
+                      <h2 className="text-lg font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">
                         Step 2: Team Name & Members (2–6 Members)
                       </h2>
                       <p className="text-base text-slate-600 dark:text-slate-300 mt-1">
@@ -1973,7 +1973,7 @@ export default function HackathonWorkspacePage() {
             <div className="bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl max-w-md w-full p-6 space-y-4 shadow-xl">
               <div className="flex items-center gap-2 text-burgundy dark:text-[#E89BA5]">
                 <Lock className="w-5 h-5" />
-                <h3 className="font-bold text-base text-slate-900 dark:text-[#FAF6F3]">Confirm Team Finalization</h3>
+                <h3 className="font-bold text-base text-slate-900 dark:text-[#FAF6F3] leading-snug">Confirm Team Finalization</h3>
               </div>
               <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
                 Are you sure you want to finalize <strong>{team?.name}</strong>?
@@ -1990,7 +1990,7 @@ export default function HackathonWorkspacePage() {
                 </ul>
               </div>
               {pendingMembers.length > 0 && (
-                <p className="text-xs text-rose-600 dark:text-rose-400 font-medium">
+                <p className="text-xs text-rose-600 dark:text-rose-400 font-medium leading-relaxed">
                   Notice: {pendingMembers.length} teammate(s) with pending invitations have not accepted yet and will NOT be included in your finalized team.
                 </p>
               )}
@@ -2035,7 +2035,7 @@ export default function HackathonWorkspacePage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-burgundy dark:text-[#E89BA5]">
                   <Pencil className="w-5 h-5" />
-                  <h3 className="font-bold text-base text-slate-900 dark:text-[#FAF6F3]">Edit Official Full Name</h3>
+                  <h3 className="font-bold text-base text-slate-900 dark:text-[#FAF6F3] leading-snug">Edit Official Full Name</h3>
                 </div>
                 <button
                   type="button"

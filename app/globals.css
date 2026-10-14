@@ -72,6 +72,24 @@ body {
   color: var(--foreground);
 }
 
+/* Keyboard focus fallback for interactive elements that declare no focus style of their own */
+:where(a, button, summary, select, [role="button"], [tabindex]:not([tabindex="-1"])):focus-visible:not([class*="focus-visible:"]):not([class*="focus:"]) {
+  outline: 2px solid var(--color-burgundy);
+  outline-offset: 2px;
+}
+
+:where(.dark) :where(a, button, summary, select, [role="button"], [tabindex]:not([tabindex="-1"])):focus-visible:not([class*="focus-visible:"]):not([class*="focus:"]) {
+  outline-color: var(--color-gold);
+}
+
+::selection {
+  background-color: rgb(108 21 30 / 0.16);
+}
+
+.dark ::selection {
+  background-color: rgb(176 141 87 / 0.32);
+}
+
 /* Hide scrollbars cross-browser while preserving scroll functionality */
 .scrollbar-none::-webkit-scrollbar,
 .no-scrollbar::-webkit-scrollbar {
