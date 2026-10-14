@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { ArrowRight, ArrowUpRight, Check } from 'lucide-react';
 import { REGISTRATION_URL, WHATSAPP_COMMUNITY_URL } from '@/lib/constants';
 
@@ -6,7 +7,7 @@ const SECTIONS = [
   { id: 'online', number: '01', title: 'Start Your Quantum Journey Online' },
   { id: 'on-campus', number: '02', title: 'Five Days of Quantum Innovation on Campus' },
   { id: 'connected', number: '03', title: 'One Connected Experience' },
-  { id: 'passes', number: '04', title: 'Registration and Offline Passes' },
+  { id: 'passes', number: '04', title: 'Passes and Accommodation' },
   { id: 'why', number: '05', title: 'Why Participate' },
   { id: 'register', number: '06', title: 'Register and Join the Festival' },
 ];
@@ -116,6 +117,21 @@ function Note({ children }: { children: React.ReactNode }) {
     <aside className="mt-6 border-l-2 border-gold py-1 pl-5 text-[15px] leading-relaxed text-[#4A3F40] dark:text-[#D2C4C1]">
       {children}
     </aside>
+  );
+}
+
+function ActionLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1">
+      <Link
+        href={href}
+        className="group inline-flex items-center gap-1.5 text-[15px] font-semibold text-[#6C151E] underline decoration-[#6C151E]/30 underline-offset-4 transition-colors duration-200 hover:decoration-[#6C151E] dark:text-[#F07A86] dark:decoration-[#F07A86]/30 dark:hover:decoration-[#F07A86]"
+      >
+        {children}
+        <ArrowRight aria-hidden="true" className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+      </Link>
+      <span className="font-mono text-xs text-[#7A6B6C] dark:text-[#A8999A]">Closes 17 Oct 2026, 11:59 PM IST</span>
+    </div>
   );
 }
 
@@ -316,6 +332,7 @@ export function AboutArticle() {
               video, from superposition and entanglement to quantum algorithms and real-world applications,
               combining scientific understanding with storytelling.
             </P>
+            <ActionLink href="/learning?challenge=1">Submit your reel</ActionLink>
 
             <SubHeading meta="Prize pool ₹5,000">Digital Poster Competition</SubHeading>
             <P>
@@ -324,6 +341,7 @@ export function AboutArticle() {
               sensing, superconducting hardware, quantum algorithms, and emerging applications. Entries are
               judged on original design, scientific accuracy, and clarity.
             </P>
+            <ActionLink href="/learning?challenge=2">Submit your poster</ActionLink>
 
             <SubHeading meta="Prize pool ₹5,000">Technical Essay Competition</SubHeading>
             <P>
@@ -332,6 +350,7 @@ export function AboutArticle() {
               quantum security, hardware architectures, quantum machine learning, and more. It rewards
               independent thinking, evidence-based reasoning, and clear scientific communication.
             </P>
+            <ActionLink href="/learning?challenge=3">Submit your essay</ActionLink>
 
             <SubHeading meta="Prize pool ₹1,00,000">Quantum Hackathon, Phase 1: Build with Qiskit</SubHeading>
             <P>
@@ -346,6 +365,7 @@ export function AboutArticle() {
               public GitHub repository, and eligible teams compete for selection to the on-campus Phase 2
               finals.
             </P>
+            <ActionLink href="/learning/hackathon">Open the hackathon workspace</ActionLink>
           </section>
 
           {/* 02 On campus */}
@@ -527,6 +547,25 @@ export function AboutArticle() {
               qualification requirements. Purchasing a pass does not guarantee selection for competitive events
               that require separate evaluation.
             </Note>
+
+            <SubHeading meta="Around ₹500 per person">Accommodation</SubHeading>
+            <P>
+              Travelling to SRM University-AP for the on-campus phase? Participants can stay in paying-guest
+              (PG) accommodation near the campus, and the organizing team will assist you in finding and
+              arranging a place. Charges are around ₹500 per person at most.
+            </P>
+            <P>
+              To request help with accommodation, message the organizing team in the{' '}
+              <a
+                href={WHATSAPP_COMMUNITY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-[#6C151E] underline decoration-[#6C151E]/30 underline-offset-4 hover:decoration-[#6C151E] dark:text-[#F07A86] dark:decoration-[#F07A86]/30"
+              >
+                WhatsApp Community
+              </a>
+              .
+            </P>
           </section>
 
           {/* 05 Why */}
