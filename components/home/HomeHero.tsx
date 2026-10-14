@@ -4,8 +4,9 @@ import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, CalendarDays, MapPin } from 'lucide-react';
-import { REGISTRATION_URL } from '@/lib/constants';
+import { REGISTRATION_URL, GOOGLE_FORM_REGISTRATION_URL, HACKATHON_WORKSPACE_URL } from '@/lib/constants';
 import { trackRegistrationClick, trackEvent } from '@/lib/analytics';
+import { getClientSession } from '@/lib/session-client';
 import { ResponsivePicture } from '@/components/shared/ResponsivePicture';
 import styles from './HomeHero.module.css';
 
@@ -57,6 +58,45 @@ const EVENT_META: EventMetaItem[] = [
 ];
 
 export function HomeHero() {
+  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+  const [participantName, setParticipantName] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    let isMounted = true;
+
+    async function checkSession() {
+      try {
+        const data = await getClientSession();
+        if (isMounted && data.authenticated && data.session) {
+          setIsAuthenticated(true);
+          const firstName = data.session.fullName?.trim().split(' ')[0] || null;
+          setParticipantName(firstName);
+        }
+      } catch {
+        // Silently fallback to guest
+      }
+    }
+
+    checkSession();
+
+    const handleAuthChange = (e: any) => {
+      if (e.detail?.email) {
+        setIsAuthenticated(true);
+        const firstName = e.detail.fullName?.trim().split(' ')[0] || null;
+        setParticipantName(firstName);
+      } else {
+        setIsAuthenticated(false);
+        setParticipantName(null);
+      }
+    };
+
+    window.addEventListener('qff_auth_change', handleAuthChange);
+    return () => {
+      isMounted = false;
+      window.removeEventListener('qff_auth_change', handleAuthChange);
+    };
+  }, []);
+
   return (
     <section
       id="section-01-hero"
@@ -214,88 +254,144 @@ export function HomeHero() {
               sm:flex-nowrap
             `}
           >
-            {/* Primary CTA: Register For Online Events */}
-            <Link
-              href="/learning"
-              data-cursor="cta"
-              onClick={() => trackEvent('cta_click', { placement: 'home_hero_register', target: '/learning' })}
-              className={`
-                ${styles.registerBtn}
-                group
-                relative
-                overflow-hidden
-                inline-flex
-                items-center
-                justify-between
-                rounded-[6px]
-                border
-                border-[rgba(193,46,63,0.85)]
-                bg-[#A61629]
-                dark:bg-[#921426]
-                text-[#FFF9F6]
-                dark:text-[#FFF5F3]
-                shadow-[0_8px_22px_rgba(105,14,27,0.12)]
-                dark:shadow-[0_7px_24px_rgba(0,0,0,0.20)]
-                transition-[border-color,transform,box-shadow]
-                duration-[250ms]
-                ease-[cubic-bezier(0.22,1,0.36,1)]
-                hover:-translate-y-[1px]
-                outline-none
-                focus-visible:ring-2
-                focus-visible:ring-[#A7192A]/40
-                focus-visible:ring-offset-2
-                focus-visible:rounded-[6px]
-                dark:focus-visible:ring-offset-[#100405]
-                shrink-0
-              `}
-            >
-              {/* Expanding Chamber: strictly clipped inside button */}
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute right-[9px] top-1/2 -translate-y-1/2 h-[32px] w-[32px] rounded-full bg-[#FFF7F2] transition-transform duration-[320ms] group-hover:duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[22] -z-0"
-              />
-
-              {/* CTA Label */}
-              <span className="relative z-10 font-[650] leading-tight text-left transition-colors duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:text-[#A61629] dark:group-hover:text-[#921426]">
-                Register For Online Events
-              </span>
-
-              {/* Circular Arrow Chamber & Icon */}
-              <span
-                aria-hidden="true"
-                className="relative z-10 flex h-[32px] w-[32px] items-center justify-center rounded-full bg-[#FFF7F2] text-[#A61629] dark:text-[#921426] border-0 border-transparent shadow-none"
+            {isAuthenticated ? (
+              /* Already Registered & Logged-In State: Single prominent CTA into Hackathon Arena */
+              <Link
+                href="/learning/hackathon"
+                data-cursor="cta"
+                onClick={() => trackEvent('cta_click', { placement: 'home_hero_arena_auth', target: '/learning/hackathon' })}
+                className={`
+                  ${styles.registerBtn}
+                  group
+                  relative
+                  overflow-hidden
+                  inline-flex
+                  items-center
+                  justify-between
+                  rounded-[6px]
+                  border
+                  border-[rgba(193,46,63,0.85)]
+                  bg-[#A61629]
+                  dark:bg-[#921426]
+                  text-[#FFF9F6]
+                  dark:text-[#FFF5F3]
+                  shadow-[0_8px_22px_rgba(105,14,27,0.12)]
+                  dark:shadow-[0_7px_24px_rgba(0,0,0,0.20)]
+                  transition-[border-color,transform,box-shadow]
+                  duration-[250ms]
+                  ease-[cubic-bezier(0.22,1,0.36,1)]
+                  hover:-translate-y-[1px]
+                  outline-none
+                  focus-visible:ring-2
+                  focus-visible:ring-[#A7192A]/40
+                  focus-visible:ring-offset-2
+                  focus-visible:rounded-[6px]
+                  dark:focus-visible:ring-offset-[#100405]
+                  shrink-0
+                `}
               >
-                <ArrowRight
-                  size={16}
-                  strokeWidth={2.2}
-                  className="transition-transform duration-[300ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-[2px]"
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute right-[9px] top-1/2 -translate-y-1/2 h-[32px] w-[32px] rounded-full bg-[#FFF7F2] transition-transform duration-[320ms] group-hover:duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[22] -z-0"
                 />
-              </span>
-            </Link>
+                <span className="relative z-10 font-[650] leading-tight text-left transition-colors duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:text-[#A61629] dark:group-hover:text-[#921426]">
+                  {participantName ? `Welcome back, ${participantName} · Enter Hackathon Arena` : 'Enter Hackathon Arena'}
+                </span>
+                <span
+                  aria-hidden="true"
+                  className="relative z-10 flex h-[32px] w-[32px] items-center justify-center rounded-full bg-[#FFF7F2] text-[#A61629] dark:text-[#921426] border-0 border-transparent shadow-none"
+                >
+                  <ArrowRight
+                    size={16}
+                    strokeWidth={2.2}
+                    className="transition-transform duration-[300ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-[2px]"
+                  />
+                </span>
+              </Link>
+            ) : (
+              /* Unauthenticated / New Visitor State: Dual CTAs */
+              <>
+                {/* Primary CTA: Register For Online Events -> Direct to Google Form */}
+                <a
+                  href={GOOGLE_FORM_REGISTRATION_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-cursor="cta"
+                  onClick={() => trackEvent('cta_click', { placement: 'home_hero_register_google_form', target: GOOGLE_FORM_REGISTRATION_URL })}
+                  className={`
+                    ${styles.registerBtn}
+                    group
+                    relative
+                    overflow-hidden
+                    inline-flex
+                    items-center
+                    justify-between
+                    rounded-[6px]
+                    border
+                    border-[rgba(193,46,63,0.85)]
+                    bg-[#A61629]
+                    dark:bg-[#921426]
+                    text-[#FFF9F6]
+                    dark:text-[#FFF5F3]
+                    shadow-[0_8px_22px_rgba(105,14,27,0.12)]
+                    dark:shadow-[0_7px_24px_rgba(0,0,0,0.20)]
+                    transition-[border-color,transform,box-shadow]
+                    duration-[250ms]
+                    ease-[cubic-bezier(0.22,1,0.36,1)]
+                    hover:-translate-y-[1px]
+                    outline-none
+                    focus-visible:ring-2
+                    focus-visible:ring-[#A7192A]/40
+                    focus-visible:ring-offset-2
+                    focus-visible:rounded-[6px]
+                    dark:focus-visible:ring-offset-[#100405]
+                    shrink-0
+                  `}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute right-[9px] top-1/2 -translate-y-1/2 h-[32px] w-[32px] rounded-full bg-[#FFF7F2] transition-transform duration-[320ms] group-hover:duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[22] -z-0"
+                  />
+                  <span className="relative z-10 font-[650] leading-tight text-left transition-colors duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:text-[#A61629] dark:group-hover:text-[#921426]">
+                    Register For Online Events
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    className="relative z-10 flex h-[32px] w-[32px] items-center justify-center rounded-full bg-[#FFF7F2] text-[#A61629] dark:text-[#921426] border-0 border-transparent shadow-none"
+                  >
+                    <ArrowRight
+                      size={16}
+                      strokeWidth={2.2}
+                      className="transition-transform duration-[300ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-[2px]"
+                    />
+                  </span>
+                </a>
 
-            {/* Secondary CTA: Enter Hackathon & Competition Arena */}
-            <Link
-              href="/learning"
-              data-cursor="cta"
-              onClick={() => trackEvent('cta_click', { placement: 'home_hero_arena', target: '/learning' })}
-              className={`
-                ${styles.arenaBtn}
-                group
-                outline-none
-                focus-visible:ring-2
-                focus-visible:ring-[#A7192A]/40
-                focus-visible:ring-offset-2
-                focus-visible:rounded-[6px]
-                dark:focus-visible:ring-offset-[#100405]
-              `}
-            >
-              <span>Enter Hackathon Arena</span>
-              <ArrowRight
-                size={15}
-                strokeWidth={2.2}
-                className="transition-transform duration-200 group-hover:translate-x-0.5 text-[#A61629] dark:text-[#F07B88]"
-              />
-            </Link>
+                {/* Secondary CTA: Enter Hackathon Arena -> /learning/hackathon */}
+                <Link
+                  href="/learning/hackathon"
+                  data-cursor="cta"
+                  onClick={() => trackEvent('cta_click', { placement: 'home_hero_arena', target: '/learning/hackathon' })}
+                  className={`
+                    ${styles.arenaBtn}
+                    group
+                    outline-none
+                    focus-visible:ring-2
+                    focus-visible:ring-[#A7192A]/40
+                    focus-visible:ring-offset-2
+                    focus-visible:rounded-[6px]
+                    dark:focus-visible:ring-offset-[#100405]
+                  `}
+                >
+                  <span>Enter Hackathon Arena</span>
+                  <ArrowRight
+                    size={15}
+                    strokeWidth={2.2}
+                    className="transition-transform duration-200 group-hover:translate-x-0.5 text-[#A61629] dark:text-[#F07B88]"
+                  />
+                </Link>
+              </>
+            )}
           </div>
         </div>
 
