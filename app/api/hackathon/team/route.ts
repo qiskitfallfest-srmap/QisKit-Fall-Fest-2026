@@ -238,7 +238,7 @@ export async function POST(request: NextRequest) {
         if (!whitelistCheck.whitelisted) {
           logWarn('whitelist.rejected', { route: 'hackathon.team.create', email: member.email, leader: session.email });
           return {
-            error: `Teammate ${member.email} is not yet registered. Ask your team member to sign in directly at the learning portal to register in 30 seconds, or contact WhatsApp support.`,
+            error: `${member.email} has not registered on the portal yet. Ask them to sign in once at www.qffsrmap2026.com/learning with this email and complete the 30-second participant profile, then add them again.`,
           };
         }
 

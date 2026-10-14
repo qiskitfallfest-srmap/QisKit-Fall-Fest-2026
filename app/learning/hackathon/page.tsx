@@ -5,6 +5,7 @@ import useSWR from 'swr';
 import Link from 'next/link';
 import { AuthGate } from '@/components/learning/AuthGate';
 import { TeammateInput } from '@/components/learning/TeammateInput';
+import { UnregisteredTeammateNotice } from '@/components/learning/UnregisteredTeammateNotice';
 import { ProblemStatementDossier } from '@/components/learning/ProblemStatementDossier';
 import { ProblemStatementDriveNotice } from '@/components/learning/ProblemStatementDriveNotice';
 import { PROBLEM_STATEMENTS } from '@/data/learning/problem-statements';
@@ -304,7 +305,7 @@ export default function HackathonWorkspacePage() {
         return;
       }
       if (m.status === 'not_whitelisted') {
-        setTeamFormError(`Teammate ${m.email} is not yet registered. Ask your team member to sign in directly at the learning portal to register in 30 seconds, or contact WhatsApp support.`);
+        setTeamFormError(`${m.email} has not registered on the portal yet. Ask them to sign in once at www.qffsrmap2026.com/learning with this email and complete the 30-second participant profile, then add them again.`);
         return;
       }
       if (m.status === 'already_in_team') {
@@ -476,7 +477,7 @@ export default function HackathonWorkspacePage() {
     }
 
     if (newMemberStatus === 'not_whitelisted') {
-      setMemberActionErr(`Teammate ${newMemberEmail} is not yet registered. Ask your team member to sign in directly at the learning portal to register in 30 seconds, or contact WhatsApp support.`);
+      setMemberActionErr(`${newMemberEmail} has not registered on the portal yet. Ask them to sign in once at www.qffsrmap2026.com/learning with this email and complete the 30-second participant profile, then add them again.`);
       return;
     }
     if (newMemberStatus === 'already_in_team') {
@@ -1335,36 +1336,7 @@ export default function HackathonWorkspacePage() {
                           )}
 
                           {newMemberStatus === 'not_whitelisted' && (
-                            <div className="w-full rounded-lg border border-amber-300/80 dark:border-amber-700/60 bg-amber-50/90 dark:bg-amber-950/40 p-2.5 space-y-1.5 animate-in fade-in duration-200">
-                              <div className="flex items-center gap-1.5 font-semibold text-amber-800 dark:text-amber-300">
-                                <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
-                                <span>Email not found in registered whitelist</span>
-                              </div>
-                              <p className="text-[11.5px] leading-relaxed text-amber-900/90 dark:text-amber-200/90 pl-5">
-                                Tell your team member to sign in directly at the learning portal to register in 30 seconds, or reach out on WhatsApp for quick assistance.
-                              </p>
-                              <div className="flex flex-wrap items-center gap-2 pl-5 pt-0.5">
-                                <a
-                                  href={REGISTRATION_URL}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-200/80 hover:bg-amber-300/90 dark:bg-amber-900/60 dark:hover:bg-amber-900 text-amber-950 dark:text-amber-100 font-semibold text-[11px] transition-colors"
-                                >
-                                  <span>Register on Portal</span>
-                                  <ExternalLink className="w-3 h-3" />
-                                </a>
-                                <a
-                                  href={WHATSAPP_COMMUNITY_URL}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-950/60 dark:hover:bg-emerald-900 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800 font-semibold text-[11px] transition-colors"
-                                >
-                                  <MessageCircle className="w-3 h-3 text-[#25D366]" />
-                                  <span>Join WhatsApp Group</span>
-                                  <ExternalLink className="w-3 h-3 text-[#25D366]" />
-                                </a>
-                              </div>
-                            </div>
+                            <UnregisteredTeammateNotice email={newMemberEmail.trim().toLowerCase()} />
                           )}
 
                           {newMemberStatus === 'already_in_team' && (
@@ -1857,7 +1829,7 @@ export default function HackathonWorkspacePage() {
                         Step 2: Team Name & Members (2–6 Members)
                       </h2>
                       <p className="text-base text-slate-600 dark:text-slate-300 mt-1">
-                        Team names must be globally unique. You are the team leader. Teams must consist of 2 to 6 members (1 leader + 1 to 5 teammates). Add between 1 and 5 additional teammates. Teammate Gmails are authenticated in real time against the platform whitelist.
+                        Team names must be globally unique. You are the team leader. Teams must consist of 2 to 6 members (1 leader + 1 to 5 teammates). Add between 1 and 5 additional teammates. Each teammate must sign in to this portal once before you can add them.
                       </p>
                     </div>
 

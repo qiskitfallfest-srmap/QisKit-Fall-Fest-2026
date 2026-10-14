@@ -211,10 +211,10 @@ export function HomeHero() {
               flex-row
               items-center
               flex-wrap
-              min-[360px]:flex-nowrap
+              sm:flex-nowrap
             `}
           >
-            {/* Primary Register Button linking directly to Learning Hub */}
+            {/* Primary CTA linking to the hackathon and competition workspace */}
             <Link
               href="/learning"
               data-cursor="cta"
@@ -252,12 +252,12 @@ export function HomeHero() {
               {/* Expanding Chamber: strictly clipped inside button (380ms expansion / 320ms retraction) */}
               <span
                 aria-hidden="true"
-                className="pointer-events-none absolute right-[9px] top-1/2 -translate-y-1/2 h-[32px] w-[32px] rounded-full bg-[#FFF7F2] transition-transform duration-[320ms] group-hover:duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[12] -z-0"
+                className="pointer-events-none absolute right-[9px] top-1/2 -translate-y-1/2 h-[32px] w-[32px] rounded-full bg-[#FFF7F2] transition-transform duration-[320ms] group-hover:duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[22] -z-0"
               />
 
               {/* CTA Label (280ms text transition) */}
-              <span className="relative z-10 font-[650] transition-colors duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:text-[#A61629] dark:group-hover:text-[#921426]">
-                Enter Learning Hub
+              <span className="relative z-10 font-[650] leading-tight text-left transition-colors duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:text-[#A61629] dark:group-hover:text-[#921426]">
+                Enter Hackathon/Competition Workspace
               </span>
 
               {/* Circular Arrow Chamber & Icon (300ms translation) */}
