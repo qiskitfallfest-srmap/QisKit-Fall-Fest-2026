@@ -10,6 +10,14 @@ This file is automatically loaded by AI agents working in this workspace.
   👉 **`https://www.qffsrmap2026.com/learning`**  
   *All participants, emails, notifications, and AI instructions directing users to register, log in, take quizzes, watch lectures, or access challenges MUST use this URL. Confirmed working natively across campus Wi-Fi and external networks.*
 
+- **Official Online Registration Form (Google Form):**  
+  👉 **`https://docs.google.com/forms/d/e/1FAIpQLSfgl8b3sfDfXw38ay6Lwj1a6DUj0uD5oc3xQ24yaClRppvWrg/viewform`**  
+  *Used for external festival registrations and primary unauthenticated hero CTA.*
+
+- **Flagship Hackathon Workspace & Competition Arena:**  
+  👉 **`https://www.qffsrmap2026.com/learning/hackathon`**  
+  *Primary destination for welcome emails, returning attendee CTAs, team creation, and problem statements to eliminate initial cognitive overload from the full curriculum.*
+
 - **Main Festival Landing Page:**  
   `https://www.qffsrmap2026.com/`  
 
@@ -81,4 +89,30 @@ This file is automatically loaded by AI agents working in this workspace.
      - Contextual alert badges on the Public Schedule (`ExploreSchedule.tsx`).
      - Global non-intrusive entrance toasts (`DeadlineToast.tsx`) with localStorage dismissal.
    - Single source of truth must remain 100% synchronized across all schedule, FAQ, curriculum, and competition data files.
+
+---
+
+## 5. Dual-Channel Registration Sync, Google Apps Script Relay & Dynamic Hero (GT-31 & GT-32)
+
+1. **Dual Registration Channels & Synchronized Whitelist (GT-31):**
+   - **Channel 1 (Google Form):** External registrations submit to the official form. Google Apps Script (`tools/google_form_webhook.gs`) runs `onFormSubmit`, dispatches the branded HTML pass email via `GmailApp.sendEmail()`, and makes an authenticated HTTP POST to `POST /api/webhooks/google-form` (`x-sync-secret`), which inserts the participant into Supabase `public.registrations`, upserts `public.allowed_emails` (both primary and college email), and primes the Upstash Redis cache `whitelist:${email}`.
+   - **Channel 2 (On-Site Self-Registration):** Direct on-site registrations in `AuthGate.tsx` invoke `POST /api/auth/register`. After saving to Supabase and Redis, the route asynchronously triggers the Google Apps Script Web App relay (`GOOGLE_APPS_SCRIPT_WEBAPP_URL`) with a 6-second timeout. Apps Script executes `doPost(e)` to dispatch the exact same branded pass email and automatically logs the registrant into a dedicated `Website_Registrations` sheet tab.
+   - **Environment Variables:**
+     - `GOOGLE_APPS_SCRIPT_WEBAPP_URL`: Production Web App endpoint (`https://script.google.com/macros/s/AKfycbyD8WBeKCBveUaNrzeYCjdo8p9JzkHKSEEP1UElmM-imWaKZIePqaKbaLx3Yak5W_E31g/exec`).
+     - `GOOGLE_FORM_SYNC_SECRET`: Shared webhook secret (`qff-srmap-2026-sync-secret`).
+
+2. **Welcome Pass Email Routing & Don Norman Cognitive Restraint:**
+   - The primary CTA button and links in the welcome pass email route directly to:
+     👉 **`https://www.qffsrmap2026.com/learning/hackathon`**
+   - Directing newly confirmed registrants into the Hackathon Workspace provides an immediate, actionable goal (team formation, roster, problem statements) rather than overwhelming them with the full 5-session curriculum syllabus on `/learning`. Secondary tracks remain 1 click away via header and sidebar navigation.
+
+3. **Homepage Dynamic Session-Aware Hero Architecture (GT-32):**
+   - In `components/home/HomeHero.tsx`, client session is passively checked using `getClientSession()` from `@/lib/session-client`.
+   - **Unauthenticated / Guest State:**
+     - Primary Button: **`Register For Online Events`** → Opens official Google Form in a new tab (`target="_blank" rel="noopener noreferrer"`).
+     - Secondary Button: **`Enter Hackathon Arena`** → Routes to `/learning/hackathon`.
+   - **Authenticated / Registered State:**
+     - The "Register For Online Events" button is automatically hidden.
+     - Replaced by a single high-prominence CTA: **`Welcome back, [First Name] · Enter Hackathon Arena`** (or **`Enter Hackathon Arena`**) routing straight to `/learning/hackathon`.
+
 
