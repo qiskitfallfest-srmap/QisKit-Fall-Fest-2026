@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import Image from 'next/image';
 import {
   Award,
   CheckCircle2,
@@ -17,6 +18,10 @@ import {
   XCircle,
   Send,
   Info,
+  Fingerprint,
+  BadgeCheck,
+  GraduationCap,
+  Printer,
 } from 'lucide-react';
 import {
   CERTIFICATE_DELIVERY_LABEL,
@@ -306,14 +311,14 @@ export function CertificateModal({
               <div>
                 <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold border border-emerald-200 dark:border-emerald-800 inline-flex items-center gap-1 mb-1.5">
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  Official Certificate Minted
+                  Certificate Issued
                 </span>
                 <h3 className="text-xl font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">
                   Congratulations, {activeUserName}!
                 </h3>
                 <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 max-w-md mx-auto leading-relaxed">
                   Your course completion and payment have been verified. Anyone can confirm this
-                  certificate using its serial number.
+                  certificate on the public verification page using its Credential ID.
                 </p>
               </div>
 
@@ -332,7 +337,7 @@ export function CertificateModal({
               {/* Serial & Distinction Preview Card */}
               <div className="p-4 bg-slate-50 dark:bg-[#1C0A0D] rounded-xl border border-slate-200 dark:border-[#3D1418] text-left space-y-2.5">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500 dark:text-slate-400 font-medium">Serial Number:</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">Credential ID:</span>
                   <code className="font-mono font-bold text-slate-900 dark:text-[#FAF6F3] bg-white dark:bg-[#150709] px-2 py-0.5 rounded border border-slate-200 dark:border-[#3D1418]">
                     {issuedCert.serialNumber || issuedCert.serial_number}
                   </code>
@@ -373,6 +378,13 @@ export function CertificateModal({
           ) : !data?.eligible ? (
             /* STATE 2: INCOMPLETE / LOCKED */
             <div className="space-y-6">
+              <CertificatePreview
+                recipientName={activeUserName}
+                totalSessions={totalSessionsCount}
+                locked
+              />
+              <CertificateAbout totalSessions={totalSessionsCount} />
+
               {/* Academic Progress Bar */}
               <div>
                 <div className="flex items-center justify-between text-xs mb-1.5">
@@ -469,15 +481,38 @@ export function CertificateModal({
           ) : (
             /* STATE 3: ELIGIBLE (UNLOCKED) */
             <div className="space-y-5">
-              <div className="p-4 bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl space-y-1.5">
-                <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-bold text-xs">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                  Course Completed
-                </div>
-                <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                  You have completed all {totalSessionsCount} video lectures and passed every concept check quiz (average score {data?.averageQuizScore}%).
-                </p>
+              <CertificatePreview
+                recipientName={activeUserName}
+                totalSessions={totalSessionsCount}
+                averageScore={data?.averageQuizScore}
+              />
+
+              <div className="flex items-start gap-2 px-3.5 py-2.5 bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-lg text-xs text-emerald-900 dark:text-emerald-200 leading-relaxed">
+                <ShieldCheck className="w-4 h-4 shrink-0 mt-px text-emerald-600 dark:text-emerald-400" />
+                <span>
+                  <span className="font-bold">Course completed.</span> All {totalSessionsCount} video lectures watched and every concept check quiz passed (average {data?.averageQuizScore}%).
+                </span>
               </div>
+
+              {!(existingSub && !showPaymentForm) && (
+                <>
+                  <CertificateAbout totalSessions={totalSessionsCount} />
+
+                  <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418]">
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-slate-900 dark:text-[#FAF6F3]">
+                        Verified Masterclass Certificate
+                      </p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                        One-time fee, paid on the SRM-AP Easebuzz page. Issued after {CERTIFICATE_RELEASE_LABEL}.
+                      </p>
+                    </div>
+                    <span className="font-serif text-2xl font-bold text-slate-900 dark:text-[#FAF6F3] shrink-0">
+                      ₹{feeInr}
+                    </span>
+                  </div>
+                </>
+              )}
 
               {existingSub && !showPaymentForm ? (
                 /* Submitted payment status */
@@ -572,19 +607,7 @@ export function CertificateModal({
                 /* Checkout: pay on Easebuzz, then submit Transaction ID + receipt */
                 <form onSubmit={handleSubmitPayment} className="space-y-4">
                   <div className="p-4 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl space-y-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <span className="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                          Step 1
-                        </span>
-                        <p className="text-xs font-bold text-slate-900 dark:text-[#FAF6F3]">
-                          Pay the ₹{feeInr} certificate fee on Easebuzz
-                        </p>
-                      </div>
-                      <span className="font-serif text-lg font-bold text-slate-900 dark:text-[#FAF6F3] shrink-0">
-                        ₹{feeInr}
-                      </span>
-                    </div>
+                    <StepHeader step={1} title={`Pay the ₹${feeInr} certificate fee on Easebuzz`} />
                     <a
                       href={gatewayUrl}
                       target="_blank"
@@ -603,14 +626,7 @@ export function CertificateModal({
                   </div>
 
                   <div className="p-4 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl space-y-3">
-                    <div>
-                      <span className="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        Step 2
-                      </span>
-                      <p className="text-xs font-bold text-slate-900 dark:text-[#FAF6F3]">
-                        Submit your receipt
-                      </p>
-                    </div>
+                    <StepHeader step={2} title="Submit your receipt" />
 
                     <label className="block space-y-1">
                       <span className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">
@@ -695,14 +711,7 @@ export function CertificateModal({
                     aria-label="Certificate delivery"
                     className="p-4 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl space-y-2"
                   >
-                    <div>
-                      <span className="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        Step 3
-                      </span>
-                      <p className="text-xs font-bold text-slate-900 dark:text-[#FAF6F3]">
-                        How do you want to receive it?
-                      </p>
-                    </div>
+                    <StepHeader step={3} title="How do you want to receive it?" />
                     {(Object.keys(CERTIFICATE_DELIVERY_LABEL) as CertificateDeliveryMode[]).map((mode) => (
                       <label
                         key={mode}
@@ -798,5 +807,181 @@ export function CertificateModal({
       </div>
     </div>,
     document.body
+  );
+}
+
+const CERTIFICATE_RELEASE_LABEL = '30 October 2026';
+
+function StepHeader({ step, title }: { step: number; title: string }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <span className="w-6 h-6 rounded-full bg-burgundy/10 dark:bg-burgundy/25 text-burgundy dark:text-[#E89BA5] text-[11px] font-bold flex items-center justify-center shrink-0">
+        {step}
+      </span>
+      <p className="text-xs font-bold text-slate-900 dark:text-[#FAF6F3]">{title}</p>
+    </div>
+  );
+}
+
+function distinctionLabel(score: number) {
+  if (score >= 90) return 'Passed with High Distinction';
+  if (score >= 75) return 'Passed with Distinction';
+  return 'Successful Completion';
+}
+
+/** Scaled-down rendering of the issued certificate so participants see what they are paying for. */
+function CertificatePreview({
+  recipientName,
+  totalSessions,
+  averageScore,
+  locked = false,
+}: {
+  recipientName: string;
+  totalSessions: number;
+  averageScore?: number;
+  locked?: boolean;
+}) {
+  return (
+    <figure className="space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          Illustrative preview
+        </span>
+        {locked && (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#250D11] border border-slate-200 dark:border-[#3D1418] text-[10px] font-semibold text-slate-600 dark:text-slate-400">
+            <Lock className="w-3 h-3" />
+            Locked
+          </span>
+        )}
+      </div>
+      <div className="relative rounded-xl bg-[#FDFBF6] dark:bg-[#F7F2E8] border border-[#E7DCC3] p-1.5 shadow-sm">
+        <div className="relative rounded-lg border border-[#800020]/35 px-4 py-5 sm:px-8 sm:py-6 text-center">
+          <div className="absolute inset-[3px] rounded-md border border-[#C9A646]/50 pointer-events-none" />
+
+          <div className="relative flex items-center justify-center gap-3 sm:gap-4">
+            <Image
+              src="/images/branding/IBM_Quantum_logotype_pos_RGB_tight.webp"
+              alt="IBM Quantum"
+              width={1200}
+              height={186}
+              className="h-3.5 sm:h-4 w-auto select-none"
+            />
+            <span className="h-6 w-px bg-slate-300" aria-hidden="true" />
+            <Image
+              src="/images/branding/srm-ap-logo-horizontal-backgroundless.webp"
+              alt="SRM University-AP"
+              width={1947}
+              height={808}
+              className="h-7 sm:h-8 w-auto select-none"
+            />
+          </div>
+          <p className="font-serif text-lg sm:text-xl font-bold text-[#4A0012] mt-3 leading-tight">
+            Certificate of Academic Mastery
+          </p>
+          <p className="text-[8px] sm:text-[9px] font-semibold tracking-[0.2em] uppercase text-[#A8842C] mt-1">
+            Qiskit Fall Fest 2026 · Masterclass
+          </p>
+
+          <p className="font-serif italic text-[11px] text-slate-500 mt-4">Awarded to</p>
+          <p className="font-serif text-xl sm:text-2xl font-bold text-slate-900 mt-0.5 truncate">
+            {recipientName}
+          </p>
+          <div className="h-px w-40 sm:w-56 mx-auto mt-1.5 bg-gradient-to-r from-transparent via-[#C9A646] to-transparent" />
+
+          <p className="text-[10px] sm:text-[11px] text-slate-600 mt-2.5 max-w-sm mx-auto leading-relaxed">
+            for completing all {totalSessions} video lectures and concept check evaluations of the
+            Qiskit Fall Fest 2026 quantum computing masterclass.
+          </p>
+
+          {averageScore !== undefined && (
+            <p className="inline-block mt-3 px-3 py-1 rounded-full border border-[#C9A646] text-[9px] font-bold tracking-wider uppercase text-[#800020]">
+              {distinctionLabel(averageScore)} ({averageScore}%)
+            </p>
+          )}
+
+          <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-end gap-3 text-left">
+            <div className="min-w-0">
+              <p className="text-[7px] sm:text-[8px] font-bold tracking-widest uppercase text-slate-400">
+                Credential ID
+              </p>
+              <p className="font-mono text-[9px] sm:text-[10px] font-bold text-[#800020] truncate">
+                QFF26-MCL-······
+              </p>
+            </div>
+            <div className="w-11 h-11 rounded-full bg-[#800020] ring-2 ring-[#C9A646] ring-offset-2 ring-offset-[#FDFBF6] flex flex-col items-center justify-center leading-none">
+              <span className="text-[7px] font-extrabold tracking-wider text-white">QFF</span>
+              <span className="text-[9px] font-black text-[#E5C766]">2026</span>
+            </div>
+            <div className="min-w-0 text-right">
+              <p className="text-[7px] sm:text-[8px] font-bold tracking-widest uppercase text-slate-400">
+                Verify at
+              </p>
+              <p className="font-mono text-[9px] sm:text-[10px] text-slate-600 truncate">
+                qffsrmap2026.com/verify-certificate
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <figcaption className="text-center text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
+        For illustration only. The final certificate design is in progress, and certificates
+        with your Credential ID are issued after {CERTIFICATE_RELEASE_LABEL}.
+      </figcaption>
+    </figure>
+  );
+}
+
+function CertificateAbout({ totalSessions }: { totalSessions: number }) {
+  const points = [
+    {
+      icon: Fingerprint,
+      title: 'Unique Credential ID',
+      body: 'Every certificate gets its own ID, backed by a tamper-evident SHA-256 record in the official registry.',
+    },
+    {
+      icon: BadgeCheck,
+      title: 'Publicly verifiable',
+      body: 'Recruiters and universities can confirm it on the Qiskit Fall Fest verification page using the Credential ID.',
+    },
+    {
+      icon: GraduationCap,
+      title: 'Grade on record',
+      body: 'Your concept check average and distinction level are printed on the certificate.',
+    },
+    {
+      icon: Printer,
+      title: 'Digital and printed',
+      body: 'Download the digital copy, and collect a printed copy at the valedictory ceremony or get it by email.',
+    },
+  ];
+
+  return (
+    <section className="space-y-3">
+      <div>
+        <h3 className="text-sm font-bold text-slate-900 dark:text-[#FAF6F3]">What this certificate is</h3>
+        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mt-1">
+          An official certificate issued by SRM University-AP in collaboration with IBM Quantum. It
+          confirms that you completed the Qiskit Fall Fest 2026 masterclass: all {totalSessions} video
+          lectures and every concept check quiz.
+        </p>
+      </div>
+      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        {points.map(({ icon: Icon, title, body }) => (
+          <li
+            key={title}
+            className="flex items-start gap-2.5 p-3 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709]"
+          >
+            <Icon className="w-4 h-4 shrink-0 mt-0.5 text-burgundy dark:text-[#E89BA5]" />
+            <span>
+              <span className="block text-xs font-semibold text-slate-800 dark:text-slate-200">{title}</span>
+              <span className="block text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mt-0.5">
+                {body}
+              </span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

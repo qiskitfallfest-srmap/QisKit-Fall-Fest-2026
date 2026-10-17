@@ -51,7 +51,7 @@ export default async function VerifyCertificatePage({ params }: PageProps) {
           <div>
             <h1 className="text-xl font-bold text-slate-900">Certificate Not Found</h1>
             <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-              No verified academic certificate matching serial number <br />
+              No verified academic certificate matching Credential ID <br />
               <code className="bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded font-mono font-semibold">
                 {serial}
               </code>{' '}
@@ -162,7 +162,7 @@ export default async function VerifyCertificatePage({ params }: PageProps) {
 
             <div className="sm:col-span-2 pt-2 border-t border-slate-100">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-                Serial Number
+                Credential ID
               </span>
               <code className="text-xs font-mono font-bold text-slate-900 bg-slate-100 px-2 py-1 rounded inline-block">
                 {cert.serial_number}
