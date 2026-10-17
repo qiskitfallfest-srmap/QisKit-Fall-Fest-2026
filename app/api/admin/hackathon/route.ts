@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
-import { supabase } from '@/lib/supabase';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { cacheAside, CACHE_TTL, invalidateCache } from '@/lib/redis';
 import { getFinalizedTeamsMap } from '@/lib/finalized-teams';
@@ -86,7 +85,7 @@ export interface AdminHackathonData {
 
 async function fetchHackathonAdminData(): Promise<AdminHackathonData> {
   // 1. Fetch all teams
-  const { data: rawTeams, error: teamsErr } = await supabase
+  const { data: rawTeams, error: teamsErr } = await supabaseAdmin
     .from('hackathon_teams')
     .select('*')
     .order('created_at', { ascending: false });
@@ -96,7 +95,7 @@ async function fetchHackathonAdminData(): Promise<AdminHackathonData> {
   }
 
   // 2. Fetch all team members
-  const { data: rawMembers, error: membersErr } = await supabase
+  const { data: rawMembers, error: membersErr } = await supabaseAdmin
     .from('team_members')
     .select('*')
     .order('role', { ascending: true })

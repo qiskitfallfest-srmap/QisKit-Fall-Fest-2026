@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { invalidateEmailCache, invalidateHackathonTeamCache } from '@/lib/redis';
 import { setSessionCookie } from '@/lib/session-cookie';
 
@@ -43,7 +43,7 @@ export async function PATCH(request: NextRequest) {
     const email = session.email.toLowerCase();
 
     // 1. Update allowed_emails
-    const { error: whitelistErr } = await supabase
+    const { error: whitelistErr } = await supabaseAdmin
       .from('allowed_emails')
       .update({ full_name: cleanFullName })
       .ilike('email', email);
@@ -53,7 +53,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // 2. Update team_members (all teams where this user is leader or member)
-    const { error: memberErr } = await supabase
+    const { error: memberErr } = await supabaseAdmin
       .from('team_members')
       .update({ full_name: cleanFullName })
       .ilike('email', email);
@@ -63,7 +63,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // 3. Update hackathon_teams lead_name if this user is a team lead
-    const { error: teamErr } = await supabase
+    const { error: teamErr } = await supabaseAdmin
       .from('hackathon_teams')
       .update({ lead_name: cleanFullName, updated_at: new Date().toISOString() })
       .ilike('lead_email', email);

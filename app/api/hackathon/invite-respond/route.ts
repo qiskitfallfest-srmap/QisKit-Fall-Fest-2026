@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { invalidateEmailCache } from '@/lib/redis';
 import { isTeamFinalized } from '@/lib/finalized-teams';
 
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify invitation belongs to this user
-    const { data: invite, error: fetchErr } = await supabase
+    const { data: invite, error: fetchErr } = await supabaseAdmin
       .from('team_members')
       .select('id, team_id, email, status')
       .eq('id', invitationId)
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     const newStatus = action === 'accept' ? 'accepted' : 'declined';
 
-    const { data: updated, error: updateErr } = await supabase
+    const { data: updated, error: updateErr } = await supabaseAdmin
       .from('team_members')
       .update({
         status: newStatus,
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     if (updateErr) throw updateErr;
 
     // Invalidate caches for all members in the team so team rosters stay consistent
-    const { data: teamMembers } = await supabase
+    const { data: teamMembers } = await supabaseAdmin
       .from('team_members')
       .select('email')
       .eq('team_id', invite.team_id);

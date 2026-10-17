@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { invalidateHackathonTeamCache } from '@/lib/redis';
 
 export async function POST(request: NextRequest) {
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify user is an accepted member of this team
-    const { data: member, error: memberErr } = await supabase
+    const { data: member, error: memberErr } = await supabaseAdmin
       .from('team_members')
       .select('id, role, status')
       .eq('team_id', teamId)
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update repository in hackathon_teams
-    const { data: updatedTeam, error: updateErr } = await supabase
+    const { data: updatedTeam, error: updateErr } = await supabaseAdmin
       .from('hackathon_teams')
       .update({
         github_repo_url: trimmedUrl,
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     if (updateErr) throw updateErr;
 
     // Invalidate cached team data for all members of this team
-    const { data: teamMembers } = await supabase
+    const { data: teamMembers } = await supabaseAdmin
       .from('team_members')
       .select('email')
       .eq('team_id', teamId);

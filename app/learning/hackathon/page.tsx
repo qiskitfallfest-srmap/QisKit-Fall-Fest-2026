@@ -55,35 +55,12 @@ export default function HackathonWorkspacePage() {
     revalidateOnReconnect: true,
     revalidateIfStale: false,
     dedupingInterval: 5000,
+    // Team tables are not readable with the anon key (RLS), so Supabase Realtime
+    // cannot push roster changes to the browser. Poll the session-scoped API
+    // instead; SWR pauses this while the tab is hidden.
+    refreshInterval: 20000,
   });
 
-  // Supabase Realtime: instant push updates on invitations, member status, and roster changes
-  useEffect(() => {
-    if (!sessionUser?.email) return;
-
-    const channel = supabase
-      .channel(`hackathon-realtime-${sessionUser.email.toLowerCase()}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'team_members' },
-        () => {
-          mutateTeam();
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'hackathon_teams' },
-        () => {
-          mutateTeam();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [sessionUser?.email, mutateTeam]);
-  
   const team = teamDataObj?.team || null;
   const pendingInvitations: any[] = teamDataObj?.pendingInvitations || [];
   const isLoading = !teamDataObj && !teamError;

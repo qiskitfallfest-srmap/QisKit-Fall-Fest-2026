@@ -1,5 +1,5 @@
 import { Redis } from '@upstash/redis';
-import { supabase } from './supabase';
+import { supabaseAdmin } from './supabase-admin';
 import { logError } from './logger';
 
 const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
@@ -103,7 +103,7 @@ export async function isEmailWhitelisted(
     CACHE_TTL.WHITELIST,
     async (): Promise<{ whitelisted: boolean; role?: string; fullName?: string }> => {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
           .from('allowed_emails')
           .select('email, role, full_name, is_active')
           .ilike('email', normalizedEmail)
@@ -147,7 +147,7 @@ export async function getMemberTeam(
 
   return cacheAside(cacheKey, CACHE_TTL.MEMBER_TEAM, async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from('team_members')
         .select('team_id, status, hackathon_teams(name)')
         .ilike('email', normalizedEmail)
