@@ -71,40 +71,4 @@ BEGIN
         AND (storage.foldername(name))[1] = 'pass-receipts'
       );
   END IF;
-
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE schemaname = 'storage'
-      AND tablename = 'objects'
-      AND policyname = 'Allow pass receipts updates in media bucket'
-  ) THEN
-    CREATE POLICY "Allow pass receipts updates in media bucket"
-      ON storage.objects
-      FOR UPDATE
-      TO public
-      USING (
-        bucket_id = 'media'
-        AND (storage.foldername(name))[1] = 'pass-receipts'
-      )
-      WITH CHECK (
-        bucket_id = 'media'
-        AND (storage.foldername(name))[1] = 'pass-receipts'
-      );
-  END IF;
-
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE schemaname = 'storage'
-      AND tablename = 'objects'
-      AND policyname = 'Allow pass receipts deletes in media bucket'
-  ) THEN
-    CREATE POLICY "Allow pass receipts deletes in media bucket"
-      ON storage.objects
-      FOR DELETE
-      TO public
-      USING (
-        bucket_id = 'media'
-        AND (storage.foldername(name))[1] = 'pass-receipts'
-      );
-  END IF;
 END $$;
