@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { isEmailWhitelisted } from './redis';
+import { SESSION_COOKIE_NAME, verifySessionCookie } from './session-cookie';
 
 export const SUPER_ADMIN_EMAILS = [
   'qiskitfallfest@srmap.edu.in',
@@ -13,26 +14,21 @@ export interface AuthSession {
   isAdmin: boolean;
 }
 
-const COOKIE_NAME = 'qff_auth_session';
-
 /**
  * Server-side helper to get the currently authenticated learning session.
  */
 export async function getServerSession(): Promise<AuthSession | null> {
   const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get(COOKIE_NAME);
+  const sessionCookie = cookieStore.get(SESSION_COOKIE_NAME);
 
   if (!sessionCookie || !sessionCookie.value) {
     return null;
   }
 
   try {
-    const parsed = JSON.parse(decodeURIComponent(sessionCookie.value)) as {
-      email: string;
-      fullName?: string;
-    };
-
-    if (!parsed.email) return null;
+    // Rejects legacy unsigned cookies, tampered values, and expired sessions.
+    const parsed = await verifySessionCookie(sessionCookie.value);
+    if (!parsed) return null;
 
     const email = parsed.email.trim().toLowerCase();
     const isSuperAdmin = SUPER_ADMIN_EMAILS.includes(email);

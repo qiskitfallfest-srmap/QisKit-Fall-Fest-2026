@@ -1,30 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isEmailWhitelisted } from '@/lib/redis';
 import { SUPER_ADMIN_EMAILS } from '@/lib/auth';
-import { logError, logInfo } from '@/lib/logger';
-
-const COOKIE_NAME = 'qff_auth_session';
+import { logError, logInfo, logWarn } from '@/lib/logger';
+import {
+  SESSION_COOKIE_NAME,
+  clearSessionCookie,
+  setSessionCookie,
+  verifySessionCookie,
+  verifySupabaseAccessToken,
+} from '@/lib/session-cookie';
 
 export const runtime = 'edge';
 
+function unauthenticated(request: NextRequest, clearCookie: boolean) {
+  const response = NextResponse.json({ authenticated: false, session: null });
+  if (clearCookie) clearSessionCookie(response, request);
+  return response;
+}
+
 export async function GET(request: NextRequest) {
-  const sessionCookie = request.cookies.get(COOKIE_NAME);
+  const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME);
   if (!sessionCookie || !sessionCookie.value) {
     return NextResponse.json({ authenticated: false, session: null });
   }
 
   try {
-    const parsed = JSON.parse(decodeURIComponent(sessionCookie.value));
-    const email = parsed.email?.trim().toLowerCase();
-    if (!email) {
-      return NextResponse.json({ authenticated: false, session: null });
+    // Legacy unsigned, tampered, or expired cookies are rejected and cleared so the
+    // client falls back to its Supabase session and re-establishes a signed cookie.
+    const parsed = await verifySessionCookie(sessionCookie.value);
+    if (!parsed) {
+      return unauthenticated(request, true);
     }
+    const email = parsed.email.trim().toLowerCase();
 
     const isSuperAdmin = SUPER_ADMIN_EMAILS.includes(email);
     const whitelist = await isEmailWhitelisted(email);
 
     if (!isSuperAdmin && !whitelist.whitelisted) {
-      return NextResponse.json({ authenticated: false, session: null });
+      return unauthenticated(request, true);
     }
 
     const role = isSuperAdmin ? 'admin' : whitelist.role || 'participant';
@@ -55,16 +68,20 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const email = body.email?.trim().toLowerCase();
-    const fullName = body.fullName?.trim() || '';
+    const body = await request.json().catch(() => ({}));
 
-    if (!email || !email.includes('@')) {
+    // The email is taken only from the Supabase-verified user, never from the request body.
+    const verifiedUser = await verifySupabaseAccessToken(body?.accessToken);
+    if (!verifiedUser) {
+      logWarn('auth.session.token_rejected', {});
       return NextResponse.json(
-        { error: 'Valid email is required' },
-        { status: 400 }
+        { error: 'Sign-in could not be verified. Please sign in with Google again.' },
+        { status: 401 }
       );
     }
+
+    const email = verifiedUser.email;
+    const fullName = verifiedUser.fullName;
 
     const isSuperAdmin = SUPER_ADMIN_EMAILS.includes(email);
     const whitelist = await isEmailWhitelisted(email);
@@ -106,36 +123,7 @@ export async function POST(request: NextRequest) {
       session: sessionData,
     });
 
-    function getCookieDomain(req: NextRequest): string | undefined {
-      const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || req.nextUrl.hostname;
-      if (host && host.includes('qffsrmap2026.com')) {
-        return '.qffsrmap2026.com';
-      }
-      return undefined;
-    }
-
-    function isRequestSecure(req: NextRequest): boolean {
-      const proto = req.headers.get('x-forwarded-proto');
-      if (proto) {
-        return proto === 'https';
-      }
-      return req.nextUrl.protocol === 'https:';
-    }
-
-    const isSecure = isRequestSecure(request);
-    const domain = getCookieDomain(request);
-
-    // Set cookie for 14 days
-    response.cookies.set({
-      name: COOKIE_NAME,
-      value: encodeURIComponent(JSON.stringify(sessionData)),
-      httpOnly: true,
-      secure: isSecure,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 24 * 14,
-      ...(domain ? { domain } : {}),
-    });
+    await setSessionCookie(response, request, { email, fullName: resolvedFullName });
 
     return response;
   } catch (error) {
@@ -149,36 +137,6 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   const response = NextResponse.json({ success: true, message: 'Logged out' });
-
-  const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || request.nextUrl.hostname;
-  const domain = host && host.includes('qffsrmap2026.com') ? '.qffsrmap2026.com' : undefined;
-  const proto = request.headers.get('x-forwarded-proto');
-  const isSecure = proto ? proto === 'https' : request.nextUrl.protocol === 'https:';
-
-  // Clear host-only cookie
-  response.cookies.set({
-    name: COOKIE_NAME,
-    value: '',
-    httpOnly: true,
-    secure: isSecure,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 0,
-  });
-
-  // Also clear shared domain cookie if applicable
-  if (domain) {
-    response.cookies.set({
-      name: COOKIE_NAME,
-      value: '',
-      httpOnly: true,
-      secure: isSecure,
-      sameSite: 'lax',
-      path: '/',
-      domain,
-      maxAge: 0,
-    });
-  }
-
+  clearSessionCookie(response, request);
   return response;
 }

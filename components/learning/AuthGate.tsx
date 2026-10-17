@@ -105,7 +105,7 @@ export function AuthGate({ children, onSessionChange, allowGuest = false }: Auth
     }
   }
 
-  async function syncSessionWithBackend(email: string, fullName: string) {
+  async function syncSessionWithBackend(email: string, fullName: string, accessToken: string) {
     if (isSyncingRef.current) return false;
     isSyncingRef.current = true;
 
@@ -113,10 +113,7 @@ export function AuthGate({ children, onSessionChange, allowGuest = false }: Auth
       const verifyRes = await fetch('/api/auth/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          fullName,
-        }),
+        body: JSON.stringify({ accessToken }),
       });
       const verifyData = await verifyRes.json();
 
@@ -238,7 +235,7 @@ export function AuthGate({ children, onSessionChange, allowGuest = false }: Auth
             sbSession.user.user_metadata?.name ||
             sbSession.user.user_metadata?.preferred_username ||
             '';
-          await syncSessionWithBackend(sbSession.user.email, fullName);
+          await syncSessionWithBackend(sbSession.user.email, fullName, sbSession.access_token);
         }
       } catch (err) {
         console.error('Session check error:', err);
@@ -278,7 +275,7 @@ export function AuthGate({ children, onSessionChange, allowGuest = false }: Auth
           sbSession.user.user_metadata?.name ||
           sbSession.user.user_metadata?.preferred_username ||
           '';
-        await syncSessionWithBackend(sbSession.user.email, fullName);
+        await syncSessionWithBackend(sbSession.user.email, fullName, sbSession.access_token);
       } else if (event === 'SIGNED_OUT') {
         if (isMounted) {
           notifyAuthChange(null);
@@ -368,11 +365,19 @@ export function AuthGate({ children, onSessionChange, allowGuest = false }: Auth
     try {
       setRegSubmitting(true);
 
+      const {
+        data: { session: sbSession },
+      } = await supabase.auth.getSession();
+      if (!sbSession?.access_token) {
+        setRegError('Your Google sign-in has expired. Please sign in again.');
+        return;
+      }
+
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: pendingUser.email,
+          accessToken: sbSession.access_token,
           fullName: regFullName.trim(),
           role: regRole,
           institution: regInstitution.trim(),
