@@ -5,6 +5,13 @@ import crypto from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
+const SUPABASE_URL =
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://jpciyrodeppqpkwqblpk.supabase.co';
+const RECEIPT_URL_PREFIX = `${SUPABASE_URL}/storage/v1/object/public/media/pass-receipts/`;
+
+// Easebuzz transaction IDs are alphanumeric (e.g. E26101518BKHN3)
+const TXN_PATTERN = /^[A-Z0-9]{6,40}$/;
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession();
@@ -18,22 +25,23 @@ export async function POST(request: NextRequest) {
 
     const normalizedEmail = session.email.trim().toLowerCase();
 
-    // 1. Guardrail: Verify attendee is not in an active Hackathon team
+    // 1. Guardrail: Hackathon participants use the Flagship Pass track instead.
+    // limit(1) rather than maybeSingle(): duplicate rows must not silently bypass the check.
     const [teamMemberRes, teamLeadRes] = await Promise.all([
       supabaseAdmin
         .from('team_members')
         .select('team_id')
         .ilike('email', normalizedEmail)
         .eq('status', 'accepted')
-        .maybeSingle(),
+        .limit(1),
       supabaseAdmin
         .from('hackathon_teams')
         .select('id')
         .ilike('lead_email', normalizedEmail)
-        .maybeSingle(),
+        .limit(1),
     ]);
 
-    if (teamMemberRes.data || teamLeadRes.data) {
+    if (teamMemberRes.data?.length || teamLeadRes.data?.length) {
       return NextResponse.json(
         {
           error:
@@ -47,31 +55,35 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { transactionReference, receiptUrl, bankReference } = body;
 
-    const trimmedTxn = String(transactionReference || '').trim();
+    const normalizedTxn = String(transactionReference || '')
+      .replace(/\s+/g, '')
+      .toUpperCase();
     const trimmedReceipt = String(receiptUrl || '').trim();
+    const trimmedBankRef = String(bankReference || '').replace(/\s+/g, '').slice(0, 40) || null;
 
-    if (!trimmedTxn || trimmedTxn.length < 4) {
+    if (!TXN_PATTERN.test(normalizedTxn)) {
       return NextResponse.json(
-        { error: 'Please enter a valid Easebuzz Transaction ID (shown on your receipt, e.g. E26101518BKHN3).' },
+        { error: 'Please enter a valid Easebuzz Transaction ID (letters and digits, e.g. E26101518BKHN3).' },
         { status: 400 }
       );
     }
 
-    if (!trimmedReceipt || !trimmedReceipt.startsWith('http')) {
+    if (!trimmedReceipt.startsWith(RECEIPT_URL_PREFIX)) {
       return NextResponse.json(
-        { error: 'Please upload a valid receipt file (PDF or screenshot).' },
+        { error: 'Please upload your receipt using the upload button (PDF or screenshot).' },
         { status: 400 }
       );
     }
 
-    // 3. Check if transaction reference is already claimed by someone else
-    const { data: existingTxn } = await supabaseAdmin
+    // 3. Transaction ID must not belong to another attendee
+    const { data: txnOwners } = await supabaseAdmin
       .from('festival_pass_claims')
-      .select('id, user_email, user_name')
-      .eq('transaction_reference', trimmedTxn)
-      .maybeSingle();
+      .select('id, user_email')
+      .ilike('transaction_reference', normalizedTxn)
+      .limit(1);
 
-    if (existingTxn && existingTxn.user_email.toLowerCase() !== normalizedEmail) {
+    const txnOwner = txnOwners?.[0];
+    if (txnOwner && txnOwner.user_email.toLowerCase() !== normalizedEmail) {
       return NextResponse.json(
         {
           error:
@@ -81,41 +93,70 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. Retrieve institution & phone from registration if available
-    const { data: reg } = await supabaseAdmin
+    // 4. One claim per attendee: resubmission updates the existing row
+    const { data: existingClaims } = await supabaseAdmin
+      .from('festival_pass_claims')
+      .select('id, status, qr_code_token')
+      .eq('user_email', normalizedEmail)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    const existingClaim = existingClaims?.[0];
+
+    if (existingClaim?.status === 'verified') {
+      return NextResponse.json(
+        { error: 'Your pass is already verified. No further action is needed.' },
+        { status: 409 }
+      );
+    }
+
+    // 5. Institution & phone from registration, if available
+    const { data: regRows } = await supabaseAdmin
       .from('registrations')
       .select('institution, phone')
       .ilike('email', normalizedEmail)
-      .maybeSingle();
+      .limit(1);
+    const reg = regRows?.[0];
 
-    // 5. Generate secure QR token if not already assigned
-    const qrToken = `qff26_${crypto.randomBytes(16).toString('hex')}`;
+    const claimFields = {
+      user_email: normalizedEmail,
+      user_name: session.fullName || normalizedEmail.split('@')[0],
+      pass_tier: 'general_offline',
+      transaction_reference: normalizedTxn,
+      bank_reference: trimmedBankRef,
+      receipt_url: trimmedReceipt,
+      amount_inr: 99.0,
+      status: 'claimed_provisional',
+      institution: reg?.institution || 'SRM University-AP',
+      contact_phone: reg?.phone || null,
+      updated_at: new Date().toISOString(),
+    };
 
-    // 6. Insert / upsert pass claim
-    const { data: savedPass, error: saveError } = await supabaseAdmin
-      .from('festival_pass_claims')
-      .upsert(
-        {
-          user_email: normalizedEmail,
-          user_name: session.fullName || normalizedEmail.split('@')[0],
-          pass_tier: 'general_offline',
-          transaction_reference: trimmedTxn,
-          bank_reference: bankReference ? String(bankReference).trim() : null,
-          receipt_url: trimmedReceipt,
-          amount_inr: 99.00,
-          status: 'claimed_provisional',
-          institution: reg?.institution || 'SRM University-AP',
-          contact_phone: reg?.phone || null,
-          qr_code_token: existingTxn ? undefined : qrToken,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'transaction_reference' }
-      )
-      .select('*')
-      .single();
+    const { data: savedPass, error: saveError } = existingClaim
+      ? await supabaseAdmin
+          .from('festival_pass_claims')
+          .update(claimFields)
+          .eq('id', existingClaim.id)
+          .select('*')
+          .single()
+      : await supabaseAdmin
+          .from('festival_pass_claims')
+          .insert({
+            ...claimFields,
+            qr_code_token: `qff26_${crypto.randomBytes(16).toString('hex')}`,
+          })
+          .select('*')
+          .single();
 
     if (saveError) {
       console.error('[Pass Claim Database Error]:', saveError);
+      // 23505 = unique violation (concurrent claim on the same transaction ID)
+      if (saveError.code === '23505') {
+        return NextResponse.json(
+          { error: 'This Easebuzz Transaction ID has already been registered.' },
+          { status: 409 }
+        );
+      }
       return NextResponse.json(
         { error: 'Failed to record pass claim. Please check your details and try again.' },
         { status: 500 }
@@ -124,14 +165,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Your On-Campus General Offline Pass has been recorded successfully.',
+      message: 'Receipt submitted. Your pass is pending verification by the organizing team.',
       pass: savedPass,
     });
   } catch (err: any) {
     console.error('[Pass Claim Server Exception]:', err);
-    return NextResponse.json(
-      { error: err?.message || 'Internal server error claiming pass.' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error claiming pass.' }, { status: 500 });
   }
 }

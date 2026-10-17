@@ -9,7 +9,6 @@ import { supabase } from '@/lib/supabase';
 import { CURRICULUM_SESSIONS, ONLINE_PROGRAMME_SCHEDULE } from '@/data/learning/curriculum';
 import { SESSION_TRANSCRIPTS } from '@/data/learning/transcripts';
 import { DAILY_COMPETITIONS } from '@/data/learning/competitions';
-import { DeadlineExtensionBanner } from '@/components/learning/DeadlineExtensionBanner';
 import { OnCampusPassCard } from '@/components/learning/OnCampusPassCard';
 import { useCurriculumSessions } from '@/hooks/use-curriculum-sessions';
 import { useQuizzes } from '@/hooks/use-quizzes';
@@ -1177,9 +1176,6 @@ function LearningDashboardContent() {
           </button>
         )}
       </div>
-
-      {/* Official Deadline Extension Announcement Banner */}
-      <DeadlineExtensionBanner />
 
       {/* On-Campus Festival Pass Hero Card (26–30 October 2026) */}
       <OnCampusPassCard />

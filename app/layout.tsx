@@ -11,7 +11,6 @@ import {
   generateEventSeriesSchema,
 } from '@/config/seo';
 import { OAuthRedirectHandler } from '@/components/shared/OAuthRedirectHandler';
-import { DeadlineToast } from '@/components/shared/DeadlineToast';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { AnalyticsProvider } from '@/components/shared/AnalyticsProvider';
@@ -117,7 +116,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <AnalyticsProvider />
             <OAuthRedirectHandler />
             <LoadScreen />
-            <DeadlineToast />
             <Navbar />
             {children}
             <Analytics />

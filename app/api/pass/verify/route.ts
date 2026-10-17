@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export const dynamic = 'force-dynamic';
+
+// Strip characters that carry meaning inside a PostgREST .or() filter string
+function sanitizeFilterTerm(value: string): string {
+  return value.replace(/[^a-zA-Z0-9@._+-]/g, '').slice(0, 100);
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,14 +22,28 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const session = await getServerSession();
+    const isStaff = Boolean(session?.isAdmin);
+
+    // Free-text lookup exposes attendee data, so it is limited to staff
+    if (query && !token && !isStaff) {
+      return NextResponse.json(
+        { error: 'Sign in with an organizer account to search passes.' },
+        { status: 403 }
+      );
+    }
+
     let passQuery = supabaseAdmin.from('festival_pass_claims').select('*');
 
     if (token) {
       passQuery = passQuery.eq('qr_code_token', token);
     } else if (query) {
-      // Support searching by Transaction Reference or User Email
+      const term = sanitizeFilterTerm(query);
+      if (!term) {
+        return NextResponse.json({ valid: false, error: 'Invalid search term.' }, { status: 400 });
+      }
       passQuery = passQuery.or(
-        `transaction_reference.eq.${query},user_email.ilike.%${query}%`
+        `transaction_reference.ilike.${term},user_email.ilike.%${term}%`
       );
     }
 
@@ -41,83 +61,106 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         {
           valid: false,
-          error: 'No valid festival pass found matching the scanned QR code or identifier.',
+          error: 'No festival pass found matching the scanned QR code or identifier.',
         },
         { status: 404 }
       );
     }
 
+    const publicFields = {
+      id: pass.id,
+      userName: pass.user_name,
+      passTier: pass.pass_tier,
+      institution: pass.institution || 'SRM University-AP',
+      status: pass.status,
+      amountInr: pass.amount_inr,
+      checkedIn: Boolean(pass.checked_in),
+      checkedInAt: pass.checked_in_at,
+    };
+
     return NextResponse.json({
-      valid: true,
-      pass: {
-        id: pass.id,
-        userName: pass.user_name,
-        userEmail: pass.user_email,
-        passTier: pass.pass_tier,
-        institution: pass.institution || 'SRM University-AP',
-        transactionReference: pass.transaction_reference,
-        status: pass.status,
-        amountInr: pass.amount_inr,
-        receiptUrl: pass.receipt_url,
-        checkedIn: Boolean(pass.checked_in),
-        checkedInAt: pass.checked_in_at,
-        checkedInBy: pass.checked_in_by,
-        createdAt: pass.created_at,
-      },
+      valid: pass.status !== 'rejected',
+      isStaff,
+      pass: isStaff
+        ? {
+            ...publicFields,
+            userEmail: pass.user_email,
+            transactionReference: pass.transaction_reference,
+            receiptUrl: pass.receipt_url,
+            checkedInBy: pass.checked_in_by,
+            createdAt: pass.created_at,
+          }
+        : publicFields,
     });
   } catch (err: any) {
     console.error('[Pass Verify Server Exception]:', err);
-    return NextResponse.json(
-      { error: err?.message || 'Internal server error verifying pass.' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error verifying pass.' }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { token, passId, volunteerName } = body;
-
-    if (!token && !passId) {
+    const session = await getServerSession();
+    if (!session?.isAdmin) {
       return NextResponse.json(
-        { error: 'Missing token or pass ID for check-in.' },
-        { status: 400 }
+        { error: 'Only organizer accounts can record gate check-ins.' },
+        { status: 403 }
       );
     }
 
-    let query = supabaseAdmin.from('festival_pass_claims').update({
-      checked_in: true,
-      checked_in_at: new Date().toISOString(),
-      checked_in_by: String(volunteerName || 'Gate Volunteer Desk').slice(0, 100),
-      updated_at: new Date().toISOString(),
-    });
+    const body = await request.json();
+    const { passId } = body;
 
-    if (passId) {
-      query = query.eq('id', passId);
-    } else {
-      query = query.eq('qr_code_token', token);
+    if (!passId) {
+      return NextResponse.json({ error: 'Missing pass ID for check-in.' }, { status: 400 });
     }
 
-    const { data: updatedPass, error } = await query.select('*').single();
+    const { data: existing, error: lookupError } = await supabaseAdmin
+      .from('festival_pass_claims')
+      .select('id, status, checked_in')
+      .eq('id', passId)
+      .maybeSingle();
+
+    if (lookupError || !existing) {
+      return NextResponse.json({ error: 'Pass not found.' }, { status: 404 });
+    }
+
+    if (existing.status === 'rejected') {
+      return NextResponse.json(
+        { error: 'This pass was rejected during receipt verification. Do not admit.' },
+        { status: 409 }
+      );
+    }
+
+    if (existing.checked_in) {
+      return NextResponse.json({ error: 'Attendee is already checked in.' }, { status: 409 });
+    }
+
+    const now = new Date().toISOString();
+    const { data: updatedPass, error } = await supabaseAdmin
+      .from('festival_pass_claims')
+      .update({
+        checked_in: true,
+        checked_in_at: now,
+        checked_in_by: session.email,
+        updated_at: now,
+      })
+      .eq('id', passId)
+      .select('*')
+      .single();
 
     if (error || !updatedPass) {
-      return NextResponse.json(
-        { error: error?.message || 'Failed to record check-in.' },
-        { status: 500 }
-      );
+      console.error('[Pass Check-In Update Error]:', error);
+      return NextResponse.json({ error: 'Failed to record check-in.' }, { status: 500 });
     }
 
     return NextResponse.json({
       success: true,
       message: 'Attendee successfully checked in.',
-      pass: updatedPass,
+      pass: { checkedIn: true, checkedInAt: updatedPass.checked_in_at, checkedInBy: updatedPass.checked_in_by },
     });
   } catch (err: any) {
     console.error('[Pass Check-In Error]:', err);
-    return NextResponse.json(
-      { error: err?.message || 'Failed to process check-in.' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to process check-in.' }, { status: 500 });
   }
 }

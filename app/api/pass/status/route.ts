@@ -27,16 +27,16 @@ export async function GET() {
         .select('team_id, role, status')
         .ilike('email', normalizedEmail)
         .eq('status', 'accepted')
-        .maybeSingle(),
+        .limit(1),
       supabaseAdmin
         .from('hackathon_teams')
         .select('id, name')
         .ilike('lead_email', normalizedEmail)
-        .maybeSingle(),
+        .limit(1),
       supabaseAdmin
         .from('festival_pass_claims')
         .select('*')
-        .ilike('user_email', normalizedEmail)
+        .eq('user_email', normalizedEmail)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle(),
@@ -44,10 +44,11 @@ export async function GET() {
         .from('registrations')
         .select('institution, phone')
         .ilike('email', normalizedEmail)
-        .maybeSingle(),
+        .limit(1),
     ]);
 
-    const isHackathonParticipant = Boolean(teamMemberRes.data || teamLeadRes.data);
+    const isHackathonParticipant = Boolean(teamMemberRes.data?.length || teamLeadRes.data?.length);
+    const reg = regRes.data?.[0];
 
     return NextResponse.json({
       success: true,
@@ -55,8 +56,8 @@ export async function GET() {
       user: {
         email: normalizedEmail,
         fullName: session.fullName || normalizedEmail.split('@')[0],
-        institution: regRes.data?.institution || 'SRM University-AP',
-        phone: regRes.data?.phone || null,
+        institution: reg?.institution || 'SRM University-AP',
+        phone: reg?.phone || null,
       },
       isHackathonParticipant,
       pass: passClaimRes.data || null,

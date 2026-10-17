@@ -5,20 +5,20 @@ import QRCode from 'qrcode';
 import {
   ShieldCheck,
   Download,
-  Printer,
   ExternalLink,
   Upload,
   FileText,
   X,
-  CheckCircle2,
+  Check,
   AlertCircle,
   Loader2,
   QrCode,
   Users,
   ArrowRight,
-  Info,
-  Calendar,
-  Building,
+  Clock,
+  XCircle,
+  MapPin,
+  CalendarDays,
 } from 'lucide-react';
 import Link from 'next/link';
 import clsx from 'clsx';
@@ -32,11 +32,12 @@ interface PassClaim {
   bank_reference?: string | null;
   receipt_url: string;
   amount_inr: number;
-  status: string;
+  status: 'claimed_provisional' | 'verified' | 'rejected' | string;
   institution?: string;
   contact_phone?: string | null;
   checked_in: boolean;
   qr_code_token: string;
+  admin_notes?: string | null;
   created_at: string;
 }
 
@@ -56,20 +57,61 @@ interface PassStatusResponse {
 const EASEBUZZ_GATEWAY_URL =
   'https://forms.easebuzz.in/register/SRMAPIA9oJ/QiskitFallFestSRMAP2026';
 const MAX_RECEIPT_SIZE_MB = 15;
+const GATEWAY_OPENED_KEY = 'qff_pass_gateway_opened_v1';
+
+const PASS_INCLUSIONS = [
+  'Keynotes by IBM Quantum researchers',
+  'Hands-on masterclass workshops',
+  'Industry Tech Expo',
+  'The Great Quantum Debate & Quantum Arcade',
+];
+
+// Ticket notches are filled with the dashboard background so they read as cut-outs
+const NOTCH = 'absolute w-5 h-5 rounded-full bg-[#FAF7F4] dark:bg-[#100405]';
+
+function isAcceptedReceipt(file: File): boolean {
+  const lower = file.name.toLowerCase();
+  return (
+    lower.endsWith('.pdf') ||
+    lower.endsWith('.png') ||
+    lower.endsWith('.jpg') ||
+    lower.endsWith('.jpeg') ||
+    file.type.startsWith('image/') ||
+    file.type === 'application/pdf'
+  );
+}
+
+function StepMarker({ index, done, active }: { index: number; done: boolean; active: boolean }) {
+  return (
+    <span
+      className={clsx(
+        'w-7 h-7 rounded-full flex items-center justify-center font-mono text-xs font-bold shrink-0 border-2',
+        done
+          ? 'bg-emerald-600 border-emerald-600 text-white'
+          : active
+            ? 'bg-white dark:bg-[#150709] border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
+            : 'bg-white dark:bg-[#150709] border-slate-300 dark:border-[#3D1418] text-slate-400'
+      )}
+    >
+      {done ? <Check className="w-3.5 h-3.5" /> : index}
+    </span>
+  );
+}
 
 export function OnCampusPassCard() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<PassStatusResponse | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
 
-  // Form states for claiming
+  const [gatewayOpened, setGatewayOpened] = useState(false);
+  const [isResubmitting, setIsResubmitting] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [transactionRef, setTransactionRef] = useState('');
   const [bankRef, setBankRef] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const generateQrCode = useCallback(async (token: string) => {
@@ -80,10 +122,7 @@ export function OnCampusPassCard() {
       const url = await QRCode.toDataURL(verifyUrl, {
         width: 320,
         margin: 1,
-        color: {
-          dark: '#201617',
-          light: '#ffffff',
-        },
+        color: { dark: '#201617', light: '#ffffff' },
       });
       setQrDataUrl(url);
     } catch (err) {
@@ -111,69 +150,75 @@ export function OnCampusPassCard() {
 
   useEffect(() => {
     fetchPassStatus();
+    try {
+      setGatewayOpened(localStorage.getItem(GATEWAY_OPENED_KEY) === 'true');
+    } catch {}
   }, [fetchPassStatus]);
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+  function markGatewayOpened() {
+    setGatewayOpened(true);
+    try {
+      localStorage.setItem(GATEWAY_OPENED_KEY, 'true');
+    } catch {}
+  }
+
+  function acceptFile(file: File | undefined) {
     setErrorMessage('');
     if (!file) return;
 
-    const lower = file.name.toLowerCase();
-    const isValidType =
-      lower.endsWith('.pdf') ||
-      lower.endsWith('.png') ||
-      lower.endsWith('.jpg') ||
-      lower.endsWith('.jpeg') ||
-      file.type.startsWith('image/') ||
-      file.type === 'application/pdf';
-
-    if (!isValidType) {
+    if (!isAcceptedReceipt(file)) {
       setErrorMessage('Please select a valid receipt file (PDF, PNG, JPG, or JPEG).');
       return;
     }
-
     if (file.size > MAX_RECEIPT_SIZE_MB * 1024 * 1024) {
       setErrorMessage(`Receipt size exceeds ${MAX_RECEIPT_SIZE_MB} MB limit.`);
       return;
     }
-
     setSelectedFile(file);
+  }
+
+  function clearFile() {
+    setSelectedFile(null);
+    // Reset the input so re-selecting the same file fires onChange again
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
+  function handleDrop(e: React.DragEvent<HTMLLabelElement>) {
+    e.preventDefault();
+    setIsDragOver(false);
+    acceptFile(e.dataTransfer.files?.[0]);
   }
 
   async function handleClaimPass(e: React.FormEvent) {
     e.preventDefault();
     setErrorMessage('');
-    setSuccessMessage('');
 
-    const trimmedTxn = transactionRef.trim();
-    if (!trimmedTxn || trimmedTxn.length < 4) {
-      setErrorMessage('Please enter a valid Easebuzz Transaction ID (e.g. E26101518BKHN3).');
+    const normalizedTxn = transactionRef.replace(/\s+/g, '').toUpperCase();
+    if (!/^[A-Z0-9]{6,40}$/.test(normalizedTxn)) {
+      setErrorMessage('Enter the Easebuzz Transaction ID exactly as shown on your receipt (letters and digits, e.g. E26101518BKHN3).');
       return;
     }
-
     if (!selectedFile) {
-      setErrorMessage('Please upload your downloaded Easebuzz receipt (PDF or screenshot).');
+      setErrorMessage('Please upload your Easebuzz receipt (PDF or screenshot).');
       return;
     }
 
     setIsSubmitting(true);
-    setUploadStatus('Uploading receipt to secure storage...');
+    setUploadStatus('Uploading receipt...');
 
     try {
-      // 1. Upload receipt to Supabase Storage bucket 'media/pass-receipts/'
       const { supabase } = await import('@/lib/supabase');
       const ext = selectedFile.name.split('.').pop()?.toLowerCase() || 'pdf';
       const emailSlug = (data?.user?.email || 'attendee')
         .replace(/[^a-z0-9]/gi, '_')
         .slice(0, 40);
-      const safeTxn = trimmedTxn.replace(/[^a-zA-Z0-9_-]/g, '_');
-      const storagePath = `pass-receipts/${emailSlug}_${safeTxn}_${Date.now()}.${ext}`;
+      const storagePath = `pass-receipts/${emailSlug}_${normalizedTxn}_${Date.now()}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from('media')
         .upload(storagePath, selectedFile, {
           cacheControl: '3600',
-          upsert: true,
+          upsert: false,
           contentType: selectedFile.type || 'application/pdf',
         });
 
@@ -183,17 +228,16 @@ export function OnCampusPassCard() {
 
       const { data: publicUrlData } = supabase.storage.from('media').getPublicUrl(storagePath);
       if (!publicUrlData?.publicUrl) {
-        throw new Error('Could not resolve public URL for receipt.');
+        throw new Error('Could not resolve receipt URL.');
       }
 
-      setUploadStatus('Registering pass claim with database...');
+      setUploadStatus('Submitting claim...');
 
-      // 2. Submit pass claim to backend API
       const res = await fetch('/api/pass/claim', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          transactionReference: trimmedTxn,
+          transactionReference: normalizedTxn,
           receiptUrl: publicUrlData.publicUrl,
           bankReference: bankRef.trim() || null,
         }),
@@ -204,8 +248,11 @@ export function OnCampusPassCard() {
         throw new Error(resJson.error || 'Failed to register pass claim.');
       }
 
-      setSuccessMessage('On-Campus Pass successfully registered! Digital badge generated.');
-      setData((prev) => (prev ? { ...prev, pass: resJson.pass } : null));
+      setData((prev) => (prev ? { ...prev, pass: resJson.pass } : prev));
+      setIsResubmitting(false);
+      clearFile();
+      setTransactionRef('');
+      setBankRef('');
       if (resJson.pass?.qr_code_token) {
         generateQrCode(resJson.pass.qr_code_token);
       }
@@ -218,26 +265,24 @@ export function OnCampusPassCard() {
     }
   }
 
-  // Generate downloadable high-resolution badge PNG
+  // Downloadable badge PNG sized for phone screens
   function handleDownloadBadge() {
     if (!data?.pass || !qrDataUrl) return;
 
     const pass = data.pass;
+    const isVerified = pass.status === 'verified';
     const canvas = document.createElement('canvas');
     canvas.width = 1200;
     canvas.height = 1800;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Background
     ctx.fillStyle = '#FAF7F5';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Header band
     ctx.fillStyle = '#6C151E';
     ctx.fillRect(0, 0, canvas.width, 280);
 
-    // Header text
     ctx.fillStyle = '#FFFFFF';
     ctx.font = 'bold 38px sans-serif';
     ctx.fillText('SRM UNIVERSITY-AP', 80, 110);
@@ -250,17 +295,15 @@ export function OnCampusPassCard() {
     ctx.fillStyle = '#FFFFFF';
     ctx.fillText('26–30 OCTOBER 2026 · MAIN CAMPUS', 80, 215);
 
-    // Pass Tier Ribbon
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(80, 340, 1040, 1300);
     ctx.strokeStyle = '#E2E8F0';
     ctx.lineWidth = 4;
     ctx.strokeRect(80, 340, 1040, 1300);
 
-    // Pass Badge Type
-    ctx.fillStyle = '#6C151E';
+    ctx.fillStyle = isVerified ? '#047857' : '#B45309';
     ctx.font = 'bold 32px monospace';
-    ctx.fillText('OFFICIAL ATTENDEE BADGE', 140, 430);
+    ctx.fillText(isVerified ? 'VERIFIED ATTENDEE' : 'PAYMENT VERIFICATION PENDING', 140, 430);
 
     ctx.fillStyle = '#0F172A';
     ctx.font = 'bold 54px serif';
@@ -274,7 +317,6 @@ export function OnCampusPassCard() {
     ctx.font = '26px monospace';
     ctx.fillText(pass.user_email, 140, 630);
 
-    // Divider
     ctx.strokeStyle = '#E2E8F0';
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -282,7 +324,6 @@ export function OnCampusPassCard() {
     ctx.lineTo(1060, 670);
     ctx.stroke();
 
-    // Pass details
     ctx.fillStyle = '#6C151E';
     ctx.font = 'bold 36px sans-serif';
     ctx.fillText('GENERAL OFFLINE PASS (₹99)', 140, 740);
@@ -291,12 +332,10 @@ export function OnCampusPassCard() {
     ctx.font = '26px sans-serif';
     ctx.fillText('Access: Keynotes, Workshops, Industry Tech Expo, Arcade & Debates', 140, 790);
 
-    // Draw QR Code
     const qrImage = new Image();
     qrImage.onload = () => {
       ctx.drawImage(qrImage, 360, 870, 480, 480);
 
-      // Footer reference info
       ctx.fillStyle = '#0F172A';
       ctx.font = 'bold 26px monospace';
       ctx.textAlign = 'center';
@@ -304,10 +343,9 @@ export function OnCampusPassCard() {
 
       ctx.fillStyle = '#64748B';
       ctx.font = '22px sans-serif';
-      ctx.fillText('Scan at campus security gate for immediate entry', 600, 1480);
-      ctx.fillText('qffsrmap2026.com · Verified Digital Gate Pass', 600, 1530);
+      ctx.fillText('Show this QR code at the campus registration desk', 600, 1480);
+      ctx.fillText('qffsrmap2026.com', 600, 1530);
 
-      // Trigger download
       const link = document.createElement('a');
       link.download = `QFF26-Campus-Pass-${(pass.user_name || 'Attendee').replace(/[^a-zA-Z0-9]/g, '_')}.png`;
       link.href = canvas.toDataURL('image/png');
@@ -318,39 +356,32 @@ export function OnCampusPassCard() {
 
   if (loading) {
     return (
-      <div className="p-6 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-2xl shadow-xs flex items-center justify-center gap-3">
+      <div className="p-6 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-2xl flex items-center justify-center gap-3">
         <Loader2 className="w-5 h-5 text-burgundy dark:text-[#E89BA5] animate-spin" />
         <span className="font-mono text-xs text-slate-500">Checking campus pass status...</span>
       </div>
     );
   }
 
-  // 1. Guardrail State: Active Hackathon Participant
+  // Hackathon participants follow the Flagship Pass track
   if (data?.isHackathonParticipant) {
     return (
-      <div className="p-5 sm:p-6 bg-white dark:bg-[#150709] border-2 border-burgundy/40 dark:border-burgundy/60 rounded-2xl shadow-xs space-y-3">
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-[10px] font-bold text-white uppercase tracking-wider px-2.5 py-0.5 rounded bg-burgundy">
-            Hackathon Phase 1 Participant
-          </span>
-          <span className="font-mono text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
-            Flagship Pass Track
-          </span>
-        </div>
-
+      <div className="p-5 sm:p-6 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] border-l-4 border-l-burgundy rounded-2xl space-y-3">
+        <span className="font-mono text-[10px] font-bold text-burgundy dark:text-[#E89BA5] uppercase tracking-wider">
+          On-Campus Access · Hackathon Participant
+        </span>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1 max-w-2xl">
             <h2 className="font-serif text-lg sm:text-xl font-bold text-slate-900 dark:text-[#FAF6F3]">
-              On-Campus Flagship Pass Notice
+              No ₹99 General Pass needed
             </h2>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-sans">
-              You are currently registered as an active participant in <strong>Quantum Hackathon Phase 1</strong>. Please do <strong>not</strong> pay the ₹99 General Pass. Teams qualifying for Phase 2 on-campus development sprint will receive instructions for the <strong>₹499 All-Access Flagship Pass</strong> (covering 24-hr sprint access, hardware setup, and lunch on all 5 days).
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              You are registered in <strong>Quantum Hackathon Phase 1</strong>. Teams selected for the Phase 2 on-campus sprint will receive instructions for the <strong>₹499 Flagship Pass</strong> (24-hr sprint access, hardware setup, and lunch on all 5 days).
             </p>
           </div>
-
           <Link
             href="/learning/hackathon"
-            className="px-4 py-2.5 bg-burgundy hover:bg-burgundy-deep text-white text-xs sm:text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 shrink-0 shadow-xs"
+            className="px-4 py-2.5 bg-burgundy hover:bg-burgundy-deep text-white text-xs sm:text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 shrink-0"
           >
             <Users className="w-4 h-4" />
             <span>Open Hackathon Workspace</span>
@@ -361,307 +392,380 @@ export function OnCampusPassCard() {
     );
   }
 
-  // 2. Active Pass State: Attendee has already claimed pass
-  if (data?.pass) {
-    const pass = data.pass;
-    const isProvisional = pass.status === 'claimed_provisional';
+  const pass = data?.pass;
+  const showClaimForm = !pass || isResubmitting;
+
+  // Claimed pass: badge view (pending / verified / rejected)
+  if (pass && !showClaimForm) {
+    const isVerified = pass.status === 'verified';
+    const isRejected = pass.status === 'rejected';
+
+    const tone = isVerified
+      ? {
+          label: 'Verified · Ready for Entry',
+          band: 'bg-emerald-700',
+          icon: <ShieldCheck className="w-4 h-4" />,
+        }
+      : isRejected
+        ? {
+            label: 'Receipt Rejected · Action Required',
+            band: 'bg-rose-700',
+            icon: <XCircle className="w-4 h-4" />,
+          }
+        : {
+            label: 'Submitted · Pending Verification',
+            band: 'bg-amber-600',
+            icon: <Clock className="w-4 h-4" />,
+          };
 
     return (
-      <div className="bg-white dark:bg-[#150709] border-2 border-emerald-500/70 dark:border-emerald-600/70 rounded-2xl shadow-md overflow-hidden">
-        {/* Pass Top Ribbon */}
-        <div className="bg-emerald-600 text-white px-5 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-wider">
-            <ShieldCheck className="w-4 h-4 text-emerald-200" />
-            <span>
-              {isProvisional ? 'Provisional Gate Pass · Receipt Uploaded' : 'Verified On-Campus Pass'}
-            </span>
-          </div>
-          <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-emerald-700/60 text-white">
-            ₹{pass.amount_inr} · General Offline Pass
+      <div className="relative bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-2xl overflow-hidden">
+        <div className={clsx(tone.band, 'text-white px-5 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2')}>
+          <span className="flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-wider">
+            {tone.icon}
+            {tone.label}
+          </span>
+          <span className="font-mono text-[11px] font-semibold opacity-90">
+            General Offline Pass · ₹{pass.amount_inr}
           </span>
         </div>
 
-        {/* Pass Main Grid */}
-        <div className="p-5 sm:p-6 grid grid-cols-1 md:grid-cols-[1fr_260px] gap-6 items-center">
-          {/* Left Details */}
-          <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto]">
+          <div className="p-5 sm:p-6 space-y-4">
             <div>
-              <span className="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
-                Attendee Name &amp; Affiliation
-              </span>
               <h2 className="font-serif text-xl sm:text-2xl font-bold text-slate-900 dark:text-[#FAF6F3]">
                 {pass.user_name}
               </h2>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs text-slate-500 dark:text-slate-400 mt-1">
-                <span>{pass.user_email}</span>
-                <span>·</span>
-                <span>{pass.institution || 'SRM University-AP'}</span>
-              </div>
-            </div>
-
-            {/* Inclusions summary */}
-            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] text-xs text-slate-600 dark:text-slate-300 space-y-1">
-              <p className="font-bold text-slate-800 dark:text-slate-200">
-                Valid for On-Campus Festival: 26–30 October 2026
-              </p>
-              <p className="leading-relaxed">
-                Includes all keynote lectures by IBM Quantum researchers, hands-on masterclass workshops, Industry Tech Expo, The Great Quantum Debate, and Quantum Arcade.
+              <p className="font-mono text-xs text-slate-500 dark:text-slate-400 mt-0.5 break-all">
+                {pass.user_email} · {pass.institution || 'SRM University-AP'}
               </p>
             </div>
 
-            {/* Reference info */}
-            <div className="grid grid-cols-2 gap-3 font-mono text-xs pt-1">
-              <div>
-                <span className="text-[10px] text-slate-400 block uppercase">Easebuzz Transaction ID</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 truncate block">
-                  {pass.transaction_reference}
-                </span>
+            {isRejected ? (
+              <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-900 dark:text-rose-200 space-y-1">
+                <p className="font-semibold">The organizing team could not match your receipt to a payment.</p>
+                {pass.admin_notes && <p>Reason: {pass.admin_notes}</p>}
+                <p>Check the Transaction ID and upload the correct receipt.</p>
               </div>
-              <div>
-                <span className="text-[10px] text-slate-400 block uppercase">Documentary Proof</span>
-                <a
-                  href={pass.receipt_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-semibold text-burgundy dark:text-[#E89BA5] hover:underline inline-flex items-center gap-1"
-                >
-                  <span>View Uploaded Receipt</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-2.5 pt-2">
-              <button
-                type="button"
-                onClick={handleDownloadBadge}
-                disabled={!qrDataUrl}
-                className="px-4 py-2.5 bg-burgundy hover:bg-burgundy-deep text-white text-xs font-semibold rounded-xl transition-colors flex items-center gap-2 shadow-xs cursor-pointer disabled:opacity-50"
-              >
-                <Download className="w-4 h-4" />
-                <span>Download Pass (PNG for Mobile)</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-[#200A0E] dark:hover:bg-[#2A0F13] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#3D1418] text-xs font-semibold rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
-              >
-                <Printer className="w-4 h-4" />
-                <span>Print Lanyard Pass</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Right QR Box */}
-          <div className="flex flex-col items-center justify-center p-4 bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] rounded-xl text-center space-y-2">
-            {qrDataUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={qrDataUrl}
-                alt="Security QR Code Gate Pass"
-                className="w-44 h-44 rounded-lg bg-white p-1 border border-slate-200 shadow-2xs"
-              />
+            ) : isVerified ? (
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                Payment confirmed. Show the QR code at the campus registration desk on arrival. Valid 26–30 October 2026.
+              </p>
             ) : (
-              <div className="w-44 h-44 flex items-center justify-center bg-white rounded-lg border border-slate-200">
-                <QrCode className="w-12 h-12 text-slate-300 animate-pulse" />
-              </div>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                The organizing team is matching your receipt with Easebuzz records. You can already download your pass; the desk will see its status when they scan it.
+              </p>
             )}
-            <div className="space-y-0.5">
-              <span className="font-mono text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
-                Security Gate QR
-              </span>
-              <span className="font-mono text-[9px] text-slate-400 block">
-                Scan on arrival at SRM-AP
-              </span>
+
+            <dl className="grid grid-cols-2 gap-3 font-mono text-xs">
+              <div className="min-w-0">
+                <dt className="text-[10px] text-slate-400 uppercase">Transaction ID</dt>
+                <dd className="font-semibold text-slate-800 dark:text-slate-200 truncate">
+                  {pass.transaction_reference}
+                </dd>
+              </div>
+              <div className="min-w-0">
+                <dt className="text-[10px] text-slate-400 uppercase">Receipt</dt>
+                <dd>
+                  <a
+                    href={pass.receipt_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-burgundy dark:text-[#E89BA5] hover:underline inline-flex items-center gap-1"
+                  >
+                    View
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </dd>
+              </div>
+            </dl>
+
+            <div className="flex flex-wrap items-center gap-2.5">
+              {isRejected ? (
+                <button
+                  type="button"
+                  onClick={() => setIsResubmitting(true)}
+                  className="px-4 py-2.5 bg-burgundy hover:bg-burgundy-deep text-white text-xs font-semibold rounded-xl transition-colors flex items-center gap-2 cursor-pointer"
+                >
+                  <Upload className="w-4 h-4" />
+                  <span>Resubmit Receipt</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleDownloadBadge}
+                  disabled={!qrDataUrl}
+                  className="px-4 py-2.5 bg-burgundy hover:bg-burgundy-deep text-white text-xs font-semibold rounded-xl transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Download Pass</span>
+                </button>
+              )}
+              {!isVerified && !isRejected && (
+                <button
+                  type="button"
+                  onClick={() => setIsResubmitting(true)}
+                  className="px-3.5 py-2.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-semibold rounded-xl border border-slate-200 dark:border-[#3D1418] cursor-pointer"
+                >
+                  Correct Details
+                </button>
+              )}
             </div>
           </div>
+
+          {/* QR stub, separated by a perforated edge */}
+          {!isRejected && (
+            <div className="relative border-t-2 md:border-t-0 md:border-l-2 border-dashed border-slate-200 dark:border-[#3D1418] p-5 sm:p-6 flex flex-col items-center justify-center text-center gap-2 bg-slate-50/60 dark:bg-[#1C0A0D]">
+              <span className={clsx(NOTCH, 'hidden md:block -top-2.5 -left-2.5')} />
+              <span className={clsx(NOTCH, 'hidden md:block -bottom-2.5 -left-2.5')} />
+              {qrDataUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={qrDataUrl}
+                  alt="Pass QR code"
+                  className="w-40 h-40 rounded-lg bg-white p-1 border border-slate-200"
+                />
+              ) : (
+                <div className="w-40 h-40 flex items-center justify-center bg-white rounded-lg border border-slate-200">
+                  <QrCode className="w-10 h-10 text-slate-300" />
+                </div>
+              )}
+              <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Scan at registration desk
+              </span>
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
-  // 3. Unclaimed State: Prompt to Pay on Easebuzz & Upload Receipt
+  // Claim flow: ticket stub (left) + three-step checkout (right)
+  const fileDone = Boolean(selectedFile);
+  const txnDone = transactionRef.trim().length >= 6;
+
   return (
-    <div className="bg-white dark:bg-[#150709] border-2 border-burgundy/30 dark:border-burgundy/50 rounded-2xl shadow-sm overflow-hidden space-y-0">
-      {/* Top Banner */}
-      <div className="bg-gradient-to-r from-burgundy to-burgundy-deep text-white px-5 sm:px-6 py-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="font-mono text-xs font-bold uppercase tracking-wider text-rose-200">
-            On-Campus Festival Access · 26–30 October 2026
+    <div className="relative bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-[280px_1fr]">
+      {/* Ticket stub */}
+      <div className="relative bg-burgundy text-white p-5 sm:p-6 flex flex-col justify-between gap-5">
+        <div className="space-y-3">
+          <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-rose-200">
+            Admit One · On-Campus
           </span>
-          <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-white/20 text-white">
-            General Offline Pass · ₹99
-          </span>
+          <h2 className="font-serif text-xl sm:text-2xl font-bold leading-tight">
+            General Offline Pass
+          </h2>
+          <div className="space-y-1.5 text-xs text-rose-100">
+            <p className="flex items-center gap-2">
+              <CalendarDays className="w-3.5 h-3.5 shrink-0" />
+              26–30 October 2026
+            </p>
+            <p className="flex items-center gap-2">
+              <MapPin className="w-3.5 h-3.5 shrink-0" />
+              SRM University-AP, Main Campus
+            </p>
+          </div>
+          <ul className="space-y-1 text-xs text-rose-50/90 pt-1">
+            {PASS_INCLUSIONS.map((item) => (
+              <li key={item} className="flex items-start gap-2">
+                <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-rose-200" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
         </div>
-        <h2 className="font-serif text-xl sm:text-2xl font-bold mt-1 text-white">
-          Claim Your On-Campus Attendance Pass
-        </h2>
-        <p className="text-xs sm:text-sm text-rose-100 max-w-2xl mt-1 leading-relaxed">
-          The online masterclasses are concluding! Join us physically at SRM University-AP for keynote sessions by IBM Quantum researchers, hands-on workshops, Industry Tech Expo, Quantum Arcade, and debates.
-        </p>
+        <div className="flex items-baseline gap-1.5 border-t border-white/20 pt-4">
+          <span className="font-serif text-4xl font-bold tabular-nums">₹99</span>
+          <span className="font-mono text-[11px] text-rose-200">one-time · all 5 days</span>
+        </div>
+        <span className={clsx(NOTCH, 'hidden lg:block -top-2.5 -right-2.5')} />
+        <span className={clsx(NOTCH, 'hidden lg:block -bottom-2.5 -right-2.5')} />
       </div>
 
-      {/* Two-Step Action Container */}
-      <div className="p-5 sm:p-6 space-y-6">
-        {/* Step 1: Gateway Link */}
-        <div className="p-4 rounded-xl bg-slate-50/80 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <span className="font-mono text-[10px] font-bold text-burgundy dark:text-[#E89BA5] uppercase tracking-wider">
-              Step 1 · Official Payment Gateway
-            </span>
-            <h3 className="font-sans text-sm font-bold text-slate-900 dark:text-[#FAF6F3]">
-              Pay ₹99 on SRM University-AP Gateway (Easebuzz)
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-lg">
-              Upon successful payment, Easebuzz displays a payment receipt on screen, allows instant PDF download, and emails a copy to your inbox.
-            </p>
-          </div>
-
-          <a
-            href={EASEBUZZ_GATEWAY_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-4 py-2.5 bg-burgundy hover:bg-burgundy-deep text-white text-xs sm:text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-1.5 shrink-0 shadow-xs"
-          >
-            <span>Open Easebuzz Gateway (₹99)</span>
-            <ExternalLink className="w-4 h-4" />
-          </a>
+      {/* Checkout steps */}
+      <form
+        onSubmit={handleClaimPass}
+        className="p-5 sm:p-6 border-t-2 lg:border-t-0 lg:border-l-2 border-dashed border-slate-200 dark:border-[#3D1418]"
+      >
+        <div className="flex items-center justify-between gap-2 mb-5">
+          <h3 className="font-sans text-sm font-bold text-slate-900 dark:text-[#FAF6F3]">
+            {isResubmitting ? 'Update your receipt details' : 'Get your pass in three steps'}
+          </h3>
+          {isResubmitting && (
+            <button
+              type="button"
+              onClick={() => {
+                setIsResubmitting(false);
+                setErrorMessage('');
+              }}
+              className="font-mono text-[11px] text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer"
+            >
+              Cancel
+            </button>
+          )}
         </div>
 
-        {/* Step 2: Upload Receipt & Submit Reference */}
-        <form onSubmit={handleClaimPass} className="space-y-4">
-          <div className="space-y-1">
-            <span className="font-mono text-[10px] font-bold text-burgundy dark:text-[#E89BA5] uppercase tracking-wider">
-              Step 2 · Upload Receipt &amp; Generate Gate Pass
-            </span>
-            <h3 className="font-sans text-sm font-bold text-slate-900 dark:text-[#FAF6F3]">
-              Confirm Your Easebuzz Transaction Reference
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Upload your downloaded Easebuzz PDF receipt or payment screenshot to activate your digital pass immediately.
-            </p>
-          </div>
-
-          {/* Drag & Drop Upload Zone */}
-          <div className="rounded-xl border-2 border-dashed border-slate-300 dark:border-[#4A181E] bg-slate-50/50 dark:bg-[#1A090C] p-4 sm:p-5 transition-colors hover:border-burgundy/60">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-lg bg-burgundy/10 dark:bg-burgundy/20 text-burgundy dark:text-[#E89BA5] flex items-center justify-center shrink-0">
-                  <FileText className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-[#FAF6F3] truncate">
-                    {selectedFile ? selectedFile.name : 'Select your Easebuzz receipt (.pdf, .png, .jpg)'}
-                  </p>
-                  <p className="font-mono text-[11px] text-slate-500 dark:text-slate-400">
-                    {selectedFile
-                      ? `${(selectedFile.size / 1024).toFixed(1)} KB · Ready to submit`
-                      : 'Computer-generated Easebuzz receipt PDF or mobile payment screenshot'}
-                  </p>
-                </div>
+        <ol className="space-y-5">
+          {/* Step 1 */}
+          <li className="flex gap-3">
+            <StepMarker index={1} done={gatewayOpened || isResubmitting} active={!gatewayOpened} />
+            <div className="flex-1 min-w-0 space-y-2">
+              <div>
+                <p className="text-sm font-semibold text-slate-900 dark:text-[#FAF6F3]">
+                  Pay ₹99 on the SRM-AP payment gateway
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Opens Easebuzz in a new tab. After paying, download the receipt; a copy is also emailed to you.
+                </p>
               </div>
+              <a
+                href={EASEBUZZ_GATEWAY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={markGatewayOpened}
+                className={clsx(
+                  'inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg transition-colors',
+                  gatewayOpened
+                    ? 'border border-slate-300 dark:border-[#3D1418] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#1C0A0D]'
+                    : 'bg-burgundy hover:bg-burgundy-deep text-white'
+                )}
+              >
+                {gatewayOpened ? 'Open Gateway Again' : 'Pay ₹99 on Easebuzz'}
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </li>
 
-              <div className="flex items-center gap-2 shrink-0">
-                {selectedFile && (
+          {/* Step 2 */}
+          <li className="flex gap-3">
+            <StepMarker index={2} done={fileDone} active={gatewayOpened && !fileDone} />
+            <div className="flex-1 min-w-0 space-y-2">
+              <p className="text-sm font-semibold text-slate-900 dark:text-[#FAF6F3]">
+                Upload the receipt
+              </p>
+              <label
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragOver(true);
+                }}
+                onDragLeave={() => setIsDragOver(false)}
+                onDrop={handleDrop}
+                className={clsx(
+                  'flex items-center gap-3 rounded-lg border-2 border-dashed px-3.5 py-3 cursor-pointer transition-colors',
+                  isDragOver
+                    ? 'border-burgundy bg-burgundy/5'
+                    : fileDone
+                      ? 'border-emerald-300 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/20'
+                      : 'border-slate-300 dark:border-[#4A181E] hover:border-burgundy/60'
+                )}
+              >
+                <FileText className="w-5 h-5 text-slate-400 shrink-0" />
+                <span className="flex-1 min-w-0">
+                  <span className="block text-xs font-semibold text-slate-800 dark:text-slate-100 truncate">
+                    {selectedFile ? selectedFile.name : 'Choose file or drop it here'}
+                  </span>
+                  <span className="block font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                    {selectedFile
+                      ? `${(selectedFile.size / 1024).toFixed(1)} KB`
+                      : `PDF receipt or screenshot · up to ${MAX_RECEIPT_SIZE_MB} MB`}
+                  </span>
+                </span>
+                {selectedFile ? (
                   <button
                     type="button"
-                    onClick={() => setSelectedFile(null)}
-                    className="p-2 rounded-lg border border-slate-200 dark:border-[#3D1418] text-slate-500 hover:text-rose-600 transition-colors"
-                    title="Remove selected file"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      clearFile();
+                    }}
+                    className="p-1.5 rounded-md text-slate-500 hover:text-rose-600 cursor-pointer"
+                    aria-label="Remove selected file"
                   >
                     <X className="w-4 h-4" />
                   </button>
+                ) : (
+                  <Upload className="w-4 h-4 text-burgundy dark:text-[#E89BA5] shrink-0" />
                 )}
-                <label className="px-3.5 py-2 rounded-lg border border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#150709] hover:bg-slate-50 text-slate-800 dark:text-[#FAF6F3] text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer shadow-2xs">
-                  <Upload className="w-3.5 h-3.5 text-burgundy dark:text-[#E89BA5]" />
-                  <span>{selectedFile ? 'Change Receipt' : 'Choose Receipt'}</span>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/*"
+                  onChange={(e) => acceptFile(e.target.files?.[0])}
+                  className="sr-only"
+                />
+              </label>
+            </div>
+          </li>
+
+          {/* Step 3 */}
+          <li className="flex gap-3">
+            <StepMarker index={3} done={txnDone} active={fileDone && !txnDone} />
+            <div className="flex-1 min-w-0 space-y-3">
+              <p className="text-sm font-semibold text-slate-900 dark:text-[#FAF6F3]">
+                Enter the reference numbers from the receipt
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="pass-txn" className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Easebuzz Transaction ID <span className="text-rose-600">*</span>
+                  </label>
                   <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/*"
-                    onChange={handleFileChange}
-                    className="sr-only"
+                    id="pass-txn"
+                    type="text"
+                    required
+                    autoComplete="off"
+                    value={transactionRef}
+                    onChange={(e) => setTransactionRef(e.target.value.toUpperCase())}
+                    placeholder="E26101518BKHN3"
+                    className="w-full px-3 py-2 text-sm font-mono uppercase border border-slate-300 dark:border-[#3D1418] rounded-lg bg-white dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] focus:outline-none focus:ring-1 focus:ring-burgundy"
                   />
-                </label>
+                </div>
+                <div>
+                  <label htmlFor="pass-bank" className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Bank Reference / UTR <span className="text-slate-400 font-normal">(optional)</span>
+                  </label>
+                  <input
+                    id="pass-bank"
+                    type="text"
+                    autoComplete="off"
+                    inputMode="numeric"
+                    value={bankRef}
+                    onChange={(e) => setBankRef(e.target.value)}
+                    placeholder="194589444789"
+                    className="w-full px-3 py-2 text-sm font-mono border border-slate-300 dark:border-[#3D1418] rounded-lg bg-white dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] focus:outline-none focus:ring-1 focus:ring-burgundy"
+                  />
+                </div>
               </div>
             </div>
+          </li>
+        </ol>
+
+        {errorMessage && (
+          <div className="mt-5 p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 rounded-lg text-xs text-rose-900 dark:text-rose-200 flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+            <span>{errorMessage}</span>
           </div>
+        )}
 
-          {/* Form Inputs Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <div>
-              <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
-                Easebuzz Transaction ID <span className="text-rose-600">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={transactionRef}
-                onChange={(e) => setTransactionRef(e.target.value)}
-                placeholder="e.g. E26101518BKHN3"
-                className="w-full px-3.5 py-2 text-xs sm:text-sm font-mono border border-slate-300 dark:border-[#3D1418] rounded-lg bg-white dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] focus:outline-none focus:ring-1 focus:ring-burgundy"
-              />
-              <span className="font-mono text-[10px] text-slate-400 mt-1 block">
-                Found on line 4 of your receipt under &quot;Easebuzz Transaction ID&quot;
-              </span>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
-                Bank Reference Number (Optional)
-              </label>
-              <input
-                type="text"
-                value={bankRef}
-                onChange={(e) => setBankRef(e.target.value)}
-                placeholder="e.g. 194589444789"
-                className="w-full px-3.5 py-2 text-xs sm:text-sm font-mono border border-slate-300 dark:border-[#3D1418] rounded-lg bg-white dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] focus:outline-none focus:ring-1 focus:ring-burgundy"
-              />
-              <span className="font-mono text-[10px] text-slate-400 mt-1 block">
-                Found on line 3 of your receipt (UPI UTR / RRN)
-              </span>
-            </div>
-          </div>
-
-          {/* Feedback Banners */}
-          {errorMessage && (
-            <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 rounded-lg text-xs text-rose-900 dark:text-rose-200 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-              <span>{errorMessage}</span>
-            </div>
-          )}
-
-          {successMessage && (
-            <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 rounded-lg text-xs text-emerald-900 dark:text-emerald-200 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>{successMessage}</span>
-            </div>
-          )}
-
-          {/* Submit Button */}
-          <div className="flex justify-end pt-1">
-            <button
-              type="submit"
-              disabled={isSubmitting || !selectedFile || !transactionRef.trim()}
-              className="w-full sm:w-auto px-6 py-2.5 bg-burgundy hover:bg-burgundy-deep text-white text-xs sm:text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>{uploadStatus || 'Processing Claim...'}</span>
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Submit Receipt &amp; Claim On-Campus Pass</span>
-                </>
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
+        <div className="mt-5 pt-4 border-t border-slate-100 dark:border-[#250D11] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-sm">
+            Your pass and QR code appear here right after you submit. The organizing team then verifies the payment.
+          </p>
+          <button
+            type="submit"
+            disabled={isSubmitting || !fileDone || !txnDone}
+            className="w-full sm:w-auto px-5 py-2.5 bg-burgundy hover:bg-burgundy-deep text-white text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>{uploadStatus || 'Submitting...'}</span>
+              </>
+            ) : (
+              <span>Submit &amp; Get Pass</span>
+            )}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

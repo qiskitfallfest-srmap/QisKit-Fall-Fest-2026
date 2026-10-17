@@ -36,6 +36,7 @@ yarn-error.log*
 *.pem
 .idea/
 .vscode/
+.claude/
 /dt_venue*
 scratch/
 *.csv

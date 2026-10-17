@@ -4,6 +4,8 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export const dynamic = 'force-dynamic';
 
+const ALLOWED_STATUSES = ['claimed_provisional', 'verified', 'rejected'];
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession();
@@ -12,7 +14,8 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const search = searchParams.get('search')?.trim();
+    // Strip characters that carry meaning inside a PostgREST .or() filter string
+    const search = searchParams.get('search')?.replace(/[^a-zA-Z0-9@._+ -]/g, '').trim().slice(0, 100);
     const status = searchParams.get('status')?.trim();
 
     let query = supabaseAdmin
@@ -84,7 +87,12 @@ export async function PATCH(request: NextRequest) {
     }
 
     const updates: any = { updated_at: new Date().toISOString() };
-    if (status) updates.status = status;
+    if (status) {
+      if (!ALLOWED_STATUSES.includes(status)) {
+        return NextResponse.json({ error: 'Invalid status value.' }, { status: 400 });
+      }
+      updates.status = status;
+    }
     if (adminNotes !== undefined) updates.admin_notes = adminNotes;
 
     const { data: updatedPass, error } = await supabaseAdmin

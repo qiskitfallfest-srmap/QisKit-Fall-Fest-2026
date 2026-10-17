@@ -22,18 +22,39 @@ import Link from 'next/link';
 interface PassData {
   id: string;
   userName: string;
-  userEmail: string;
+  userEmail?: string;
   passTier: string;
   institution: string;
-  transactionReference: string;
+  transactionReference?: string;
   status: string;
   amountInr: number;
-  receiptUrl: string;
+  receiptUrl?: string;
   checkedIn: boolean;
   checkedInAt: string | null;
-  checkedInBy: string | null;
-  createdAt: string;
+  checkedInBy?: string | null;
+  createdAt?: string;
 }
+
+const STATUS_STYLES: Record<string, { label: string; border: string; band: string; chip: string }> = {
+  verified: {
+    label: 'Verified Attendee · Payment Confirmed',
+    border: 'border-emerald-500/70 dark:border-emerald-600/70',
+    band: 'bg-emerald-600',
+    chip: 'bg-emerald-700/60',
+  },
+  claimed_provisional: {
+    label: 'Payment Pending Verification',
+    border: 'border-amber-400 dark:border-amber-600/70',
+    band: 'bg-amber-500',
+    chip: 'bg-amber-600/60',
+  },
+  rejected: {
+    label: 'Pass Rejected · Do Not Admit',
+    border: 'border-rose-500/70 dark:border-rose-600/70',
+    band: 'bg-rose-600',
+    chip: 'bg-rose-700/60',
+  },
+};
 
 function VerifyPassContent() {
   const searchParams = useSearchParams();
@@ -43,6 +64,7 @@ function VerifyPassContent() {
   const [searchInput, setSearchInput] = useState(initialQuery);
   const [loading, setLoading] = useState(Boolean(token || initialQuery));
   const [passData, setPassData] = useState<PassData | null>(null);
+  const [isStaff, setIsStaff] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [checkingIn, setCheckingIn] = useState(false);
   const [checkInSuccess, setCheckInSuccess] = useState(false);
@@ -62,8 +84,9 @@ function VerifyPassContent() {
     try {
       const res = await fetch(`/api/pass/verify?token=${encodeURIComponent(t)}`);
       const data = await res.json();
-      if (res.ok && data.valid) {
+      if (res.ok && data.pass) {
         setPassData(data.pass);
+        setIsStaff(Boolean(data.isStaff));
       } else {
         setErrorMessage(data.error || 'Invalid or unregistered festival pass.');
       }
@@ -82,8 +105,9 @@ function VerifyPassContent() {
     try {
       const res = await fetch(`/api/pass/verify?q=${encodeURIComponent(q.trim())}`);
       const data = await res.json();
-      if (res.ok && data.valid) {
+      if (res.ok && data.pass) {
         setPassData(data.pass);
+        setIsStaff(Boolean(data.isStaff));
       } else {
         setErrorMessage(data.error || 'No attendee pass found matching your search.');
       }
@@ -101,12 +125,12 @@ function VerifyPassContent() {
       const res = await fetch('/api/pass/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ passId: passData.id, volunteerName: 'Campus Gate Desk' }),
+        body: JSON.stringify({ passId: passData.id }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
         setPassData((prev) =>
-          prev ? { ...prev, checkedIn: true, checkedInAt: new Date().toISOString() } : null
+          prev ? { ...prev, checkedIn: true, checkedInAt: data.pass?.checkedInAt || new Date().toISOString() } : null
         );
         setCheckInSuccess(true);
       } else {
@@ -150,7 +174,7 @@ function VerifyPassContent() {
                 type="text"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Search by Easebuzz Txn ID, Roll No, or Student Email..."
+                placeholder="Search by Easebuzz Txn ID or email (organizers only)"
                 className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm font-mono border border-slate-300 dark:border-[#3D1418] rounded-lg bg-slate-50/50 dark:bg-[#1C0A0D] text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-burgundy"
               />
             </div>
@@ -184,18 +208,28 @@ function VerifyPassContent() {
           </div>
         )}
 
-        {!loading && passData && (
-          <div className="bg-white dark:bg-[#150709] border-2 border-emerald-500/70 dark:border-emerald-600/70 rounded-2xl overflow-hidden shadow-md">
-            {/* Top Verified Banner */}
-            <div className="bg-emerald-600 text-white px-5 py-3 flex items-center justify-between">
+        {!loading && passData && (() => {
+          const style = STATUS_STYLES[passData.status] || STATUS_STYLES.claimed_provisional;
+          const isRejected = passData.status === 'rejected';
+          const isProvisional = passData.status === 'claimed_provisional';
+          return (
+          <div className={`bg-white dark:bg-[#150709] border-2 ${style.border} rounded-2xl overflow-hidden shadow-md`}>
+            {/* Status Banner */}
+            <div className={`${style.band} text-white px-5 py-3 flex items-center justify-between gap-2`}>
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-emerald-200" />
+                {isRejected ? (
+                  <XCircle className="w-5 h-5" />
+                ) : isProvisional ? (
+                  <Clock className="w-5 h-5" />
+                ) : (
+                  <ShieldCheck className="w-5 h-5" />
+                )}
                 <span className="font-mono text-xs font-bold uppercase tracking-wider">
-                  Verified On-Campus Attendee
+                  {style.label}
                 </span>
               </div>
-              <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-emerald-700/60 text-white">
-                ₹{passData.amountInr} Paid
+              <span className={`font-mono text-xs font-semibold px-2 py-0.5 rounded ${style.chip} text-white shrink-0`}>
+                ₹{passData.amountInr} General Pass
               </span>
             </div>
 
@@ -209,9 +243,11 @@ function VerifyPassContent() {
                 <h2 className="font-serif text-xl sm:text-2xl font-bold text-slate-900 dark:text-[#FAF6F3]">
                   {passData.userName}
                 </h2>
-                <p className="font-mono text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  {passData.userEmail}
-                </p>
+                {passData.userEmail && (
+                  <p className="font-mono text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    {passData.userEmail}
+                  </p>
+                )}
               </div>
 
               {/* Grid Details */}
@@ -240,14 +276,16 @@ function VerifyPassContent() {
                     {passData.institution}
                   </p>
                 </div>
-                <div>
-                  <span className="font-mono text-[10px] text-slate-400 uppercase tracking-wider block">
-                    Easebuzz Txn Ref
-                  </span>
-                  <p className="font-mono font-semibold text-slate-800 dark:text-slate-200 mt-0.5 truncate">
-                    {passData.transactionReference}
-                  </p>
-                </div>
+                {passData.transactionReference && (
+                  <div>
+                    <span className="font-mono text-[10px] text-slate-400 uppercase tracking-wider block">
+                      Easebuzz Txn Ref
+                    </span>
+                    <p className="font-mono font-semibold text-slate-800 dark:text-slate-200 mt-0.5 truncate">
+                      {passData.transactionReference}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Receipt Preview Link */}
@@ -268,9 +306,24 @@ function VerifyPassContent() {
                 </div>
               )}
 
+              {isProvisional && isStaff && !passData.checkedIn && (
+                <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 rounded-xl flex items-start gap-2 text-xs text-amber-900 dark:text-amber-200">
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <span>
+                    The receipt has not been verified yet. Open the receipt above and confirm the Easebuzz
+                    Transaction ID matches before admitting.
+                  </span>
+                </div>
+              )}
+
               {/* Check-In Action Section */}
               <div className="pt-2">
-                {passData.checkedIn ? (
+                {isRejected ? (
+                  <div className="p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 rounded-xl flex items-center gap-3 text-xs text-rose-900 dark:text-rose-200 font-medium">
+                    <XCircle className="w-5 h-5 text-rose-600 shrink-0" />
+                    <span>Receipt was rejected by the organizing team. Direct the attendee to the help desk.</span>
+                  </div>
+                ) : passData.checkedIn ? (
                   <div className="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 rounded-xl flex items-center gap-3 text-xs text-emerald-900 dark:text-emerald-200 font-medium">
                     <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                     <div>
@@ -284,6 +337,10 @@ function VerifyPassContent() {
                       </p>
                     </div>
                   </div>
+                ) : !isStaff ? (
+                  <p className="text-center font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                    Gate check-in is recorded by organizers signed in on the learning portal.
+                  </p>
                 ) : (
                   <button
                     onClick={handleCheckIn}
@@ -306,7 +363,8 @@ function VerifyPassContent() {
               </div>
             </div>
           </div>
-        )}
+          );
+        })()}
 
         {/* Footer Link */}
         <div className="text-center pt-4">

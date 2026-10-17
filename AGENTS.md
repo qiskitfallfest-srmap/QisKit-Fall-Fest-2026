@@ -115,4 +115,46 @@ This file is automatically loaded by AI agents working in this workspace.
      - The "Register For Online Events" button is automatically hidden.
      - Replaced by a single high-prominence CTA: **`Welcome back, [First Name] · Enter Hackathon Arena`** (or **`Enter Hackathon Arena`**) routing straight to `/learning/hackathon`.
 
+---
+
+## 6. On-Campus General Offline Pass & Gate Verification Desk (GT-34)
+
+1. **Database Schema & Migration:**
+   - **Table:** `public.festival_pass_claims`
+   - **Migration File:** `supabase/migrations/20261017193500_create_festival_pass_claims.sql`
+   - **Columns:**
+     - `id`: UUID PRIMARY KEY DEFAULT `gen_random_uuid()`
+     - `user_email`: TEXT NOT NULL (indexed)
+     - `user_name`: TEXT NOT NULL
+     - `pass_tier`: TEXT NOT NULL DEFAULT `'general_offline'` CHECK (`pass_tier IN ('general_offline', 'flagship_offline')`)
+     - `transaction_reference`: TEXT NOT NULL UNIQUE (Easebuzz Transaction ID, e.g. `E26101518BKHN3`)
+     - `bank_reference`: TEXT (optional secondary bank UTR / reference)
+     - `receipt_url`: TEXT NOT NULL (Supabase storage URL under `media/pass-receipts/`)
+     - `amount_inr`: NUMERIC(10, 2) NOT NULL DEFAULT `99.00`
+     - `status`: TEXT NOT NULL DEFAULT `'claimed_provisional'` CHECK (`status IN ('claimed_provisional', 'verified', 'rejected')`)
+     - `institution`: TEXT
+     - `contact_phone`: TEXT
+     - `admin_notes`: TEXT
+     - `checked_in`: BOOLEAN DEFAULT false
+     - `checked_in_at`: TIMESTAMPTZ
+     - `checked_in_by`: TEXT (staff administrator email)
+     - `qr_code_token`: TEXT NOT NULL UNIQUE (`qff26_[16-byte-hex]`)
+     - `created_at` / `updated_at`: TIMESTAMPTZ DEFAULT `now()`
+
+2. **Storage Bucket & Security Policies:**
+   - Receipts are uploaded to Supabase Storage bucket `media` under folder `pass-receipts/*`.
+   - RLS policies restrict participants to viewing only their own passes (`user_email = auth.jwt() ->> 'email'`).
+   - Service role (`supabaseAdmin`) maintains full operational authority across API routes.
+
+3. **Strict Hackathon Isolation & Fee Integrity:**
+   - **Online Phase is 100% Free:** Registration, sessions, quizzes, creative challenges, and Hackathon Phase 1 require zero payment.
+   - **₹99 General Offline Pass:** Grants general admission to campus exhibitions, keynotes, workshops, debates, and open games (Oct 26–30).
+   - **₹499 All-Access Flagship Pass:** Reserved exclusively for Hackathon Phase 2 finalists and qualified flagship tracks (includes full 5-day meals and refreshments).
+   - **Hackathon Guardrail:** Active hackathon leaders and accepted team members are strictly prohibited from purchasing or claiming the ₹99 pass (`app/api/pass/claim/route.ts` and `components/learning/OnCampusPassCard.tsx`). Finalist teams will be guided directly to the Flagship pass flow upon Phase 1 shortlisting.
+
+4. **Gate Verification Desk & Admin Console:**
+   - **Desk URL:** `/verify-pass` (`app/verify-pass/page.tsx`). Supports high-speed camera QR code barcode scanning, pass lookup, and idempotent gate check-in (`POST /api/pass/verify`).
+   - **Admin Management:** Available in `/admin` under the "Passes" tab (`components/learning/AdminPassManager.tsx`) for reviewing uploaded payment receipts, approving/rejecting claims, and tracking live gate attendance.
+
+
 

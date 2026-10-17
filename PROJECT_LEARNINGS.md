@@ -175,6 +175,8 @@ sahgyan9/Qiskit-Fall-Fest-SRMAP-2026 (PLANNING REPO)
 | **2026-10-13 19:46** | Antigravity (Gemini 3.8 Flash) | Daily Competitions UI Layout Optimization, Typographic Elevation & Deadline Extension to 17 October | `app/learning/page.tsx`, `data/learning/competitions.ts`, `data/learning/curriculum.ts`, `data/onlineSchedule.ts`, `data/faqs.ts`, `components/learning/LearningSidebar.tsx`, `components/schedule/ExploreSchedule.tsx`, `components/ui/hero-carousel.tsx`, `public/llms-full.txt`, `AGENTS.md`, `PROJECT_LEARNINGS.md` | (1) Optimized daily competition screen real estate from constrained `max-w-3xl` to balanced `max-w-5xl` container, eliminating awkward empty gutters on the right side of the learning shell. (2) Elevated typography from micro-copy (`text-[10px]` / `text-xs`) to readable `text-sm` / `text-base` scales with comfortable padding across brand kits, guidelines, and submission dropzones. (3) Synchronized all competition deadlines and Hackathon Phase 1 online sprint to Saturday, 17 October 2026, 11:59 PM IST across the entire platform. Codified GT-30. |
 | **2026-10-15 00:15** | Antigravity (Gemini) | Built Google Form & Apps Script Automated Webhook Relay, Whitelist Sync & Branded Pass Email Dispatch | `tools/google_form_webhook.gs`, `app/api/webhooks/google-form/route.ts`, `app/api/auth/register/route.ts`, `public/brand/qiskit-fall-fest-banner.png`, `.env.example`, `.env.local`, `AGENTS.md`, `PROJECT_LEARNINGS.md` | Built dual-channel registration and email relay system: (1) Inbound webhook `/api/webhooks/google-form` to auto-whitelist Google Form responses in Supabase and Upstash Redis. (2) Outbound Web App `doPost` in Google Apps Script to send branded passes and log website registrations in `Website_Registrations` tab. (3) Configured and deployed across Vercel production. Codified GT-31. |
 | **2026-10-15 00:30** | Antigravity (Gemini) | Homepage Dynamic Session-Aware Hero CTAs & Direct Hackathon Workspace Routing | `components/home/HomeHero.tsx`, `components/home/HomeHero.module.css`, `lib/constants.ts`, `tools/google_form_webhook.gs`, `qiskit_fall_fest_confirmation_email.html`, `AGENTS.md`, `GEMINI.md`, `PROJECT_LEARNINGS.md` | (1) Added dual CTAs on Home Hero: "Register For Online Events" directly opens official Google Form in a new tab; "Enter Hackathon Arena" routes to `/learning/hackathon`. (2) Integrated dynamic session detection via `getClientSession()`: logged-in participants automatically see the register button hidden and a single prominent "Welcome back, [Name] · Enter Hackathon Arena" CTA. (3) Updated welcome email template button and links to direct participants to `/learning/hackathon` to eliminate initial cognitive overload from the full curriculum overview. Codified GT-32. |
+| **2026-10-17 19:35** | Antigravity (Gemini 3.8 Flash) | Implemented ₹99 General Offline Pass System, Verification Gate Desk, Recipient Roster & Supabase Migration | `components/learning/OnCampusPassCard.tsx`, `app/verify-pass/page.tsx`, `components/learning/AdminPassManager.tsx`, `app/api/pass/*`, `app/api/admin/passes/route.ts`, `tools/google_form_webhook.gs`, `tools/export_non_hackathon_pass_recipients.py`, `supabase/migrations/20261017193500_create_festival_pass_claims.sql`, `AGENTS.md`, `PROJECT_LEARNINGS.md` | (1) Provisioned `public.festival_pass_claims` database table, unique indexes, and RLS/storage policies for offline pass claims. (2) Built pass claim UI with QR badge rendering on `/learning`, staff check-in gate with barcode scanner at `/verify-pass`, and pass approval manager in `/admin`. (3) Synced 1,730 Unstop participants to `allowed_emails` (fixing 582 code names and adding 93 new sign-ups) to ensure 1-click Google OAuth access for tonight's deadline. (4) Prepared 1,636 clean, non-hackathon recipient rows in Google Sheet with automated Apps Script campaign runner. Codified GT-34. |
+
 
 ---
 
@@ -245,6 +247,23 @@ sahgyan9/Qiskit-Fall-Fest-SRMAP-2026 (PLANNING REPO)
    - **Resilient Spreadsheet Finder (`getTargetSpreadsheet()`)**: Cascades through (1) `SpreadsheetApp.getActiveSpreadsheet()`, (2) explicit fallback `SPREADSHEET_ID_OR_URL`, and (3) `FormApp.getActiveForm().getDestinationId()`.
 3. **One-Click Batch Recovery**:
    - Both `syncAllUnsyncedRows()` (for Google Sheets) and `syncAllFormResponses()` (for Google Forms) iterate through historical records, synchronizing unsynced attendees to Supabase/Redis and dispatching missing welcome emails with polite rate-limiting (`Utilities.sleep(300)`).
+
+---
+
+### GT-34: On-Campus General Offline Pass Architecture, Gate Desk & Hackathon Isolation Standard
+1. **Separation of Pass Tiers & Fee Integrity**:
+   - **Online Phase is 100% Free**: Masterclasses, video lectures, concept quizzes, creative competitions (Reels, Poster, Essay), and Hackathon Phase 1 require zero payment.
+   - **₹99 General Offline Pass**: Covers physical campus access, exhibitions, keynotes, non-flagship workshops, debates, and open games from October 26–30.
+   - **₹499 Flagship All-Access Pass**: Reserved exclusively for Hackathon Phase 2 finalists, QCTF qualifiers, and Startup Pitch competitors (includes 5 days of lunches and refreshments).
+   - **Hackathon Guardrail**: Active hackathon leaders and accepted teammates are strictly blocked from submitting ₹99 claims (`app/api/pass/claim/route.ts` and `components/learning/OnCampusPassCard.tsx`), preventing confusion with their ₹499 finalist requirement.
+2. **Database & Storage Architecture (`public.festival_pass_claims`)**:
+   - Stores `user_email`, `user_name`, `pass_tier`, `transaction_reference` (Easebuzz Transaction ID), `receipt_url` (`media/pass-receipts/*`), `amount_inr` (99.00), `status` (`claimed_provisional`, `verified`, `rejected`), `qr_code_token` (`qff26_[16-byte-hex]`), and check-in audit stamps (`checked_in`, `checked_in_at`, `checked_in_by`).
+   - Backed by migration `supabase/migrations/20261017193500_create_festival_pass_claims.sql`.
+3. **Staff Gate Verification Desk (`/verify-pass`) & Admin Console**:
+   - High-throughput gate entrance interface with camera barcode/QR scanner (`@zxing/browser`) and manual search.
+   - Authenticated staff can verify attendees in <500ms and record tamper-resistant one-time check-in stamps (`POST /api/pass/verify`) with duplicate admission prevention.
+   - Admin management live under the "Passes" tab in `/admin` (`components/learning/AdminPassManager.tsx`) for reviewing uploaded payment receipts, approving/rejecting claims, and tracking live gate attendance.
+
 
 
 
