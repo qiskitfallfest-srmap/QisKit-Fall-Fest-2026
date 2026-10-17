@@ -92,3 +92,23 @@ USING (true)
 WITH CHECK (true);
 
 REVOKE ALL ON public.competition_submissions FROM anon, authenticated;
+
+-- ============================================================================
+-- Realtime
+-- ============================================================================
+-- No client subscribes to these tables. Remove them from the publication in
+-- case they were added from the dashboard (no migration adds them).
+DO $$
+DECLARE
+  t text;
+BEGIN
+  FOREACH t IN ARRAY ARRAY['allowed_emails', 'platform_config', 'user_progress', 'competition_submissions']
+  LOOP
+    IF EXISTS (
+      SELECT 1 FROM pg_publication_tables
+      WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = t
+    ) THEN
+      EXECUTE format('ALTER PUBLICATION supabase_realtime DROP TABLE public.%I', t);
+    END IF;
+  END LOOP;
+END $$;
