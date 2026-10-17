@@ -33,9 +33,11 @@ import type {
   AdminHackathonTeam,
   AdminHackathonParticipant,
 } from '@/app/api/admin/hackathon/route';
-import { supabase } from '@/lib/supabase';
+import { useEvaluationPolling } from './useEvaluationPolling';
 import { EvaluationDrawer } from './EvaluationDrawer';
 import { SubmissionEvaluation } from '@/types/evaluations';
+
+const HACKATHON_EVALUATION_CATEGORIES = ['hackathon'] as const;
 
 export function AdminHackathonView() {
   const [data, setData] = useState<AdminHackathonData | null>(null);
@@ -149,68 +151,32 @@ export function AdminHackathonView() {
     }
   };
 
-  // Real-time synchronization via Supabase Postgres Changes
   useEffect(() => {
     fetchData();
-
-    // Listen to real-time evaluation updates across all admin sessions
-    const channel = supabase
-      .channel('hackathon-evaluations-live')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'submission_evaluations' },
-        (payload) => {
-          const updated = (payload.new || {}) as SubmissionEvaluation;
-          if (updated && updated.category === 'hackathon') {
-            setData((prev) => {
-              if (!prev) return prev;
-              const nextTeams = prev.teams.map((t) => {
-                if (t.id === updated.target_id) {
-                  return { ...t, evaluation: updated };
-                }
-                return t;
-              });
-
-              let downloadedCount = 0;
-              let shortlistedCount = 0;
-              let evaluatedCount = 0;
-              let rejectedCount = 0;
-              nextTeams.forEach((t) => {
-                if (t.evaluation?.downloaded) downloadedCount++;
-                if (t.evaluation?.is_next_round) shortlistedCount++;
-                if (t.evaluation?.status === 'rejected') rejectedCount++;
-                if (t.evaluation?.status && t.evaluation.status !== 'pending') evaluatedCount++;
-              });
-
-              return {
-                ...prev,
-                teams: nextTeams,
-                stats: {
-                  ...prev.stats,
-                  downloadedSubmissionsCount: downloadedCount,
-                  shortlistedTeamsCount: shortlistedCount,
-                  rejectedTeamsCount: rejectedCount,
-                  evaluatedTeamsCount: evaluatedCount,
-                },
-              };
-            });
-
-            // Also update active drawer if currently inspecting this team
-            setSelectedTeamForEvaluation((current) => {
-              if (current && current.id === updated.target_id) {
-                return { ...current, evaluation: updated };
-              }
-              return current;
-            });
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, []);
+
+  // Pick up evaluations recorded in other admin sessions. submission_evaluations
+  // is service-role only, so this polls the admin API instead of Supabase Realtime.
+  useEvaluationPolling(HACKATHON_EVALUATION_CATEGORIES, (evaluations) => {
+    const byTarget = new Map(evaluations.map((ev) => [ev.target_id, ev]));
+    setData((prev) => {
+      if (!prev) return prev;
+      let changed = false;
+      const nextTeams = prev.teams.map((t) => {
+        const ev = byTarget.get(t.id);
+        if (!ev || ev.updated_at === t.evaluation?.updated_at) return t;
+        changed = true;
+        return { ...t, evaluation: ev };
+      });
+      if (!changed) return prev;
+      return { ...prev, teams: nextTeams, stats: recomputeHackathonStats(nextTeams, prev.stats) };
+    });
+    setSelectedTeamForEvaluation((current) => {
+      const ev = current ? byTarget.get(current.id) : undefined;
+      if (!current || !ev || ev.updated_at === current.evaluation?.updated_at) return current;
+      return { ...current, evaluation: ev };
+    });
+  });
 
   const recomputeHackathonStats = (teams: AdminHackathonTeam[], baseStats: any) => {
     if (!baseStats) return baseStats;

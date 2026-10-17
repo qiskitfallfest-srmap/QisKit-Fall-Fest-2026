@@ -23,7 +23,7 @@ import {
   MessageSquare,
   XCircle,
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { useEvaluationPolling } from './useEvaluationPolling';
 import { EvaluationDrawer } from './EvaluationDrawer';
 import { SubmissionEvaluation } from '@/types/evaluations';
 
@@ -53,6 +53,8 @@ interface Stats {
   evaluatedCount?: number;
   downloadedCount?: number;
 }
+
+const COMPETITION_EVALUATION_CATEGORIES = ['reels', 'poster', 'essay'] as const;
 
 export function AdminCompetitionsView() {
   const [submissions, setSubmissions] = useState<CompetitionSubmissionItem[]>([]);
@@ -95,31 +97,28 @@ export function AdminCompetitionsView() {
 
   useEffect(() => {
     fetchSubmissions();
-
-    // Listen to real-time evaluation updates across all admin sessions
-    const channel = supabase
-      .channel('competitions-evaluations-live')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'submission_evaluations' },
-        (payload) => {
-          const updated = (payload.new || {}) as SubmissionEvaluation;
-          if (['reels', 'poster', 'essay'].includes(updated.category)) {
-            setSubmissions((prev) =>
-              prev.map((sub) => (sub.id === updated.target_id ? { ...sub, evaluation: updated } : sub))
-            );
-            setSelectedSubForEvaluation((curr) =>
-              curr && curr.id === updated.target_id ? { ...curr, evaluation: updated } : curr
-            );
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, [fetchSubmissions]);
+
+  // Pick up evaluations recorded in other admin sessions. submission_evaluations
+  // is service-role only, so this polls the admin API instead of Supabase Realtime.
+  useEvaluationPolling(COMPETITION_EVALUATION_CATEGORIES, (evaluations) => {
+    const byTarget = new Map(evaluations.map((ev) => [ev.target_id, ev]));
+    setSubmissions((prev) => {
+      let changed = false;
+      const next = prev.map((sub) => {
+        const ev = byTarget.get(sub.id);
+        if (!ev || ev.updated_at === sub.evaluation?.updated_at) return sub;
+        changed = true;
+        return { ...sub, evaluation: ev };
+      });
+      return changed ? next : prev;
+    });
+    setSelectedSubForEvaluation((curr) => {
+      const ev = curr ? byTarget.get(curr.id) : undefined;
+      if (!curr || !ev || ev.updated_at === curr.evaluation?.updated_at) return curr;
+      return { ...curr, evaluation: ev };
+    });
+  });
 
   // Quick Action: Download / Inspect & Auto-Tick in DB
   const handleQuickDownload = async (sub: CompetitionSubmissionItem) => {

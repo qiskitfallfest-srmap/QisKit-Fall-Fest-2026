@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import {
   CheckCircle2,
   XCircle,
@@ -30,10 +30,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function VerifyCertificatePage({ params }: PageProps) {
   const { serial } = await params;
 
-  // Query issued_certificates by serial_number
-  const { data: cert, error } = await supabase
+  // Public verification by serial number. issued_certificates is service-role
+  // only; this server component selects just the fields shown on the page so
+  // the recipient's email is never exposed.
+  const { data: cert, error } = await supabaseAdmin
     .from('issued_certificates')
-    .select('*')
+    .select(
+      'serial_number, recipient_name, institution, course_name, average_quiz_score, certificate_url, verification_hash, issued_at'
+    )
     .eq('serial_number', serial)
     .maybeSingle();
 
