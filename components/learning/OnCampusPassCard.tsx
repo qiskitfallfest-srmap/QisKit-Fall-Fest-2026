@@ -78,9 +78,10 @@ interface HackathonContext {
 }
 
 const FLAGSHIP_INCLUSIONS = [
-  '24-hour on-campus hackathon sprint',
-  'Hardware setup for the sprint',
-  'Lunch on all 5 days',
+  'Hackathon Phase 2 (24-hour on-campus sprint)',
+  'Flagship Tracks: Quantum Startup Pitch & QCTF (upon qualification)',
+  'Special lunch & 2 snack servings on all 5 days',
+  'Hardware setup & priority seating',
   'Everything in the General Pass',
 ];
 
@@ -714,6 +715,9 @@ export function OnCampusPassCard() {
               </li>
             ))}
           </ul>
+          <p className="text-[11px] text-rose-200/80 pt-2 border-t border-white/10 leading-snug">
+            Excludes Hackathon Phase 2, Startup Pitch, QCTF &amp; meals (Flagship Pass only).
+          </p>
         </div>
         <div className="flex items-baseline gap-1.5 border-t border-white/20 pt-4">
           <span className="font-serif text-4xl font-bold tabular-nums">₹99</span>
@@ -728,7 +732,7 @@ export function OnCampusPassCard() {
         onSubmit={handleClaimPass}
         className="p-5 sm:p-6 border-t-2 lg:border-t-0 lg:border-l-2 border-dashed border-slate-200 dark:border-[#3D1418]"
       >
-        <div className="flex items-center justify-between gap-2 mb-5">
+        <div className="flex items-center justify-between gap-2 mb-4">
           <div>
             {data?.hackathon?.outcome === 'not_shortlisted' && !isResubmitting && (
               <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-0.5">
@@ -755,6 +759,20 @@ export function OnCampusPassCard() {
               Cancel
             </button>
           )}
+        </div>
+
+        {/* Scope & Exclusions Notice */}
+        <div className="mb-5 p-3.5 bg-amber-50/90 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40 rounded-xl text-xs text-amber-900 dark:text-amber-200/90 space-y-1.5">
+          <p className="font-semibold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+            Pass Scope &amp; Exclusions Notice
+          </p>
+          <p className="leading-relaxed">
+            The <strong>₹99 General Pass</strong> grants full campus entry to keynotes, workshops, tech expo exhibits, debates, and open games for all 5 days. It does <strong>not</strong> include entry to competitive flagship tracks (<strong>Hackathon Phase 2</strong>, <strong>Quantum Startup Pitch</strong>, <strong>QCTF</strong>) or the <strong>5-day special lunch and daily refreshments</strong>.
+          </p>
+          <p className="leading-relaxed text-amber-800/80 dark:text-amber-300/80">
+            These flagship tracks and meals are reserved exclusively for the <strong>₹499 All-Access Flagship Pass</strong> (awarded to shortlisted hackathon teams and qualified finalists).
+          </p>
         </div>
 
         <ol className="space-y-5">

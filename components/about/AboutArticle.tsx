@@ -521,6 +521,9 @@ export function AboutArticle() {
                   For eligible campus activities, exhibitions, keynote sessions, workshops, debates, and
                   open-participation games.
                 </p>
+                <p className="mt-2 text-xs text-[#7A6B6C] dark:text-[#A8999A] leading-relaxed">
+                  Does not include Hackathon Phase 2, Startup Pitch, QCTF, or 5-day meals (reserved exclusively for the ₹499 Flagship Pass).
+                </p>
               </div>
               <div className="border-t border-[#6C151E]/20 bg-[#6C151E]/[0.04] p-6 sm:border-t-0 sm:border-l dark:border-[#F07A86]/20 dark:bg-[#F07A86]/[0.05]">
                 <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-[#6C151E] dark:text-[#F07A86]">
