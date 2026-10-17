@@ -490,9 +490,6 @@ function LearningDashboardContent() {
                 <span className="font-mono text-xs font-bold text-burgundy dark:text-[#E89BA5] uppercase tracking-wider">
                   Challenge · Day 0{day} · Deadline: 17 October 2026 (11:59 PM IST)
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full font-mono text-[10px] font-bold uppercase tracking-wider bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800/80">
-                  Extended
-                </span>
               </div>
               <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#181313] dark:text-[#FAF6F3] tracking-tight leading-snug">
                 {challenge.title}
@@ -1338,14 +1335,14 @@ function LearningDashboardContent() {
                 Academic Requirements Met
               </span>
               <span className="font-mono text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
-                Payment Details Updating Soon
+                Optional · ₹99
               </span>
             </div>
             <h2 className="font-serif text-base sm:text-lg font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">
               Masterclass Certificate Unlocked
             </h2>
             <p className="text-xs text-slate-600 dark:text-slate-300 font-sans max-w-xl leading-relaxed">
-              You have completed all {totalSessionsCount} video lectures and passed every concept check quiz. Official UPI payment QR and bank transfer details are being updated by the organizing team.
+              You have completed all {totalSessionsCount} video lectures and passed every concept check quiz. Pay the optional ₹99 fee on the SRM-AP Easebuzz form and upload your receipt to claim your verified certificate.
             </p>
           </div>
 

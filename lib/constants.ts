@@ -11,5 +11,8 @@ export const WHATSAPP_COMMUNITY_URL =
 export const HACKATHON_WORKSPACE_URL =
   'https://www.qffsrmap2026.com/learning/hackathon';
 
+// Online competitions and Hackathon Phase 1 close together
+export const ONLINE_SUBMISSIONS_CLOSE_ISO = '2026-10-17T23:59:59+05:30';
+
 export const GOOGLE_FORM_REGISTRATION_URL =
   'https://docs.google.com/forms/d/e/1FAIpQLSfgl8b3sfDfXw38ay6Lwj1a6DUj0uD5oc3xQ24yaClRppvWrg/viewform';

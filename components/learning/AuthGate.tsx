@@ -699,7 +699,7 @@ export function AuthGate({ children, onSessionChange, allowGuest = false }: Auth
             <Lock className="w-6 h-6" />
           </div>
           <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300 font-mono text-[10px] font-bold uppercase tracking-wider mb-2">
-            <span>Deadline Extended: 17 Oct 2026</span>
+            <span>On-Campus Phase: 26–30 Oct 2026</span>
           </div>
           <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight leading-snug">
             Hackathon &amp; Competition Arena

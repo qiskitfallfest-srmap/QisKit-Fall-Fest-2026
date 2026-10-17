@@ -281,10 +281,10 @@ export function ExploreSchedule({ currentPhase = 'offline', onPhaseChange, targe
               {currentPhase === 'online' && (
                 <div className="mt-3.5 inline-flex flex-wrap items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-950 dark:text-amber-200 text-xs">
                   <span className="font-mono font-bold uppercase tracking-wider text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-900 dark:text-amber-300">
-                    Deadline Extended
+                    Deadline
                   </span>
                   <span>
-                    Creative competitions (Tech Reels, Digital Poster, Technical Essay) are open until 17 Oct, 11:59 PM IST.
+                    Creative competitions (Tech Reels, Digital Poster, Technical Essay) close 17 Oct, 11:59 PM IST.
                   </span>
                 </div>
               )}

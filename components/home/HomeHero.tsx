@@ -4,7 +4,12 @@ import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, CalendarDays, MapPin } from 'lucide-react';
-import { REGISTRATION_URL, GOOGLE_FORM_REGISTRATION_URL, HACKATHON_WORKSPACE_URL } from '@/lib/constants';
+import {
+  REGISTRATION_URL,
+  GOOGLE_FORM_REGISTRATION_URL,
+  HACKATHON_WORKSPACE_URL,
+  ONLINE_SUBMISSIONS_CLOSE_ISO,
+} from '@/lib/constants';
 import { trackRegistrationClick, trackEvent } from '@/lib/analytics';
 import { getClientSession } from '@/lib/session-client';
 import { ResponsivePicture } from '@/components/shared/ResponsivePicture';
@@ -60,6 +65,12 @@ const EVENT_META: EventMetaItem[] = [
 export function HomeHero() {
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
   const [participantName, setParticipantName] = React.useState<string | null>(null);
+  // Resolved on the client so a statically rendered page still switches CTAs after the deadline
+  const [onlineClosed, setOnlineClosed] = React.useState(false);
+
+  React.useEffect(() => {
+    setOnlineClosed(Date.now() > Date.parse(ONLINE_SUBMISSIONS_CLOSE_ISO));
+  }, []);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -255,11 +266,16 @@ export function HomeHero() {
             `}
           >
             {isAuthenticated ? (
-              /* Already Registered & Logged-In State: Single prominent CTA into Hackathon Arena */
+              /* Logged-In State: single CTA. Hackathon Arena while online submissions are open, on-campus pass after. */
               <Link
-                href="/learning/hackathon"
+                href={onlineClosed ? '/learning' : '/learning/hackathon'}
                 data-cursor="cta"
-                onClick={() => trackEvent('cta_click', { placement: 'home_hero_arena_auth', target: '/learning/hackathon' })}
+                onClick={() =>
+                  trackEvent('cta_click', {
+                    placement: onlineClosed ? 'home_hero_pass_auth' : 'home_hero_arena_auth',
+                    target: onlineClosed ? '/learning' : '/learning/hackathon',
+                  })
+                }
                 className={`
                   ${styles.registerBtn}
                   group
@@ -295,7 +311,10 @@ export function HomeHero() {
                   className="pointer-events-none absolute right-[9px] top-1/2 -translate-y-1/2 h-[32px] w-[32px] rounded-full bg-[#FFF7F2] transition-transform duration-[320ms] group-hover:duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[22] -z-0"
                 />
                 <span className="relative z-10 font-[650] leading-tight text-left transition-colors duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:text-[#A61629] dark:group-hover:text-[#921426]">
-                  {participantName ? `Welcome back, ${participantName} · Enter Hackathon Arena` : 'Enter Hackathon Arena'}
+                  {(() => {
+                    const label = onlineClosed ? 'Get Your On-Campus Pass' : 'Enter Hackathon Arena';
+                    return participantName ? `Welcome back, ${participantName} · ${label}` : label;
+                  })()}
                 </span>
                 <span
                   aria-hidden="true"
@@ -311,13 +330,17 @@ export function HomeHero() {
             ) : (
               /* Unauthenticated / New Visitor State: Dual CTAs */
               <>
-                {/* Primary CTA: Register For Online Events -> Direct to Google Form */}
+                {/* Primary CTA: Google Form while online events are open; learning portal pass card after */}
                 <a
-                  href={GOOGLE_FORM_REGISTRATION_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={onlineClosed ? REGISTRATION_URL : GOOGLE_FORM_REGISTRATION_URL}
+                  target={onlineClosed ? undefined : '_blank'}
+                  rel={onlineClosed ? undefined : 'noopener noreferrer'}
                   data-cursor="cta"
-                  onClick={() => trackEvent('cta_click', { placement: 'home_hero_register_google_form', target: GOOGLE_FORM_REGISTRATION_URL })}
+                  onClick={() =>
+                    trackEvent('cta_click', onlineClosed
+                      ? { placement: 'home_hero_get_pass', target: REGISTRATION_URL }
+                      : { placement: 'home_hero_register_google_form', target: GOOGLE_FORM_REGISTRATION_URL })
+                  }
                   className={`
                     ${styles.registerBtn}
                     group
@@ -353,7 +376,7 @@ export function HomeHero() {
                     className="pointer-events-none absolute right-[9px] top-1/2 -translate-y-1/2 h-[32px] w-[32px] rounded-full bg-[#FFF7F2] transition-transform duration-[320ms] group-hover:duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[22] -z-0"
                   />
                   <span className="relative z-10 font-[650] leading-tight text-left transition-colors duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:text-[#A61629] dark:group-hover:text-[#921426]">
-                    Register For Online Events
+                    {onlineClosed ? 'Get Your On-Campus Pass' : 'Register For Online Events'}
                   </span>
                   <span
                     aria-hidden="true"

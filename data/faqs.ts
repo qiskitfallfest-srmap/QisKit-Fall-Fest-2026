@@ -98,7 +98,7 @@ export const GENERAL_FAQS: FAQItem[] = [
     number: 2,
     question: 'When will Qiskit Fall Fest 2026 take place?',
     answer:
-      'Online Phase: October 8–13, 2026\nOffline Phase: October 26–30, 2026 at SRM University-AP, Amaravati.',
+      'Online Phase: masterclass sessions on 8–10 October 2026. Online competition and Hackathon Phase 1 submissions close 17 October 2026, 11:59 PM IST.\nHackathon Phase 1 results: announced by 18 October 2026.\nOn-Campus Phase: 26–30 October 2026 at SRM University-AP, Amaravati.',
     category: 'Schedule & Venues',
     section: 'general',
     isTopQuestion: true,
@@ -149,7 +149,7 @@ export const GENERAL_FAQS: FAQItem[] = [
     number: 7,
     question: 'What events are being conducted?',
     answer:
-      'Online competitions (submit via the portal):\n• Tech Reels Competition — 45–90 sec quantum video, prize up to ₹10,000 — deadline 17 Oct (Extended)\n• Digital Poster Creation — infographic on Quantum Materials or Sensing, prize up to ₹5,000 — deadline 17 Oct (Extended)\n• Essay Competition — 800–1,200 words on a quantum topic, prize up to ₹5,000 — deadline 17 Oct (Extended)\n• Flagship Hackathon — Phase 1 online sprint deadline: 17 October 2026\n\nOffline phase (26–30 October at SRM-AP):\n• Quantum Quiddles quiz, QTalk presentations, Guess the QTech, workshops, and the Hackathon Phase 2 finale.',
+      'Online competitions (submit via the portal):\n• Tech Reels Competition — 45–90 sec quantum video, prize up to ₹10,000\n• Digital Poster Creation — infographic on Quantum Materials or Sensing, prize up to ₹5,000\n• Essay Competition — 800–1,200 words on a quantum topic, prize up to ₹5,000\n• Flagship Hackathon Phase 1 — online qualification round, prize pool ₹1,00,000\nAll online submissions close 17 October 2026, 11:59 PM IST.\n\nOn-campus phase (26–30 October at SRM-AP):\n• IBM speakers, keynotes, and hands-on quantum workshops\n• Industry Tech Expo and Quantum Startup Pitch\n• Quantum Hackathon Phase 2 (24 hours, shortlisted teams only)\n• Quantum Capture the Flag (QCTF) and the Great Quantum Debate\n• Open games such as QChess, QEscapes, and the Quantum Arcade\n\nThe full programme is on the About page: https://www.qffsrmap2026.com/about',
     category: 'Events & Competitions',
     section: 'general',
     isTopQuestion: true,
@@ -170,7 +170,7 @@ export const GENERAL_FAQS: FAQItem[] = [
     number: 9,
     question: 'Will participants receive certificates or prizes?',
     answer:
-      'Yes. Participation certificates will be issued after the offline event concludes (post 30 October 2026).\n• Offline participants: collect in person on campus.\n• Online participants: certificates sent via email to your registered Gmail.\n\nPrizes:\n• Tech Reels: up to ₹10,000\n• Essay Competition: up to ₹5,000\n• Digital Poster: up to ₹5,000\n• Hackathon: prizes announced at the closing ceremony on 30 October 2026.',
+      'Yes. Participation certificates will be issued after the on-campus event concludes (post 30 October 2026).\n• On-campus participants: collect in person on campus.\n• Online participants: certificates sent via email to your registered Gmail.\n\nVerified Masterclass Certificate (optional, ₹99): once you finish all 5 masterclasses and pass every concept check quiz, use "Claim Certificate" on the learning portal. You pay on the SRM-AP Easebuzz form, upload the receipt, and choose to collect it at the valedictory ceremony or receive it by email. See FAQ 17 for fee details.\n\nPrizes:\n• Tech Reels: up to ₹10,000\n• Essay Competition: up to ₹5,000\n• Digital Poster: up to ₹5,000\n• Hackathon: prizes announced at the closing ceremony on 30 October 2026.',
     category: 'Certificates & Contact',
     section: 'general',
     isTopQuestion: true,
@@ -213,7 +213,7 @@ export const GENERAL_FAQS: FAQItem[] = [
     number: 13,
     question: 'What topics can I write about for the Essay Competition?',
     answer:
-      'You may choose any of the following:\n• Prompt A: The Post-Quantum Cryptographic Migration — Balancing Vulnerability and Readiness\n• Prompt B: Quantum Machine Learning — Fundamental Advantage vs Classical Baseline Realities\n• Or any quantum computing topic of your own choice\n\nWord limit: 800–1,200 words. Deadline: 17 October 2026, 11:59 PM IST (Extended).\nSubmit a PDF/DOCX (up to 15 MB) or a public Google Docs link on the portal under Day 3: Essay Competition.',
+      'You may choose any of the following:\n• Prompt A: The Post-Quantum Cryptographic Migration — Balancing Vulnerability and Readiness\n• Prompt B: Quantum Machine Learning — Fundamental Advantage vs Classical Baseline Realities\n• Or any quantum computing topic of your own choice\n\nWord limit: 800–1,200 words. Deadline: 17 October 2026, 11:59 PM IST.\nSubmit a PDF/DOCX (up to 15 MB) or a public Google Docs link on the portal under Day 3: Essay Competition.',
     category: 'Events & Competitions',
     section: 'general',
     tags: ['Essay', 'Topics', 'Guidelines'],
@@ -223,7 +223,7 @@ export const GENERAL_FAQS: FAQItem[] = [
     number: 14,
     question: 'Where and when do I submit my Poster and Essay?',
     answer:
-      'Submit on the official portal: https://www.qffsrmap2026.com/learning/\n\n• Essay — Day 3 section → upload PDF/DOCX or paste a public document link\n• Poster — Day 2 section → upload PDF/DOCX or paste a public Canva/Drive link\n• Deadline for both: 17 October 2026, 11:59 PM IST (Extended)\n\nEnsure any shared links are set to “Anyone with the link can view.”',
+      'Submit on the official portal: https://www.qffsrmap2026.com/learning/\n\n• Essay — Day 3 section → upload PDF/DOCX or paste a public document link\n• Poster — Day 2 section → upload PDF/DOCX or paste a public Canva/Drive link\n• Deadline for both: 17 October 2026, 11:59 PM IST\n\nEnsure any shared links are set to “Anyone with the link can view.”',
     category: 'Events & Competitions',
     section: 'general',
     tags: ['Submission', 'Poster', 'Essay', 'Deadlines'],
@@ -254,7 +254,7 @@ export const GENERAL_FAQS: FAQItem[] = [
     number: 17,
     question: 'Is there any registration, certificate, or pass fee?',
     answer:
-      'The online phase is free: masterclasses, concept check quizzes, the creative competitions, and Hackathon Phase 1.\n\nOptional Verified Certificate Fee: \u20b999, only if you want an official, cryptographically verified certificate of completion after finishing the masterclasses and passing the quizzes.\n\nOn-campus phase (26\u201330 October 2026) passes are priced separately:\n\u2022 General Offline Pass \u2014 from \u20b999: eligible campus activities, exhibitions, keynotes, workshops, debates, and open-participation games\n\u2022 All-Access Flagship Pass \u2014 \u20b9499: eligible flagship activities (Hackathon Phase 2, QCTF, Startup Pitch, subject to qualification), lunch on all five days, two snack servings per day, and priority workshop seating\n\nPurchasing a pass does not guarantee selection for competitive events that require separate evaluation.',
+      'The online phase is free: masterclasses, concept check quizzes, the creative competitions, and Hackathon Phase 1.\n\nOptional Verified Certificate Fee: \u20b999, only if you want an official, cryptographically verified certificate of completion after finishing the masterclasses and passing the quizzes. Hackathon participants may also buy it.\n\nOn-campus phase (26\u201330 October 2026) passes are priced separately:\n\u2022 General Offline Pass \u2014 \u20b999: eligible campus activities, exhibitions, keynotes, workshops, debates, and open-participation games\n\u2022 All-Access Flagship Pass \u2014 \u20b9499: for hackathon teams shortlisted for Phase 2. Includes eligible flagship activities (Hackathon Phase 2, QCTF, Startup Pitch, subject to qualification), lunch on all five days, two snack servings per day, and priority workshop seating\n\nThe certificate and the General Offline Pass are both paid on the same SRM-AP Easebuzz form, but they are separate payments. One Easebuzz Transaction ID covers exactly one purchase, so buying both means paying twice and submitting two different Transaction IDs.\n\nPurchasing a pass does not guarantee selection for competitive events that require separate evaluation.',
     category: 'Registration & Fees',
     section: 'general',
     isTopQuestion: true,
@@ -280,6 +280,38 @@ export const GENERAL_FAQS: FAQItem[] = [
     section: 'general',
     isTopQuestion: true,
     tags: ['Hackathon Optional', 'Tracks', 'Competitions', 'Masterclasses'],
+  },
+  {
+    id: 'faq-20',
+    number: 20,
+    question: 'How do I get the ₹99 General Offline Pass for the on-campus phase?',
+    answer:
+      'Get it from the On-Campus Pass card on the learning portal: https://www.qffsrmap2026.com/learning\n\n1. Sign in with Google (new participants complete the 30-second registration first).\n2. Pay ₹99 on the SRM-AP Easebuzz payment form linked from the card.\n3. Enter the Easebuzz Transaction ID exactly as shown on your receipt (e.g. E26101518BKHN3) and upload the receipt as a PDF or screenshot.\n4. Your pass appears immediately with a QR code you can download. Its status shows as pending until the organizing team matches your receipt with Easebuzz records, then changes to verified.\n\nOne pass per attendee. If a pass is rejected, the card shows the reason and lets you resubmit.\n\nHackathon team members: do not buy the General Pass while Phase 1 results are pending. See FAQ 21.',
+    category: 'Registration & Fees',
+    section: 'general',
+    isTopQuestion: true,
+    tags: ['Offline Pass', '₹99', 'Easebuzz', 'QR Code', 'On-Campus'],
+  },
+  {
+    id: 'faq-21',
+    number: 21,
+    question: 'I am in a hackathon team. Which pass do I need, and when are Phase 1 results announced?',
+    answer:
+      'Phase 1 shortlisted teams are announced by 18 October 2026. Your status appears on the Flagship Pass card on the learning portal once results are published.\n\n• Shortlisted for Phase 2: you get the ₹499 All-Access Flagship Pass. Payment instructions are shared with your team by email. Do not buy the ₹99 General Pass.\n• Not shortlisted: you can still attend the festival with the ₹99 General Offline Pass. It opens on the same card once results are announced.\n\nUntil results are published, hackathon leaders and accepted team members cannot claim the General Pass.',
+    category: 'Registration & Fees',
+    section: 'general',
+    isTopQuestion: true,
+    tags: ['Flagship Pass', '₹499', 'Phase 1 Results', 'Shortlist', 'Hackathon'],
+  },
+  {
+    id: 'faq-22',
+    number: 22,
+    question: 'How is my pass checked at the venue, and is accommodation available?',
+    answer:
+      'Show the QR code from your downloaded pass at the campus registration desk when you arrive. The desk scans it to confirm your name, institution, and pass status, then checks you in. Rejected passes cannot be checked in. The pass is valid 26–30 October 2026.\n\nAccommodation: participants travelling to SRM University-AP can stay in paying-guest (PG) accommodation near the campus. The organizing team will help you find and arrange a place, at around ₹500 per person at most. Message the team in the WhatsApp Community to request help:\nhttps://chat.whatsapp.com/HoLFUpcm46L0qDE6VBdboW',
+    category: 'Schedule & Venues',
+    section: 'general',
+    tags: ['Check-In', 'QR Code', 'Accommodation', 'PG', 'Travel'],
   },
 ];
 
@@ -336,11 +368,11 @@ export const TECHNICAL_FAQS: FAQItem[] = [
     number: 5,
     question: 'What is the Phase 1 timeline and submission deadline?',
     answer:
-      'The materials describe the kickoff/course period as Oct 5–8 and online Phase 1 work as Oct 8–13. The participant instructions state that the qualification stage begins Oct 8. The stated submission deadline is Oct 13 at midnight (11:59 PM IST); review is Oct 14–16, and finalists are announced on the night of Oct 17.',
+      'The qualification stage began on 8 October 2026. Phase 1 submissions close on 17 October 2026 at 11:59 PM IST. Shortlisted teams for Phase 2 are announced by 18 October 2026 and shown on the Flagship Pass card on the learning portal. Phase 2 runs on campus at SRM University-AP during 26–30 October 2026.\n\nEarlier materials listed a 13 October deadline; that date was superseded by the 17 October deadline.',
     category: 'General Rules & Phase 1',
     section: 'technical',
     isTopQuestion: true,
-    tags: ['Timeline', 'Deadline', 'Oct 13', 'Finalists'],
+    tags: ['Timeline', 'Deadline', 'Oct 17', 'Results', 'Finalists'],
   },
   {
     id: 'tech-06',

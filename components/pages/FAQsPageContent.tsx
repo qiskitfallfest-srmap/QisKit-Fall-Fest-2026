@@ -94,7 +94,7 @@ export default function FAQsPageContent() {
     setMounted(true);
   }, []);
 
-  // Support direct anchor linking on page mount or hash change (#faq-01..#faq-18, #tech-01..#tech-84)
+  // Support direct anchor linking on page mount or hash change (#faq-01..#faq-22, #tech-01..#tech-84)
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -372,7 +372,7 @@ export default function FAQsPageContent() {
                 custom={0.15}
                 variants={fadeInUpVariant}
               >
-                Explore General Event Rules, Registration &amp; Venue Details, along with complete Technical Hackathon guidelines across all 5 tracks: Quantum Chemistry, Optimization, Simulation, QML, and Post-Quantum Cryptography. All festival events are 100% free to attend, with an optional ₹99 fee for certified credentials.
+                Explore General Event Rules, Registration &amp; Venue Details, along with complete Technical Hackathon guidelines across all 5 tracks: Quantum Chemistry, Optimization, Simulation, QML, and Post-Quantum Cryptography. The online phase is free; the ₹99 verified certificate and the on-campus passes are optional, separate payments.
               </motion.p>
 
               {/* Quick Jump Directory Cards (First Page Card Structure & Sizing) */}
@@ -468,7 +468,7 @@ export default function FAQsPageContent() {
                     <div className={`relative z-10 text-xs font-sans font-semibold mt-0.5 transition-colors duration-300 ${
                       activeSection === 'all' ? 'text-white/90' : 'text-[#6C151E] dark:text-[#F0A2B0] group-hover:text-white'
                     }`}>
-                      102 Total Directory
+                      {FAQS_DATA.length} Total Directory
                     </div>
                   </button>
                 </div>
@@ -499,10 +499,10 @@ export default function FAQsPageContent() {
                   Total Questions
                 </span>
                 <div className="font-serif text-xl sm:text-2xl font-bold text-white leading-tight group-hover:text-white transition-colors">
-                  102 Verified Items
+                  {FAQS_DATA.length} Verified Items
                 </div>
                 <span className="text-xs font-sans text-[#F0E6E3] dark:text-[#C4B9B8] mt-1">
-                  18 General • 84 Technical
+                  {GENERAL_FAQS.length} General • {TECHNICAL_FAQS.length} Technical
                 </span>
               </div>
 
@@ -535,13 +535,13 @@ export default function FAQsPageContent() {
               {/* Metric 4 */}
               <div className="group flex flex-col items-start p-3.5 sm:p-4 rounded-2xl bg-white/12 dark:bg-[#1A060A]/85 border border-white/20 dark:border-[#4A151C] hover:border-white/40 dark:hover:border-[#F0A2B0]/50 backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 shadow-lg">
                 <span className="font-sans text-xs font-bold tracking-widest uppercase text-[#F5DABF] dark:text-[#F0A2B0] mb-1">
-                  Submission Deadline
+                  Phase 1 Deadline
                 </span>
                 <div className="font-serif text-xl sm:text-2xl font-bold text-white leading-tight group-hover:text-white transition-colors">
-                  13 Oct • 11:59 PM
+                  17 Oct • 11:59 PM
                 </div>
                 <span className="text-xs font-sans text-[#F0E6E3] dark:text-[#C4B9B8] mt-1">
-                  Phase 1 Online Sprint Finale
+                  Results by 18 Oct 2026
                 </span>
               </div>
 
@@ -1037,7 +1037,7 @@ export default function FAQsPageContent() {
                                       ₹99 (Certificate Only)
                                     </div>
                                     <p className="text-xs sm:text-sm text-[#16171B]/80 dark:text-[#C4B9B8] mt-1 leading-relaxed">
-                                      Online phase participation is free. The optional ₹99 fee applies only if you request an official, cryptographically verified certificate upon completion. On-campus passes are priced separately.
+                                      Online phase participation is free. The optional ₹99 fee applies only if you request an official, cryptographically verified certificate upon completion, paid on the SRM-AP Easebuzz form. On-campus passes (₹99 General, ₹499 Flagship) are separate payments.
                                     </p>
                                   </div>
                                   <Link

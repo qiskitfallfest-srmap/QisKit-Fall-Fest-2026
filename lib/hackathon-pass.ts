@@ -1,8 +1,9 @@
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { ONLINE_SUBMISSIONS_CLOSE_ISO } from '@/lib/constants';
 
 // Admin-controlled switch: shortlist/reject marks stay hidden from participants until published
 export const RESULTS_CONFIG_KEY = 'hackathon_phase1_results';
-export const PHASE1_DEADLINE_ISO = '2026-10-17T23:59:59+05:30';
+export const PHASE1_DEADLINE_ISO = ONLINE_SUBMISSIONS_CLOSE_ISO;
 export const RESULTS_EXPECTED_LABEL = '18 October 2026';
 
 export type HackathonOutcome = 'pending' | 'shortlisted' | 'not_shortlisted';

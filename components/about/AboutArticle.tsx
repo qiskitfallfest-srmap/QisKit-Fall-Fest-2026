@@ -515,7 +515,6 @@ export function AboutArticle() {
                   General Offline Pass
                 </p>
                 <p className="mt-2 font-serif text-3xl font-bold text-[#201617] dark:text-[#FFF4F1]">
-                  <span className="mr-1.5 font-sans text-sm font-medium text-[#7A6B6C] dark:text-[#A8999A]">from</span>
                   ₹99
                 </p>
                 <p className="mt-4 text-[15px] leading-relaxed">
@@ -539,8 +538,15 @@ export function AboutArticle() {
               </div>
             </div>
             <P className="mt-6">
-              The ₹499 pass is intended for participants who want to spend all five days on campus, engage with
-              the technical programme, experience the expo and workshops, and join the wider festival community.
+              Claim the General Offline Pass from the On-Campus Pass card on the{' '}
+              <a href={REGISTRATION_URL} className="font-medium text-[#6C151E] underline decoration-[#6C151E]/30 underline-offset-4 hover:decoration-[#6C151E] dark:text-[#F07A86] dark:decoration-[#F07A86]/30">
+                learning platform
+              </a>
+              : pay on the SRM-AP Easebuzz form, enter your Transaction ID, and upload the receipt to receive a
+              pass with a QR code for the registration desk. The ₹499 Flagship Pass is for hackathon teams
+              shortlisted for Phase 2 (results by 18 October 2026); those teams receive payment instructions by
+              email. Hackathon teams that are not shortlisted can take the General Offline Pass once results are
+              announced.
             </P>
             <Note>
               Consult the official event instructions for final pass inclusions, activity restrictions, and
@@ -594,11 +600,11 @@ export function AboutArticle() {
           <section id="register" aria-labelledby="register-title" className="scroll-mt-32">
             <SectionHeading {...SECTIONS[5]} />
             <P>
-              Registration has been extended to{' '}
-              <strong className="font-semibold text-[#201617] dark:text-[#FFF4F1]">17 October 2026, 11:59 PM IST</strong>.
-              Students who had difficulty with external registration platforms can register directly on the
-              official learning website and follow the platform instructions to access learning materials and
-              participant workspaces.
+              Online competition and Hackathon Phase 1 submissions close on{' '}
+              <strong className="font-semibold text-[#201617] dark:text-[#FFF4F1]">17 October 2026, 11:59 PM IST</strong>,
+              and Phase 1 results are announced by 18 October 2026. Register directly on the official learning
+              website to access learning materials and participant workspaces, and to claim your on-campus pass
+              for 26–30 October.
             </P>
 
             <div className="mt-10 rounded-xl bg-[#3A0B10] p-6 text-[#F5F3F0] shadow-md sm:p-8 dark:bg-[#1F0609] dark:ring-1 dark:ring-[#F07A86]/20">
