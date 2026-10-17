@@ -10,8 +10,10 @@ import { AdminQuizzesManager } from '@/components/learning/AdminQuizzesManager';
 import { AdminCodingChallengeView } from '@/components/learning/AdminCodingChallengeView';
 import { AdminCompetitionsView } from '@/components/learning/AdminCompetitionsView';
 import { AdminCertificateManager } from '@/components/learning/AdminCertificateManager';
+import { AdminPassManager } from '@/components/learning/AdminPassManager';
 import {
   Shield,
+  Ticket,
   UserPlus,
   Users,
   Search,
@@ -36,7 +38,7 @@ import { extractParticipantsFromCSV, ParsedParticipant } from '@/lib/csv';
 
 export default function AdminConsolePage() {
   const [session, setSession] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'analytics' | 'hackathon' | 'competitions' | 'whitelist' | 'overrides' | 'sessions' | 'quizzes' | 'coding' | 'certificates'>('hackathon');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'hackathon' | 'competitions' | 'whitelist' | 'overrides' | 'sessions' | 'quizzes' | 'coding' | 'certificates' | 'passes'>('hackathon');
 
   const [emails, setEmails] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -475,6 +477,19 @@ export default function AdminConsolePage() {
 
             <button
               type="button"
+              onClick={() => setActiveTab('passes')}
+              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+                activeTab === 'passes'
+                  ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
+                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
+              }`}
+            >
+              <Ticket className="w-4 h-4" />
+              <span>On-Campus Passes (₹99)</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setActiveTab('certificates')}
               className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
                 activeTab === 'certificates'
@@ -499,6 +514,9 @@ export default function AdminConsolePage() {
               <span>System & Release Overrides</span>
             </button>
           </div>
+
+          {/* TAB: ON-CAMPUS PASSES & RECEIPT AUDIT */}
+          {activeTab === 'passes' && <AdminPassManager />}
 
           {/* TAB: CERTIFICATES & UPI QR CONFIGURATION */}
           {activeTab === 'certificates' && <AdminCertificateManager />}

@@ -88,10 +88,14 @@ function onOpen() {
     var ui = SpreadsheetApp.getUi();
     if (ui) {
       ui.createMenu('Qiskit Fall Fest 2026')
+        .addItem('1. Setup "General_Pass_Recipients" Sheet', 'setupGeneralPassRecipientsSheet')
+        .addItem('2. Send Test Pass Email to sahgyan9@gmail.com', 'sendTestGeneralPassEmail')
+        .addItem('3. Start General Pass Email Campaign', 'startGeneralPassEmailCampaign')
+        .addSeparator()
         .addItem('Sync All Unsynced Rows to Portal', 'syncAllUnsyncedRows')
         .addItem('Send Missing Welcome Emails', 'sendMissingWelcomeEmails')
         .addSeparator()
-        .addItem('Send Test Email to sahgyan9@gmail.com', 'testSendToGyan')
+        .addItem('Send Welcome Email Test to sahgyan9@gmail.com', 'testSendToGyan')
         .addToUi();
     }
   } catch (e) {
@@ -724,3 +728,238 @@ function doGet(e) {
     timestamp: new Date().toISOString()
   })).setMimeType(ContentService.MimeType.JSON);
 }
+
+// ============================================================================
+// ON-CAMPUS GENERAL OFFLINE PASS (₹99) EMAIL CAMPAIGN
+// ============================================================================
+
+/**
+ * 1. Automatically creates and formats the 'General_Pass_Recipients' tab.
+ */
+function setupGeneralPassRecipientsSheet() {
+  var ss = getTargetSpreadsheet();
+  if (!ss) {
+    try {
+      SpreadsheetApp.getUi().alert('Could not locate active Google Spreadsheet.');
+    } catch (e) {}
+    return;
+  }
+  
+  var sheet = ss.getSheetByName('General_Pass_Recipients');
+  if (!sheet) {
+    sheet = ss.insertSheet('General_Pass_Recipients');
+    sheet.appendRow([
+      'Email',
+      'Full Name',
+      'Institution',
+      'Phone',
+      'Role',
+      'Pass_Email_Status'
+    ]);
+    sheet.getRange(1, 1, 1, 6).setFontWeight('bold').setBackground('#6C151E').setFontColor('#ffffff');
+    sheet.setFrozenRows(1);
+    SpreadsheetApp.getUi().alert(
+      'Sheet "General_Pass_Recipients" created successfully!\n\n' +
+      'Next Step: Open "C:\\Users\\sahgy\\Downloads\\non_hackathon_pass_recipients.csv", copy the recipient data, and paste it into this sheet. Then click:\n\n' +
+      'Qiskit Fall Fest 2026 -> 3. Start General Pass Email Campaign'
+    );
+  } else {
+    SpreadsheetApp.getUi().alert('Sheet "General_Pass_Recipients" already exists.');
+  }
+}
+
+/**
+ * 2. Dispatches a single test copy of the General Offline Pass email to sahgyan9@gmail.com.
+ */
+function sendTestGeneralPassEmail() {
+  var testEmail = 'sahgyan9@gmail.com';
+  try {
+    sendGeneralPassAnnouncementEmail(testEmail, 'Gyan Kumar Sah (Test Mode)');
+    SpreadsheetApp.getUi().alert('Test pass email successfully dispatched to ' + testEmail + '!\nPlease check your inbox.');
+  } catch (err) {
+    SpreadsheetApp.getUi().alert('Failed to send test email: ' + err.toString());
+  }
+}
+
+/**
+ * 3. Batched campaign dispatcher with safety quota check and deduplication.
+ */
+function startGeneralPassEmailCampaign() {
+  var ss = getTargetSpreadsheet();
+  if (!ss) {
+    SpreadsheetApp.getUi().alert('Could not locate active Google Spreadsheet.');
+    return;
+  }
+  
+  var sheet = ss.getSheetByName('General_Pass_Recipients');
+  if (!sheet) {
+    SpreadsheetApp.getUi().alert('Please run "1. Setup General_Pass_Recipients Sheet" first.');
+    return;
+  }
+  
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) {
+    SpreadsheetApp.getUi().alert('The sheet "General_Pass_Recipients" has no recipient rows. Please paste the recipient data from your Downloads folder first.');
+    return;
+  }
+  
+  var quotaRemaining = MailApp.getRemainingDailyQuota();
+  if (quotaRemaining < 5) {
+    SpreadsheetApp.getUi().alert('Daily Gmail sending quota reached (' + quotaRemaining + ' left). Please try again tomorrow.');
+    return;
+  }
+  
+  var data = sheet.getRange(2, 1, lastRow - 1, 6).getValues();
+  var sentCount = 0;
+  var skippedCount = 0;
+  
+  for (var i = 0; i < data.length; i++) {
+    var rowNum = i + 2;
+    var email = String(data[i][0]).trim().toLowerCase();
+    var name = String(data[i][1]).trim() || 'Participant';
+    var currentStatus = String(data[i][5] || '').trim();
+    
+    if (!email || email.indexOf('@') === -1) {
+      sheet.getRange(rowNum, 6).setValue('SKIPPED (Invalid Email)');
+      continue;
+    }
+    
+    // Deduplication check: Never re-send to anyone already marked SENT
+    if (currentStatus.indexOf('SENT') !== -1) {
+      skippedCount++;
+      continue;
+    }
+    
+    if (MailApp.getRemainingDailyQuota() <= 2) {
+      Logger.log('Quota limit hit during batch. Stopping cleanly.');
+      break;
+    }
+    
+    try {
+      sendGeneralPassAnnouncementEmail(email, name);
+      var timestamp = Utilities.formatDate(new Date(), 'Asia/Kolkata', 'yyyy-MM-dd HH:mm:ss');
+      sheet.getRange(rowNum, 6).setValue('SENT (' + timestamp + ' IST)');
+      sentCount++;
+      Utilities.sleep(1000); // Respect Google Workspace mail rate limit
+    } catch (mailErr) {
+      sheet.getRange(rowNum, 6).setValue('ERROR: ' + mailErr.toString().slice(0, 100));
+    }
+  }
+  
+  var summary = 'Campaign run completed!\n\n' +
+    'Successfully Dispatched: ' + sentCount + '\n' +
+    'Skipped (Already Sent): ' + skippedCount + '\n' +
+    'Daily Quota Remaining: ' + MailApp.getRemainingDailyQuota();
+  
+  Logger.log(summary);
+  SpreadsheetApp.getUi().alert(summary);
+}
+
+/**
+ * 4. Master HTML email builder and dispatcher for the General Offline Pass (₹99).
+ * Exact visual synchronization with the official registration email template.
+ */
+function sendGeneralPassAnnouncementEmail(recipientEmail, participantName) {
+  var subject = 'IBM Qiskit Fall Fest 2026 — On-Campus Attendance Pass (26–30 Oct)';
+  
+  var htmlBody = '<!DOCTYPE html>'
+    + '<html lang="en" xmlns="http://www.w3.org/1999/xhtml">'
+    + '<head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0">'
+    + '<style type="text/css">body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; } table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; } img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; } body { margin: 0; padding: 0; width: 100% !important; background-color: #f5efea; }</style>'
+    + '</head>'
+    + '<body style="margin:0;padding:24px 12px;background-color:#f5efea;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Helvetica,Arial,sans-serif;color:#231f20;line-height:1.65;">'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:680px;margin:0 auto;background-color:#ffffff;border:1px solid #e4dacb;border-radius:12px;overflow:hidden;box-shadow:0 4px 18px rgba(124,20,21,0.06);">'
+    + '<tr><td style="padding:0;background-color:#faf7f2;text-align:center;">'
+    + '<img src="https://www.qffsrmap2026.com/brand/qiskit-fall-fest-banner.png" alt="IBM Qiskit Fall Fest 2026 — Partner Plus Host at SRM University-AP" width="680" style="display:block;width:100%;max-width:680px;height:auto;border:0;outline:none;">'
+    + '</td></tr>'
+    + '<tr><td style="background-color:#7c1415;padding:10px 24px;text-align:center;">'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr>'
+    + '<td style="font-family:\'Georgia\',\'Times New Roman\',serif;font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:#fdf8f0;font-weight:bold;text-align:center;">'
+    + 'IBM PARTNER PLUS · SRM UNIVERSITY-AP · ON-CAMPUS PASS REGISTRATION'
+    + '</td></tr></table></td></tr>'
+    + '<tr><td style="padding:32px 36px 36px 36px;">'
+    + '<p style="margin:0 0 16px 0;font-size:16px;color:#231f20;font-weight:bold;">Dear ' + participantName + ',</p>'
+    + '<p style="margin:0 0 14px 0;font-size:15px;color:#3d3635;line-height:1.7;">'
+    + 'The online masterclasses, quizzes, and competition submissions for <strong>Partner Plus IBM Qiskit Fall Fest 2026 at SRM University-AP</strong> are concluding.'
+    + '</p>'
+    + '<p style="margin:0 0 24px 0;font-size:15px;color:#3d3635;line-height:1.7;">'
+    + 'We are now preparing for the flagship physical on-campus festival, taking place from <strong>Monday, 26 October through Friday, 30 October 2026</strong> at SRM University-AP. To attend keynote sessions by IBM Quantum researchers, hands-on masterclasses, the Industry Tech Expo, and student networking arenas, attendees can now secure their <strong>General Offline Pass (&#8377;99)</strong>.'
+    + '</p>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#fcf9f4;border:1px solid #dfcfb9;border-top:4px solid #7c1415;border-radius:8px;margin:24px 0 28px 0;"><tr>'
+    + '<td style="padding:26px 24px;text-align:center;">'
+    + '<div style="display:inline-block;background-color:#faefe0;border:1px solid #d9be97;border-radius:4px;padding:4px 12px;font-size:11px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase;color:#7c1415;margin-bottom:12px;">Official On-Campus Attendance Pass</div>'
+    + '<h2 style="margin:0 0 8px 0;font-family:\'Georgia\',\'Times New Roman\',serif;font-size:22px;color:#7c1415;font-weight:bold;line-height:1.3;">Claim Your General Offline Pass — &#8377;99</h2>'
+    + '<p style="margin:0 0 6px 0;font-size:14px;color:#554c4a;">5 Full Days of Campus Access · Keynotes · Technical Workshops · Industry Tech Expo · Arcade</p>'
+    + '<p style="margin:0 0 20px 0;font-size:14px;color:#7c1415;font-weight:bold;">Festival Dates: 26–30 October 2026 · Main Campus, SRM University-AP</p>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr>'
+    + '<td align="center" style="border-radius:6px;background-color:#7c1415;">'
+    + '<a href="https://forms.easebuzz.in/register/SRMAPIA9oJ/QiskitFallFestSRMAP2026" target="_blank" style="display:inline-block;padding:14px 28px;font-size:14px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:6px;letter-spacing:0.8px;text-transform:uppercase;border:1px solid #630e10;">Pay &#8377;99 on University Gateway &rarr;</a>'
+    + '</td></tr></table>'
+    + '<p style="margin:16px 0 0 0;font-size:12px;color:#7d726e;">Direct Gateway link: <a href="https://forms.easebuzz.in/register/SRMAPIA9oJ/QiskitFallFestSRMAP2026" style="color:#7c1415;text-decoration:underline;">SRM University-AP Easebuzz Payment Portal</a></p>'
+    + '</td></tr></table>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#fbf7ef;border-left:4px solid #b97e3e;border-radius:0 6px 6px 0;margin:0 0 32px 0;"><tr>'
+    + '<td style="padding:14px 18px;font-size:13.5px;color:#4f443b;line-height:1.6;">'
+    + '<strong style="color:#7c1415;">Important Scope Notice:</strong> This pass provides comprehensive access to general festival events, keynote sessions, and open workshops. It does not include catering/lunch packages or entry into the competitive Hackathon Phase 2 sprint (which requires Phase 1 qualification). Hackathon Phase 1 participants will receive separate instructions following Phase 1 evaluation.'
+    + '</td></tr></table>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:28px 0 24px 0;"><tr><td style="border-bottom:1px solid #ebd9c2;"></td></tr></table>'
+    + '<h2 style="margin:0 0 6px 0;font-family:\'Georgia\',\'Times New Roman\',serif;font-size:21px;color:#7c1415;font-weight:bold;">What Your General Pass (&#8377;99) Unlocks</h2>'
+    + '<div style="width:40px;height:2px;background-color:#b97e3e;margin-bottom:18px;"></div>'
+    + '<p style="margin:0 0 16px 0;font-size:14.5px;color:#4f4645;line-height:1.65;">The &#8377;99 General Offline Pass enables full in-person participation across five days of quantum science, industry exhibits, and interactive challenges:</p>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 26px 0;">'
+    + '<tr><td width="50%" valign="top" style="padding:0 8px 12px 0;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#faf7f2;border:1px solid #e7dcce;border-radius:8px;padding:14px 16px;"><tr><td>'
+    + '<div style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#b97e3e;margin-bottom:4px;">Campus Access</div>'
+    + '<div style="font-size:14.5px;font-weight:bold;color:#231f20;margin-bottom:6px;">5 Full Festival Days</div>'
+    + '<div style="font-size:13.5px;color:#554c4a;line-height:1.5;">Access to all open festival venues and exhibition zones at SRM University-AP (26–30 Oct).</div>'
+    + '</td></tr></table></td>'
+    + '<td width="50%" valign="top" style="padding:0 0 12px 8px;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#faf7f2;border:1px solid #e7dcce;border-radius:8px;padding:14px 16px;"><tr><td>'
+    + '<div style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#b97e3e;margin-bottom:4px;">Technical Learning</div>'
+    + '<div style="font-size:14.5px;font-weight:bold;color:#231f20;margin-bottom:6px;">IBM Keynotes &amp; Workshops</div>'
+    + '<div style="font-size:13.5px;color:#554c4a;line-height:1.5;">Distinguished research talks by IBM Quantum scientists and hands-on masterclasses.</div>'
+    + '</td></tr></table></td></tr>'
+    + '<tr><td width="50%" valign="top" style="padding:0 8px 0 0;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#faf7f2;border:1px solid #e7dcce;border-radius:8px;padding:14px 16px;"><tr><td>'
+    + '<div style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#b97e3e;margin-bottom:4px;">Ecosystem &amp; Innovation</div>'
+    + '<div style="font-size:14.5px;font-weight:bold;color:#231f20;margin-bottom:6px;">Industry Tech Expo</div>'
+    + '<div style="font-size:13.5px;color:#554c4a;line-height:1.5;">Quantum Startup Pitch showcase, hardware demos, and expert networking.</div>'
+    + '</td></tr></table></td>'
+    + '<td width="50%" valign="top" style="padding:0 0 0 8px;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#faf7f2;border:1px solid #e7dcce;border-radius:8px;padding:14px 16px;"><tr><td>'
+    + '<div style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#b97e3e;margin-bottom:4px;">Interactive Arena</div>'
+    + '<div style="font-size:14.5px;font-weight:bold;color:#231f20;margin-bottom:6px;">Games &amp; Quantum Debate</div>'
+    + '<div style="font-size:13.5px;color:#554c4a;line-height:1.5;">QChess, QEscapes, The Great Quantum Debate, and official certificate of attendance.</div>'
+    + '</td></tr></table></td></tr></table>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 28px 0;"><tr><td style="border-bottom:1px solid #ebd9c2;"></td></tr></table>'
+    + '<h2 style="margin:0 0 6px 0;font-family:\'Georgia\',\'Times New Roman\',serif;font-size:21px;color:#7c1415;font-weight:bold;">How to Claim Your Digital Gate Badge</h2>'
+    + '<div style="width:40px;height:2px;background-color:#b97e3e;margin-bottom:16px;"></div>'
+    + '<p style="margin:0 0 14px 0;font-size:14.5px;color:#4f4645;line-height:1.65;">Because pass fees are processed through SRM University-AP&apos;s central gateway, follow these steps to instantly pair your payment with your attendee profile and receive your digital badge:</p>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#faf7f2;border:1px solid #e7dcce;border-radius:8px;padding:18px 20px;margin:0 0 32px 0;">'
+    + '<tr><td style="font-size:13px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#b97e3e;padding-bottom:12px;">Pass Issuance Protocol</td></tr>'
+    + '<tr><td style="padding:6px 0;font-size:14px;color:#3d3635;line-height:1.6;"><strong style="color:#7c1415;">Step 1:</strong> Complete the &#8377;99 fee on the central <a href="https://forms.easebuzz.in/register/SRMAPIA9oJ/QiskitFallFestSRMAP2026" target="_blank" style="color:#7c1415;font-weight:bold;">Easebuzz Payment Portal</a>. Download your PDF receipt upon payment success.</td></tr>'
+    + '<tr><td style="padding:6px 0;font-size:14px;color:#3d3635;line-height:1.6;"><strong style="color:#7c1415;">Step 2:</strong> Visit <a href="https://www.qffsrmap2026.com/learning" target="_blank" style="color:#7c1415;font-weight:bold;">qffsrmap2026.com/learning</a> and sign in with Google.</td></tr>'
+    + '<tr><td style="padding:6px 0;font-size:14px;color:#3d3635;line-height:1.6;"><strong style="color:#7c1415;">Step 3:</strong> At the top of your dashboard, upload your downloaded Easebuzz receipt (PDF or screenshot) and confirm your <strong>Easebuzz Transaction ID</strong> (shown on line 4 of your receipt, e.g. <code>E26101518BKHN3</code>).</td></tr>'
+    + '<tr><td style="padding:6px 0;font-size:14px;color:#3d3635;line-height:1.6;"><strong style="color:#7c1415;">Step 4:</strong> Your <strong>Official Digital Gate Pass with Security QR Code</strong> will be generated immediately. Click <strong>&quot;Download Pass (PNG)&quot;</strong> to save it to your phone gallery for fast-track entry at the campus gate.</td></tr></table>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#fcf9f5;border:1px solid #e4dacb;border-radius:8px;padding:18px 20px;margin:0 0 32px 0;"><tr><td>'
+    + '<div style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#b97e3e;margin-bottom:4px;">Accommodation Assistance</div>'
+    + '<h3 style="margin:0 0 6px 0;font-size:16px;color:#231f20;font-weight:bold;">Travelling from Outside Vijayawada / Guntur?</h3>'
+    + '<p style="margin:0;font-size:14px;color:#4f4645;line-height:1.6;">Participants traveling to SRM University-AP can stay in verified paying-guest (PG) accommodation near the campus. The organizing team will assist you in arranging a place at approximately <strong>&#8377;500 per person</strong>. Please coordinate with the team in our official WhatsApp Community.</p>'
+    + '</td></tr></table>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#fbf7ef;border:1px solid #e1d3bf;border-radius:8px;padding:20px;margin:0 0 32px 0;"><tr><td>'
+    + '<h3 style="margin:0 0 6px 0;font-size:16px;color:#7c1415;font-weight:bold;">Official Participant Support &amp; Updates</h3>'
+    + '<p style="margin:0 0 14px 0;font-size:14px;color:#4f443b;line-height:1.6;">Join our verified WhatsApp Community for live festival announcements, speaker schedules, campus directions, and direct coordinator contact:</p>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="background-color:#2a6a43;border-radius:6px;">'
+    + '<a href="https://chat.whatsapp.com/HoLFUpcm46L0qDE6VBdboW" target="_blank" style="display:inline-block;padding:11px 22px;font-size:13.5px;font-weight:bold;color:#ffffff;text-decoration:none;">Join Official WhatsApp Community &rarr;</a>'
+    + '</td></tr></table></td></tr></table>'
+    + '<p style="margin:0 0 14px 0;font-size:14.5px;color:#3d3635;line-height:1.7;">We look forward to welcoming you to the SRM University-AP campus for five days of deep-tech exploration, industry networking, and quantum computation.</p>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0 10px 0;"><tr><td style="border-left:3px solid #7c1415;padding-left:14px;">'
+    + '<p style="margin:0;font-size:14.5px;color:#231f20;line-height:1.5;">Best regards,<br><strong>Organizing Committee</strong><br>IBM Qiskit Fall Fest 2026<br>Department of Physics &amp; School of Engineering and Sciences<br>SRM University-AP</p>'
+    + '</td></tr></table></td></tr>'
+    + '<tr><td style="background-color:#faf7f2;border-top:1px solid #ebd9c2;padding:22px 36px;text-align:center;">'
+    + '<p style="margin:0 0 8px 0;font-family:\'Georgia\',\'Times New Roman\',serif;font-size:13px;color:#7c1415;font-weight:bold;">Partner Plus IBM Qiskit Fall Fest 2026</p>'
+    + '<p style="margin:0 0 10px 0;font-size:12px;color:#6b625b;">SRM University-AP, Neerukonda, Mangalagiri Mandal, Andhra Pradesh 522240</p>'
+    + '<p style="margin:0;font-size:12px;color:#857a73;">Learning Portal: <a href="https://www.qffsrmap2026.com/learning" target="_blank" style="color:#7c1415;text-decoration:underline;">qffsrmap2026.com/learning</a> &nbsp;·&nbsp; Festival Schedule: <a href="https://www.qffsrmap2026.com/schedule" target="_blank" style="color:#7c1415;text-decoration:underline;">qffsrmap2026.com/schedule</a> &nbsp;·&nbsp; Contact: <a href="mailto:qiskitfallfest@srmap.edu.in" style="color:#7c1415;text-decoration:underline;">qiskitfallfest@srmap.edu.in</a></p>'
+    + '</td></tr></table></body></html>';
+
+  GmailApp.sendEmail(recipientEmail, subject, 'Please view this email in an HTML-compatible client.', {
+    htmlBody: htmlBody,
+    name: 'Qiskit Fall Fest 2026'
+  });
+}
+

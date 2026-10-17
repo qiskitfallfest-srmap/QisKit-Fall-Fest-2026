@@ -10,6 +10,7 @@ import { CURRICULUM_SESSIONS, ONLINE_PROGRAMME_SCHEDULE } from '@/data/learning/
 import { SESSION_TRANSCRIPTS } from '@/data/learning/transcripts';
 import { DAILY_COMPETITIONS } from '@/data/learning/competitions';
 import { DeadlineExtensionBanner } from '@/components/learning/DeadlineExtensionBanner';
+import { OnCampusPassCard } from '@/components/learning/OnCampusPassCard';
 import { useCurriculumSessions } from '@/hooks/use-curriculum-sessions';
 import { useQuizzes } from '@/hooks/use-quizzes';
 import {
@@ -1179,6 +1180,19 @@ function LearningDashboardContent() {
 
       {/* Official Deadline Extension Announcement Banner */}
       <DeadlineExtensionBanner />
+
+      {/* On-Campus Festival Pass Hero Card (26–30 October 2026) */}
+      <OnCampusPassCard />
+
+      {/* Section Divider: Online Arenas & Competition Tracks */}
+      <div className="pt-2 flex items-center justify-between border-t border-slate-200 dark:border-[#3D1418]">
+        <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          Online Competition Arenas &amp; Masterclasses
+        </h2>
+        <span className="font-mono text-[11px] text-slate-400">
+          Phase 1 Window
+        </span>
+      </div>
 
       {/* Flagship Hackathon Feature Card */}
       <div className="p-5 sm:p-6 bg-white dark:bg-[#150709] border-2 border-burgundy/40 dark:border-burgundy/60 rounded-xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
