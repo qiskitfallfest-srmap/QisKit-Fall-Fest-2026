@@ -9,7 +9,8 @@
 -- tables now go through Next.js API routes (app/api/hackathon/*,
 -- app/api/admin/*, app/api/pass/*, app/api/user/profile) that check
 -- getServerSession() and use supabaseAdmin. The browser no longer queries or
--- subscribes (Realtime) to these tables.
+-- subscribes (Realtime) to these tables. anon/authenticated also held direct
+-- table grants including TRUNCATE (not covered by RLS); those are revoked.
 --
 -- PREREQUISITE: SUPABASE_SERVICE_ROLE_KEY must be set in the deployment
 -- environment before this migration is applied. lib/supabase-admin.ts falls
@@ -49,3 +50,26 @@ USING (true)
 WITH CHECK (true);
 
 REVOKE ALL ON public.team_members FROM anon, authenticated;
+
+-- ============================================================================
+-- Realtime
+-- ============================================================================
+-- Both tables were in the supabase_realtime publication, so any anon client
+-- could subscribe to postgres_changes and receive every roster change. No
+-- client subscribes to them any more; remove them from the publication.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'hackathon_teams'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime DROP TABLE public.hackathon_teams;
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'team_members'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime DROP TABLE public.team_members;
+  END IF;
+END $$;
