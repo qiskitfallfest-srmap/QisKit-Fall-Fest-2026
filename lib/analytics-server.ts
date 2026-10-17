@@ -1,5 +1,4 @@
 import { redis, cacheAside, CACHE_TTL, invalidateCache } from './redis';
-import { supabase } from './supabase';
 import { supabaseAdmin } from './supabase-admin';
 
 export interface AnalyticsEventPayload {
@@ -106,13 +105,6 @@ const DEFAULT_METRICS: StoredAnalyticsData = {
 // In-memory local fallback in case database query fails
 let localMemoryStore: StoredAnalyticsData = { ...DEFAULT_METRICS };
 
-function getDbClient() {
-  if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return supabaseAdmin;
-  }
-  return supabase;
-}
-
 function parseDeviceType(userAgent?: string): 'desktop' | 'mobile' | 'tablet' | 'other' {
   if (!userAgent) return 'desktop';
   const ua = userAgent.toLowerCase();
@@ -144,7 +136,7 @@ function normalizePath(rawPath?: string): string {
  */
 async function fetchPersistentMetrics(): Promise<StoredAnalyticsData> {
   try {
-    const db = getDbClient();
+    const db = supabaseAdmin;
     const { data, error } = await db
       .from('platform_config')
       .select('value')
@@ -182,7 +174,7 @@ async function fetchPersistentMetrics(): Promise<StoredAnalyticsData> {
 async function savePersistentMetrics(metrics: StoredAnalyticsData): Promise<void> {
   localMemoryStore = metrics;
   try {
-    const db = getDbClient();
+    const db = supabaseAdmin;
     await db.from('platform_config').upsert({
       key: 'analytics_metrics',
       value: metrics,
@@ -313,7 +305,7 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
     let certificatesIssued = 0;
 
     try {
-      const db = getDbClient();
+      const db = supabaseAdmin;
       const [userRes, teamRes, compRes, certRes] = await Promise.all([
         db.from('allowed_emails').select('*', { count: 'exact', head: true }),
         db.from('hackathon_teams').select('*', { count: 'exact', head: true }),

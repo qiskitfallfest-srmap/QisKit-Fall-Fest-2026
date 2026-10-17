@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { redis, invalidateEmailCache, CACHE_TTL } from '@/lib/redis';
 import { logError, logInfo, logWarn, serializeError } from '@/lib/logger';
 
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       }
 
       // 1. Insert into public.registrations
-      const { error: regError } = await supabase
+      const { error: regError } = await supabaseAdmin
         .from('registrations')
         .insert({
           name: fullName,
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
 
       // 2. Upsert each email into public.allowed_emails
       for (const emailToWhitelist of emailsToWhitelist) {
-        const { error: whitelistError } = await supabase
+        const { error: whitelistError } = await supabaseAdmin
           .from('allowed_emails')
           .upsert(
             {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { redis, invalidateEmailCache } from '@/lib/redis';
 import { SUPER_ADMIN_EMAILS } from '@/lib/auth';
 import { logError, logInfo, logWarn, serializeError } from '@/lib/logger';
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 1. Insert or update record in public.registrations
-    const { error: regError } = await supabase
+    const { error: regError } = await supabaseAdmin
       .from('registrations')
       .insert({
         name: fullName,
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     const isSuperAdmin = SUPER_ADMIN_EMAILS.includes(email);
     const assignedRole = isSuperAdmin ? 'admin' : 'participant';
 
-    const { error: whitelistError } = await supabase
+    const { error: whitelistError } = await supabaseAdmin
       .from('allowed_emails')
       .upsert(
         {

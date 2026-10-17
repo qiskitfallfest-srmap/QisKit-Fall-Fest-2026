@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabaseAdmin } from './supabase-admin';
 
 /**
  * Helper to fetch the mapping of participant email -> university / institution.
@@ -6,7 +6,7 @@ import { supabase } from './supabase';
  */
 export async function getParticipantUniversitiesMap(): Promise<Record<string, string>> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('platform_config')
       .select('value')
       .eq('key', 'participant_universities')
@@ -69,7 +69,7 @@ export async function saveParticipantUniversities(
 
   try {
     // 1. Save to platform_config
-    const { error: configError } = await supabase
+    const { error: configError } = await supabaseAdmin
       .from('platform_config')
       .upsert({
         key: 'participant_universities',
@@ -88,7 +88,7 @@ export async function saveParticipantUniversities(
       const cleanName = entry.fullName?.trim() || cleanEmail.split('@')[0];
 
       try {
-        await supabase
+        await supabaseAdmin
           .from('registrations')
           .upsert(
             {

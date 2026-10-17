@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabaseAdmin } from './supabase-admin';
 
 export interface FinalizedTeamInfo {
   finalized_at: string;
@@ -10,7 +10,7 @@ export interface FinalizedTeamInfo {
  */
 export async function getFinalizedTeamsMap(): Promise<Record<string, FinalizedTeamInfo>> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('platform_config')
       .select('value')
       .eq('key', 'finalized_teams')
@@ -60,7 +60,7 @@ export async function setTeamFinalized(teamId: string, finalizedBy: string): Pro
     finalized_by: finalizedBy || 'leader',
   };
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('platform_config')
     .upsert({
       key: 'finalized_teams',
