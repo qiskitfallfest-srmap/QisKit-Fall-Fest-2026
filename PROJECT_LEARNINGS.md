@@ -233,5 +233,19 @@ sahgyan9/Qiskit-Fall-Fest-SRMAP-2026 (PLANNING REPO)
 2. **Cognitive Restraint via Hackathon Workspace Landing**:
    - Welcome pass emails and "Enter Arena" CTAs route directly to `/learning/hackathon` rather than the general `/learning` curriculum hub. This eliminates initial cognitive overload from the 5-session curriculum syllabus, transcripts, and quiz cards, landing participants directly in their active hackathon workspace (team formation, roster management, problem statements, and repo submissions). Secondary tracks (Masterclasses, Coding Challenges, Creative Tracks) remain instantly accessible via the top navigation and sidebar.
 
+---
+
+### GT-33: Google Apps Script Dual Container (Form vs. Sheet) Context Resilience & Batch Recovery Protocol
+1. **Root Cause Analysis (`getActiveSheet` on `null`)**:
+   - When Google Apps Script is bound to a Google Form or when a trigger is created from event source "From form", the execution container is `FormApp.getActiveForm()`. In this container, `SpreadsheetApp.getActiveSpreadsheet()` strictly returns `null`, and the trigger event object passes `e.response` (`FormResponse`) rather than `e.range`.
+   - Invoking `SpreadsheetApp.getActiveSpreadsheet().getActiveSheet()` within `onFormSubmit(e)` under a form trigger throws `TypeError: Cannot read properties of null (reading 'getActiveSheet')`, preventing the webhook POST to the website and stopping email dispatch.
+2. **Dual-Container Resolution Architecture (`tools/google_form_webhook.gs`)**:
+   - **Spreadsheet Trigger (`e.range` present)**: Resolved directly via `e.range.getSheet()` and `e.range.getRow()`.
+   - **Form Trigger (`e.response` present)**: Extracts participant responses directly from `FormResponse.getItemResponses()` and `getRespondentEmail()`. Dispatches HTTP POST to the portal webhook and sends the confirmation email immediately, eliminating any failure dependency on spreadsheet access.
+   - **Resilient Spreadsheet Finder (`getTargetSpreadsheet()`)**: Cascades through (1) `SpreadsheetApp.getActiveSpreadsheet()`, (2) explicit fallback `SPREADSHEET_ID_OR_URL`, and (3) `FormApp.getActiveForm().getDestinationId()`.
+3. **One-Click Batch Recovery**:
+   - Both `syncAllUnsyncedRows()` (for Google Sheets) and `syncAllFormResponses()` (for Google Forms) iterate through historical records, synchronizing unsynced attendees to Supabase/Redis and dispatching missing welcome emails with polite rate-limiting (`Utilities.sleep(300)`).
+
+
 
 
