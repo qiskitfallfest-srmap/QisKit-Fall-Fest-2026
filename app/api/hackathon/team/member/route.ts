@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { logWarn } from '@/lib/logger';
 import { isEmailWhitelisted, invalidateHackathonTeamCache, invalidateEmailCache } from '@/lib/redis';
 import { isTeamFinalized } from '@/lib/finalized-teams';
@@ -9,7 +9,7 @@ import { saveParticipantUniversities } from '@/lib/participant-universities';
 // Helper to invalidate all team member caches
 async function invalidateAllTeamCaches(teamId: string, additionalEmail?: string) {
   try {
-    const { data: members } = await supabase
+    const { data: members } = await supabaseAdmin
       .from('team_members')
       .select('email')
       .eq('team_id', teamId);
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Verify caller is authorized (must be leader or accepted member of this team)
-    const { data: callerMembership } = await supabase
+    const { data: callerMembership } = await supabaseAdmin
       .from('team_members')
       .select('role, status')
       .ilike('email', session.email)
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 3. Check current team member count (Max 6 active/pending members)
-    const { data: currentMembers } = await supabase
+    const { data: currentMembers } = await supabaseAdmin
       .from('team_members')
       .select('id, email, status')
       .eq('team_id', teamId)
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. Check if email already has a record in THIS team
-    const { data: existingInThisTeam } = await supabase
+    const { data: existingInThisTeam } = await supabaseAdmin
       .from('team_members')
       .select('id, email, status')
       .ilike('email', trimmedEmail)
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
     if (existingInThisTeam) {
       // If they were previously declined, re-invite them seamlessly!
       if (existingInThisTeam.status === 'declined') {
-        const { data: resurrected, error: resurrectErr } = await supabase
+        const { data: resurrected, error: resurrectErr } = await supabaseAdmin
           .from('team_members')
           .update({
             status: 'invited',
@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 6. Verify teammate is not already registered in another active team
-    const { data: activeTeam } = await supabase
+    const { data: activeTeam } = await supabaseAdmin
       .from('team_members')
       .select('team_id, hackathon_teams(name)')
       .ilike('email', trimmedEmail)
@@ -168,14 +168,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Clean up any stale declined row for this email across any team to avoid unique constraint collisions
-    await supabase
+    await supabaseAdmin
       .from('team_members')
       .delete()
       .ilike('email', trimmedEmail)
       .eq('status', 'declined');
 
     // 7. Insert new invited member
-    const { data: newMember, error: insertError } = await supabase
+    const { data: newMember, error: insertError } = await supabaseAdmin
       .from('team_members')
       .insert({
         team_id: teamId,
@@ -258,7 +258,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // 2. Fetch member to be removed
-    const { data: targetMember } = await supabase
+    const { data: targetMember } = await supabaseAdmin
       .from('team_members')
       .select('id, team_id, email, role, status')
       .eq('id', memberId)
@@ -281,7 +281,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // 3. Verify caller is team leader, admin, or the member leaving themselves
-    const { data: callerEntry } = await supabase
+    const { data: callerEntry } = await supabaseAdmin
       .from('team_members')
       .select('role, status')
       .ilike('email', session.email)
@@ -301,7 +301,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // 4. Delete the member record (leader can freely remove anyone before finalization)
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await supabaseAdmin
       .from('team_members')
       .delete()
       .eq('id', memberId);
@@ -356,7 +356,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // 2. Verify caller is team leader, admin, or accepted member
-    const { data: callerEntry } = await supabase
+    const { data: callerEntry } = await supabaseAdmin
       .from('team_members')
       .select('role, status')
       .ilike('email', session.email)
@@ -375,7 +375,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // 3. Fetch target member
-    const { data: targetMember } = await supabase
+    const { data: targetMember } = await supabaseAdmin
       .from('team_members')
       .select('*')
       .eq('id', memberId)
@@ -387,7 +387,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     if (action === 'resend') {
-      const { data: updated, error: updateErr } = await supabase
+      const { data: updated, error: updateErr } = await supabaseAdmin
         .from('team_members')
         .update({
           invited_at: new Date().toISOString(),

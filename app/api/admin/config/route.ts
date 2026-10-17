@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import {
   cacheAside,
   CACHE_TTL,
@@ -19,14 +19,14 @@ export async function GET() {
       'admin:config_and_stats',
       CACHE_TTL.ADMIN_STATS,
       async () => {
-        const { data: configs } = await supabase.from('platform_config').select('*');
-        const { count: userCount } = await supabase
+        const { data: configs } = await supabaseAdmin.from('platform_config').select('*');
+        const { count: userCount } = await supabaseAdmin
           .from('allowed_emails')
           .select('*', { count: 'exact', head: true });
-        const { count: teamCount } = await supabase
+        const { count: teamCount } = await supabaseAdmin
           .from('hackathon_teams')
           .select('*', { count: 'exact', head: true });
-        const { count: subCount } = await supabase
+        const { count: subCount } = await supabaseAdmin
           .from('competition_submissions')
           .select('*', { count: 'exact', head: true });
 
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'key and value are required' }, { status: 400 });
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('platform_config')
       .upsert({ key, value, updated_at: new Date().toISOString() })
       .select()

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { isTeamFinalized, setTeamFinalized } from '@/lib/finalized-teams';
 import { invalidateHackathonTeamCache, invalidateEmailCache } from '@/lib/redis';
 
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 1. Verify caller is the leader of this team
-    const { data: callerEntry } = await supabase
+    const { data: callerEntry } = await supabaseAdmin
       .from('team_members')
       .select('team_id, role, status')
       .ilike('email', session.email)
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     // 3. Count confirmed (accepted) members
     // Teammates must accept before they count!
-    const { data: allMembers } = await supabase
+    const { data: allMembers } = await supabaseAdmin
       .from('team_members')
       .select('id, email, role, status')
       .eq('team_id', teamId);

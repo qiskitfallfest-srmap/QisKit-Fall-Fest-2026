@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { logWarn } from '@/lib/logger';
 import {
   isEmailWhitelisted,
@@ -23,7 +23,7 @@ export async function GET() {
   try {
     const data = await getHackathonTeamCached(session.email, async () => {
       // 1. Check if user is a member of an active team (leader or accepted member)
-      const { data: memberEntry } = await supabase
+      const { data: memberEntry } = await supabaseAdmin
         .from('team_members')
         .select('team_id, role, status')
         .ilike('email', session.email)
@@ -35,14 +35,14 @@ export async function GET() {
 
       if (memberEntry) {
         // Fetch full team with all members
-        const { data: teamData } = await supabase
+        const { data: teamData } = await supabaseAdmin
           .from('hackathon_teams')
           .select('*')
           .eq('id', memberEntry.team_id)
           .maybeSingle();
 
         if (teamData) {
-          const { data: allMembers } = await supabase
+          const { data: allMembers } = await supabaseAdmin
             .from('team_members')
             .select('*')
             .eq('team_id', memberEntry.team_id)
@@ -78,7 +78,7 @@ export async function GET() {
       }
 
       // 2. Also check if user has any pending invitations from OTHER teams
-      const { data: invites } = await supabase
+      const { data: invites } = await supabaseAdmin
         .from('team_members')
         .select('id, team_id, invited_at, hackathon_teams(name, vertical, problem_statement_id, lead_name, lead_email)')
         .ilike('email', session.email)
@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 1. Check if user is already in a team
-    const { data: existingUserMember } = await supabase
+    const { data: existingUserMember } = await supabaseAdmin
       .from('team_members')
       .select('team_id, status')
       .ilike('email', session.email)
@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Check if team name already exists
-    const { data: existingTeam } = await supabase
+    const { data: existingTeam } = await supabaseAdmin
       .from('hackathon_teams')
       .select('id')
       .ilike('name', trimmedTeamName)
@@ -243,7 +243,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Verify not in another active team
-        const { data: activeTeam } = await supabase
+        const { data: activeTeam } = await supabaseAdmin
           .from('team_members')
           .select('team_id')
           .ilike('email', member.email)
@@ -269,7 +269,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. Create the team in hackathon_teams
-    const { data: newTeam, error: teamInsertError } = await supabase
+    const { data: newTeam, error: teamInsertError } = await supabaseAdmin
       .from('hackathon_teams')
       .insert({
         name: trimmedTeamName,
@@ -288,7 +288,7 @@ export async function POST(request: NextRequest) {
     // Clean up any stale declined invitation rows for these emails to avoid unique constraint violations
     const allRosterEmails = [session.email.toLowerCase(), ...cleanedMembers.map((m) => m.email.toLowerCase())];
     try {
-      await supabase
+      await supabaseAdmin
         .from('team_members')
         .delete()
         .in('email', allRosterEmails)
@@ -316,13 +316,13 @@ export async function POST(request: NextRequest) {
       })),
     ];
 
-    const { error: membersError } = await supabase
+    const { error: membersError } = await supabaseAdmin
       .from('team_members')
       .insert(membersToInsert);
 
     if (membersError) {
       // rollback team
-      await supabase.from('hackathon_teams').delete().eq('id', newTeam.id);
+      await supabaseAdmin.from('hackathon_teams').delete().eq('id', newTeam.id);
       if (membersError.message?.includes('team_members_email_key') || (membersError as any).code === '23505') {
         return NextResponse.json(
           { error: 'One or more members are already registered in a team. Each participant can only join one team.' },
@@ -376,7 +376,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // 1. Verify user is an authorized member/leader of this team
-    const { data: memberEntry } = await supabase
+    const { data: memberEntry } = await supabaseAdmin
       .from('team_members')
       .select('team_id, role, status')
       .ilike('email', session.email)
@@ -392,7 +392,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // 2. Safely UPDATE only problem_statement_id and vertical without touching other fields
-    const { data: updatedTeam, error: updateError } = await supabase
+    const { data: updatedTeam, error: updateError } = await supabaseAdmin
       .from('hackathon_teams')
       .update({
         problem_statement_id: problemStatementId,
@@ -407,7 +407,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // 3. Invalidate Redis caches for all team members so the change reflects immediately
-    const { data: allMembers } = await supabase
+    const { data: allMembers } = await supabaseAdmin
       .from('team_members')
       .select('email')
       .eq('team_id', teamId);
