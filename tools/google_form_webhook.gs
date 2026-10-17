@@ -6,15 +6,16 @@
  *    so participants are immediately whitelisted with ZERO extra forms to fill on the website.
  * 2. Automatically dispatches a personalized Registration Confirmation & Portal Pass email.
  * 3. Records sync status and email status in the spreadsheet to prevent duplicate communication.
- * 4. Adds a custom menu in Google Sheets for 1-click batch syncing of past submissions.
+ * 4. Adds a custom menu in Google Sheets / Google Forms for 1-click batch syncing.
  * 5. Serves as a Web App (doPost) so participants registering directly on the website also receive
  *    the exact same branded pass email and appear under a "Website_Registrations" sheet tab.
  *
  * Setup Instructions:
- * 1. Open your Google Form or the linked Google Sheet.
- * 2. Click "Extensions" -> "Apps Script".
+ * 1. Open your Google Form (or linked Google Sheet).
+ * 2. Click "Extensions" -> "Apps Script" (or the 3 dots in Google Forms -> "Script editor").
  * 3. Delete any code in the editor and paste this entire file.
- * 4. Replace WEBHOOK_SECRET below if you changed it in your environment variables.
+ * 4. (Optional) Paste your Google Sheet URL or ID into SPREADSHEET_ID_OR_URL below if this script
+ *    is running inside the Google Form editor rather than the Google Sheet.
  * 5. Click "Save" (disk icon).
  * 6. Set up the automated trigger for Form submissions:
  *    - Click the clock icon ("Triggers") on the left sidebar.
@@ -30,34 +31,248 @@
  *    - Execute as: "Me (your email address)"
  *    - Who has access: "Anyone"
  *    - Click "Deploy", authorize access, and copy the Web App URL.
- *    - Add this URL to Vercel and .env.local as:
- *      GOOGLE_APPS_SCRIPT_WEBAPP_URL=https://script.google.com/macros/s/.../exec
  */
 
 var WEBHOOK_URL = 'https://www.qffsrmap2026.com/api/webhooks/google-form';
 var WEBHOOK_SECRET = 'qff-srmap-2026-sync-secret'; // Must match GOOGLE_FORM_SYNC_SECRET in your .env
 
+// OPTIONAL: If this script is attached directly to the Google Form (or standalone),
+// paste your Google Sheet URL or ID below so the script can locate and mark rows.
+// Example: 'https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit'
+var SPREADSHEET_ID_OR_URL = '';
+
 /**
- * Creates custom menu when opening the Google Sheet.
+ * Safely resolves the target Google Spreadsheet across all contexts:
+ * 1. Sheet-bound script: SpreadsheetApp.getActiveSpreadsheet()
+ * 2. Explicit ID or URL in SPREADSHEET_ID_OR_URL
+ * 3. Form-bound script: FormApp.getActiveForm().getDestinationId()
+ */
+function getTargetSpreadsheet() {
+  // 1. Check if bound to active spreadsheet
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (ss) return ss;
+  } catch (e) {}
+  
+  // 2. Check explicit ID or URL fallback
+  if (typeof SPREADSHEET_ID_OR_URL !== 'undefined' && SPREADSHEET_ID_OR_URL && SPREADSHEET_ID_OR_URL.trim() !== '') {
+    try {
+      var target = SPREADSHEET_ID_OR_URL.trim();
+      if (target.indexOf('http') === 0) {
+        return SpreadsheetApp.openByUrl(target);
+      } else {
+        return SpreadsheetApp.openById(target);
+      }
+    } catch (e) {
+      Logger.log('getTargetSpreadsheet openById/Url error: ' + e);
+    }
+  }
+
+  // 3. Check if attached to Google Form with linked destination sheet
+  try {
+    var form = FormApp.getActiveForm();
+    if (form) {
+      var destId = form.getDestinationId();
+      if (destId) {
+        return SpreadsheetApp.openById(destId);
+      }
+    }
+  } catch (e) {}
+
+  return null;
+}
+
+/**
+ * Creates custom menu when opening the Google Sheet or Google Form.
  */
 function onOpen() {
-  var ui = SpreadsheetApp.getUi();
-  ui.createMenu('Qiskit Fall Fest 2026')
-    .addItem('Sync All Unsynced Rows to Portal', 'syncAllUnsyncedRows')
-    .addItem('Send Missing Welcome Emails', 'sendMissingWelcomeEmails')
-    .addSeparator()
-    .addItem('Send Test Email to sahgyan9@gmail.com', 'testSendToGyan')
-    .addToUi();
+  try {
+    var ui = SpreadsheetApp.getUi();
+    if (ui) {
+      ui.createMenu('Qiskit Fall Fest 2026')
+        .addItem('Sync All Unsynced Rows to Portal', 'syncAllUnsyncedRows')
+        .addItem('Send Missing Welcome Emails', 'sendMissingWelcomeEmails')
+        .addSeparator()
+        .addItem('Send Test Email to sahgyan9@gmail.com', 'testSendToGyan')
+        .addToUi();
+    }
+  } catch (e) {
+    // If running in Form UI context:
+    try {
+      var formUi = FormApp.getUi();
+      if (formUi) {
+        formUi.createMenu('Qiskit Fall Fest 2026')
+          .addItem('Sync All Form Submissions to Portal', 'syncAllFormResponses')
+          .addItem('Send Test Email to sahgyan9@gmail.com', 'testSendToGyan')
+          .addToUi();
+      }
+    } catch (fErr) {}
+  }
 }
 
 /**
  * Triggered automatically upon each Google Form submission.
+ * Resilient to both Form triggers (e.response) and Spreadsheet triggers (e.range).
  */
 function onFormSubmit(e) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var row = e ? e.range.getRow() : sheet.getLastRow();
+  try {
+    // Case 1: Trigger is bound to Google Sheet (e.range exists)
+    if (e && e.range) {
+      var sheet = e.range.getSheet();
+      var row = e.range.getRow();
+      syncSingleRow(sheet, row);
+      return;
+    }
+    
+    // Case 2: Trigger is bound to Google Form (e.response exists)
+    if (e && e.response) {
+      var record = extractRecordFromFormResponse(e.response);
+      processParticipantRecord(record);
+      
+      // Update linked spreadsheet status if accessible
+      try {
+        var ss = getTargetSpreadsheet();
+        if (ss) {
+          var targetSheet = ss.getActiveSheet() || ss.getSheets()[0];
+          var participantEmail = findField(record, ['Email ID', 'Email', 'Email Address']);
+          if (participantEmail) {
+            updateRowStatusForEmail(targetSheet, participantEmail, 'SYNCED', 'SENT');
+          }
+        }
+      } catch (sheetErr) {
+        Logger.log('Could not update status in sheet: ' + sheetErr);
+      }
+      return;
+    }
+    
+    // Case 3: Manual execution or fallback without event object
+    var ssFallback = getTargetSpreadsheet();
+    if (ssFallback) {
+      var activeSheet = ssFallback.getActiveSheet() || ssFallback.getSheets()[0];
+      syncSingleRow(activeSheet, activeSheet.getLastRow());
+    } else {
+      Logger.log('onFormSubmit: No event object and no spreadsheet available.');
+    }
+  } catch (err) {
+    Logger.log('onFormSubmit fatal error: ' + err);
+  }
+}
+
+/**
+ * Extracts a key-value record from a Google Form FormResponse object.
+ */
+function extractRecordFromFormResponse(response) {
+  var record = {};
+  var itemResponses = response.getItemResponses();
+  for (var i = 0; i < itemResponses.length; i++) {
+    var item = itemResponses[i];
+    var title = item.getItem().getTitle();
+    var val = item.getResponse();
+    record[title] = val;
+  }
+  var respondentEmail = response.getRespondentEmail();
+  if (respondentEmail && !findField(record, ['Email ID', 'Email', 'Email Address'])) {
+    record['Email ID'] = respondentEmail;
+  }
+  return record;
+}
+
+/**
+ * Processes a single participant record: syncs to portal webhook and dispatches welcome email.
+ */
+function processParticipantRecord(record) {
+  var name = findField(record, ['Name of the Participant', 'Name', 'Full Name']) || 'Participant';
+  var email = findField(record, ['Email ID', 'Email', 'Email Address']) || '';
+  var phone = findField(record, ['WhatsApp Contact', 'Phone', 'Contact Number', 'WhatsApp']) || '';
+  var education = findField(record, ['Highest Education', 'Highest Education (eg: B.Tech CSE )', 'Education']) || '';
+  var role = findField(record, ['Current Role', 'Role']) || 'Undergraduate Student';
+  var college = findField(record, ['College / University / Organization', 'College', 'Institution']) || 'SRM University-AP';
+  var collegeEmail = findField(record, ['College/ University/ Organization Mail ID (if Applicable)', 'College Mail ID', 'College Email']) || '';
+  var yearOfStudy = findField(record, ['Year of Study', 'Year']) || '';
   
-  syncSingleRow(sheet, row);
+  email = String(email).trim().toLowerCase();
+  if (!email || email.indexOf('@') === -1) {
+    Logger.log('processParticipantRecord: Invalid email: ' + email);
+    return false;
+  }
+  
+  // 1. Post to Webhook
+  try {
+    var payload = {
+      name: name,
+      email: email,
+      phone: String(phone),
+      education: education,
+      role: role,
+      institution: college,
+      collegeEmail: String(collegeEmail).trim().toLowerCase(),
+      yearOfStudy: yearOfStudy
+    };
+    
+    var options = {
+      method: 'post',
+      contentType: 'application/json',
+      headers: {
+        'x-sync-secret': WEBHOOK_SECRET
+      },
+      payload: JSON.stringify(payload),
+      muteHttpExceptions: true
+    };
+    
+    var res = UrlFetchApp.fetch(WEBHOOK_URL, options);
+    Logger.log('Webhook sync status for ' + email + ': ' + res.getResponseCode());
+  } catch (syncErr) {
+    Logger.log('Webhook sync error for ' + email + ': ' + syncErr);
+  }
+  
+  // 2. Dispatch Confirmation Email
+  try {
+    sendWelcomeEmail(email, name);
+    Logger.log('Welcome email dispatched to: ' + email);
+  } catch (mailErr) {
+    Logger.log('Email dispatch error for ' + email + ': ' + mailErr);
+  }
+  
+  return true;
+}
+
+/**
+ * Updates Portal_Sync_Status and Welcome_Email_Status for a matching email in the sheet.
+ */
+function updateRowStatusForEmail(sheet, email, syncStatus, emailStatus) {
+  try {
+    if (!sheet || !email) return;
+    var lastRow = sheet.getLastRow();
+    if (lastRow <= 1) return;
+    
+    var headerMap = getHeaderMap(sheet);
+    var syncCol = getOrCreateColumn(sheet, 'Portal_Sync_Status');
+    var emailCol = getOrCreateColumn(sheet, 'Welcome_Email_Status');
+    
+    var emailColIndex = -1;
+    for (var h in headerMap) {
+      if (h.indexOf('email') !== -1 || h.indexOf('mail id') !== -1) {
+        emailColIndex = headerMap[h];
+        break;
+      }
+    }
+    if (emailColIndex === -1) emailColIndex = 2; // Default column B
+    
+    var emailValues = sheet.getRange(2, emailColIndex, lastRow - 1, 1).getValues();
+    var cleanTarget = String(email).trim().toLowerCase();
+    
+    for (var i = emailValues.length - 1; i >= 0; i--) {
+      if (String(emailValues[i][0]).trim().toLowerCase() === cleanTarget) {
+        var rowNum = i + 2;
+        var timestamp = Utilities.formatDate(new Date(), 'Asia/Kolkata', 'yyyy-MM-dd HH:mm:ss');
+        if (syncStatus) sheet.getRange(rowNum, syncCol).setValue(syncStatus);
+        if (emailStatus) sheet.getRange(rowNum, emailCol).setValue(emailStatus + ' (' + timestamp + ' IST)');
+        break;
+      }
+    }
+  } catch (e) {
+    Logger.log('updateRowStatusForEmail error: ' + e);
+  }
 }
 
 /**
@@ -267,13 +482,60 @@ function sendWelcomeEmail(recipientEmail, participantName) {
 }
 
 /**
+ * 1-Click batch sync directly from Google Forms.
+ * Use when this script is running inside Google Forms.
+ */
+function syncAllFormResponses() {
+  try {
+    var form = FormApp.getActiveForm();
+    if (!form) {
+      Logger.log('syncAllFormResponses: FormApp.getActiveForm() is null. Run syncAllUnsyncedRows in Google Sheets instead.');
+      return;
+    }
+    
+    var responses = form.getResponses();
+    var count = 0;
+    Logger.log('Found ' + responses.length + ' total responses in Google Form.');
+    
+    for (var i = 0; i < responses.length; i++) {
+      var record = extractRecordFromFormResponse(responses[i]);
+      var ok = processParticipantRecord(record);
+      if (ok) count++;
+      Utilities.sleep(300); // polite rate limit
+    }
+    
+    var msg = 'Batch sync completed: ' + count + ' form submission(s) processed.';
+    Logger.log(msg);
+    try {
+      FormApp.getUi().alert(msg);
+    } catch (e) {}
+  } catch (err) {
+    Logger.log('syncAllFormResponses error: ' + err);
+  }
+}
+
+/**
  * 1-Click batch sync of all unsynced rows in the spreadsheet.
  */
 function syncAllUnsyncedRows() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var ss = getTargetSpreadsheet();
+  if (!ss) {
+    var msg = 'Could not locate active Google Spreadsheet.\n\nIf this script is running inside Google Forms, you can:\n1. Run "syncAllFormResponses" instead, OR\n2. Set SPREADSHEET_ID_OR_URL at top of script.';
+    Logger.log(msg);
+    try {
+      SpreadsheetApp.getUi().alert(msg);
+    } catch (e) {
+      try { FormApp.getUi().alert(msg); } catch (fe) {}
+    }
+    return;
+  }
+  
+  var sheet = ss.getActiveSheet() || ss.getSheets()[0];
   var lastRow = sheet.getLastRow();
   if (lastRow <= 1) {
-    SpreadsheetApp.getUi().alert('No data found in sheet.');
+    try {
+      SpreadsheetApp.getUi().alert('No data found in sheet.');
+    } catch (e) {}
     return;
   }
   
@@ -291,14 +553,24 @@ function syncAllUnsyncedRows() {
     }
   }
   
-  SpreadsheetApp.getUi().alert('Batch sync completed: ' + count + ' row(s) processed.');
+  var resultMsg = 'Batch sync completed: ' + count + ' row(s) processed.';
+  Logger.log(resultMsg);
+  try {
+    SpreadsheetApp.getUi().alert(resultMsg);
+  } catch (e) {}
 }
 
 /**
- * 1-Click batch dispatch for any missing welcome emails.
+ * 1-Click batch dispatch for any missing welcome emails in the spreadsheet.
  */
 function sendMissingWelcomeEmails() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var ss = getTargetSpreadsheet();
+  if (!ss) {
+    Logger.log('sendMissingWelcomeEmails: Could not locate active Google Spreadsheet.');
+    return;
+  }
+  
+  var sheet = ss.getActiveSheet() || ss.getSheets()[0];
   var lastRow = sheet.getLastRow();
   if (lastRow <= 1) return;
   
@@ -316,7 +588,11 @@ function sendMissingWelcomeEmails() {
     }
   }
   
-  SpreadsheetApp.getUi().alert('Email dispatch completed: ' + count + ' welcome email(s) dispatched.');
+  var resultMsg = 'Email dispatch completed: ' + count + ' welcome email(s) dispatched.';
+  Logger.log(resultMsg);
+  try {
+    SpreadsheetApp.getUi().alert(resultMsg);
+  } catch (e) {}
 }
 
 /**
@@ -349,9 +625,11 @@ function testSendToGyan() {
   Logger.log('Test confirmation email dispatched to: ' + testEmail);
   
   try {
-    SpreadsheetApp.getUi().alert('Test Email Sent!\n\nA sample confirmation email has been dispatched to ' + testEmail + '.\nPlease check your Gmail Inbox (and Updates/Spam folders).');
+    SpreadsheetApp.getUi().alert('Test Email Sent!\n\nA sample confirmation email has been dispatched to ' + testEmail + '.\nPlease check your Gmail Inbox.');
   } catch (e) {
-    // Silent if executed without active spreadsheet UI
+    try {
+      FormApp.getUi().alert('Test Email Sent!\n\nA sample confirmation email has been dispatched to ' + testEmail + '.\nPlease check your Gmail Inbox.');
+    } catch (fe) {}
   }
 }
 
@@ -388,36 +666,38 @@ function doPost(e) {
     
     // 2. Record registration under "Website_Registrations" sheet tab
     try {
-      var ss = SpreadsheetApp.getActiveSpreadsheet();
-      var sheet = ss.getSheetByName('Website_Registrations');
-      if (!sheet) {
-        sheet = ss.insertSheet('Website_Registrations');
+      var ss = getTargetSpreadsheet();
+      if (ss) {
+        var sheet = ss.getSheetByName('Website_Registrations');
+        if (!sheet) {
+          sheet = ss.insertSheet('Website_Registrations');
+          sheet.appendRow([
+            'Timestamp',
+            'Full Name',
+            'Email',
+            'Institution',
+            'Role',
+            'Phone',
+            'Year of Study',
+            'Interests',
+            'Email_Status'
+          ]);
+          sheet.getRange(1, 1, 1, 9).setFontWeight('bold').setBackground('#f5efea');
+        }
+        
+        var timestamp = Utilities.formatDate(new Date(), 'Asia/Kolkata', 'yyyy-MM-dd HH:mm:ss');
         sheet.appendRow([
-          'Timestamp',
-          'Full Name',
-          'Email',
-          'Institution',
-          'Role',
-          'Phone',
-          'Year of Study',
-          'Interests',
-          'Email_Status'
+          timestamp,
+          name,
+          email,
+          data.college || data.institution || 'SRM University-AP',
+          data.role || 'Undergraduate Student',
+          data.phone || '',
+          data.yearOfStudy || '',
+          Array.isArray(data.interests) ? data.interests.join(', ') : (data.interests || ''),
+          'SENT (' + timestamp + ' IST)'
         ]);
-        sheet.getRange(1, 1, 1, 9).setFontWeight('bold').setBackground('#f5efea');
       }
-      
-      var timestamp = Utilities.formatDate(new Date(), 'Asia/Kolkata', 'yyyy-MM-dd HH:mm:ss');
-      sheet.appendRow([
-        timestamp,
-        name,
-        email,
-        data.college || data.institution || 'SRM University-AP',
-        data.role || 'Undergraduate Student',
-        data.phone || '',
-        data.yearOfStudy || '',
-        Array.isArray(data.interests) ? data.interests.join(', ') : (data.interests || ''),
-        'SENT (' + timestamp + ' IST)'
-      ]);
     } catch (sheetErr) {
       Logger.log('Sheet recording note: ' + sheetErr);
     }
@@ -446,4 +726,3 @@ function doGet(e) {
     timestamp: new Date().toISOString()
   })).setMimeType(ContentService.MimeType.JSON);
 }
-
