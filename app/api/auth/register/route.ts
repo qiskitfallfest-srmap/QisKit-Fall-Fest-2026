@@ -3,31 +3,23 @@ import { supabase } from '@/lib/supabase';
 import { redis, invalidateEmailCache } from '@/lib/redis';
 import { SUPER_ADMIN_EMAILS } from '@/lib/auth';
 import { logError, logInfo, logWarn, serializeError } from '@/lib/logger';
-
-const COOKIE_NAME = 'qff_auth_session';
+import { setSessionCookie, verifySupabaseAccessToken } from '@/lib/session-cookie';
 
 export const runtime = 'edge';
-
-function getCookieDomain(req: NextRequest): string | undefined {
-  const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || req.nextUrl.hostname;
-  if (host && host.includes('qffsrmap2026.com')) {
-    return '.qffsrmap2026.com';
-  }
-  return undefined;
-}
-
-function isRequestSecure(req: NextRequest): boolean {
-  const proto = req.headers.get('x-forwarded-proto');
-  if (proto) {
-    return proto === 'https';
-  }
-  return req.nextUrl.protocol === 'https:';
-}
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const email = body.email?.trim().toLowerCase();
+
+    // The email is taken only from the Supabase-verified user, never from the request body.
+    const verifiedUser = await verifySupabaseAccessToken(body?.accessToken);
+    if (!verifiedUser) {
+      return NextResponse.json(
+        { error: 'Sign-in could not be verified. Please sign in with Google again.' },
+        { status: 401 }
+      );
+    }
+    const email = verifiedUser.email;
     const fullName = body.fullName?.trim() || '';
     const role = body.role?.trim() || 'Undergraduate Student';
     const institution = body.institution?.trim() || 'SRM University-AP';
@@ -158,20 +150,7 @@ export async function POST(request: NextRequest) {
       session: sessionData,
     });
 
-    const isSecure = isRequestSecure(request);
-    const domain = getCookieDomain(request);
-
-    // Set cookie for 14 days
-    response.cookies.set({
-      name: COOKIE_NAME,
-      value: encodeURIComponent(JSON.stringify(sessionData)),
-      httpOnly: true,
-      secure: isSecure,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 24 * 14,
-      ...(domain ? { domain } : {}),
-    });
+    await setSessionCookie(response, request, { email, fullName });
 
     return response;
   } catch (err: any) {

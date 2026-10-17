@@ -19,16 +19,13 @@ export function OAuthRedirectHandler() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user?.email && !isSyncingRef.current) {
+      if (event === 'SIGNED_IN' && session?.access_token && !isSyncingRef.current) {
         isSyncingRef.current = true;
         try {
           await fetch('/api/auth/session', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: session.user.email,
-              fullName: session.user.user_metadata?.full_name || '',
-            }),
+            body: JSON.stringify({ accessToken: session.access_token }),
           });
 
           // Clean URL hash
@@ -68,14 +65,11 @@ export function OAuthRedirectHandler() {
         return;
       }
 
-      if (session?.user?.email) {
+      if (session?.access_token) {
         await fetch('/api/auth/session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: session.user.email,
-            fullName: session.user.user_metadata?.full_name || '',
-          }),
+          body: JSON.stringify({ accessToken: session.access_token }),
         });
 
         // Clean up hash fragment from the URL for security and clean navigation
