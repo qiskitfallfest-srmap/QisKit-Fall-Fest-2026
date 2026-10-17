@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import {
+  getHackathonPassContext,
+  PHASE1_DEADLINE_ISO,
+  RESULTS_EXPECTED_LABEL,
+} from '@/lib/hackathon-pass';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,25 +19,16 @@ export async function GET() {
         isAuthenticated: false,
         user: null,
         isHackathonParticipant: false,
+        hackathon: null,
         pass: null,
       });
     }
 
     const normalizedEmail = session.email.trim().toLowerCase();
 
-    // 1. Check if user is an accepted team member or leader in Hackathon
-    const [teamMemberRes, teamLeadRes, passClaimRes, regRes] = await Promise.all([
-      supabaseAdmin
-        .from('team_members')
-        .select('team_id, role, status')
-        .ilike('email', normalizedEmail)
-        .eq('status', 'accepted')
-        .limit(1),
-      supabaseAdmin
-        .from('hackathon_teams')
-        .select('id, name')
-        .ilike('lead_email', normalizedEmail)
-        .limit(1),
+    // Hackathon team context, latest pass claim and registration details
+    const [hackathon, passClaimRes, regRes] = await Promise.all([
+      getHackathonPassContext(normalizedEmail),
       supabaseAdmin
         .from('festival_pass_claims')
         .select('*')
@@ -47,7 +43,8 @@ export async function GET() {
         .limit(1),
     ]);
 
-    const isHackathonParticipant = Boolean(teamMemberRes.data?.length || teamLeadRes.data?.length);
+    // Teams not shortlisted after results are treated like general attendees
+    const isHackathonParticipant = Boolean(hackathon && hackathon.outcome !== 'not_shortlisted');
     const reg = regRes.data?.[0];
 
     return NextResponse.json({
@@ -60,6 +57,14 @@ export async function GET() {
         phone: reg?.phone || null,
       },
       isHackathonParticipant,
+      hackathon: hackathon
+        ? {
+            ...hackathon,
+            phase1DeadlineIso: PHASE1_DEADLINE_ISO,
+            phase1DeadlinePassed: Date.now() > new Date(PHASE1_DEADLINE_ISO).getTime(),
+            resultsExpectedLabel: RESULTS_EXPECTED_LABEL,
+          }
+        : null,
       pass: passClaimRes.data || null,
     });
   } catch (err: any) {

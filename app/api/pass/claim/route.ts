@@ -8,6 +8,7 @@ import {
   normalizeTxn,
   receiptUrlPrefix,
 } from '@/lib/payments';
+import { getHackathonPassContext, RESULTS_EXPECTED_LABEL } from '@/lib/hackathon-pass';
 import crypto from 'crypto';
 
 export const dynamic = 'force-dynamic';
@@ -27,27 +28,24 @@ export async function POST(request: NextRequest) {
 
     const normalizedEmail = session.email.trim().toLowerCase();
 
-    // 1. Guardrail: Hackathon participants use the Flagship Pass track instead.
-    // limit(1) rather than maybeSingle(): duplicate rows must not silently bypass the check.
-    const [teamMemberRes, teamLeadRes] = await Promise.all([
-      supabaseAdmin
-        .from('team_members')
-        .select('team_id')
-        .ilike('email', normalizedEmail)
-        .eq('status', 'accepted')
-        .limit(1),
-      supabaseAdmin
-        .from('hackathon_teams')
-        .select('id')
-        .ilike('lead_email', normalizedEmail)
-        .limit(1),
-    ]);
+    // 1. Guardrail: hackathon teams wait for Phase 1 results. Shortlisted teams take the
+    // ₹499 Flagship Pass; teams not shortlisted may buy the General Pass once results are out.
+    const hackathon = await getHackathonPassContext(normalizedEmail);
 
-    if (teamMemberRes.data?.length || teamLeadRes.data?.length) {
+    if (hackathon && hackathon.outcome === 'pending') {
+      return NextResponse.json(
+        {
+          error: `Your team is in Hackathon Phase 1. Results are announced by ${RESULTS_EXPECTED_LABEL}; your pass options will appear here then.`,
+        },
+        { status: 403 }
+      );
+    }
+
+    if (hackathon && hackathon.outcome === 'shortlisted') {
       return NextResponse.json(
         {
           error:
-            'You are registered as an active Hackathon participant. Please do not submit the ₹99 General Pass. Selected Phase 2 finalist teams will receive instructions for the ₹499 Flagship Pass.',
+            'Your team is shortlisted for Phase 2. Please do not buy the ₹99 General Pass; you will receive instructions for the ₹499 Flagship Pass.',
         },
         { status: 403 }
       );

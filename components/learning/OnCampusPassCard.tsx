@@ -17,6 +17,7 @@ import {
   ArrowRight,
   Clock,
   XCircle,
+  Lock,
   MapPin,
   CalendarDays,
 } from 'lucide-react';
@@ -60,7 +61,66 @@ interface PassStatusResponse {
     phone?: string;
   };
   isHackathonParticipant: boolean;
+  hackathon?: HackathonContext | null;
   pass?: PassClaim | null;
+}
+
+interface HackathonContext {
+  teamId: string;
+  teamName: string;
+  isLead: boolean;
+  submittedAt: string | null;
+  resultsPublished: boolean;
+  outcome: 'pending' | 'shortlisted' | 'not_shortlisted';
+  phase1DeadlineIso: string;
+  phase1DeadlinePassed: boolean;
+  resultsExpectedLabel: string;
+}
+
+const FLAGSHIP_INCLUSIONS = [
+  '24-hour on-campus hackathon sprint',
+  'Hardware setup for the sprint',
+  'Lunch on all 5 days',
+  'Everything in the General Pass',
+];
+
+function StepRow({
+  index,
+  state,
+  title,
+  children,
+}: {
+  index: number;
+  state: 'done' | 'active' | 'locked' | 'missed';
+  title: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <li className="flex gap-3">
+      <span
+        className={clsx(
+          'w-7 h-7 rounded-full flex items-center justify-center font-mono text-xs font-bold shrink-0 border-2',
+          state === 'done' && 'bg-emerald-600 border-emerald-600 text-white',
+          state === 'active' && 'bg-white dark:bg-[#150709] border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]',
+          state === 'locked' && 'bg-slate-50 dark:bg-[#1C0A0D] border-slate-200 dark:border-[#3D1418] text-slate-400',
+          state === 'missed' && 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-600'
+        )}
+      >
+        {state === 'done' ? <Check className="w-3.5 h-3.5" /> : state === 'locked' ? <Lock className="w-3 h-3" /> : index}
+      </span>
+      <div className="flex-1 min-w-0 space-y-1.5 pt-0.5">
+        <p
+          className={clsx(
+            'text-sm font-semibold',
+            state === 'locked' ? 'text-slate-400 dark:text-slate-500' : 'text-slate-900 dark:text-[#FAF6F3]'
+          )}
+        >
+          {title}
+        </p>
+        {children}
+      </div>
+    </li>
+  );
 }
 
 const GATEWAY_OPENED_KEY = 'qff_pass_gateway_opened_v1';
@@ -340,30 +400,134 @@ export function OnCampusPassCard() {
     );
   }
 
-  // Hackathon participants follow the Flagship Pass track
-  if (data?.isHackathonParticipant) {
+  // Hackathon teams awaiting results, or shortlisted: Flagship Pass track.
+  // An existing General Pass claim still takes precedence so it is never hidden.
+  const hackathon = data?.hackathon;
+  if (data?.isHackathonParticipant && hackathon && !data.pass) {
+    const isShortlisted = hackathon.outcome === 'shortlisted';
+    const hasSubmitted = Boolean(hackathon.submittedAt);
+    const deadlinePassed = hackathon.phase1DeadlinePassed;
+    const submittedLabel =
+      hackathon.submittedAt && hackathon.submittedAt !== 'submitted'
+        ? new Date(hackathon.submittedAt).toLocaleString('en-IN', {
+            timeZone: 'Asia/Kolkata',
+            day: 'numeric',
+            month: 'short',
+            hour: 'numeric',
+            minute: '2-digit',
+          })
+        : null;
+
     return (
-      <div className="p-5 sm:p-6 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] border-l-4 border-l-burgundy rounded-2xl space-y-3">
-        <span className="font-mono text-[10px] font-bold text-burgundy dark:text-[#E89BA5] uppercase tracking-wider">
-          On-Campus Access · Hackathon Participant
-        </span>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1 max-w-2xl">
-            <h2 className="font-serif text-lg sm:text-xl font-bold text-slate-900 dark:text-[#FAF6F3]">
-              No ₹99 General Pass needed
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-              You are registered in <strong>Quantum Hackathon Phase 1</strong>. Teams selected for the Phase 2 on-campus sprint will receive instructions for the <strong>₹499 Flagship Pass</strong> (24-hr sprint access, hardware setup, and lunch on all 5 days).
-            </p>
+      <div className="relative bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-[280px_1fr]">
+        {/* Flagship Pass ticket stub */}
+        <div className="relative bg-[#201617] text-white p-5 sm:p-6 flex flex-col justify-between gap-5">
+          <div className="space-y-3">
+            <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-amber-300">
+              Admit One · Phase 2 Finalists
+            </span>
+            <h2 className="font-serif text-xl sm:text-2xl font-bold leading-tight">Flagship Pass</h2>
+            <div className="space-y-1.5 text-xs text-slate-300">
+              <p className="flex items-center gap-2">
+                <CalendarDays className="w-3.5 h-3.5 shrink-0" />
+                26–30 October 2026
+              </p>
+              <p className="flex items-center gap-2">
+                <MapPin className="w-3.5 h-3.5 shrink-0" />
+                SRM University-AP, Main Campus
+              </p>
+            </div>
+            <ul className="space-y-1 text-xs text-slate-200 pt-1">
+              {FLAGSHIP_INCLUSIONS.map((item) => (
+                <li key={item} className="flex items-start gap-2">
+                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-amber-300" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
           </div>
-          <Link
-            href="/learning/hackathon"
-            className="px-4 py-2.5 bg-burgundy hover:bg-burgundy-deep text-white text-xs sm:text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 shrink-0"
-          >
-            <Users className="w-4 h-4" />
-            <span>Open Hackathon Workspace</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
+          <div className="flex items-baseline gap-1.5 border-t border-white/15 pt-4">
+            <span className="font-serif text-4xl font-bold tabular-nums">₹499</span>
+            <span className="font-mono text-[11px] text-slate-400">shortlisted teams only</span>
+          </div>
+          <span className={clsx(NOTCH, 'hidden lg:block -top-2.5 -right-2.5')} />
+          <span className={clsx(NOTCH, 'hidden lg:block -bottom-2.5 -right-2.5')} />
+        </div>
+
+        {/* Progress */}
+        <div className="p-5 sm:p-6 border-t-2 lg:border-t-0 lg:border-l-2 border-dashed border-slate-200 dark:border-[#3D1418] flex flex-col">
+          <div className="mb-5">
+            <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Team {hackathon.teamName}
+            </span>
+            <h3 className="font-sans text-sm font-bold text-slate-900 dark:text-[#FAF6F3] mt-0.5">
+              {isShortlisted
+                ? 'Your team is shortlisted for Phase 2'
+                : 'Your on-campus pass comes with Phase 2'}
+            </h3>
+          </div>
+
+          <ol className="space-y-5 flex-1">
+            <StepRow
+              index={1}
+              state={hasSubmitted ? 'done' : deadlinePassed ? 'missed' : 'active'}
+              title={hasSubmitted ? 'Phase 1 submitted' : 'Submit your Phase 1 project'}
+            >
+              {hasSubmitted ? (
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {submittedLabel ? `Received ${submittedLabel} IST.` : 'Submission received.'}
+                </p>
+              ) : deadlinePassed ? (
+                <p className="text-xs text-rose-700 dark:text-rose-300">
+                  The deadline has passed and no submission was recorded for your team.
+                </p>
+              ) : (
+                <>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Due 17 October 2026, 11:59 PM IST.{' '}
+                    {hackathon.isLead ? 'As team lead, you submit for the team.' : 'Your team lead submits for the team.'}
+                  </p>
+                  <Link
+                    href="/learning/hackathon"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-burgundy hover:bg-burgundy-deep text-white text-xs font-semibold rounded-lg transition-colors"
+                  >
+                    Open Hackathon Workspace
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </>
+              )}
+            </StepRow>
+
+            <StepRow
+              index={2}
+              state={isShortlisted ? 'done' : hasSubmitted || deadlinePassed ? 'active' : 'locked'}
+              title={isShortlisted ? 'Shortlisted for Phase 2' : 'Phase 1 results'}
+            >
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {isShortlisted
+                  ? 'Congratulations. Your team will build on campus during the 24-hour sprint.'
+                  : `Shortlisted teams are announced by ${hackathon.resultsExpectedLabel}.`}
+              </p>
+            </StepRow>
+
+            <StepRow
+              index={3}
+              state={isShortlisted ? 'active' : 'locked'}
+              title="Get the ₹499 Flagship Pass"
+            >
+              <p className={clsx('text-xs', isShortlisted ? 'text-slate-500 dark:text-slate-400' : 'text-slate-400 dark:text-slate-500')}>
+                {isShortlisted
+                  ? 'Payment instructions for the Flagship Pass will be shared with your team by email. Do not buy the ₹99 General Pass.'
+                  : 'Opens for shortlisted teams after results.'}
+              </p>
+            </StepRow>
+          </ol>
+
+          {!isShortlisted && (
+            <p className="mt-5 pt-4 border-t border-slate-100 dark:border-[#250D11] text-[11px] text-slate-500 dark:text-slate-400">
+              Not shortlisted? You can still attend the festival with the ₹99 General Pass. It opens here once results are announced.
+            </p>
+          )}
         </div>
       </div>
     );
@@ -565,9 +729,20 @@ export function OnCampusPassCard() {
         className="p-5 sm:p-6 border-t-2 lg:border-t-0 lg:border-l-2 border-dashed border-slate-200 dark:border-[#3D1418]"
       >
         <div className="flex items-center justify-between gap-2 mb-5">
-          <h3 className="font-sans text-sm font-bold text-slate-900 dark:text-[#FAF6F3]">
-            {isResubmitting ? 'Update your receipt details' : 'Get your pass in three steps'}
-          </h3>
+          <div>
+            {data?.hackathon?.outcome === 'not_shortlisted' && !isResubmitting && (
+              <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-0.5">
+                Team {data.hackathon.teamName} · Not shortlisted for Phase 2
+              </p>
+            )}
+            <h3 className="font-sans text-sm font-bold text-slate-900 dark:text-[#FAF6F3]">
+              {isResubmitting
+                ? 'Update your receipt details'
+                : data?.hackathon?.outcome === 'not_shortlisted'
+                  ? 'You can still attend: get your pass in three steps'
+                  : 'Get your pass in three steps'}
+            </h3>
+          </div>
           {isResubmitting && (
             <button
               type="button"

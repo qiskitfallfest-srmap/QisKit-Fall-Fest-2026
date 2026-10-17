@@ -43,6 +43,45 @@ export function AdminHackathonView() {
   const [isPurging, setIsPurging] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
 
+  // Phase 1 results visibility (participants see shortlist outcome only when published)
+  const [resultsPublished, setResultsPublished] = useState<boolean | null>(null);
+  const [isTogglingResults, setIsTogglingResults] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/admin/config', { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => setResultsPublished(Boolean(json?.config?.hackathon_phase1_results?.published)))
+      .catch(() => setResultsPublished(false));
+  }, []);
+
+  async function handleToggleResults() {
+    const next = !resultsPublished;
+    const confirmed = window.confirm(
+      next
+        ? 'Publish Phase 1 results? Every hackathon participant will immediately see whether their team is shortlisted, and teams not shortlisted can buy the ₹99 General Pass.'
+        : 'Hide Phase 1 results from participants again?'
+    );
+    if (!confirmed) return;
+
+    setIsTogglingResults(true);
+    try {
+      const res = await fetch('/api/admin/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          key: 'hackathon_phase1_results',
+          value: { published: next, updated_at: new Date().toISOString() },
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to update results visibility.');
+      setResultsPublished(next);
+    } catch (err: any) {
+      alert(err?.message || 'Failed to update results visibility.');
+    } finally {
+      setIsTogglingResults(false);
+    }
+  }
+
   // View mode
   const [viewMode, setViewMode] = useState<'teams' | 'participants' | 'insights'>('teams');
 
@@ -523,6 +562,36 @@ export function AdminHackathonView() {
 
   return (
     <div className="space-y-6 font-sans">
+      {/* Phase 1 Results Visibility */}
+      <div
+        className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+          resultsPublished
+            ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800'
+            : 'bg-white border-slate-200 dark:bg-[#150709] dark:border-[#3D1418]'
+        }`}
+      >
+        <div className="space-y-0.5">
+          <p className="text-sm font-bold text-slate-900 dark:text-[#FAF6F3]">
+            Phase 1 results: {resultsPublished === null ? 'Loading...' : resultsPublished ? 'Published to participants' : 'Hidden from participants'}
+          </p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-2xl">
+            Shortlist and reject marks below are only shown on participants&apos; pass cards after publishing. Teams not shortlisted can then buy the ₹99 General Pass.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={handleToggleResults}
+          disabled={resultsPublished === null || isTogglingResults}
+          className={`px-4 py-2 rounded-lg text-xs font-semibold shrink-0 transition-colors cursor-pointer disabled:opacity-50 ${
+            resultsPublished
+              ? 'border border-slate-300 dark:border-[#3D1418] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#1C0A0D]'
+              : 'bg-burgundy hover:bg-burgundy-deep text-white'
+          }`}
+        >
+          {isTogglingResults ? 'Saving...' : resultsPublished ? 'Hide Results' : 'Publish Results'}
+        </button>
+      </div>
+
       {/* Top Banner & Action Controls */}
       <div className="p-5 bg-linear-to-r from-burgundy via-burgundy-deep to-[#18070B] text-white rounded-xl shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 border border-burgundy/40">
         <div className="space-y-1">
