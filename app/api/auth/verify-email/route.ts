@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from '@/lib/auth';
 import { isEmailWhitelisted, getMemberTeam } from '@/lib/redis';
 
 export async function GET(request: NextRequest) {
+  // Teammate lookup for signed-in users only; otherwise this is a public roster oracle.
+  const session = await getServerSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
   const emailParam = searchParams.get('email');
 
@@ -21,7 +28,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       email,
       whitelisted: whitelist.whitelisted,
-      role: whitelist.role || null,
       fullName: whitelist.fullName || null,
       inTeam: teamStatus.inTeam,
       teamName: teamStatus.teamName || null,

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { redis, invalidateEmailCache } from '@/lib/redis';
 import { logError, logInfo } from '@/lib/logger';
 
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   const search = searchParams.get('search') || '';
 
   try {
-    let query = supabase
+    let query = supabaseAdmin
       .from('allowed_emails')
       .select('*')
       .order('created_at', { ascending: false });
@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
 
     for (let i = 0; i < allEmails.length; i += CHUNK_QUERY_SIZE) {
       const emailChunk = allEmails.slice(i, i + CHUNK_QUERY_SIZE);
-      const { data: existingRows, error: queryErr } = await supabase
+      const { data: existingRows, error: queryErr } = await supabaseAdmin
         .from('allowed_emails')
         .select('email, role, full_name')
         .in('email', emailChunk);
@@ -204,7 +204,7 @@ export async function POST(request: NextRequest) {
     const UPSERT_CHUNK_SIZE = 200;
     for (let i = 0; i < recordsToInsert.length; i += UPSERT_CHUNK_SIZE) {
       const chunk = recordsToInsert.slice(i, i + UPSERT_CHUNK_SIZE);
-      const { error: upsertErr } = await supabase
+      const { error: upsertErr } = await supabaseAdmin
         .from('allowed_emails')
         .upsert(chunk, { onConflict: 'email' });
 
@@ -276,7 +276,7 @@ export async function PATCH(request: NextRequest) {
     if (typeof isActive === 'boolean') updates.is_active = isActive;
     if (role) updates.role = role;
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('allowed_emails')
       .update(updates)
       .ilike('email', email.trim().toLowerCase())
@@ -312,7 +312,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'email is required' }, { status: 400 });
     }
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('allowed_emails')
       .delete()
       .ilike('email', email.trim().toLowerCase());
