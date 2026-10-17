@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
+import { rejectIfOnlineSubmissionsClosed } from '@/lib/submission-window';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { logWarn } from '@/lib/logger';
 import {
@@ -123,6 +124,9 @@ export async function POST(request: NextRequest) {
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  const closed = rejectIfOnlineSubmissionsClosed('Hackathon team registration');
+  if (closed) return closed;
 
   try {
     const body = await request.json();
@@ -363,6 +367,9 @@ export async function PATCH(request: NextRequest) {
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  const closed = rejectIfOnlineSubmissionsClosed('Problem statement changes');
+  if (closed) return closed;
 
   try {
     const body = await request.json();

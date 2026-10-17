@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
+import { rejectIfOnlineSubmissionsClosed } from '@/lib/submission-window';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { invalidateEmailCache } from '@/lib/redis';
 import { isTeamFinalized } from '@/lib/finalized-teams';
@@ -13,6 +14,11 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { invitationId, action } = body;
+
+    if (action === 'accept') {
+      const closed = rejectIfOnlineSubmissionsClosed('Joining teams');
+      if (closed) return closed;
+    }
 
     if (!invitationId || !['accept', 'decline'].includes(action)) {
       return NextResponse.json(

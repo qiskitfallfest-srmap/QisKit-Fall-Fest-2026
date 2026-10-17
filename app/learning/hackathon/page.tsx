@@ -36,7 +36,15 @@ import {
   MessageCircle,
   Copy,
 } from 'lucide-react';
-import { REGISTRATION_URL, WHATSAPP_COMMUNITY_URL, HACKATHON_WORKSPACE_URL } from '@/lib/constants';
+import {
+  REGISTRATION_URL,
+  WHATSAPP_COMMUNITY_URL,
+  HACKATHON_WORKSPACE_URL,
+  ONLINE_SUBMISSIONS_CLOSE_LABEL,
+  isOnlineSubmissionsClosed,
+} from '@/lib/constants';
+import { useSubmissionDeadline } from '@/hooks/use-submission-deadline';
+import { SubmissionCountdown } from '@/components/learning/SubmissionCountdown';
 import { supabase } from '@/lib/supabase';
 
 const VERTICALS: VerticalType[] = [
@@ -49,6 +57,8 @@ const VERTICALS: VerticalType[] = [
 
 export default function HackathonWorkspacePage() {
   const [sessionUser, setSessionUser] = useState<any>(null);
+  const submissionDeadline = useSubmissionDeadline();
+  const submissionsClosed = submissionDeadline.closed;
   const fetcher = (url: string) => fetch(url).then((res) => res.json());
   const { data: teamDataObj, error: teamError, mutate: mutateTeam } = useSWR('/api/hackathon/team', fetcher, {
     revalidateOnFocus: true,
@@ -356,6 +366,10 @@ export default function HackathonWorkspacePage() {
     setRepoErrorMsg('');
 
     if (!team?.id || !githubUrl.trim()) return;
+    if (isOnlineSubmissionsClosed()) {
+      setRepoErrorMsg(`Phase 1 submissions closed on ${ONLINE_SUBMISSIONS_CLOSE_LABEL}.`);
+      return;
+    }
 
     try {
       setIsSubmittingRepo(true);
@@ -708,7 +722,7 @@ export default function HackathonWorkspacePage() {
   );
   const isFinalized = !!team?.is_finalized;
   const totalOccupiedSlots = confirmedMembers.length + pendingMembers.length;
-  const canAddMore = !isFinalized && totalOccupiedSlots < 6;
+  const canAddMore = !isFinalized && !submissionsClosed && totalOccupiedSlots < 6;
 
   const verticalStatements = PROBLEM_STATEMENTS.filter((ps) => ps.vertical === selectedVertical);
   const changeVerticalStatements = PROBLEM_STATEMENTS.filter((ps) => ps.vertical === changeVertical);
@@ -768,6 +782,17 @@ export default function HackathonWorkspacePage() {
             </p>
           </div>
 
+          <SubmissionCountdown
+            deadline={submissionDeadline}
+            label="Phase 1 submissions"
+            closedDetail={
+              team?.github_repo_url
+                ? `Phase 1 closed on ${ONLINE_SUBMISSIONS_CLOSE_LABEL}. Your team's repository below is the final recorded submission. Team formation, invitations, and problem statement changes are locked.`
+                : `Phase 1 closed on ${ONLINE_SUBMISSIONS_CLOSE_LABEL}. Repository submission, team formation, invitations, and problem statement changes are locked.`
+            }
+            className="mb-8"
+          />
+
           {/* Highlighted Grand Hackathon Prize Pool Banner (Visible both Before and After Creating Team) - Styled in Burgundy Shades */}
           <div className="relative overflow-hidden mb-8 p-4 sm:p-5 rounded-xl border-2 border-burgundy/30 dark:border-burgundy/60 bg-linear-to-r from-burgundy/10 via-burgundy/[0.04] to-transparent dark:from-[#260C11] dark:via-[#1A080C] dark:to-[#120507] shadow-sm">
             <div className="absolute top-0 right-0 -mt-6 -mr-6 w-36 h-36 bg-burgundy/15 dark:bg-burgundy/25 rounded-full blur-2xl pointer-events-none" />
@@ -809,7 +834,7 @@ export default function HackathonWorkspacePage() {
           </div>
 
           {/* Pending Invitations Alert Banner */}
-          {pendingInvitations.length > 0 && (
+          {pendingInvitations.length > 0 && !submissionsClosed && (
             <div className="mb-8 space-y-3">
               <h2 className="font-mono text-xs font-bold uppercase tracking-[0.18em] text-burgundy dark:text-[#E89BA5] flex items-center gap-1.5">
                 <Users className="w-4 h-4" />
@@ -910,6 +935,7 @@ export default function HackathonWorkspacePage() {
                       <span>Track: <span className="font-semibold text-slate-800 dark:text-[#FAF6F3]">{team.vertical}</span></span>
                       <span>·</span>
                       <span>Problem Statement: <span className="font-mono font-bold text-burgundy dark:text-[#E89BA5]">{team.problem_statement_id}</span></span>
+                      {!submissionsClosed && (
                       <button
                         type="button"
                         onClick={handleToggleChangePS}
@@ -918,6 +944,7 @@ export default function HackathonWorkspacePage() {
                         <Edit3 className="w-3.5 h-3.5" />
                         <span>{isChangingPS ? 'Close Switcher' : 'Change Problem Statement'}</span>
                       </button>
+                      )}
                     </div>
                   </div>
 
@@ -1638,6 +1665,7 @@ export default function HackathonWorkspacePage() {
                 )}
 
                 <form onSubmit={handleSubmitGithub} className="space-y-3">
+                  {!submissionsClosed && (
                   <div className="flex flex-col sm:flex-row gap-2">
                     <input
                       type="url"
@@ -1656,6 +1684,13 @@ export default function HackathonWorkspacePage() {
                       {team.github_repo_url ? 'Update Repository Link' : 'Submit Repository'}
                     </button>
                   </div>
+                  )}
+
+                  {submissionsClosed && !team.github_repo_url && (
+                    <div className="p-2.5 rounded bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] text-sm text-slate-600 dark:text-slate-400">
+                      No repository was submitted for your team before the deadline.
+                    </div>
+                  )}
 
                   {team.github_repo_url && (
                     <div className="p-2.5 rounded bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] text-sm flex items-center justify-between">
@@ -1687,6 +1722,7 @@ export default function HackathonWorkspacePage() {
                     </p>
                   </div>
 
+                  {!submissionsClosed && (
                   <button
                     type="button"
                     onClick={handleToggleChangePS}
@@ -1695,6 +1731,7 @@ export default function HackathonWorkspacePage() {
                     <Edit3 className="w-3.5 h-3.5" />
                     <span>{isChangingPS ? 'Close Switcher' : 'Change Problem Statement'}</span>
                   </button>
+                  )}
                 </div>
 
                 {selectedPSObj ? (
@@ -1705,6 +1742,23 @@ export default function HackathonWorkspacePage() {
                   </div>
                 )}
               </div>
+            </div>
+          ) : submissionsClosed ? (
+            <div className="max-w-xl mx-auto text-center space-y-3 py-10">
+              <div className="w-14 h-14 bg-slate-100 dark:bg-[#1C0A0D] text-slate-500 dark:text-slate-400 rounded-full flex items-center justify-center mx-auto">
+                <Lock className="w-7 h-7" />
+              </div>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">Team formation is closed</h2>
+              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                Hackathon Phase 1 ended on {ONLINE_SUBMISSIONS_CLOSE_LABEL}. New teams can no longer be created.
+              </p>
+              <Link
+                href="/learning"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-burgundy dark:text-[#E89BA5] hover:underline"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back to Workspace</span>
+              </Link>
             </div>
           ) : (
             /* TEAM FORMATION & PROBLEM SELECTION FORM */

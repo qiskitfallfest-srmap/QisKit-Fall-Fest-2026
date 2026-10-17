@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
+import { rejectIfOnlineSubmissionsClosed } from '@/lib/submission-window';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import {
   getCompetitionSubmissionsCached,
@@ -62,6 +63,9 @@ export async function POST(request: NextRequest) {
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  const closed = rejectIfOnlineSubmissionsClosed('Competition submissions');
+  if (closed) return closed;
 
   const normalizedEmail = session.email.trim().toLowerCase();
 

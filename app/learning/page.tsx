@@ -12,6 +12,9 @@ import { DAILY_COMPETITIONS } from '@/data/learning/competitions';
 import { OnCampusPassCard } from '@/components/learning/OnCampusPassCard';
 import { useCurriculumSessions } from '@/hooks/use-curriculum-sessions';
 import { useQuizzes } from '@/hooks/use-quizzes';
+import { useSubmissionDeadline } from '@/hooks/use-submission-deadline';
+import { SubmissionCountdown } from '@/components/learning/SubmissionCountdown';
+import { ONLINE_SUBMISSIONS_CLOSE_LABEL, isOnlineSubmissionsClosed } from '@/lib/constants';
 import {
   Award,
   Send,
@@ -82,6 +85,8 @@ function LearningDashboardContent() {
   const [isSubmittingComp, setIsSubmittingComp] = useState<Record<string, boolean>>({});
   const [compSuccessMsg, setCompSuccessMsg] = useState<Record<string, string>>({});
   const [compErrorMsg, setCompErrorMsg] = useState<Record<string, string>>({});
+  const submissionDeadline = useSubmissionDeadline();
+  const submissionsClosed = submissionDeadline.closed;
 
   // Session progress state
   const [progress, setProgress] = useState<Record<string, any>>({});
@@ -232,6 +237,13 @@ function LearningDashboardContent() {
       setCompErrorMsg((prev) => ({
         ...prev,
         [type]: 'Please sign in with Google to submit your entry.',
+      }));
+      return;
+    }
+    if (isOnlineSubmissionsClosed()) {
+      setCompErrorMsg((prev) => ({
+        ...prev,
+        [type]: `Submissions closed on ${ONLINE_SUBMISSIONS_CLOSE_LABEL}.`,
       }));
       return;
     }
@@ -504,6 +516,11 @@ function LearningDashboardContent() {
                 <CheckCircle2 className="w-4 h-4" />
                 <span>Submitted</span>
               </span>
+            ) : submissionsClosed ? (
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-100 dark:bg-[#1C0A0D] text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-[#3D1418] font-mono text-xs font-bold shrink-0 self-start">
+                <Lock className="w-4 h-4" />
+                <span>Closed</span>
+              </span>
             ) : (
               <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 font-mono text-xs font-bold shrink-0 self-start">
                 <Clock className="w-4 h-4" />
@@ -564,8 +581,20 @@ function LearningDashboardContent() {
           </div>
 
           <div className="space-y-5">
+            <SubmissionCountdown
+              deadline={submissionDeadline}
+              label={`${challenge.title} submissions`}
+              closedDetail={
+                isCurrentChallengeSubmitted
+                  ? `The window closed on ${ONLINE_SUBMISSIONS_CLOSE_LABEL}. Your recorded entry below has been sent for evaluation and can no longer be changed.`
+                  : sessionUser
+                  ? `The window closed on ${ONLINE_SUBMISSIONS_CLOSE_LABEL}. No entry was recorded for your account.`
+                  : undefined
+              }
+            />
+
             {/* Guest Preview Mode Notice */}
-            {!sessionUser && (
+            {!sessionUser && !submissionsClosed && (
               <div className="p-4 sm:p-5 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-300/80 dark:border-amber-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs sm:text-sm shadow-2xs">
                 <div className="flex items-start sm:items-center gap-3 min-w-0">
                   <Lock className="w-5 h-5 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5 sm:mt-0" />
@@ -590,7 +619,7 @@ function LearningDashboardContent() {
             )}
 
             {/* Mode Switcher for Digital Poster (Day 2) & Essay (Day 3) */}
-            {supportsDocUpload && (
+            {supportsDocUpload && !submissionsClosed && (
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
@@ -875,7 +904,7 @@ function LearningDashboardContent() {
             )}
 
             <form onSubmit={(e) => handleCompetitionSubmit(e, challenge.type)} className="space-y-4">
-              {supportsDocUpload && activeMode === 'file' ? (
+              {submissionsClosed ? null : supportsDocUpload && activeMode === 'file' ? (
                 <div className="space-y-3.5">
                   <div className="rounded-xl border-2 border-dashed border-slate-300 dark:border-[#4A181E] bg-slate-50/70 dark:bg-[#1C0A0D]/70 p-5 sm:p-6 transition-colors hover:border-burgundy/50 dark:hover:border-[#E89BA5]/50">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1227,6 +1256,7 @@ function LearningDashboardContent() {
             {submittedCompsCount} / 3 Submitted
           </span>
         </div>
+        <SubmissionCountdown deadline={submissionDeadline} label="Online competition submissions" />
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {Object.values(DAILY_COMPETITIONS).map((comp) => {
             const sub = competitions[comp.type];
@@ -1248,6 +1278,8 @@ function LearningDashboardContent() {
                     </span>
                     {isSubmitted ? (
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    ) : submissionsClosed ? (
+                      <Lock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                     ) : (
                       <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                     )}
@@ -1269,11 +1301,15 @@ function LearningDashboardContent() {
                       'font-semibold',
                       isSubmitted
                         ? 'text-emerald-700 dark:text-emerald-400'
+                        : submissionsClosed
+                        ? 'text-slate-500 dark:text-slate-400'
                         : 'text-burgundy dark:text-[#E89BA5]'
                     )}
                   >
                     {isSubmitted
                       ? 'Submitted'
+                      : submissionsClosed
+                      ? 'Closed'
                       : sessionUser
                       ? 'Submit Entry'
                       : 'Preview Challenge'}

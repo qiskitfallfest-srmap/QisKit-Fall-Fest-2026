@@ -8,8 +8,8 @@ import {
   REGISTRATION_URL,
   GOOGLE_FORM_REGISTRATION_URL,
   HACKATHON_WORKSPACE_URL,
-  ONLINE_SUBMISSIONS_CLOSE_ISO,
 } from '@/lib/constants';
+import { useSubmissionDeadline } from '@/hooks/use-submission-deadline';
 import { trackRegistrationClick, trackEvent } from '@/lib/analytics';
 import { getClientSession } from '@/lib/session-client';
 import { ResponsivePicture } from '@/components/shared/ResponsivePicture';
@@ -66,11 +66,7 @@ export function HomeHero() {
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
   const [participantName, setParticipantName] = React.useState<string | null>(null);
   // Resolved on the client so a statically rendered page still switches CTAs after the deadline
-  const [onlineClosed, setOnlineClosed] = React.useState(false);
-
-  React.useEffect(() => {
-    setOnlineClosed(Date.now() > Date.parse(ONLINE_SUBMISSIONS_CLOSE_ISO));
-  }, []);
+  const { closed: onlineClosed } = useSubmissionDeadline();
 
   React.useEffect(() => {
     let isMounted = true;
