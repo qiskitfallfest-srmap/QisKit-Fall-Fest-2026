@@ -92,6 +92,10 @@ function onOpen() {
         .addItem('2. Send Test Pass Email to sahgyan9@gmail.com', 'sendTestGeneralPassEmail')
         .addItem('3. Start General Pass Email Campaign', 'startGeneralPassEmailCampaign')
         .addSeparator()
+        .addItem('4. Setup "Hackathon_Repo_Reminder" Sheet', 'setupHackathonRepoReminderSheet')
+        .addItem('5. Send Test Hackathon Reminder to sahgyan9@gmail.com', 'sendTestHackathonRepoReminderEmail')
+        .addItem('6. Start Hackathon Repo Reminder Campaign', 'startHackathonRepoReminderCampaign')
+        .addSeparator()
         .addItem('Sync All Unsynced Rows to Portal', 'syncAllUnsyncedRows')
         .addItem('Send Missing Welcome Emails', 'sendMissingWelcomeEmails')
         .addSeparator()
@@ -962,4 +966,238 @@ function sendGeneralPassAnnouncementEmail(recipientEmail, participantName) {
     name: 'Qiskit Fall Fest 2026'
   });
 }
+
+// ============================================================================
+// HACKATHON PHASE 1 REPO SUBMISSION REMINDER EMAIL CAMPAIGN
+// ============================================================================
+
+/**
+ * 4. Automatically creates and formats the 'Hackathon_Repo_Reminder' tab.
+ */
+function setupHackathonRepoReminderSheet() {
+  var ss = getTargetSpreadsheet();
+  if (!ss) {
+    try {
+      SpreadsheetApp.getUi().alert('Could not locate active Google Spreadsheet.');
+    } catch (e) {}
+    return;
+  }
+  
+  var sheet = ss.getSheetByName('Hackathon_Repo_Reminder');
+  if (!sheet) {
+    sheet = ss.insertSheet('Hackathon_Repo_Reminder');
+    sheet.appendRow([
+      'Participant Name',
+      'Email',
+      'Role',
+      'Team Name',
+      'Vertical',
+      'Problem Statement ID',
+      'Repo Status',
+      'Submitted Repo URL',
+      'Reminder_Status'
+    ]);
+    sheet.getRange(1, 1, 1, 9).setFontWeight('bold').setBackground('#7c1415').setFontColor('#ffffff');
+    sheet.setFrozenRows(1);
+    SpreadsheetApp.getUi().alert(
+      'Sheet "Hackathon_Repo_Reminder" created successfully!\n\n' +
+      'Next Step: Open "C:\\Users\\sahgy\\Downloads\\all_hackathon_participants.csv", copy the rows, and paste them into this sheet (Columns A to H). Then click:\n\n' +
+      'Qiskit Fall Fest 2026 -> 6. Start Hackathon Repo Reminder Campaign'
+    );
+  } else {
+    SpreadsheetApp.getUi().alert('Sheet "Hackathon_Repo_Reminder" already exists.');
+  }
+}
+
+/**
+ * 5. Dispatches a single test copy of the Hackathon Repo Reminder email to sahgyan9@gmail.com.
+ */
+function sendTestHackathonRepoReminderEmail() {
+  var testEmail = 'sahgyan9@gmail.com';
+  try {
+    sendHackathonRepoReminderEmail(
+      testEmail,
+      'Gyan Kumar Sah (Test)',
+      'Quantum Builders (Test Team)',
+      'Quantum Machine Learning',
+      'PS-Q1'
+    );
+    SpreadsheetApp.getUi().alert('Test hackathon reminder successfully dispatched to ' + testEmail + '!\nPlease check your inbox.');
+  } catch (err) {
+    SpreadsheetApp.getUi().alert('Failed to send test email: ' + err.toString());
+  }
+}
+
+/**
+ * 6. Batched campaign dispatcher for all hackathon participants with safety quota check.
+ */
+function startHackathonRepoReminderCampaign() {
+  var ss = getTargetSpreadsheet();
+  if (!ss) {
+    SpreadsheetApp.getUi().alert('Could not locate active Google Spreadsheet.');
+    return;
+  }
+  
+  var sheet = ss.getSheetByName('Hackathon_Repo_Reminder');
+  if (!sheet) {
+    SpreadsheetApp.getUi().alert('Please run "4. Setup Hackathon_Repo_Reminder Sheet" first.');
+    return;
+  }
+  
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) {
+    SpreadsheetApp.getUi().alert('The sheet "Hackathon_Repo_Reminder" has no recipient rows. Please paste the recipient data from your Downloads folder first.');
+    return;
+  }
+  
+  var quotaRemaining = MailApp.getRemainingDailyQuota();
+  if (quotaRemaining < 5) {
+    SpreadsheetApp.getUi().alert('Daily Gmail sending quota reached (' + quotaRemaining + ' left). Please try again tomorrow.');
+    return;
+  }
+  
+  var data = sheet.getRange(2, 1, lastRow - 1, 9).getValues();
+  var sentCount = 0;
+  var skippedCount = 0;
+  
+  for (var i = 0; i < data.length; i++) {
+    var rowNum = i + 2;
+    var name = String(data[i][0]).trim() || 'Innovator';
+    var email = String(data[i][1]).trim().toLowerCase();
+    var role = String(data[i][2]).trim();
+    var teamName = String(data[i][3]).trim() || 'Your Team';
+    var vertical = String(data[i][4]).trim() || 'Quantum Computing';
+    var problemId = String(data[i][5]).trim() || 'Phase 1';
+    var repoStatus = String(data[i][6] || '').trim();
+    var repoUrl = String(data[i][7] || '').trim();
+    var currentStatus = String(data[i][8] || '').trim();
+    
+    if (!email || email.indexOf('@') === -1) {
+      sheet.getRange(rowNum, 9).setValue('SKIPPED (Invalid Email)');
+      continue;
+    }
+    
+    // Deduplication check: Never re-send to anyone already marked SENT
+    if (currentStatus.indexOf('SENT') !== -1) {
+      skippedCount++;
+      continue;
+    }
+    
+    if (MailApp.getRemainingDailyQuota() <= 2) {
+      Logger.log('Quota limit reached during batch. Stopping cleanly.');
+      break;
+    }
+    
+    try {
+      sendHackathonRepoReminderEmail(email, name, teamName, vertical, problemId);
+      var timestamp = Utilities.formatDate(new Date(), 'Asia/Kolkata', 'yyyy-MM-dd HH:mm:ss');
+      sheet.getRange(rowNum, 9).setValue('SENT (' + timestamp + ' IST)');
+      sentCount++;
+      Utilities.sleep(1000); // Polite rate limit
+    } catch (mailErr) {
+      sheet.getRange(rowNum, 9).setValue('ERROR: ' + mailErr.toString().slice(0, 100));
+    }
+  }
+  
+  var summary = 'Hackathon Reminder Campaign completed!\n\n' +
+    'Successfully Dispatched: ' + sentCount + '\n' +
+    'Skipped (Already Sent): ' + skippedCount + '\n' +
+    'Daily Quota Remaining: ' + MailApp.getRemainingDailyQuota();
+  
+  Logger.log(summary);
+  SpreadsheetApp.getUi().alert(summary);
+}
+
+/**
+ * 7. Master HTML email builder for Hackathon Phase 1 Repo Reminder.
+ */
+function sendHackathonRepoReminderEmail(recipientEmail, participantName, teamName, vertical, problemStatementId) {
+  var subject = 'IBM Qiskit Fall Fest 2026 — Action Required: Hackathon Phase 1 Submission & Public Repo Check (Tonight 11:59 PM IST)';
+  
+  var htmlBody = '<!DOCTYPE html>'
+    + '<html lang="en" xmlns="http://www.w3.org/1999/xhtml">'
+    + '<head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0">'
+    + '<style type="text/css">body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; } table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; } img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; } body { margin: 0; padding: 0; width: 100% !important; background-color: #f5efea; }</style>'
+    + '</head>'
+    + '<body style="margin:0;padding:24px 12px;background-color:#f5efea;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Helvetica,Arial,sans-serif;color:#231f20;line-height:1.65;">'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:680px;margin:0 auto;background-color:#ffffff;border:1px solid #e4dacb;border-radius:12px;overflow:hidden;box-shadow:0 4px 18px rgba(124,20,21,0.06);">'
+    + '<tr><td style="padding:0;background-color:#faf7f2;text-align:center;">'
+    + '<img src="https://www.qffsrmap2026.com/brand/qiskit-fall-fest-banner.png" alt="IBM Qiskit Fall Fest 2026 — Partner Plus Host at SRM University-AP" width="680" style="display:block;width:100%;max-width:680px;height:auto;border:0;outline:none;">'
+    + '</td></tr>'
+    + '<tr><td style="background-color:#7c1415;padding:10px 24px;text-align:center;">'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr>'
+    + '<td style="font-family:\'Georgia\',\'Times New Roman\',serif;font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:#fdf8f0;font-weight:bold;text-align:center;">'
+    + 'IBM PARTNER PLUS · SRM UNIVERSITY-AP · HACKATHON PHASE 1 SUBMISSION &amp; REPO CHECK'
+    + '</td></tr></table></td></tr>'
+    + '<tr><td style="padding:32px 36px 36px 36px;">'
+    + '<p style="margin:0 0 16px 0;font-size:16px;color:#231f20;font-weight:bold;">Dear ' + participantName + ' (Team: ' + teamName + '),</p>'
+    + '<p style="margin:0 0 14px 0;font-size:15px;color:#3d3635;line-height:1.7;">'
+    + 'The online submission window for <strong>Phase 1 of the Flagship Quantum Hackathon</strong> at Partner Plus IBM Qiskit Fall Fest 2026 closes <strong>tonight, Saturday, 17 October 2026 at 11:59 PM IST</strong>.'
+    + '</p>'
+    + '<p style="margin:0 0 24px 0;font-size:15px;color:#3d3635;line-height:1.7;">'
+    + 'Whether your team has already submitted or is putting the finishing touches on your solution, please read this notification carefully to ensure your work is evaluated by our academic and IBM review panel.'
+    + '</p>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#fcf9f4;border:1px solid #dfcfb9;border-top:4px solid #7c1415;border-radius:8px;margin:24px 0 28px 0;"><tr>'
+    + '<td style="padding:26px 24px;text-align:center;">'
+    + '<div style="display:inline-block;background-color:#faefe0;border:1px solid #d9be97;border-radius:4px;padding:4px 12px;font-size:11px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase;color:#7c1415;margin-bottom:12px;">Final Hours · Phase 1 Submission Arena</div>'
+    + '<h2 style="margin:0 0 8px 0;font-family:\'Georgia\',\'Times New Roman\',serif;font-size:22px;color:#7c1415;font-weight:bold;line-height:1.3;">Repository Submission &amp; Verification</h2>'
+    + '<p style="margin:0 0 6px 0;font-size:14px;color:#554c4a;">Qualify for Phase 2 On-Campus Shortlisting · &#8377;1,00,000+ Prize Pool · Industry Internships</p>'
+    + '<p style="margin:0 0 20px 0;font-size:14.5px;color:#7c1415;font-weight:bold;">Final Deadline: Tonight · Saturday, 17 October 2026 · 11:59 PM IST</p>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr>'
+    + '<td align="center" style="border-radius:6px;background-color:#7c1415;">'
+    + '<a href="https://www.qffsrmap2026.com/learning/hackathon" target="_blank" style="display:inline-block;padding:14px 28px;font-size:14px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:6px;letter-spacing:0.8px;text-transform:uppercase;border:1px solid #630e10;">Open Hackathon Arena &rarr;</a>'
+    + '</td></tr></table>'
+    + '<p style="margin:16px 0 0 0;font-size:12px;color:#7d726e;">Direct link: <a href="https://www.qffsrmap2026.com/learning/hackathon" style="color:#7c1415;text-decoration:underline;">https://www.qffsrmap2026.com/learning/hackathon</a></p>'
+    + '</td></tr></table>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 28px 0;">'
+    + '<tr><td style="padding-bottom:16px;">'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f0f7f3;border:1px solid #c2e0cf;border-left:4px solid #1e7e45;border-radius:8px;padding:18px 20px;"><tr><td>'
+    + '<div style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#1e7e45;margin-bottom:4px;">Already Submitted? (Critical Public Visibility Check)</div>'
+    + '<div style="font-size:16px;font-weight:bold;color:#1e7e45;margin-bottom:8px;">Ensure Your Repository is Set to &quot;Public&quot;</div>'
+    + '<p style="margin:0 0 10px 0;font-size:14px;color:#2c4033;line-height:1.6;">Several submitted repositories are currently set to <strong>Private</strong>. If your repository is private, our evaluation panel cannot open your code and will receive a <code>404 Not Found</code> error.</p>'
+    + '<ul style="margin:0 0 8px 0;padding-left:20px;font-size:13.5px;color:#2c4033;line-height:1.6;">'
+    + '<li><strong>The Incognito Test:</strong> Open your repository link in an <strong>Incognito / Private browser tab</strong> (while logged out of GitHub/GitLab). If you can view your code and README without logging in, your repo is properly public.</li>'
+    + '<li><strong>Latest Commits Pushed?</strong> Ensure all your circuits, code, and documentation are committed and pushed to your remote <code>main</code> branch before midnight.</li>'
+    + '<li><strong>Updates Allowed:</strong> You can edit your submitted repository URL or notes on the arena anytime before 11:59 PM IST tonight.</li>'
+    + '</ul></td></tr></table></td></tr>'
+    + '<tr><td><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#fdf6ed;border:1px solid #f0d5b5;border-left:4px solid #b97e3e;border-radius:8px;padding:18px 20px;"><tr><td>'
+    + '<div style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#b97e3e;margin-bottom:4px;">Yet to Submit? (Action Mandatory)</div>'
+    + '<div style="font-size:16px;font-weight:bold;color:#7c1415;margin-bottom:8px;">Submit Your Repository Link Before 11:59 PM IST</div>'
+    + '<p style="margin:0 0 10px 0;font-size:14px;color:#4f3d2a;line-height:1.6;">To be considered for the Phase 2 on-campus hackathon, prize pool of &#8377;1,00,000+, and certificates of achievement, your team must submit your repository URL on the Hackathon Arena tonight.</p>'
+    + '<ul style="margin:0;padding-left:20px;font-size:13.5px;color:#4f3d2a;line-height:1.6;">'
+    + '<li><strong>Any Teammate Can Submit:</strong> Either the Team Leader or any accepted Team Member can submit the repository link on behalf of the whole team.</li>'
+    + '<li><strong>Host on Git:</strong> Upload your code to a public <strong>GitHub</strong>, <strong>GitLab</strong>, or <strong>Hugging Face</strong> repository.</li>'
+    + '<li><strong>Submit Link:</strong> Go to <a href="https://www.qffsrmap2026.com/learning/hackathon" target="_blank" style="color:#7c1415;font-weight:bold;">qffsrmap2026.com/learning/hackathon</a>, paste your public repo URL, and click &quot;Submit Repository&quot;.</li>'
+    + '</ul></td></tr></table></td></tr></table>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 24px 0;"><tr><td style="border-bottom:1px solid #ebd9c2;"></td></tr></table>'
+    + '<h2 style="margin:0 0 6px 0;font-family:\'Georgia\',\'Times New Roman\',serif;font-size:20px;color:#7c1415;font-weight:bold;">Evaluation Rubric &amp; Repository Checklist</h2>'
+    + '<div style="width:40px;height:2px;background-color:#b97e3e;margin-bottom:16px;"></div>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#faf7f2;border:1px solid #e7dcce;border-radius:8px;padding:18px 20px;margin:0 0 28px 0;">'
+    + '<tr><td style="padding:6px 0;font-size:14px;color:#3d3635;line-height:1.6;border-bottom:1px solid #eee4d7;"><strong style="color:#7c1415;">1. Comprehensive README.md:</strong> Problem statement overview, proposed quantum architecture, choice of algorithms (VQE, QAOA, QSVM, Grover, etc.), and team members&apos; contributions.</td></tr>'
+    + '<tr><td style="padding:8px 0;font-size:14px;color:#3d3635;line-height:1.6;border-bottom:1px solid #eee4d7;"><strong style="color:#7c1415;">2. Working Circuit Code &amp; Notebooks:</strong> Clean Python files (<code>.py</code>) or well-documented Jupyter notebooks (<code>.ipynb</code>) containing Qiskit circuit implementations, simulation outputs, and result charts.</td></tr>'
+    + '<tr><td style="padding:8px 0 0 0;font-size:14px;color:#3d3635;line-height:1.6;"><strong style="color:#7c1415;">3. Reproducibility:</strong> Dependencies file (<code>requirements.txt</code> or environment specs) and clear setup steps so evaluators can run your code.</td></tr></table>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#fbf7ef;border:1px solid #e1d3bf;border-radius:8px;padding:20px;margin:0 0 32px 0;"><tr><td>'
+    + '<h3 style="margin:0 0 6px 0;font-size:16px;color:#7c1415;font-weight:bold;">Need Assistance or Encountering Submission Errors?</h3>'
+    + '<p style="margin:0 0 14px 0;font-size:14px;color:#4f443b;line-height:1.6;">Our technical committee and student organizers are active on WhatsApp to assist with team rosters, submission glitches, and public repository checks:</p>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="background-color:#2a6a43;border-radius:6px;">'
+    + '<a href="https://chat.whatsapp.com/HoLFUpcm46L0qDE6VBdboW" target="_blank" style="display:inline-block;padding:11px 22px;font-size:13.5px;font-weight:bold;color:#ffffff;text-decoration:none;">Join Official WhatsApp Community &rarr;</a>'
+    + '</td></tr></table></td></tr></table>'
+    + '<p style="margin:0 0 14px 0;font-size:14.5px;color:#3d3635;line-height:1.7;">Shortlisted Phase 1 teams will be announced on the portal and invited to the 24-hour physical on-campus Hackathon Phase 2 on <strong>27–28 October 2026</strong> at SRM University-AP.</p>'
+    + '<p style="margin:0 0 26px 0;font-size:14.5px;color:#3d3635;line-height:1.7;">We encourage every participant to double-check their repository access tonight. Best of luck with your submissions!</p>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0 10px 0;"><tr><td style="border-left:3px solid #7c1415;padding-left:14px;">'
+    + '<p style="margin:0;font-size:14.5px;color:#231f20;line-height:1.5;">Best regards,<br><strong>Hackathon Technical Committee</strong><br>Partner Plus IBM Qiskit Fall Fest 2026<br>Department of Computer Science &amp; Engineering<br>SRM University-AP</p>'
+    + '</td></tr></table></td></tr>'
+    + '<tr><td style="background-color:#faf7f2;border-top:1px solid #ebd9c2;padding:22px 36px;text-align:center;">'
+    + '<p style="margin:0 0 8px 0;font-family:\'Georgia\',\'Times New Roman\',serif;font-size:13px;color:#7c1415;font-weight:bold;">Partner Plus IBM Qiskit Fall Fest 2026</p>'
+    + '<p style="margin:0 0 10px 0;font-size:12px;color:#6b625b;">Department of Computer Science &amp; Engineering, SRM University-AP</p>'
+    + '<p style="margin:0;font-size:12px;color:#857a73;">Hackathon Arena: <a href="https://www.qffsrmap2026.com/learning/hackathon" target="_blank" style="color:#7c1415;text-decoration:underline;">qffsrmap2026.com/learning/hackathon</a> &nbsp;·&nbsp; Learning Portal: <a href="https://www.qffsrmap2026.com/learning" target="_blank" style="color:#7c1415;text-decoration:underline;">qffsrmap2026.com/learning</a></p>'
+    + '</td></tr></table></body></html>';
+  
+  GmailApp.sendEmail(recipientEmail, subject, 'Please view this email in an HTML-compatible client.', {
+    htmlBody: htmlBody,
+    name: 'Qiskit Fall Fest 2026'
+  });
+}
+
+
 

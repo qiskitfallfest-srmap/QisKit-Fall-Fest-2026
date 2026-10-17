@@ -129,6 +129,9 @@ def main():
             continue
         if em in PROTECTED_EMAILS or "sazzadali.b" in em or "gangireddy.s" in em:
             continue
+        # Exclude admins, mentors, and testers from student pass campaigns
+        if em in allowed_map and (allowed_map[em].get("role") or "").lower() in ("admin", "mentor", "tester"):
+            continue
 
         name = ""
         if em in unstop_map and not is_code_or_garbage(unstop_map[em]["name"]):

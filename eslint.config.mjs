@@ -14,6 +14,8 @@ export default defineConfig([
       "node_modules/**",
       "public/**",
       "dist/**",
+      ".claude/**",
+      ".tmp/**",
     ],
   },
   ...next,
