@@ -36,10 +36,8 @@
 var WEBHOOK_URL = 'https://www.qffsrmap2026.com/api/webhooks/google-form';
 var WEBHOOK_SECRET = 'qff-srmap-2026-sync-secret'; // Must match GOOGLE_FORM_SYNC_SECRET in your .env
 
-// OPTIONAL: If this script is attached directly to the Google Form (or standalone),
-// paste your Google Sheet URL or ID below so the script can locate and mark rows.
-// Example: 'https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit'
-var SPREADSHEET_ID_OR_URL = '';
+// Configured for Qiskit_Fall_Fest (Responses)
+var SPREADSHEET_ID_OR_URL = '1mWBUDchcuUsG0J9dbWjdbduLHt0CBCYbQeBe8QzcJBE';
 
 /**
  * Safely resolves the target Google Spreadsheet across all contexts:
@@ -133,7 +131,7 @@ function onFormSubmit(e) {
       try {
         var ss = getTargetSpreadsheet();
         if (ss) {
-          var targetSheet = ss.getActiveSheet() || ss.getSheets()[0];
+          var targetSheet = ss.getSheetByName('Form Responses 1') || ss.getSheets()[0];
           var participantEmail = findField(record, ['Email ID', 'Email', 'Email Address']);
           if (participantEmail) {
             updateRowStatusForEmail(targetSheet, participantEmail, 'SYNCED', 'SENT');
@@ -148,7 +146,7 @@ function onFormSubmit(e) {
     // Case 3: Manual execution or fallback without event object
     var ssFallback = getTargetSpreadsheet();
     if (ssFallback) {
-      var activeSheet = ssFallback.getActiveSheet() || ssFallback.getSheets()[0];
+      var activeSheet = ssFallback.getSheetByName('Form Responses 1') || ssFallback.getSheets()[0];
       syncSingleRow(activeSheet, activeSheet.getLastRow());
     } else {
       Logger.log('onFormSubmit: No event object and no spreadsheet available.');
@@ -530,7 +528,7 @@ function syncAllUnsyncedRows() {
     return;
   }
   
-  var sheet = ss.getActiveSheet() || ss.getSheets()[0];
+  var sheet = ss.getSheetByName('Form Responses 1') || ss.getSheets()[0];
   var lastRow = sheet.getLastRow();
   if (lastRow <= 1) {
     try {
@@ -570,7 +568,7 @@ function sendMissingWelcomeEmails() {
     return;
   }
   
-  var sheet = ss.getActiveSheet() || ss.getSheets()[0];
+  var sheet = ss.getSheetByName('Form Responses 1') || ss.getSheets()[0];
   var lastRow = sheet.getLastRow();
   if (lastRow <= 1) return;
   
