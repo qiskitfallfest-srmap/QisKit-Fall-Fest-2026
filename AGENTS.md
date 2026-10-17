@@ -34,7 +34,7 @@ This file is automatically loaded by AI agents working in this workspace.
 
 2. **Fee Structure & Non-Misleading Copy (CRITICAL):**
    - **Online Phase is 100% FREE:** Registration, masterclasses, quizzes, the creative competitions (Reels, Poster, Essay), and Hackathon Phase 1 require zero payment.
-   - **Optional Verified Certificate Fee (₹99):** An optional fee for minting a cryptographically verified completion certificate after finishing all 5 masterclasses and quizzes. Never call it a "Registration Fee" or "Online Course Fee".
+   - **Optional Verified Certificate Fee (₹99):** An optional fee for the course completion certificate after finishing all 5 masterclasses and quizzes. Paid on the same Easebuzz form as the General Offline Pass, but it is a **separate payment**: one Easebuzz Transaction ID covers exactly one purchase (pass or certificate, enforced by a DB trigger). Hackathon participants may buy the certificate. The participant chooses delivery: collect in person at the valedictory ceremony, or receive by email. Never call it a "Registration Fee" or "Online Course Fee".
    - **On-Campus Passes (26–30 October 2026):** General Offline Pass from ₹99 (eligible campus activities, exhibitions, keynotes, workshops, debates, open games) and All-Access Flagship Pass at ₹499 (eligible flagship activities such as Hackathon Phase 2, QCTF, and Startup Pitch subject to qualification, lunch on all five days, two snack servings per day, priority workshop seating). Always state that a pass does not guarantee selection for competitive events. The full breakdown lives on `/about` (`components/about/AboutArticle.tsx`) and FAQ 17; keep them synchronized.
    - **FAQ #14 Integrity:** FAQ 14 is dedicated to Day 2/3 Poster & Essay submissions. Never override FAQ 14 with payment or fee blocks (fee cards belong under FAQ 17).
 
@@ -154,7 +154,12 @@ This file is automatically loaded by AI agents working in this workspace.
 
 4. **Gate Verification Desk & Admin Console:**
    - **Desk URL:** `/verify-pass` (`app/verify-pass/page.tsx`). Supports high-speed camera QR code barcode scanning, pass lookup, and idempotent gate check-in (`POST /api/pass/verify`).
-   - **Admin Management:** Available in `/admin` under the "Passes" tab (`components/learning/AdminPassManager.tsx`) for reviewing uploaded payment receipts, approving/rejecting claims, and tracking live gate attendance.
+   - **Admin Management:** `/learning/admin` → "Payments: Pass & Certificate" tab (`components/learning/AdminPaymentsManager.tsx`, API `app/api/admin/payments/route.ts`). One review queue for both ₹99 purchases: receipt preview, cross-purchase and duplicate-transaction flags, course progress for certificates, approve / reject (reason required, shown to the participant) / reopen. Approving a certificate mints it. A "To deliver" queue tracks ceremony hand-over or email dispatch (`delivered_at`).
+
+5. **Certificate Payment Flow (GT-35):**
+   - Participant: `components/learning/CertificateModal.tsx` → Easebuzz → upload receipt to `media/certificate-receipts/*` → `POST /api/learning/certificate/submit-payment` (txn ID, receipt URL, optional bank ref, `deliveryMode` = `ceremony` | `email`).
+   - Table `public.certificate_payment_submissions`, extended by migration `supabase/migrations/20261017220000_certificate_payments_via_easebuzz.sql` (receipt, delivery, reviewer columns; cross-table transaction trigger; storage insert policy).
+   - Shared constants (gateway URL, fees, txn validation, receipt upload): `lib/payments.ts`.
 
 
 

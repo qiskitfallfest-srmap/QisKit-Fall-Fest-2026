@@ -9,8 +9,7 @@ import { AdminSessionsManager } from '@/components/learning/AdminSessionsManager
 import { AdminQuizzesManager } from '@/components/learning/AdminQuizzesManager';
 import { AdminCodingChallengeView } from '@/components/learning/AdminCodingChallengeView';
 import { AdminCompetitionsView } from '@/components/learning/AdminCompetitionsView';
-import { AdminCertificateManager } from '@/components/learning/AdminCertificateManager';
-import { AdminPassManager } from '@/components/learning/AdminPassManager';
+import { AdminPaymentsManager } from '@/components/learning/AdminPaymentsManager';
 import {
   Shield,
   Ticket,
@@ -38,7 +37,7 @@ import { extractParticipantsFromCSV, ParsedParticipant } from '@/lib/csv';
 
 export default function AdminConsolePage() {
   const [session, setSession] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'analytics' | 'hackathon' | 'competitions' | 'whitelist' | 'overrides' | 'sessions' | 'quizzes' | 'coding' | 'certificates' | 'passes'>('hackathon');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'hackathon' | 'competitions' | 'whitelist' | 'overrides' | 'sessions' | 'quizzes' | 'coding' | 'payments'>('hackathon');
 
   const [emails, setEmails] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -477,28 +476,15 @@ export default function AdminConsolePage() {
 
             <button
               type="button"
-              onClick={() => setActiveTab('passes')}
+              onClick={() => setActiveTab('payments')}
               className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
-                activeTab === 'passes'
+                activeTab === 'payments'
                   ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
                   : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
               }`}
             >
               <Ticket className="w-4 h-4" />
-              <span>On-Campus Passes (₹99)</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('certificates')}
-              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
-                activeTab === 'certificates'
-                  ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
-                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
-              }`}
-            >
-              <Award className="w-4 h-4" />
-              <span>Certificates &amp; UPI QR</span>
+              <span>Payments: Pass &amp; Certificate</span>
             </button>
 
             <button
@@ -515,11 +501,8 @@ export default function AdminConsolePage() {
             </button>
           </div>
 
-          {/* TAB: ON-CAMPUS PASSES & RECEIPT AUDIT */}
-          {activeTab === 'passes' && <AdminPassManager />}
-
-          {/* TAB: CERTIFICATES & UPI QR CONFIGURATION */}
-          {activeTab === 'certificates' && <AdminCertificateManager />}
+          {/* TAB: ₹99 PAYMENTS REVIEW (OFFLINE PASS + CERTIFICATE) */}
+          {activeTab === 'payments' && <AdminPaymentsManager />}
 
           {/* TAB: HACKATHON TEAMS & PARTICIPANTS */}
           {activeTab === 'hackathon' && <AdminHackathonView />}

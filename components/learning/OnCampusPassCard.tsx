@@ -22,6 +22,15 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import clsx from 'clsx';
+import {
+  EASEBUZZ_GATEWAY_URL,
+  MAX_RECEIPT_SIZE_MB,
+  TXN_FORMAT_HINT,
+  TXN_PATTERN,
+  isAcceptedReceipt,
+  normalizeTxn,
+  uploadReceipt,
+} from '@/lib/payments';
 
 interface PassClaim {
   id: string;
@@ -54,9 +63,6 @@ interface PassStatusResponse {
   pass?: PassClaim | null;
 }
 
-const EASEBUZZ_GATEWAY_URL =
-  'https://forms.easebuzz.in/register/SRMAPIA9oJ/QiskitFallFestSRMAP2026';
-const MAX_RECEIPT_SIZE_MB = 15;
 const GATEWAY_OPENED_KEY = 'qff_pass_gateway_opened_v1';
 
 const PASS_INCLUSIONS = [
@@ -68,18 +74,6 @@ const PASS_INCLUSIONS = [
 
 // Ticket notches are filled with the dashboard background so they read as cut-outs
 const NOTCH = 'absolute w-5 h-5 rounded-full bg-[#FAF7F4] dark:bg-[#100405]';
-
-function isAcceptedReceipt(file: File): boolean {
-  const lower = file.name.toLowerCase();
-  return (
-    lower.endsWith('.pdf') ||
-    lower.endsWith('.png') ||
-    lower.endsWith('.jpg') ||
-    lower.endsWith('.jpeg') ||
-    file.type.startsWith('image/') ||
-    file.type === 'application/pdf'
-  );
-}
 
 function StepMarker({ index, done, active }: { index: number; done: boolean; active: boolean }) {
   return (
@@ -193,9 +187,9 @@ export function OnCampusPassCard() {
     e.preventDefault();
     setErrorMessage('');
 
-    const normalizedTxn = transactionRef.replace(/\s+/g, '').toUpperCase();
-    if (!/^[A-Z0-9]{6,40}$/.test(normalizedTxn)) {
-      setErrorMessage('Enter the Easebuzz Transaction ID exactly as shown on your receipt (letters and digits, e.g. E26101518BKHN3).');
+    const normalizedTxn = normalizeTxn(transactionRef);
+    if (!TXN_PATTERN.test(normalizedTxn)) {
+      setErrorMessage(TXN_FORMAT_HINT);
       return;
     }
     if (!selectedFile) {
@@ -207,29 +201,12 @@ export function OnCampusPassCard() {
     setUploadStatus('Uploading receipt...');
 
     try {
-      const { supabase } = await import('@/lib/supabase');
-      const ext = selectedFile.name.split('.').pop()?.toLowerCase() || 'pdf';
-      const emailSlug = (data?.user?.email || 'attendee')
-        .replace(/[^a-z0-9]/gi, '_')
-        .slice(0, 40);
-      const storagePath = `pass-receipts/${emailSlug}_${normalizedTxn}_${Date.now()}.${ext}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('media')
-        .upload(storagePath, selectedFile, {
-          cacheControl: '3600',
-          upsert: false,
-          contentType: selectedFile.type || 'application/pdf',
-        });
-
-      if (uploadError) {
-        throw new Error(`Receipt upload failed: ${uploadError.message}`);
-      }
-
-      const { data: publicUrlData } = supabase.storage.from('media').getPublicUrl(storagePath);
-      if (!publicUrlData?.publicUrl) {
-        throw new Error('Could not resolve receipt URL.');
-      }
+      const receiptUrl = await uploadReceipt(
+        selectedFile,
+        'pass-receipts',
+        data?.user?.email || '',
+        normalizedTxn
+      );
 
       setUploadStatus('Submitting claim...');
 
@@ -238,7 +215,7 @@ export function OnCampusPassCard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           transactionReference: normalizedTxn,
-          receiptUrl: publicUrlData.publicUrl,
+          receiptUrl,
           bankReference: bankRef.trim() || null,
         }),
       });

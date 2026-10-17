@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
 import { checkCertificateEligibility } from '@/lib/certificate';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
+import { CERTIFICATE_FEE_INR, EASEBUZZ_GATEWAY_URL } from '@/lib/payments';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -13,46 +14,25 @@ export async function GET() {
   }
 
   try {
-    const result = await checkCertificateEligibility(session.email);
+    const normalizedEmail = session.email.trim().toLowerCase();
+    const result = await checkCertificateEligibility(normalizedEmail);
 
-    // Fetch dynamic certificate configuration from platform_config
-    const { data: configRow } = await supabase
-      .from('platform_config')
-      .select('value')
-      .eq('key', 'certificate_config')
-      .maybeSingle();
-
-    const certConfig = configRow?.value || {};
-
-    // Check if candidate already submitted a UTI payment record
-    const { data: existingSubmission } = await supabase
+    // Service client: RLS on this table keys off the Supabase JWT, which server routes do not carry
+    const { data: submissionRows } = await supabaseAdmin
       .from('certificate_payment_submissions')
-      .select('*')
-      .ilike('user_email', session.email.trim().toLowerCase())
+      .select(
+        'id, transaction_reference, bank_reference, receipt_url, amount_inr, status, admin_notes, delivery_mode, delivered_at, created_at'
+      )
+      .ilike('user_email', normalizedEmail)
       .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .limit(1);
 
     return NextResponse.json(
       {
         success: true,
-        priceInr: certConfig.price_inr ?? null,
-        feeLabel:
-          certConfig.fee_label ||
-          (certConfig.price_inr ? `₹${certConfig.price_inr} INR` : 'Updating Soon / To be announced'),
-        paymentStatus: certConfig.payment_status || 'updating_soon',
-        upiId: certConfig.upi_id || '',
-        bankName: certConfig.bank_name || '',
-        accountNumber: certConfig.account_number || '',
-        ifscCode: certConfig.ifsc_code || '',
-        accountHolder: certConfig.account_holder || 'SRM University-AP',
-        qrCodeUrl: certConfig.qr_code_url || '',
-        noticeTitle:
-          certConfig.notice_title || 'Payment Gateway & Official QR Code Updating Soon',
-        noticeMessage:
-          certConfig.notice_message ||
-          'The official UPI payment QR code and bank account details for certificate issuance are currently being finalized by the organizing team. Once released, you will be able to scan the QR code to complete the fee transfer and submit your Unique Transaction ID (UTI) / UPI Reference Number below.',
-        paymentSubmission: existingSubmission || null,
+        feeInr: CERTIFICATE_FEE_INR,
+        gatewayUrl: EASEBUZZ_GATEWAY_URL,
+        paymentSubmission: submissionRows?.[0] || null,
         userEmail: session.email,
         userName: session.fullName || session.email,
         ...result,

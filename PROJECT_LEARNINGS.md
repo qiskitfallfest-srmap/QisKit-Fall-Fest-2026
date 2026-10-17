@@ -262,9 +262,12 @@ sahgyan9/Qiskit-Fall-Fest-SRMAP-2026 (PLANNING REPO)
 3. **Staff Gate Verification Desk (`/verify-pass`) & Admin Console**:
    - High-throughput gate entrance interface with camera barcode/QR scanner (`@zxing/browser`) and manual search.
    - Authenticated staff can verify attendees in <500ms and record tamper-resistant one-time check-in stamps (`POST /api/pass/verify`) with duplicate admission prevention.
-   - Admin management live under the "Passes" tab in `/admin` (`components/learning/AdminPassManager.tsx`) for reviewing uploaded payment receipts, approving/rejecting claims, and tracking live gate attendance.
+   - Admin management lives under the "Payments: Pass & Certificate" tab in `/learning/admin` (`components/learning/AdminPaymentsManager.tsx`), see GT-35.
 
+---
 
-
-
-
+### GT-35: Certificate Fee on Easebuzz, Unified Payments Review & Delivery Tracking
+1. **Separate purchases, same gateway**: The ₹99 certificate and the ₹99 General Offline Pass both use the Easebuzz form in `lib/payments.ts`. They are separate payments. A transaction ID claimed in `festival_pass_claims` cannot be claimed in `certificate_payment_submissions` and vice versa (API checks plus `reject_cross_claimed_transaction` trigger).
+2. **Certificate claim**: Requires a completed course, Easebuzz Transaction ID, receipt in `media/certificate-receipts/*`, and a delivery choice (`ceremony` = valedictory ceremony in person, `email`). One row per participant; a rejected row is updated in place on resubmission. Hackathon participants are allowed.
+3. **Admin decisions**: `GET/PATCH /api/admin/payments` (`type=pass|certificate`). Rejection requires a reason (shown to the participant). Approving a certificate mints it via `mintCertificate`; approval is refused if the course is incomplete. Checked-in passes and issued certificates cannot be rejected. `reviewed_by` records the admin.
+4. **RLS pitfall**: Server routes use the anon or service client without a Supabase JWT, so RLS policies keyed on `auth.jwt() ->> 'email'` return nothing. Read participant-owned payment rows with `supabaseAdmin` after checking the session email.

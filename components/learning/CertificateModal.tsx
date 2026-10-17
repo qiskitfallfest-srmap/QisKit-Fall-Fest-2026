@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Award,
@@ -10,16 +10,26 @@ import {
   ExternalLink,
   ShieldCheck,
   AlertCircle,
-  AlertTriangle,
   X,
   Clock,
-  QrCode,
-  Mail,
-  Info,
-  Copy,
-  Check,
+  Upload,
+  FileText,
+  XCircle,
   Send,
+  Info,
 } from 'lucide-react';
+import {
+  CERTIFICATE_DELIVERY_LABEL,
+  CERTIFICATE_FEE_INR,
+  type CertificateDeliveryMode,
+  EASEBUZZ_GATEWAY_URL,
+  MAX_RECEIPT_SIZE_MB,
+  TXN_FORMAT_HINT,
+  TXN_PATTERN,
+  isAcceptedReceipt,
+  normalizeTxn,
+  uploadReceipt,
+} from '@/lib/payments';
 
 interface CertificateModalProps {
   isOpen: boolean;
@@ -28,26 +38,25 @@ interface CertificateModalProps {
   userName: string;
 }
 
+interface PaymentSubmission {
+  id: string;
+  transaction_reference: string;
+  bank_reference?: string | null;
+  receipt_url?: string | null;
+  amount_inr?: number | null;
+  status: 'pending_verification' | 'verified' | 'rejected';
+  admin_notes?: string | null;
+  delivery_mode?: CertificateDeliveryMode | null;
+  delivered_at?: string | null;
+  created_at: string;
+}
+
 interface EligibilityData {
   eligible: boolean;
   alreadyIssued: boolean;
-  priceInr?: number | null;
-  feeLabel?: string;
-  paymentStatus?: 'updating_soon' | 'active';
-  upiId?: string;
-  bankName?: string;
-  accountNumber?: string;
-  ifscCode?: string;
-  accountHolder?: string;
-  qrCodeUrl?: string;
-  noticeTitle?: string;
-  noticeMessage?: string;
-  paymentSubmission?: {
-    id: string;
-    transaction_reference: string;
-    status: 'pending_verification' | 'verified' | 'rejected';
-    created_at: string;
-  } | null;
+  feeInr?: number;
+  gatewayUrl?: string;
+  paymentSubmission?: PaymentSubmission | null;
   issuedCertificate?: {
     id: string;
     serialNumber: string;
@@ -77,10 +86,16 @@ export function CertificateModal({
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [issuedCert, setIssuedCert] = useState<any>(null);
-  const [utiInput, setUtiInput] = useState('');
-  const [isSubmittingUti, setIsSubmittingUti] = useState(false);
-  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [transactionRef, setTransactionRef] = useState('');
+  const [bankRef, setBankRef] = useState('');
+  const [deliveryMode, setDeliveryMode] = useState<CertificateDeliveryMode | ''>('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState('');
+  const [isResubmitting, setIsResubmitting] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -119,7 +134,6 @@ export function CertificateModal({
   async function loadEligibility() {
     setLoading(true);
     setErrorMessage('');
-    setSuccessMessage('');
     try {
       const res = await fetch('/api/learning/certificate/eligibility', {
         cache: 'no-store',
@@ -140,46 +154,84 @@ export function CertificateModal({
     }
   }
 
-  async function handleSubmitUti(e: React.FormEvent) {
-    e.preventDefault();
-    if (!utiInput.trim()) {
-      setErrorMessage('Please enter a valid UTI or UPI Reference Number.');
+  function acceptFile(file: File | undefined) {
+    setErrorMessage('');
+    if (!file) return;
+    if (!isAcceptedReceipt(file)) {
+      setErrorMessage('Please select a valid receipt file (PDF, PNG, JPG, or JPEG).');
       return;
     }
+    if (file.size > MAX_RECEIPT_SIZE_MB * 1024 * 1024) {
+      setErrorMessage(`Receipt size exceeds ${MAX_RECEIPT_SIZE_MB} MB limit.`);
+      return;
+    }
+    setSelectedFile(file);
+  }
 
-    setIsSubmittingUti(true);
+  function clearFile() {
+    setSelectedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
+  async function handleSubmitPayment(e: React.FormEvent) {
+    e.preventDefault();
     setErrorMessage('');
     setSuccessMessage('');
 
+    const normalizedTxn = normalizeTxn(transactionRef);
+    if (!TXN_PATTERN.test(normalizedTxn)) {
+      setErrorMessage(TXN_FORMAT_HINT);
+      return;
+    }
+    if (!selectedFile) {
+      setErrorMessage('Please upload your Easebuzz receipt (PDF or screenshot).');
+      return;
+    }
+    if (!deliveryMode) {
+      setErrorMessage('Choose how you want to receive the certificate.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setUploadStatus('Uploading receipt...');
+
     try {
-      const res = await fetch('/api/learning/certificate/submit-uti', {
+      const receiptUrl = await uploadReceipt(
+        selectedFile,
+        'certificate-receipts',
+        data?.userEmail || userEmail,
+        normalizedTxn
+      );
+
+      setUploadStatus('Submitting payment...');
+      const res = await fetch('/api/learning/certificate/submit-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          transactionReference: utiInput.trim(),
+          transactionReference: normalizedTxn,
+          receiptUrl,
+          bankReference: bankRef.trim() || null,
+          deliveryMode,
         }),
       });
 
       const resData = await res.json();
-      if (res.ok && resData.success) {
-        setSuccessMessage('Payment transaction ID submitted successfully! Verification is underway.');
-        setUtiInput('');
-        await loadEligibility();
-      } else {
-        setErrorMessage(resData.error || 'Failed to submit transaction reference.');
+      if (!res.ok || !resData.success) {
+        throw new Error(resData.error || 'Failed to submit payment.');
       }
-    } catch (err: any) {
-      setErrorMessage(err?.message || 'Network error submitting reference.');
-    } finally {
-      setIsSubmittingUti(false);
-    }
-  }
 
-  function handleCopy(text: string, fieldName: string) {
-    if (!text) return;
-    navigator.clipboard.writeText(text);
-    setCopiedField(fieldName);
-    setTimeout(() => setCopiedField(null), 2000);
+      setSuccessMessage('Receipt submitted. Your certificate will be issued once the payment is verified.');
+      setTransactionRef('');
+      setBankRef('');
+      clearFile();
+      setIsResubmitting(false);
+      await loadEligibility();
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Network error submitting payment.');
+    } finally {
+      setIsSubmitting(false);
+      setUploadStatus('');
+    }
   }
 
   if (!isOpen || !isMounted || typeof document === 'undefined') return null;
@@ -193,10 +245,11 @@ export function CertificateModal({
     Math.round((completedTasks / totalTasks) * 100)
   );
 
-  const isGatewayActive = data?.paymentStatus === 'active';
   const existingSub = data?.paymentSubmission;
+  const showPaymentForm = !existingSub || (existingSub.status === 'rejected' && isResubmitting);
+  const feeInr = data?.feeInr ?? CERTIFICATE_FEE_INR;
+  const gatewayUrl = data?.gatewayUrl || EASEBUZZ_GATEWAY_URL;
   const activeUserName = userName || data?.userName || 'Candidate';
-  const activeUserEmail = userEmail || data?.userEmail || 'your registered email';
 
   return createPortal(
     <div
@@ -259,10 +312,22 @@ export function CertificateModal({
                   Congratulations, {activeUserName}!
                 </h3>
                 <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 max-w-md mx-auto leading-relaxed">
-                  Your academic completion has been verified and permanently recorded on the
-                  blockchain-grade registry.
+                  Your course completion and payment have been verified. Anyone can confirm this
+                  certificate using its serial number.
                 </p>
               </div>
+
+              {data?.paymentSubmission?.delivery_mode && (
+                <p className="text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] rounded-lg p-3 text-left">
+                  {data.paymentSubmission.delivery_mode === 'ceremony'
+                    ? data.paymentSubmission.delivered_at
+                      ? 'Collected at the valedictory ceremony.'
+                      : 'Collect your printed certificate in person at the valedictory ceremony.'
+                    : data.paymentSubmission.delivered_at
+                      ? `Emailed to ${data.userEmail || userEmail}.`
+                      : `A copy will be emailed to ${data.userEmail || userEmail}.`}
+                </p>
+              )}
 
               {/* Serial & Distinction Preview Card */}
               <div className="p-4 bg-slate-50 dark:bg-[#1C0A0D] rounded-xl border border-slate-200 dark:border-[#3D1418] text-left space-y-2.5">
@@ -384,7 +449,7 @@ export function CertificateModal({
                 <div className="flex items-center gap-2.5">
                   <Lock className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
                   <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">
-                    Complete all {totalSessionsCount} video lectures and quizzes to unlock certificate payment and issuance.
+                    Complete all {totalSessionsCount} video lectures and quizzes to unlock the ₹{CERTIFICATE_FEE_INR} certificate payment.
                   </span>
                 </div>
                 <button
@@ -404,183 +469,22 @@ export function CertificateModal({
           ) : (
             /* STATE 3: ELIGIBLE (UNLOCKED) */
             <div className="space-y-5">
-              {/* Verification Success Badge */}
               <div className="p-4 bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl space-y-1.5">
                 <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-bold text-xs">
                   <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                  Academic Eligibility Verified
+                  Course Completed
                 </div>
                 <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                  You have completed all {totalSessionsCount} video lectures and passed every concept check quiz (Average Score: {data?.averageQuizScore}%). Your certificate qualification has been confirmed.
+                  You have completed all {totalSessionsCount} video lectures and passed every concept check quiz (average score {data?.averageQuizScore}%).
                 </p>
               </div>
 
-              {/* Status Notice Banner (Updating Soon vs Active) */}
-              {!isGatewayActive ? (
-                /* Updating Soon Notice */
-                <div className="p-4 bg-amber-50/90 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 rounded-xl space-y-2.5">
-                  <div className="flex items-center gap-2 text-amber-900 dark:text-amber-300 font-bold text-xs">
-                    <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-                    <span>{data?.noticeTitle || 'Payment Gateway & Official QR Code Updating Soon'}</span>
-                  </div>
-                  <p className="text-xs text-amber-900/90 dark:text-amber-200/90 leading-relaxed">
-                    {data?.noticeMessage ||
-                      'The official UPI payment QR code and bank account details for certificate issuance are currently being finalized by the organizing team.'}
-                  </p>
-                  <div className="p-2.5 bg-amber-100/70 dark:bg-amber-900/40 rounded-lg text-[11px] text-amber-950 dark:text-amber-200 space-y-1 border border-amber-200/60 dark:border-amber-800/60">
-                    <div className="font-semibold flex items-center gap-1.5">
-                      <Info className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400 shrink-0" />
-                      How certification works once details are published:
-                    </div>
-                    <ol className="list-decimal list-inside space-y-0.5 pl-1 text-[11px] leading-relaxed">
-                      <li>Scan the official UPI QR code or transfer directly to the provided bank account.</li>
-                      <li>Enter your 12-digit Unique Transaction ID (UTI) or UPI Reference Number in the verification form below.</li>
-                      <li>Upon administrative payment verification, your official co-certified digital certificate will be minted and emailed to <span className="font-mono font-semibold">{activeUserEmail}</span>.</li>
-                    </ol>
-                  </div>
-                </div>
-              ) : (
-                /* Active Payment Instructions */
-                <div className="p-4 bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 rounded-xl space-y-2">
-                  <div className="flex items-center gap-2 text-emerald-900 dark:text-emerald-200 font-bold text-xs">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                    <span>Payment Gateway Active · Complete Transfer &amp; Submit UTI</span>
-                  </div>
-                  <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                    Scan the official QR code below or use the bank details to transfer the certification fee. Once done, enter your UTI / UPI Reference number to submit for verification.
-                  </p>
-                </div>
-              )}
-
-              {/* Payment QR & Account Information Box */}
-              <div className="p-4 bg-slate-50 dark:bg-[#1A0A0D] border border-dashed border-slate-300 dark:border-[#3D1418] rounded-xl space-y-4">
-                <div className="flex flex-col sm:flex-row items-center gap-4">
-                  {/* QR Box */}
-                  <div className="w-36 h-36 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#150709] flex flex-col items-center justify-center p-2 text-center shrink-0 shadow-xs overflow-hidden">
-                    {isGatewayActive && data?.qrCodeUrl ? (
-                      <img
-                        src={data.qrCodeUrl}
-                        alt="Payment QR Code"
-                        className="w-full h-full object-contain"
-                      />
-                    ) : (
-                      <>
-                        <QrCode className="w-10 h-10 text-slate-400 dark:text-slate-600 mb-1" />
-                        <span className="font-mono text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                          UPI QR Code
-                        </span>
-                        <span className="font-mono text-[8px] text-amber-600 dark:text-amber-400 mt-0.5">
-                          {isGatewayActive ? 'Scan & Pay' : 'Updating Soon'}
-                        </span>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Specifications Grid */}
-                  <div className="flex-1 w-full space-y-2 text-xs">
-                    <div className="flex items-center justify-between pb-1.5 border-b border-slate-200/70 dark:border-[#3D1418]">
-                      <span className="text-slate-500 dark:text-slate-400 font-medium">Certification Fee</span>
-                      <span className="font-semibold text-slate-800 dark:text-slate-200">
-                        {data?.feeLabel || 'Updating Soon / To be announced'}
-                      </span>
-                    </div>
-
-                    {data?.upiId && (
-                      <div className="flex items-center justify-between pb-1.5 border-b border-slate-200/70 dark:border-[#3D1418]">
-                        <span className="text-slate-500 dark:text-slate-400 font-medium">UPI ID (VPA)</span>
-                        <div className="flex items-center gap-1.5">
-                          <code className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                            {data.upiId}
-                          </code>
-                          <button
-                            type="button"
-                            onClick={() => handleCopy(data.upiId || '', 'upi')}
-                            className="p-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-                            title="Copy UPI ID"
-                          >
-                            {copiedField === 'upi' ? (
-                              <Check className="w-3.5 h-3.5 text-emerald-500" />
-                            ) : (
-                              <Copy className="w-3.5 h-3.5" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {data?.bankName && (
-                      <div className="flex items-center justify-between pb-1.5 border-b border-slate-200/70 dark:border-[#3D1418]">
-                        <span className="text-slate-500 dark:text-slate-400 font-medium">Bank</span>
-                        <span className="font-semibold text-slate-800 dark:text-slate-200">
-                          {data.bankName}
-                        </span>
-                      </div>
-                    )}
-
-                    {data?.accountNumber && (
-                      <div className="flex items-center justify-between pb-1.5 border-b border-slate-200/70 dark:border-[#3D1418]">
-                        <span className="text-slate-500 dark:text-slate-400 font-medium">Account Number</span>
-                        <div className="flex items-center gap-1.5">
-                          <code className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                            {data.accountNumber}
-                          </code>
-                          <button
-                            type="button"
-                            onClick={() => handleCopy(data.accountNumber || '', 'acc')}
-                            className="p-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-                            title="Copy Account Number"
-                          >
-                            {copiedField === 'acc' ? (
-                              <Check className="w-3.5 h-3.5 text-emerald-500" />
-                            ) : (
-                              <Copy className="w-3.5 h-3.5" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {data?.ifscCode && (
-                      <div className="flex items-center justify-between pb-1.5 border-b border-slate-200/70 dark:border-[#3D1418]">
-                        <span className="text-slate-500 dark:text-slate-400 font-medium">IFSC Code</span>
-                        <div className="flex items-center gap-1.5">
-                          <code className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                            {data.ifscCode}
-                          </code>
-                          <button
-                            type="button"
-                            onClick={() => handleCopy(data.ifscCode || '', 'ifsc')}
-                            className="p-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-                            title="Copy IFSC"
-                          >
-                            {copiedField === 'ifsc' ? (
-                              <Check className="w-3.5 h-3.5 text-emerald-500" />
-                            ) : (
-                              <Copy className="w-3.5 h-3.5" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-500 dark:text-slate-400 font-medium">Certificate Delivery</span>
-                      <span className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
-                        <Mail className="w-3 h-3 text-slate-400" />
-                        Emailed post-verification
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Transaction ID Submission Section */}
-              {existingSub ? (
-                /* Already Submitted State */
-                <div className="p-4 bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] rounded-xl space-y-2">
-                  <div className="flex items-center justify-between">
+              {existingSub && !showPaymentForm ? (
+                /* Submitted payment status */
+                <div className="p-4 bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] rounded-xl space-y-3">
+                  <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                      Payment Verification Status
+                      Certificate Payment
                     </span>
                     {existingSub.status === 'pending_verification' && (
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center gap-1">
@@ -591,101 +495,275 @@ export function CertificateModal({
                     {existingSub.status === 'verified' && (
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
                         <CheckCircle2 className="w-3 h-3" />
-                        Payment Verified
+                        Verified
                       </span>
                     )}
                     {existingSub.status === 'rejected' && (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-900">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-900 flex items-center gap-1">
+                        <XCircle className="w-3 h-3" />
                         Rejected
                       </span>
                     )}
                   </div>
-                  <div className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-2">
-                    <span>Submitted UTI Reference:</span>
-                    <code className="font-mono font-bold text-slate-900 dark:text-[#FAF6F3] bg-white dark:bg-[#150709] px-2 py-0.5 rounded border border-slate-200 dark:border-[#3D1418]">
+
+                  <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-xs">
+                    <dt className="text-slate-500 dark:text-slate-400">Transaction ID</dt>
+                    <dd className="font-mono font-bold text-slate-900 dark:text-[#FAF6F3] break-all">
                       {existingSub.transaction_reference}
-                    </code>
-                  </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                    Your reference number is currently being cross-referenced with university records. The official certificate will be minted and emailed to <span className="font-mono font-semibold">{activeUserEmail}</span> once approved.
-                  </p>
-                </div>
-              ) : isGatewayActive ? (
-                /* Active Submission Form */
-                <form onSubmit={handleSubmitUti} className="p-4 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl space-y-3">
-                  <div className="space-y-1">
-                    <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200">
-                      UTI (Unique Transaction ID) / UPI Reference Number
-                    </label>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      Enter the 12-digit reference number provided by your UPI app (Google Pay, PhonePe, Paytm, BHIM) or bank receipt.
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <input
-                      type="text"
-                      required
-                      value={utiInput}
-                      onChange={(e) => setUtiInput(e.target.value)}
-                      placeholder="e.g. 428901234567 (12-digit transaction ID)"
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] rounded-lg text-xs text-slate-900 dark:text-[#FAF6F3] font-mono focus:outline-hidden focus:ring-1 focus:ring-burgundy"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isSubmittingUti}
-                    className="w-full py-2.5 px-4 bg-burgundy hover:bg-burgundy-deep text-white font-semibold text-xs rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shadow-xs"
-                  >
-                    {isSubmittingUti ? (
+                    </dd>
+                    <dt className="text-slate-500 dark:text-slate-400">Submitted</dt>
+                    <dd className="text-slate-700 dark:text-slate-300">
+                      {new Date(existingSub.created_at).toLocaleString('en-IN', {
+                        day: 'numeric',
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </dd>
+                    {existingSub.delivery_mode && (
                       <>
-                        <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>Submitting Reference...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-3.5 h-3.5" />
-                        <span>Submit Transaction ID for Verification</span>
+                        <dt className="text-slate-500 dark:text-slate-400">Delivery</dt>
+                        <dd className="text-slate-700 dark:text-slate-300">
+                          {CERTIFICATE_DELIVERY_LABEL[existingSub.delivery_mode]}
+                        </dd>
                       </>
                     )}
-                  </button>
-                </form>
+                    {existingSub.receipt_url && (
+                      <>
+                        <dt className="text-slate-500 dark:text-slate-400">Receipt</dt>
+                        <dd>
+                          <a
+                            href={existingSub.receipt_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-burgundy dark:text-[#E89BA5] font-semibold hover:underline inline-flex items-center gap-1"
+                          >
+                            View
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </dd>
+                      </>
+                    )}
+                  </dl>
+
+                  {existingSub.status === 'pending_verification' && (
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                      The organizing team is matching your receipt against Easebuzz records. Once approved, your certificate appears here and is delivered the way you chose above.
+                    </p>
+                  )}
+
+                  {existingSub.status === 'rejected' && (
+                    <div className="space-y-3">
+                      <p className="text-[11px] text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-lg p-2.5 leading-relaxed">
+                        {existingSub.admin_notes ||
+                          'The payment could not be matched. Check the Transaction ID and receipt, then resubmit.'}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setIsResubmitting(true)}
+                        className="w-full py-2 px-4 bg-burgundy hover:bg-burgundy-deep text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+                      >
+                        Resubmit Payment Details
+                      </button>
+                    </div>
+                  )}
+                </div>
               ) : (
-                /* Inactive Preview Mode Form */
-                <div className="p-4 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl space-y-3">
-                  <div className="space-y-1">
-                    <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200">
-                      UTI (Unique Transaction ID) / UPI Reference Number
-                    </label>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      Enter the 12-digit reference number provided by your UPI application (Google Pay, PhonePe, Paytm, BHIM) or bank statement.
+                /* Checkout: pay on Easebuzz, then submit Transaction ID + receipt */
+                <form onSubmit={handleSubmitPayment} className="space-y-4">
+                  <div className="p-4 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <span className="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          Step 1
+                        </span>
+                        <p className="text-xs font-bold text-slate-900 dark:text-[#FAF6F3]">
+                          Pay the ₹{feeInr} certificate fee on Easebuzz
+                        </p>
+                      </div>
+                      <span className="font-serif text-lg font-bold text-slate-900 dark:text-[#FAF6F3] shrink-0">
+                        ₹{feeInr}
+                      </span>
+                    </div>
+                    <a
+                      href={gatewayUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-2.5 px-4 bg-burgundy hover:bg-burgundy-deep text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      Open Easebuzz Payment Page
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                    <p className="flex items-start gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                      <Info className="w-3.5 h-3.5 shrink-0 mt-px" />
+                      <span>
+                        The certificate is a separate payment from the On-Campus Pass. A Transaction ID already used for a pass cannot be reused here.
+                      </span>
                     </p>
                   </div>
 
-                  <div className="space-y-2">
-                    <input
-                      type="text"
-                      disabled
-                      value={utiInput}
-                      onChange={(e) => setUtiInput(e.target.value)}
-                      placeholder="e.g. 428901234567 (12-digit transaction ID)"
-                      className="w-full px-3 py-2 bg-slate-100 dark:bg-[#250D11] border border-slate-200 dark:border-[#3D1418] rounded-lg text-xs text-slate-500 dark:text-slate-400 cursor-not-allowed opacity-75 font-mono"
-                    />
-                    <div className="flex items-center gap-1 text-[11px] text-amber-700 dark:text-amber-400">
-                      <Clock className="w-3.5 h-3.5 shrink-0" />
-                      <span>Reference input form will activate immediately once payment details are live.</span>
+                  <div className="p-4 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl space-y-3">
+                    <div>
+                      <span className="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        Step 2
+                      </span>
+                      <p className="text-xs font-bold text-slate-900 dark:text-[#FAF6F3]">
+                        Submit your receipt
+                      </p>
                     </div>
+
+                    <label className="block space-y-1">
+                      <span className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                        Easebuzz Transaction ID
+                      </span>
+                      <input
+                        type="text"
+                        required
+                        value={transactionRef}
+                        onChange={(e) => setTransactionRef(e.target.value)}
+                        placeholder="e.g. E26101518BKHN3"
+                        className="w-full px-3 py-2 bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] rounded-lg text-xs text-slate-900 dark:text-[#FAF6F3] font-mono uppercase focus:outline-hidden focus:ring-1 focus:ring-burgundy"
+                      />
+                    </label>
+
+                    <label className="block space-y-1">
+                      <span className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                        Bank reference <span className="font-normal text-slate-400">(optional)</span>
+                      </span>
+                      <input
+                        type="text"
+                        value={bankRef}
+                        onChange={(e) => setBankRef(e.target.value)}
+                        placeholder="UTR / bank reference number"
+                        className="w-full px-3 py-2 bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] rounded-lg text-xs text-slate-900 dark:text-[#FAF6F3] font-mono focus:outline-hidden focus:ring-1 focus:ring-burgundy"
+                      />
+                    </label>
+
+                    {selectedFile ? (
+                      <div className="flex items-center justify-between gap-2 p-3 bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] rounded-lg">
+                        <span className="flex items-center gap-2 min-w-0 text-xs text-slate-800 dark:text-slate-200">
+                          <FileText className="w-4 h-4 text-burgundy dark:text-[#E89BA5] shrink-0" />
+                          <span className="truncate">{selectedFile.name}</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={clearFile}
+                          className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer shrink-0"
+                          aria-label="Remove receipt"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <label
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          setIsDragOver(true);
+                        }}
+                        onDragLeave={() => setIsDragOver(false)}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setIsDragOver(false);
+                          acceptFile(e.dataTransfer.files?.[0]);
+                        }}
+                        className={`flex flex-col items-center justify-center gap-1 p-4 border border-dashed rounded-lg cursor-pointer text-center transition-colors ${
+                          isDragOver
+                            ? 'border-burgundy bg-burgundy/5'
+                            : 'border-slate-300 dark:border-[#3D1418] hover:border-slate-400'
+                        }`}
+                      >
+                        <Upload className="w-5 h-5 text-slate-400" />
+                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                          Upload receipt
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                          PDF or screenshot, up to {MAX_RECEIPT_SIZE_MB} MB
+                        </span>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/*"
+                          className="sr-only"
+                          onChange={(e) => acceptFile(e.target.files?.[0])}
+                        />
+                      </label>
+                    )}
                   </div>
 
-                  <button
-                    disabled
-                    className="w-full py-2.5 px-4 bg-slate-200 dark:bg-[#250D11] text-slate-400 dark:text-slate-500 font-semibold text-xs rounded-lg cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+                  <div
+                    role="radiogroup"
+                    aria-label="Certificate delivery"
+                    className="p-4 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl space-y-2"
                   >
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>Submit Transaction ID for Verification (Opening Soon)</span>
-                  </button>
-                </div>
+                    <div>
+                      <span className="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        Step 3
+                      </span>
+                      <p className="text-xs font-bold text-slate-900 dark:text-[#FAF6F3]">
+                        How do you want to receive it?
+                      </p>
+                    </div>
+                    {(Object.keys(CERTIFICATE_DELIVERY_LABEL) as CertificateDeliveryMode[]).map((mode) => (
+                      <label
+                        key={mode}
+                        className={`flex items-start gap-2.5 p-3 border rounded-lg cursor-pointer transition-colors ${
+                          deliveryMode === mode
+                            ? 'border-burgundy bg-burgundy/5 dark:border-[#E89BA5]'
+                            : 'border-slate-200 dark:border-[#3D1418] hover:border-slate-300'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="certificate-delivery"
+                          value={mode}
+                          checked={deliveryMode === mode}
+                          onChange={() => setDeliveryMode(mode)}
+                          className="mt-0.5 accent-[#800020]"
+                        />
+                        <span className="text-xs">
+                          <span className="block font-semibold text-slate-800 dark:text-slate-200">
+                            {CERTIFICATE_DELIVERY_LABEL[mode]}
+                          </span>
+                          <span className="block text-[11px] text-slate-500 dark:text-slate-400">
+                            {mode === 'ceremony'
+                              ? 'Pick up the printed certificate in person at the valedictory ceremony.'
+                              : `Sent to ${data?.userEmail || userEmail} after your payment is verified.`}
+                          </span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+
+                  <div className="flex gap-2">
+                    {isResubmitting && (
+                      <button
+                        type="button"
+                        onClick={() => setIsResubmitting(false)}
+                        disabled={isSubmitting}
+                        className="py-2.5 px-4 bg-slate-100 dark:bg-[#1C0A0D] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#3D1418] text-xs font-semibold rounded-lg cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="flex-1 py-2.5 px-4 bg-burgundy hover:bg-burgundy-deep text-white font-semibold text-xs rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>{uploadStatus || 'Submitting...'}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-3.5 h-3.5" />
+                          <span>Submit for Verification</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
               )}
 
               {successMessage && (
@@ -695,8 +773,9 @@ export function CertificateModal({
               )}
 
               {errorMessage && (
-                <p className="text-xs text-rose-600 dark:text-rose-400 font-medium bg-rose-50 dark:bg-rose-950/40 p-2.5 rounded border border-rose-200 dark:border-rose-900 leading-relaxed">
-                  {errorMessage}
+                <p className="text-xs text-rose-600 dark:text-rose-400 font-medium bg-rose-50 dark:bg-rose-950/40 p-2.5 rounded border border-rose-200 dark:border-rose-900 leading-relaxed flex items-start gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-px" />
+                  <span>{errorMessage}</span>
                 </p>
               )}
             </div>

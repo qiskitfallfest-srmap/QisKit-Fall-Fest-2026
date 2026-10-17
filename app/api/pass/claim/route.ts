@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import {
+  PASS_FEE_INR,
+  TXN_PATTERN,
+  normalizeBankRef,
+  normalizeTxn,
+  receiptUrlPrefix,
+} from '@/lib/payments';
 import crypto from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
-const SUPABASE_URL =
-  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://jpciyrodeppqpkwqblpk.supabase.co';
-const RECEIPT_URL_PREFIX = `${SUPABASE_URL}/storage/v1/object/public/media/pass-receipts/`;
-
-// Easebuzz transaction IDs are alphanumeric (e.g. E26101518BKHN3)
-const TXN_PATTERN = /^[A-Z0-9]{6,40}$/;
+const RECEIPT_URL_PREFIX = receiptUrlPrefix('pass-receipts');
 
 export async function POST(request: NextRequest) {
   try {
@@ -55,11 +57,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { transactionReference, receiptUrl, bankReference } = body;
 
-    const normalizedTxn = String(transactionReference || '')
-      .replace(/\s+/g, '')
-      .toUpperCase();
+    const normalizedTxn = normalizeTxn(transactionReference);
     const trimmedReceipt = String(receiptUrl || '').trim();
-    const trimmedBankRef = String(bankReference || '').replace(/\s+/g, '').slice(0, 40) || null;
+    const trimmedBankRef = normalizeBankRef(bankReference);
 
     if (!TXN_PATTERN.test(normalizedTxn)) {
       return NextResponse.json(
@@ -75,12 +75,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Transaction ID must not belong to another attendee
-    const { data: txnOwners } = await supabaseAdmin
-      .from('festival_pass_claims')
-      .select('id, user_email')
-      .ilike('transaction_reference', normalizedTxn)
-      .limit(1);
+    // 3. Transaction ID must not belong to another attendee, or to a certificate purchase
+    const [{ data: txnOwners }, { data: certTxnRows }] = await Promise.all([
+      supabaseAdmin
+        .from('festival_pass_claims')
+        .select('id, user_email')
+        .ilike('transaction_reference', normalizedTxn)
+        .limit(1),
+      supabaseAdmin
+        .from('certificate_payment_submissions')
+        .select('id')
+        .ilike('transaction_reference', normalizedTxn)
+        .limit(1),
+    ]);
+
+    if (certTxnRows?.length) {
+      return NextResponse.json(
+        {
+          error:
+            'This Easebuzz Transaction ID was already submitted for a certificate. The pass and the certificate are separate ₹99 payments; please pay again for the pass.',
+        },
+        { status: 409 }
+      );
+    }
 
     const txnOwner = txnOwners?.[0];
     if (txnOwner && txnOwner.user_email.toLowerCase() !== normalizedEmail) {
@@ -125,7 +142,7 @@ export async function POST(request: NextRequest) {
       transaction_reference: normalizedTxn,
       bank_reference: trimmedBankRef,
       receipt_url: trimmedReceipt,
-      amount_inr: 99.0,
+      amount_inr: PASS_FEE_INR,
       status: 'claimed_provisional',
       institution: reg?.institution || 'SRM University-AP',
       contact_phone: reg?.phone || null,
