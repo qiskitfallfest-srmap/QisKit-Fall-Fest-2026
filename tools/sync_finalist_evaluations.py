@@ -19,9 +19,11 @@ import argparse
 import openpyxl
 import urllib.request
 import json
+from datetime import datetime, timezone
 
 SUPABASE_URL = os.environ.get("NEXT_PUBLIC_SUPABASE_URL", "https://jpciyrodeppqpkwqblpk.supabase.co")
-SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "sb_publishable_wjeOXSiT7E63DsDqTaL1cw_JBMTC3kj")
+# Writes need the service role key: submission_evaluations is service-role only (20261017235500)
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 
 def make_supabase_request(endpoint, method="GET", data=None):
     url = f"{SUPABASE_URL}/rest/v1/{endpoint}"
@@ -68,6 +70,7 @@ def sync_evaluations(xlsx_path, dry_run=False, publish=False):
             for k, v in team_name_to_id.items():
                 if k in team_name.lower() or team_name.lower() in k:
                     team_id = v
+                    print(f"[Fuzzy] Sheet '{team_name}' -> DB '{k}' (check this match)")
                     break
 
         if not team_id:
@@ -98,7 +101,14 @@ def sync_evaluations(xlsx_path, dry_run=False, publish=False):
             "score": float(score) if score is not None else 0.0,
             "last_evaluated_by_email": "qiskitfallfest@srmap.edu.in",
             "last_evaluated_by_name": "Jury Evaluation Committee",
-            "comments": [{"author": "Organizing Committee", "text": notes}]
+            # Same shape as EvaluationComment in types/evaluations.ts
+            "comments": [{
+                "id": f"jury-{team_id}",
+                "evaluator_email": "qiskitfallfest@srmap.edu.in",
+                "evaluator_name": "Jury Evaluation Committee",
+                "text": notes,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            }]
         })
 
     print(f"\n[Summary of Payload]")
@@ -116,7 +126,9 @@ def sync_evaluations(xlsx_path, dry_run=False, publish=False):
     # Chunk by 50
     for i in range(0, len(eval_payload), 50):
         chunk = eval_payload[i:i+50]
-        res = make_supabase_request("submission_evaluations", method="POST", data=chunk)
+        res = make_supabase_request(
+            "submission_evaluations?on_conflict=category,target_id", method="POST", data=chunk
+        )
         print(f"  Upserted chunk {i//50 + 1} ({len(chunk)} rows)")
 
     if publish:
@@ -134,4 +146,6 @@ if __name__ == "__main__":
     parser.add_argument("--publish", action="store_true")
     args = parser.parse_args()
 
+    if not SUPABASE_KEY and not args.dry_run:
+        sys.exit("SUPABASE_SERVICE_ROLE_KEY is not set; refusing to write.")
     sync_evaluations(args.file, dry_run=args.dry_run, publish=args.publish)
