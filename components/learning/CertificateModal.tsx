@@ -22,6 +22,7 @@ import {
   BadgeCheck,
   GraduationCap,
   Printer,
+  ChevronDown,
 } from 'lucide-react';
 import {
   CERTIFICATE_DELIVERY_LABEL,
@@ -35,6 +36,7 @@ import {
   normalizeTxn,
   uploadReceipt,
 } from '@/lib/payments';
+import { useSmoothScroll } from '@/components/shared/SmoothScrollProvider';
 
 interface CertificateModalProps {
   isOpen: boolean;
@@ -101,6 +103,9 @@ export function CertificateModal({
   const [isResubmitting, setIsResubmitting] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const [showScrollHint, setShowScrollHint] = useState(false);
+  const { lenis } = useSmoothScroll();
 
   useEffect(() => {
     setIsMounted(true);
@@ -120,15 +125,33 @@ export function CertificateModal({
     };
   }, [isOpen, onClose]);
 
-  // Prevent background scrolling while modal is open
+  // Prevent background scrolling while modal is open. Lenis drives page scrolling
+  // from window wheel events, so it has to be stopped as well as hiding body overflow.
   useEffect(() => {
     if (!isOpen) return;
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    lenis?.stop();
     return () => {
       document.body.style.overflow = originalOverflow;
+      lenis?.start();
     };
-  }, [isOpen]);
+  }, [isOpen, lenis]);
+
+  // Show a "more below" hint while the body has unseen content under the fold
+  useEffect(() => {
+    const el = bodyRef.current;
+    if (!isOpen || loading || !el) return;
+    const update = () =>
+      setShowScrollHint(el.scrollHeight - el.clientHeight - el.scrollTop > 48);
+    update();
+    el.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    return () => {
+      el.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+    };
+  }, [isOpen, loading, data, issuedCert]);
 
   useEffect(() => {
     if (isOpen) {
@@ -263,6 +286,7 @@ export function CertificateModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="certificate-modal-title"
+      data-lenis-prevent="true"
     >
       <div
         onClick={(e) => e.stopPropagation()}
@@ -294,7 +318,10 @@ export function CertificateModal({
         </div>
 
         {/* Scrollable Body Content Container */}
-        <div className="p-4 sm:p-6 space-y-5 overflow-y-auto flex-1 min-h-0 [scrollbar-width:thin] [scrollbar-color:#CBD5E1_transparent] dark:[scrollbar-color:#3D1418_transparent]">
+        <div className="relative flex-1 min-h-0 flex flex-col">
+        <div
+          ref={bodyRef}
+          className="p-4 sm:p-6 space-y-5 overflow-y-auto overscroll-contain flex-1 min-h-0 [scrollbar-width:thin] [scrollbar-color:#CBD5E1_transparent] dark:[scrollbar-color:#3D1418_transparent]">
           {loading ? (
             <div className="py-12 flex flex-col items-center justify-center gap-3">
               <div className="w-8 h-8 border-2 border-burgundy border-t-transparent rounded-full animate-spin" />
@@ -378,6 +405,61 @@ export function CertificateModal({
           ) : !data?.eligible ? (
             /* STATE 2: INCOMPLETE / LOCKED */
             <div className="space-y-6">
+              {/* Unlock requirement: first thing the participant reads */}
+              <div className="p-4 rounded-xl border border-amber-200 dark:border-amber-800/70 bg-amber-50/80 dark:bg-amber-950/30 space-y-3">
+                <div className="flex items-start gap-3">
+                  <span className="w-8 h-8 rounded-lg bg-white dark:bg-[#1C0A0D] border border-amber-200 dark:border-amber-800/70 flex items-center justify-center shrink-0">
+                    <Lock className="w-4 h-4 text-amber-700 dark:text-amber-400" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-slate-900 dark:text-[#FAF6F3]">
+                      Complete the masterclass to unlock
+                    </p>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mt-0.5">
+                      Watch all {totalSessionsCount} video lectures and pass all {totalSessionsCount} concept
+                      check quizzes. The ₹{CERTIFICATE_FEE_INR} certificate payment opens once both are done.
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between text-[11px] mb-1">
+                    <span className="font-semibold text-slate-700 dark:text-slate-300">
+                      {completedTasks} of {totalTasks} tasks complete
+                    </span>
+                    <span className="font-bold text-burgundy dark:text-[#E89BA5]">{progressPercent}%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-white dark:bg-[#250D11] rounded-full overflow-hidden border border-amber-200/70 dark:border-transparent">
+                    <div
+                      className="h-full bg-burgundy rounded-full transition-all duration-500"
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  {[
+                    { label: 'Video lectures watched', done: data?.sessionsCompleted || 0 },
+                    { label: 'Concept quizzes passed', done: data?.quizzesPassed || 0 },
+                  ].map(({ label, done }) => (
+                    <div
+                      key={label}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-[#1C0A0D] border border-amber-100 dark:border-[#3D1418]"
+                    >
+                      {done === totalSessionsCount ? (
+                        <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                      ) : (
+                        <Clock className="w-4 h-4 shrink-0 text-amber-500" />
+                      )}
+                      <span className="text-slate-700 dark:text-slate-300">{label}</span>
+                      <span className="ml-auto font-bold tabular-nums text-slate-900 dark:text-[#FAF6F3]">
+                        {done}/{totalSessionsCount}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <CertificatePreview
                 recipientName={activeUserName}
                 totalSessions={totalSessionsCount}
@@ -385,92 +467,20 @@ export function CertificateModal({
               />
               <CertificateAbout totalSessions={totalSessionsCount} />
 
-              {/* Academic Progress Bar */}
-              <div>
-                <div className="flex items-center justify-between text-xs mb-1.5">
-                  <span className="font-bold text-slate-800 dark:text-slate-200">
-                    Academic Requirement Progress: {completedTasks} / {totalTasks} Tasks
-                  </span>
-                  <span className="font-bold text-burgundy dark:text-[#E89BA5]">
-                    {progressPercent}%
-                  </span>
-                </div>
-                <div className="w-full h-2 bg-slate-100 dark:bg-[#250D11] rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-burgundy rounded-full transition-all duration-500"
-                    style={{ width: `${progressPercent}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Strict Requirement Checklist Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div className="p-3 bg-slate-50 dark:bg-[#1C0A0D] rounded-lg border border-slate-200/80 dark:border-[#3D1418] space-y-1">
-                  <span className="font-bold text-slate-700 dark:text-slate-300 block">
-                    {totalSessionsCount} Video Lectures:
-                  </span>
-                  <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-                    {data?.sessionsCompleted === totalSessionsCount ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                    ) : (
-                      <Clock className="w-4 h-4 text-amber-500" />
-                    )}
-                    <span>
-                      {data?.sessionsCompleted || 0} of {totalSessionsCount} Watched
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-3 bg-slate-50 dark:bg-[#1C0A0D] rounded-lg border border-slate-200/80 dark:border-[#3D1418] space-y-1">
-                  <span className="font-bold text-slate-700 dark:text-slate-300 block">
-                    {totalSessionsCount} Concept Check Quizzes:
-                  </span>
-                  <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-                    {data?.quizzesPassed === totalSessionsCount ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                    ) : (
-                      <Clock className="w-4 h-4 text-amber-500" />
-                    )}
-                    <span>
-                      {data?.quizzesPassed || 0} of {totalSessionsCount} Passed (Avg: {data?.averageQuizScore || 0}%)
-                    </span>
-                  </div>
-                </div>
-              </div>
-
               {/* Missing Requirements List */}
               {data?.missingTasks && data.missingTasks.length > 0 && (
-                <div className="p-3.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg text-xs text-amber-900 dark:text-amber-200 space-y-2">
-                  <span className="font-bold flex items-center gap-1.5">
-                    <AlertCircle className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
-                    Pending Academic Requirements:
+                <div className="p-3.5 bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] rounded-lg text-xs text-slate-700 dark:text-slate-300 space-y-2">
+                  <span className="font-bold flex items-center gap-1.5 text-slate-900 dark:text-[#FAF6F3]">
+                    <AlertCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                    Still to do
                   </span>
-                  <ul className="list-disc list-inside space-y-1 text-amber-800 dark:text-amber-300 text-[11px] pl-1">
+                  <ul className="list-disc list-inside space-y-1 text-[11px] pl-1">
                     {data.missingTasks.map((task, idx) => (
                       <li key={idx}>{task}</li>
                     ))}
                   </ul>
-                  <p className="text-[11px] text-amber-700 dark:text-amber-400/90 pt-1 border-t border-amber-200/60 dark:border-amber-800/60">
-                    The certificate unlocks automatically once every video lecture has been watched and all concept quizzes are passed.
-                  </p>
                 </div>
               )}
-
-              {/* Locked Notice */}
-              <div className="p-4 bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] rounded-xl flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2.5">
-                  <Lock className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
-                  <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">
-                    Complete all {totalSessionsCount} video lectures and quizzes to unlock the ₹{CERTIFICATE_FEE_INR} certificate payment.
-                  </span>
-                </div>
-                <button
-                  disabled
-                  className="px-4 py-2 bg-slate-200 dark:bg-[#250D11] text-slate-400 dark:text-slate-500 text-xs font-semibold rounded-lg cursor-not-allowed shrink-0"
-                >
-                  Locked
-                </button>
-              </div>
 
               {errorMessage && (
                 <p className="text-xs text-rose-600 dark:text-rose-400 font-medium bg-rose-50 dark:bg-rose-950/40 p-2.5 rounded border border-rose-200 dark:border-rose-900 leading-relaxed">
@@ -789,6 +799,20 @@ export function CertificateModal({
               )}
             </div>
           )}
+        </div>
+
+        {showScrollHint && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white dark:from-[#150709] to-transparent flex items-end justify-center pb-2.5">
+            <button
+              type="button"
+              onClick={() => bodyRef.current?.scrollBy({ top: bodyRef.current.clientHeight * 0.7, behavior: 'smooth' })}
+              className="pointer-events-auto inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] shadow-sm text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer"
+            >
+              More details below
+              <ChevronDown className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
         </div>
 
         {/* Sticky/Fixed Footer */}
