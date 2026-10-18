@@ -49,7 +49,7 @@ export function AdminHackathonView() {
   const [resultsPublished, setResultsPublished] = useState<boolean | null>(null);
   const [isTogglingResults, setIsTogglingResults] = useState(false);
 
-  // ₹499 Flagship Pass payment window (opened_at starts the 48-hour countdown on shortlisted cards)
+  // ₹499 Flagship Pass payment link (opened_at starts the per-team payment windows of accepted teams)
   const [flagshipPayment, setFlagshipPayment] = useState<{ opened_at: string | null; gateway_url: string } | null>(null);
   const [flagshipGatewayInput, setFlagshipGatewayInput] = useState('');
   const [isSavingFlagship, setIsSavingFlagship] = useState(false);
@@ -77,8 +77,8 @@ export function AdminHackathonView() {
     }
     const confirmed = window.confirm(
       open
-        ? 'Open ₹499 Flagship Pass payment now? Every shortlisted participant sees the payment link and a 48-hour countdown starting now. This cannot be paused.'
-        : 'Close Flagship Pass payment? Shortlisted participants go back to the "payment opens soon" message and the countdown is reset.'
+        ? 'Publish the ₹499 Flagship Pass payment link now? Every team that has accepted its Phase 2 invitation starts its own payment window now (teams that accept later start from their acceptance).'
+        : 'Unpublish the payment link? Nobody can submit a Flagship receipt while it is unpublished, but teams already paying keep their deadlines running.'
     );
     if (!confirmed) return;
 
@@ -98,10 +98,6 @@ export function AdminHackathonView() {
       setIsSavingFlagship(false);
     }
   }
-
-  const flagshipDeadline = flagshipPayment?.opened_at
-    ? new Date(new Date(flagshipPayment.opened_at).getTime() + 48 * 60 * 60 * 1000)
-    : null;
 
   async function handleToggleResults() {
     const next = !resultsPublished;
@@ -618,12 +614,14 @@ export function AdminHackathonView() {
             ₹499 Flagship Pass payment:{' '}
             {flagshipPayment === null
               ? 'Loading...'
-              : flagshipPayment.opened_at && flagshipDeadline
-                ? `Opened · closes ${flagshipDeadline.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })} IST`
-                : 'Not open'}
+              : flagshipPayment.opened_at
+                ? `Link published ${new Date(flagshipPayment.opened_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })} IST`
+                : 'Link not published'}
           </p>
           <p className="text-xs text-slate-500 dark:text-slate-400 max-w-2xl">
-            Until opened, shortlisted participants see &quot;Payment opens on 19 October 2026&quot;. Opening starts a 48-hour countdown on their cards and lets each member submit a ₹499 receipt.
+            Teams can accept their Phase 2 invitation before the link exists; their payment window does not start until
+            it is published. After that, each team gets its own window (Phase 2 Results &gt; Settings), counted from
+            publication or its acceptance, whichever is later.
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
@@ -645,7 +643,7 @@ export function AdminHackathonView() {
                 : 'bg-burgundy hover:bg-burgundy-deep text-white'
             }`}
           >
-            {isSavingFlagship ? 'Saving...' : flagshipPayment?.opened_at ? 'Close Payment' : 'Open Payment'}
+            {isSavingFlagship ? 'Saving...' : flagshipPayment?.opened_at ? 'Unpublish Link' : 'Publish Link'}
           </button>
         </div>
       </div>

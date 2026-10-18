@@ -139,18 +139,23 @@ function PaymentChecklist({ phase2, isLead }: { phase2: Phase2TeamStatus; isLead
           </li>
         ))}
       </ul>
-      {isLead && !payment.allOthersPaid && (
+      {!phase2.paymentLinkPublished ? (
+        <p className="text-xs text-slate-600 dark:text-slate-300">
+          Payments open when the link is published. Use this time to make sure every teammate can pay ₹{FLAGSHIP_PASS_FEE_INR}.
+        </p>
+      ) : null}
+      {phase2.paymentLinkPublished && isLead && !payment.allOthersPaid && (
         <p className="text-xs text-slate-600 dark:text-slate-300">
           You pay last. Make sure each teammate pays ₹{FLAGSHIP_PASS_FEE_INR} and submits their receipt from their own
           account; your payment unlocks once all {payment.othersTotal} have submitted.
         </p>
       )}
-      {isLead && payment.allOthersPaid && !payment.leadPaid && (
+      {phase2.paymentLinkPublished && isLead && payment.allOthersPaid && !payment.leadPaid && (
         <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">
           All teammates have paid. Pay your ₹{FLAGSHIP_PASS_FEE_INR} in the Flagship Pass card to confirm your desk.
         </p>
       )}
-      {!isLead && (
+      {phase2.paymentLinkPublished && !isLead && (
         <p className="text-xs text-slate-600 dark:text-slate-300">
           Pay ₹{FLAGSHIP_PASS_FEE_INR} and submit your receipt in the Flagship Pass card on your dashboard. Your team lead pays
           after everyone else.
@@ -164,6 +169,7 @@ function LeadResponse({ team, onDone }: { team: PassStatusHackathon; onDone: () 
   const phase2 = team.phase2!;
   const [mode, setMode] = useState<'idle' | 'declining'>('idle');
   const [reason, setReason] = useState('');
+  const [committed, setCommitted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -174,7 +180,7 @@ function LeadResponse({ team, onDone }: { team: PassStatusHackathon; onDone: () 
       const res = await fetch('/api/hackathon/phase2', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, reason }),
+        body: JSON.stringify({ action, reason, committed: action === 'accept' ? committed : undefined }),
       });
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.error || 'Could not record your response.');
@@ -242,17 +248,43 @@ function LeadResponse({ team, onDone }: { team: PassStatusHackathon; onDone: () 
     );
   }
 
+  const memberCount = team.phase2?.payment?.members.length;
+  const windowText = phase2.paymentLinkPublished
+    ? `within ${phase2.paymentWindowHours} hours of accepting`
+    : `within ${phase2.paymentWindowHours} hours of the payment link opening (expected ${phase2.paymentLinkExpectedLabel})`;
+
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
+      <div className="rounded-lg border border-slate-200 dark:border-[#3D1418] bg-slate-50 dark:bg-[#1C0A0D] p-3.5 space-y-2 text-xs text-slate-700 dark:text-slate-300">
+        <p className="font-semibold text-slate-900 dark:text-[#FAF6F3]">Accepting is a commitment to pay</p>
+        <ul className="list-disc pl-4 space-y-1">
+          <li>Every member of your team will attend Phase 2 on 27–28 October.</li>
+          <li>
+            Every member pays ₹{FLAGSHIP_PASS_FEE_INR} for the Flagship Pass {windowText}. You, as lead, pay last.
+          </li>
+          <li>If payment is not complete in time, the desk goes to the next team in the waiting room.</li>
+        </ul>
+        <label className="flex items-start gap-2 pt-1 cursor-pointer">
+          <input
+            type="checkbox"
+            className="mt-0.5"
+            checked={committed}
+            onChange={(e) => setCommitted(e.target.checked)}
+          />
+          <span>
+            I have confirmed with my team{memberCount ? ` (${memberCount} members)` : ''} and we will pay on time.
+          </span>
+        </label>
+      </div>
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
-          disabled={busy}
+          disabled={busy || !committed}
           onClick={() => respond('accept')}
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-burgundy hover:bg-burgundy-deep text-white text-sm font-semibold rounded-lg cursor-pointer disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 px-4 py-2 bg-burgundy hover:bg-burgundy-deep text-white text-sm font-semibold rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-          Accept for my team
+          Accept and commit to pay
         </button>
         <button
           type="button"
@@ -263,10 +295,11 @@ function LeadResponse({ team, onDone }: { team: PassStatusHackathon; onDone: () 
           Decline
         </button>
       </div>
-      <p className="text-xs text-slate-500 dark:text-slate-400">
-        Accept only after confirming every teammate can attend on 27–28 October. After you accept, your team has{' '}
-        {phase2.paymentWindowHours} hours to pay.
-      </p>
+      {!phase2.paymentLinkPublished && (
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          Nobody pays today. Accepting holds your desk until the payment link opens.
+        </p>
+      )}
       {error && <p className="text-xs text-rose-700 dark:text-rose-300">{error}</p>}
     </div>
   );
@@ -343,12 +376,19 @@ export function Phase2StatusCard({ team, className }: { team: PassStatusHackatho
       break;
 
     case 'accepted':
-      tone = 'action';
-      title = 'Invitation accepted: complete team payment';
-      body = (
+      tone = phase2.payBy ? 'action' : 'positive';
+      title = phase2.payBy ? 'Invitation accepted: complete team payment' : 'Invitation accepted: your desk is held';
+      body = phase2.payBy ? (
         <>
           Every member pays the ₹{FLAGSHIP_PASS_FEE_INR} Flagship Pass from their own account. The team lead pays last.
           The desk is confirmed when the lead&apos;s payment is submitted.
+        </>
+      ) : (
+        <>
+          Your team&apos;s desk is held. Nothing needs to be paid yet: the ₹{FLAGSHIP_PASS_FEE_INR} payment link is
+          expected on {phase2.paymentLinkExpectedLabel}. Once it is published, your team gets{' '}
+          {phase2.paymentWindowHours} hours to pay, starting from that moment. Each member then pays from their own
+          account and the team lead pays last.
         </>
       );
       extra = (
@@ -450,6 +490,7 @@ export function Phase2StatusCard({ team, className }: { team: PassStatusHackatho
 
 /** One-line title for compact notices. */
 export function phase2Headline(team: PassStatusHackathon): string {
+  if (team.phase2?.stage === 'accepted' && !team.phase2.payBy) return 'Desk held: payment link coming soon';
   const p = team.phase2;
   if (!p) return 'Phase 1 results';
   switch (p.stage) {

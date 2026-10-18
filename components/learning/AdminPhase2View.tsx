@@ -272,7 +272,7 @@ export function AdminPhase2View() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, { score: string; feedback: string }>>({});
   const [showSettings, setShowSettings] = useState(false);
-  const [settings, setSettings] = useState({ responseHours: '24', paymentHours: '48', autoPromote: true });
+  const [settings, setSettings] = useState({ responseHours: '24', paymentHours: '24', autoPromote: true });
   const [now, setNow] = useState(() => Date.now());
 
   const load = useCallback(async () => {
@@ -680,6 +680,9 @@ export function AdminPhase2View() {
                             {timeLeft(deadline, now)}
                           </span>
                         )}
+                        {r.stage === 'accepted' && !r.offer?.pay_by && (
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400">waiting for payment link</span>
+                        )}
                         {r.offer?.source === 'auto_promotion' && <span className="text-[11px] text-violet-600 dark:text-violet-300">auto</span>}
                       </div>
                     </td>
@@ -746,7 +749,13 @@ export function AdminPhase2View() {
                                   <li>Invited {formatIst(r.offer.invited_at)} IST {r.offer.source === 'auto_promotion' ? '(auto-promoted from waitlist)' : `by ${r.offer.invited_by}`}</li>
                                   {r.offer.status === 'invited' && <li>Lead must accept by {formatIst(r.offer.respond_by)} IST</li>}
                                   {r.offer.responded_at && r.offer.status !== 'declined' && <li>Accepted {formatIst(r.offer.responded_at)} IST</li>}
-                                  {r.offer.pay_by && r.offer.status === 'accepted' && <li>Payments due {formatIst(r.offer.pay_by)} IST</li>}
+                                  {r.offer.status === 'accepted' && (
+                                    <li>
+                                      {r.offer.pay_by
+                                        ? `Payments due ${formatIst(r.offer.pay_by)} IST`
+                                        : `Payment window (${r.offer.payment_window_hours}h) starts when the payment link is published`}
+                                    </li>
+                                  )}
                                   {r.payment && <li>Payments: {r.payment.paid}/{r.payment.total} submitted, {r.payment.verified} verified</li>}
                                   {r.offer.confirmed_at && <li>Confirmed {formatIst(r.offer.confirmed_at)} IST</li>}
                                   {r.offer.close_reason && <li>Closed: {CLOSE_REASON[r.offer.close_reason] || r.offer.close_reason}</li>}

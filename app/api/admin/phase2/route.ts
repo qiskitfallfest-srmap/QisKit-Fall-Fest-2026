@@ -372,6 +372,10 @@ export async function POST(request: NextRequest) {
             results.push({ teamId: offer.team_id, ok: false, message: 'Only open invitations can be extended.' });
             continue;
           }
+          if (field === 'pay_by' && !offer.pay_by) {
+            results.push({ teamId: offer.team_id, ok: false, message: 'Payment window has not started yet (no payment link).' });
+            continue;
+          }
           // Extend from whichever is later: the current deadline or now
           const base = Math.max(Date.parse((offer as any)[field] || ''), Date.now()) || Date.now();
           await supabaseAdmin

@@ -16,7 +16,7 @@ export const PHASE2_OFFERS_TABLE = 'hackathon_phase2_offers';
 export const WAITING_ROOM_CONFIG_KEY = 'phase2_waiting_room';
 
 export const DEFAULT_RESPONSE_HOURS = 24;
-export const DEFAULT_PAYMENT_HOURS = 48;
+export const DEFAULT_PAYMENT_HOURS = 24;
 
 export type Phase2Track = 'internal' | 'external';
 export type OfferStatus = 'invited' | 'accepted' | 'confirmed' | 'declined' | 'expired' | 'revoked';
@@ -307,6 +307,7 @@ export async function closeOffer(
  * replacement for each. Cheap when nothing is overdue; safe to call concurrently.
  */
 export async function sweepExpiredOffers(): Promise<{ expired: number; promoted: number }> {
+  await startPendingPaymentWindows();
   const nowIso = new Date().toISOString();
   const [lateInvites, latePayments] = await Promise.all([
     supabaseAdmin.from(PHASE2_OFFERS_TABLE).select('id').eq('status', 'invited').lt('respond_by', nowIso),
@@ -326,6 +327,52 @@ export async function sweepExpiredOffers(): Promise<{ expired: number; promoted:
     if (result.promoted) promoted += 1;
   }
   return { expired, promoted };
+}
+
+/**
+ * Payment link state from platform_config flagship_payment (set in the Hackathon admin tab).
+ * Read here directly rather than through hackathon-pass to avoid a circular import.
+ */
+export async function getPaymentLinkOpenedAt(): Promise<string | null> {
+  const { data } = await supabaseAdmin
+    .from('platform_config')
+    .select('value')
+    .eq('key', 'flagship_payment')
+    .limit(1);
+  const value = data?.[0]?.value || {};
+  return value.gateway_url && value.opened_at ? String(value.opened_at) : null;
+}
+
+/**
+ * Teams can accept before the Easebuzz link exists; their pay_by stays NULL (never expires).
+ * Once the link is published, each such team gets its full payment window, counted from
+ * whichever is later: its acceptance or the link going live.
+ */
+export async function startPendingPaymentWindows(): Promise<number> {
+  const openedAt = await getPaymentLinkOpenedAt();
+  if (!openedAt) return 0;
+
+  const { data: waiting } = await supabaseAdmin
+    .from(PHASE2_OFFERS_TABLE)
+    .select('id, responded_at, payment_window_hours')
+    .eq('status', 'accepted')
+    .is('pay_by', null);
+
+  let started = 0;
+  for (const offer of waiting || []) {
+    const startMs = Math.max(Date.parse(openedAt), Date.parse(offer.responded_at || '') || 0);
+    const { data } = await supabaseAdmin
+      .from(PHASE2_OFFERS_TABLE)
+      .update({
+        pay_by: new Date(startMs + offer.payment_window_hours * 3_600_000).toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', offer.id)
+      .is('pay_by', null)
+      .select('id');
+    if (data?.length) started += 1;
+  }
+  return started;
 }
 
 export function isOfferOverdue(offer: Phase2Offer, now = Date.now()): boolean {

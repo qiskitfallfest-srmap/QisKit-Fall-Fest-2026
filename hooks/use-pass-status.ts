@@ -33,6 +33,8 @@ export interface Phase2TeamStatus {
   waitlistPosition: number | null;
   waitlistSize: number | null;
   waitingRoomClosed: boolean;
+  paymentLinkPublished: boolean;
+  paymentLinkExpectedLabel: string;
   payment: {
     members: { name: string; email: string; isLead: boolean; paid: boolean; verified: boolean }[];
     othersTotal: number;

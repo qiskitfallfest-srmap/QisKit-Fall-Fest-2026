@@ -4,6 +4,7 @@ import {
   PHASE2_OFFERS_TABLE,
   WAITLIST_EVAL_STATUSES,
   getOfferForTeam,
+  getPaymentLinkOpenedAt,
   getTeamPaymentProgress,
   getWaitingRoomConfig,
   isOfferOverdue,
@@ -117,6 +118,9 @@ export interface Phase2TeamStatus {
   waitlistSize: number | null;
   /** True when the team was waitlisted and the waiting room closed without a desk for it */
   waitingRoomClosed: boolean;
+  /** False until the Easebuzz link is set; accepted teams' payment clocks start then */
+  paymentLinkPublished: boolean;
+  paymentLinkExpectedLabel: string;
   payment: TeamPaymentProgress | null;
 }
 
@@ -217,7 +221,7 @@ export async function getHackathonPassContext(email: string): Promise<HackathonP
   if (!team) return null;
   const teamId = String(team.id);
 
-  const [configRes, evalRes, initialOffer, waitingRoom] = await Promise.all([
+  const [configRes, evalRes, initialOffer, waitingRoom, linkOpenedAt] = await Promise.all([
     supabaseAdmin.from('platform_config').select('value').eq('key', RESULTS_CONFIG_KEY).limit(1),
     supabaseAdmin
       .from('submission_evaluations')
@@ -227,11 +231,13 @@ export async function getHackathonPassContext(email: string): Promise<HackathonP
       .limit(1),
     getOfferForTeam(teamId),
     getWaitingRoomConfig(),
+    getPaymentLinkOpenedAt(),
   ]);
 
   // Deadlines are enforced lazily: an overdue offer is expired (and its desk re-offered) on read
   let offer = initialOffer;
-  if (offer && isOfferOverdue(offer)) {
+  const paymentClockPending = offer?.status === 'accepted' && !offer.pay_by && Boolean(linkOpenedAt);
+  if (offer && (isOfferOverdue(offer) || paymentClockPending)) {
     await sweepExpiredOffers();
     offer = await getOfferForTeam(teamId);
   }
@@ -256,7 +262,7 @@ export async function getHackathonPassContext(email: string): Promise<HackathonP
 
   const waitlist = stage === 'waitlisted' ? await getWaitlistPosition(teamId, track) : null;
   const payment =
-    stage === 'accepted' || stage === 'confirmed'
+    stage === 'invited' || stage === 'accepted' || stage === 'confirmed'
       ? await getTeamPaymentProgress(teamId, team.lead_email)
       : null;
   const showJuryNote = released && stage !== 'under_review';
@@ -287,6 +293,8 @@ export async function getHackathonPassContext(email: string): Promise<HackathonP
       waitlistSize: waitlist?.size ?? null,
       waitingRoomClosed: isWaitlistEval && !offer && Boolean(waitingRoom.closedAt),
       payment,
+      paymentLinkPublished: Boolean(linkOpenedAt),
+      paymentLinkExpectedLabel: FLAGSHIP_PAYMENT_EXPECTED_LABEL,
     },
   };
 }

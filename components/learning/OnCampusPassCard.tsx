@@ -677,11 +677,12 @@ export function OnCampusPassCard() {
                 <div className="p-3.5 rounded-xl border border-amber-200/80 dark:border-amber-900/40 bg-amber-50/90 dark:bg-amber-950/20 text-xs text-amber-900 dark:text-amber-200/90 space-y-1.5 leading-relaxed">
                   <p className="font-semibold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5 shrink-0" />
-                    Payment link coming shortly
+                    Payment link expected on {flagship?.expectedLabel || '19 October 2026'}
                   </p>
                   <p>
-                    Your team accepted its Phase 2 place. The ₹{FLAGSHIP_PASS_FEE_INR} payment link appears on this card
-                    shortly; your team&apos;s deadline is shown in the Phase 2 card.
+                    Your team&apos;s desk is held. There is nothing to pay today. When the link is published it appears on
+                    this card, and your team gets <strong>{hackathon.phase2?.paymentWindowHours ?? 48} hours</strong> from
+                    then to pay ₹{FLAGSHIP_PASS_FEE_INR} each, the team lead last.
                   </p>
                   <p>
                     Do not pay on the ₹{PASS_FEE_INR} General Pass form. That payment does not count towards the Flagship Pass.

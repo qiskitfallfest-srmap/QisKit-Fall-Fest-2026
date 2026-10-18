@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { getHackathonPassContext } from '@/lib/hackathon-pass';
-import { PHASE2_OFFERS_TABLE, closeOffer, getOfferForTeam } from '@/lib/phase2-waiting-room';
+import { PHASE2_OFFERS_TABLE, closeOffer, getOfferForTeam, getPaymentLinkOpenedAt } from '@/lib/phase2-waiting-room';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,11 +34,20 @@ export async function POST(request: NextRequest) {
       if (!offer || offer.status !== 'invited') {
         return NextResponse.json({ error: 'There is no open invitation to accept.' }, { status: 409 });
       }
+      if (body?.committed !== true) {
+        return NextResponse.json(
+          { error: 'Please confirm that your team will pay on time before accepting.' },
+          { status: 400 }
+        );
+      }
       const nowMs = Date.now();
       if (Date.parse(offer.respond_by) <= nowMs) {
         return NextResponse.json({ error: 'The time to accept this invitation has passed.' }, { status: 409 });
       }
 
+      // The payment clock starts only once the Easebuzz link is live; until then pay_by stays NULL
+      // and startPendingPaymentWindows() sets it when the link is published.
+      const linkOpenedAt = await getPaymentLinkOpenedAt();
       const nowIso = new Date(nowMs).toISOString();
       const { data, error } = await supabaseAdmin
         .from(PHASE2_OFFERS_TABLE)
@@ -46,7 +55,9 @@ export async function POST(request: NextRequest) {
           status: 'accepted',
           responded_at: nowIso,
           responded_by: session.email,
-          pay_by: new Date(nowMs + offer.payment_window_hours * 3_600_000).toISOString(),
+          pay_by: linkOpenedAt
+            ? new Date(Math.max(nowMs, Date.parse(linkOpenedAt)) + offer.payment_window_hours * 3_600_000).toISOString()
+            : null,
           updated_at: nowIso,
         })
         .eq('id', offer.id)
