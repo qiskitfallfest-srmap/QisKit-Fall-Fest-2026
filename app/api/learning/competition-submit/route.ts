@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
-import { rejectIfOnlineSubmissionsClosed } from '@/lib/submission-window';
+import {
+  rejectIfCompetitionSubmissionsClosedForUser,
+  getUserCompetitionOverride,
+} from '@/lib/submission-window';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import {
   getCompetitionSubmissionsCached,
@@ -19,9 +22,8 @@ export async function GET() {
   const normalizedEmail = session.email.trim().toLowerCase();
 
   try {
-    const submissionsMap = await getCompetitionSubmissionsCached(
-      normalizedEmail,
-      async () => {
+    const [submissionsMap, userOverride] = await Promise.all([
+      getCompetitionSubmissionsCached(normalizedEmail, async () => {
         const { data, error } = await supabaseAdmin
           .from('competition_submissions')
           .select('*')
@@ -34,12 +36,14 @@ export async function GET() {
           map[sub.competition_type] = sub;
         });
         return map;
-      }
-    );
+      }),
+      getUserCompetitionOverride(normalizedEmail),
+    ]);
 
     return NextResponse.json(
       {
         submissions: submissionsMap,
+        userOverride: userOverride || null,
       },
       {
         headers: {
@@ -64,7 +68,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const closed = rejectIfOnlineSubmissionsClosed('Competition submissions');
+  const closed = await rejectIfCompetitionSubmissionsClosedForUser(
+    'Competition submissions',
+    session.email
+  );
   if (closed) return closed;
 
   const normalizedEmail = session.email.trim().toLowerCase();

@@ -101,8 +101,18 @@ function LearningDashboardContent() {
   const [isSubmittingComp, setIsSubmittingComp] = useState<Record<string, boolean>>({});
   const [compSuccessMsg, setCompSuccessMsg] = useState<Record<string, string>>({});
   const [compErrorMsg, setCompErrorMsg] = useState<Record<string, string>>({});
+  const [competitionUserOverride, setCompetitionUserOverride] = useState<{
+    hasExtension: boolean;
+    expiresAt?: string;
+    deadlineLabel?: string;
+  } | null>(null);
   const submissionDeadline = useSubmissionDeadline();
-  const submissionsClosed = submissionDeadline.closed;
+  const isUserExtensionActive = Boolean(
+    competitionUserOverride?.hasExtension &&
+      competitionUserOverride?.expiresAt &&
+      Date.now() <= Date.parse(competitionUserOverride.expiresAt)
+  );
+  const submissionsClosed = isUserExtensionActive ? false : submissionDeadline.closed;
 
   // Session progress state
   const [progress, setProgress] = useState<Record<string, any>>({});
@@ -184,6 +194,11 @@ function LearningDashboardContent() {
       const res = await fetch('/api/learning/competition-submit', { cache: 'no-store' });
       if (!res.ok) return;
       const data = await res.json();
+      if (data.userOverride) {
+        setCompetitionUserOverride(data.userOverride);
+      } else {
+        setCompetitionUserOverride(null);
+      }
       if (data.submissions) {
         setCompetitions(data.submissions);
         const urls: Record<string, string> = {};
@@ -256,7 +271,7 @@ function LearningDashboardContent() {
       }));
       return;
     }
-    if (isOnlineSubmissionsClosed()) {
+    if (isOnlineSubmissionsClosed() && !isUserExtensionActive) {
       setCompErrorMsg((prev) => ({
         ...prev,
         [type]: `Submissions closed on ${ONLINE_SUBMISSIONS_CLOSE_LABEL}.`,
@@ -598,8 +613,20 @@ function LearningDashboardContent() {
 
           <div className="space-y-5">
             <SubmissionCountdown
-              deadline={submissionDeadline}
-              label={`${challenge.title} submissions`}
+              deadline={
+                isUserExtensionActive && competitionUserOverride?.expiresAt
+                  ? {
+                      ready: true,
+                      closed: false,
+                      remainingMs: Math.max(0, Date.parse(competitionUserOverride.expiresAt) - Date.now()),
+                    }
+                  : submissionDeadline
+              }
+              label={
+                isUserExtensionActive
+                  ? `${challenge.title} submissions (Extended)`
+                  : `${challenge.title} submissions`
+              }
               closedDetail={
                 isCurrentChallengeSubmitted
                   ? `The window closed on ${ONLINE_SUBMISSIONS_CLOSE_LABEL}. Your recorded entry below has been sent for evaluation and can no longer be changed.`
@@ -608,6 +635,22 @@ function LearningDashboardContent() {
                   : undefined
               }
             />
+
+            {/* Personalized Extension Notice */}
+            {isUserExtensionActive && (
+              <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-xs sm:text-sm text-emerald-950 dark:text-emerald-200 flex items-center gap-3">
+                <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                <div>
+                  <p className="font-semibold text-emerald-900 dark:text-emerald-100">
+                    Personalized Submission Extension Active
+                  </p>
+                  <p className="text-emerald-800/90 dark:text-emerald-300/90 text-xs mt-0.5">
+                    Your account has been granted an extended submission window until{' '}
+                    <strong>{competitionUserOverride?.deadlineLabel || '18 October 2026, 11:59 PM IST'}</strong>. You can freely submit your entries below.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Guest Preview Mode Notice */}
             {!sessionUser && !submissionsClosed && (
