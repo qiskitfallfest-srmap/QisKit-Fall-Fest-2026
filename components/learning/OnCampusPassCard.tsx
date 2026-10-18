@@ -210,14 +210,24 @@ export function OnCampusPassCard() {
     else setQrDataUrl('');
   }, [qrToken, generateQrCode]);
 
+  // AuthGate re-announces the same session on every load; refetch only when the account changes
+  const loadedEmail = data ? (data.isAuthenticated ? data.user?.email ?? null : null) : undefined;
+
   useEffect(() => {
     try {
       setGatewayOpened(localStorage.getItem(GATEWAY_OPENED_KEY) === 'true');
     } catch {}
-    const handleAuthChange = () => mutate();
+  }, []);
+
+  useEffect(() => {
+    if (loadedEmail === undefined) return;
+    const handleAuthChange = (e: Event) => {
+      const nextEmail = (e as CustomEvent).detail?.email?.trim().toLowerCase() ?? null;
+      if (nextEmail !== loadedEmail) mutate();
+    };
     window.addEventListener('qff_auth_change', handleAuthChange);
     return () => window.removeEventListener('qff_auth_change', handleAuthChange);
-  }, [mutate]);
+  }, [loadedEmail, mutate]);
 
   function markGatewayOpened() {
     setGatewayOpened(true);
