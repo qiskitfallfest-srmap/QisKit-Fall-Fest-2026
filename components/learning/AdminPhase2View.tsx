@@ -11,16 +11,18 @@ import {
   RotateCw,
   Search,
   Settings2,
+  Copy,
 } from 'lucide-react';
-import type { AdminPhase2Data, AdminPhase2Row, AdminPhase2Stage } from '@/app/api/admin/phase2/route';
+import type { AdminPhase2Data, AdminPhase2Member, AdminPhase2Row, AdminPhase2Stage } from '@/app/api/admin/phase2/route';
 
-type Filter = 'undecided' | 'invited' | 'accepted' | 'confirmed' | 'waitlisted' | 'not_selected' | 'closed' | 'all';
+type Filter = 'undecided' | 'invited' | 'accepted' | 'confirmed' | 'verify' | 'waitlisted' | 'not_selected' | 'closed' | 'all';
 
 const FILTERS: { key: Filter; label: string; match: (r: AdminPhase2Row) => boolean }[] = [
   { key: 'undecided', label: 'To decide', match: (r) => r.stage === 'undecided' },
   { key: 'invited', label: 'Awaiting response', match: (r) => r.stage === 'invited' },
   { key: 'accepted', label: 'Accepted, paying', match: (r) => r.stage === 'accepted' },
   { key: 'confirmed', label: 'Confirmed', match: (r) => r.stage === 'confirmed' },
+  { key: 'verify', label: 'Receipts to verify', match: (r) => (r.payment?.pending || 0) > 0 },
   { key: 'waitlisted', label: 'Waitlisted', match: (r) => r.stage === 'waitlisted' },
   { key: 'not_selected', label: 'Not selected', match: (r) => r.stage === 'not_selected' },
   { key: 'closed', label: 'Declined / expired', match: (r) => ['declined', 'expired', 'revoked'].includes(r.stage) },
@@ -104,6 +106,156 @@ function Stat({ label, value, detail }: { label: string; value: React.ReactNode;
       <dt className="text-[11px] text-slate-500 dark:text-slate-400">{label}</dt>
       <dd className="text-xl font-semibold tabular-nums text-slate-900 dark:text-[#FAF6F3]">{value}</dd>
       {detail && <p className="text-[11px] text-slate-500 dark:text-slate-400">{detail}</p>}
+    </div>
+  );
+}
+
+const CLAIM_LABEL: Record<string, { text: string; tone: string }> = {
+  claimed_provisional: { text: 'Submitted, to verify', tone: 'text-amber-700 dark:text-amber-300' },
+  verified: { text: 'Verified', tone: 'text-emerald-700 dark:text-emerald-300' },
+  rejected: { text: 'Rejected', tone: 'text-rose-600 dark:text-rose-300' },
+};
+
+function MemberPayments({
+  row,
+  busy,
+  onReview,
+}: {
+  row: AdminPhase2Row;
+  busy: boolean;
+  onReview: (member: AdminPhase2Member, action: 'approve' | 'reject' | 'reopen') => void;
+}) {
+  const paying = Boolean(row.payment);
+  return (
+    <div className="mt-5 pt-4 border-t border-slate-200 dark:border-[#3D1418] space-y-2">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+          Members ({row.members.length})
+          {row.payment && (
+            <span className="ml-2 font-normal text-slate-500 dark:text-slate-400 tabular-nums">
+              {row.payment.paid}/{row.payment.total} paid · {row.payment.verified} verified · {row.payment.pending} to verify
+            </span>
+          )}
+        </p>
+        {!paying && (
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">Payments open after the team lead accepts.</p>
+        )}
+      </div>
+      {row.stage === 'confirmed' && row.payment && row.payment.rejected > 0 && (
+        <p className="text-[11px] text-rose-700 dark:text-rose-300">
+          Desk is confirmed but a receipt was rejected. The member can resubmit from their pass card.
+        </p>
+      )}
+      <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709]">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="text-left text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-[#3D1418]">
+              <th className="px-3 py-2">Member</th>
+              <th className="px-3 py-2">Role</th>
+              {paying && (
+                <>
+                  <th className="px-3 py-2">Payment</th>
+                  <th className="px-3 py-2">Transaction ID</th>
+                  <th className="px-3 py-2">Receipt</th>
+                  <th className="px-3 py-2 text-right">Action</th>
+                </>
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {row.members.map((m) => {
+              const claim = m.claim;
+              const label = claim ? CLAIM_LABEL[claim.status] || { text: claim.status, tone: 'text-slate-500' } : null;
+              return (
+                <tr key={m.email} className="border-b last:border-b-0 border-slate-100 dark:border-[#250D11] align-top">
+                  <td className="px-3 py-2">
+                    <p className="font-medium text-slate-900 dark:text-[#FAF6F3]">{m.name}</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">{m.email}</p>
+                  </td>
+                  <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{m.isLead ? 'Lead (pays last)' : 'Member'}</td>
+                  {paying && (
+                    <>
+                      <td className="px-3 py-2">
+                        {claim && label ? (
+                          <>
+                            <p className={clsx('font-semibold', label.tone)}>{label.text}</p>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                              ₹{claim.amountInr} · {formatIst(claim.submittedAt)}
+                            </p>
+                            {claim.status === 'rejected' && claim.adminNotes && (
+                              <p className="text-[11px] text-rose-600 dark:text-rose-300">{claim.adminNotes}</p>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-slate-400">Not paid</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2 font-mono text-[11px] text-slate-700 dark:text-slate-200">
+                        {claim ? (
+                          <span className="inline-flex items-center gap-1">
+                            {claim.transactionReference}
+                            <button
+                              type="button"
+                              aria-label="Copy transaction ID"
+                              className="text-slate-400 hover:text-slate-700 cursor-pointer"
+                              onClick={() => navigator.clipboard?.writeText(claim.transactionReference).catch(() => {})}
+                            >
+                              <Copy className="w-3 h-3" />
+                            </button>
+                          </span>
+                        ) : (
+                          '–'
+                        )}
+                        {claim?.bankReference && <p className="text-[10px] text-slate-500">UTR {claim.bankReference}</p>}
+                      </td>
+                      <td className="px-3 py-2">
+                        {claim?.receiptUrl ? (
+                          <a
+                            href={claim.receiptUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-burgundy dark:text-[#E89BA5] hover:underline"
+                          >
+                            Open <ExternalLink className="w-3 h-3" />
+                          </a>
+                        ) : (
+                          '–'
+                        )}
+                      </td>
+                      <td className="px-3 py-2">
+                        {claim && (
+                          <div className="flex flex-wrap justify-end gap-1.5">
+                            {claim.status !== 'verified' && (
+                              <button type="button" className={btnPrimary} disabled={busy} onClick={() => onReview(m, 'approve')}>
+                                Approve
+                              </button>
+                            )}
+                            {claim.status !== 'rejected' && !claim.checkedIn && (
+                              <button type="button" className={btnDanger} disabled={busy} onClick={() => onReview(m, 'reject')}>
+                                Reject
+                              </button>
+                            )}
+                            {claim.status !== 'claimed_provisional' && !claim.checkedIn && (
+                              <button
+                                type="button"
+                                className={`${btn} text-slate-500 hover:text-slate-800`}
+                                disabled={busy}
+                                onClick={() => onReview(m, 'reopen')}
+                              >
+                                Reopen
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                    </>
+                  )}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -240,6 +392,43 @@ export function AdminPhase2View() {
     act({ action, teamIds }, action === 'reject' ? 'Released as not selected.' : 'Released as waitlisted.');
   }
 
+  async function reviewClaim(member: AdminPhase2Member, action: 'approve' | 'reject' | 'reopen') {
+    if (!member.claim) return;
+    let notes = '';
+    if (action === 'reject') {
+      const reason = window.prompt(
+        `Reject the receipt from ${member.name}? Enter the reason; the participant sees it and can resubmit.`,
+        'Transaction ID does not match an Easebuzz payment'
+      );
+      if (!reason || !reason.trim()) return;
+      notes = reason.trim();
+    }
+    setBusy(true);
+    setError('');
+    setNotice('');
+    try {
+      const res = await fetch('/api/admin/payments', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'pass', id: member.claim.id, action, notes }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || 'Review failed');
+      setNotice(
+        action === 'approve'
+          ? `Verified ${member.name}.`
+          : action === 'reject'
+            ? `Rejected the receipt from ${member.name}.`
+            : `Reopened the receipt from ${member.name}.`
+      );
+      await load();
+    } catch (err: any) {
+      setError(err?.message || 'Review failed');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center gap-2 p-6 text-sm text-slate-500">
@@ -306,7 +495,7 @@ export function AdminPhase2View() {
         <Stat label="Awaiting response" value={s.awaitingResponse} />
         <Stat label="Accepted" value={s.accepted} detail={`${s.accepted - s.confirmed} still paying`} />
         <Stat label="Fully paid teams" value={s.confirmed} />
-        <Stat label="Member payments" value={`${s.membersPaid}/${s.membersToPay}`} detail="accepted teams" />
+        <Stat label="Member payments" value={`${s.membersPaid}/${s.membersToPay}`} detail={`${s.receiptsToVerify} receipts to verify`} />
         <Stat label="Not selected (released)" value={s.notSelectedReleased} />
         <Stat
           label="Waitlist"
@@ -480,6 +669,12 @@ export function AdminPhase2View() {
                         {r.payment && (
                           <span className="text-[11px] text-slate-500 dark:text-slate-400 tabular-nums">paid {r.payment.paid}/{r.payment.total}</span>
                         )}
+                        {r.payment && r.payment.pending > 0 && (
+                          <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-300 tabular-nums">{r.payment.pending} to verify</span>
+                        )}
+                        {r.payment && r.payment.rejected > 0 && (
+                          <span className="text-[11px] font-semibold text-rose-600 dark:text-rose-300 tabular-nums">{r.payment.rejected} rejected</span>
+                        )}
                         {deadline && (
                           <span className={clsx('text-[11px] tabular-nums', timeLeft(deadline, now) === 'overdue' ? 'text-rose-600' : 'text-slate-500 dark:text-slate-400')}>
                             {timeLeft(deadline, now)}
@@ -574,6 +769,7 @@ export function AdminPhase2View() {
                             )}
                           </div>
                         </div>
+                        <MemberPayments row={r} busy={busy} onReview={reviewClaim} />
                       </td>
                     </tr>
                   )}

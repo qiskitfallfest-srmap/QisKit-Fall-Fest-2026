@@ -42,7 +42,28 @@ export interface AdminPhase2Row {
   releasedAt: string | null;
   stage: AdminPhase2Stage;
   offer: Phase2Offer | null;
-  payment: { paid: number; verified: number; total: number } | null;
+  /** Accepted roster, lead first; claim is filled only once the team has accepted */
+  members: AdminPhase2Member[];
+  payment: { paid: number; verified: number; pending: number; rejected: number; total: number } | null;
+}
+
+export interface AdminPhase2Claim {
+  id: string;
+  status: 'claimed_provisional' | 'verified' | 'rejected' | string;
+  transactionReference: string;
+  bankReference: string | null;
+  receiptUrl: string | null;
+  amountInr: number;
+  adminNotes: string | null;
+  submittedAt: string;
+  checkedIn: boolean;
+}
+
+export interface AdminPhase2Member {
+  name: string;
+  email: string;
+  isLead: boolean;
+  claim: AdminPhase2Claim | null;
 }
 
 export interface AdminPhase2Data {
@@ -61,6 +82,7 @@ export interface AdminPhase2Data {
     waitlistedReleased: number;
     waitlistRemaining: Record<Phase2Track, number>;
     membersPaid: number;
+    receiptsToVerify: number;
     membersToPay: number;
     desks: Record<Phase2Track, { active: number; quota: number }>;
     undecided: number;
@@ -77,7 +99,7 @@ async function loadData(): Promise<AdminPhase2Data> {
 
   const [teamsRes, membersRes, evalsRes, offersRes, config, flagship] = await Promise.all([
     supabaseAdmin.from('hackathon_teams').select('id, name, lead_name, lead_email, submitted_at, github_repo_url'),
-    supabaseAdmin.from('team_members').select('team_id, email').eq('status', 'accepted'),
+    supabaseAdmin.from('team_members').select('team_id, email, full_name').eq('status', 'accepted'),
     supabaseAdmin
       .from('submission_evaluations')
       .select('target_id, status, score, max_score, participant_feedback, result_released_at')
@@ -90,11 +112,13 @@ async function loadData(): Promise<AdminPhase2Data> {
   if (teamsRes.error) throw teamsRes.error;
   if (offersRes.error) throw offersRes.error;
 
-  const membersByTeam = new Map<string, Set<string>>();
+  // team id -> (email -> name)
+  const membersByTeam = new Map<string, Map<string, string>>();
   (membersRes.data || []).forEach((m: any) => {
     const key = String(m.team_id);
-    if (!membersByTeam.has(key)) membersByTeam.set(key, new Set());
-    membersByTeam.get(key)!.add(String(m.email).trim().toLowerCase());
+    if (!membersByTeam.has(key)) membersByTeam.set(key, new Map());
+    const email = String(m.email).trim().toLowerCase();
+    membersByTeam.get(key)!.set(email, m.full_name || email.split('@')[0]);
   });
   const evalByTeam = new Map((evalsRes.data || []).map((e: any) => [String(e.target_id), e]));
   const offerByTeam = new Map((offersRes.data || []).map((o: any) => [String(o.team_id), o as Phase2Offer]));
@@ -103,18 +127,30 @@ async function loadData(): Promise<AdminPhase2Data> {
   const payingTeams = (offersRes.data || []).filter((o: any) => ['accepted', 'confirmed'].includes(o.status));
   const payingEmails = payingTeams.flatMap((o: any) => {
     const team = (teamsRes.data || []).find((t: any) => String(t.id) === String(o.team_id));
-    const set = new Set(membersByTeam.get(String(o.team_id)) || []);
+    const set = new Set(membersByTeam.get(String(o.team_id))?.keys() || []);
     if (team) set.add(String(team.lead_email).trim().toLowerCase());
     return [...set];
   });
-  const claimByEmail = new Map<string, string>();
+  const claimByEmail = new Map<string, AdminPhase2Claim>();
   if (payingEmails.length) {
     const { data: claims } = await supabaseAdmin
       .from('festival_pass_claims')
-      .select('user_email, status')
+      .select('id, user_email, status, transaction_reference, bank_reference, receipt_url, amount_inr, admin_notes, created_at, checked_in')
       .eq('pass_tier', 'flagship_offline')
       .in('user_email', payingEmails);
-    (claims || []).forEach((c: any) => claimByEmail.set(String(c.user_email).toLowerCase(), c.status));
+    (claims || []).forEach((c: any) =>
+      claimByEmail.set(String(c.user_email).toLowerCase(), {
+        id: c.id,
+        status: c.status,
+        transactionReference: c.transaction_reference,
+        bankReference: c.bank_reference || null,
+        receiptUrl: c.receipt_url || null,
+        amountInr: Number(c.amount_inr),
+        adminNotes: c.admin_notes || null,
+        submittedAt: c.created_at,
+        checkedIn: Boolean(c.checked_in),
+      })
+    );
   }
 
   const deadlinePassed = Date.now() > Date.parse(PHASE1_DEADLINE_ISO);
@@ -123,8 +159,18 @@ async function loadData(): Promise<AdminPhase2Data> {
     const teamId = String(t.id);
     const evaluation = evalByTeam.get(teamId);
     const offer = offerByTeam.get(teamId) || null;
-    const members = new Set(membersByTeam.get(teamId) || []);
-    members.add(String(t.lead_email).trim().toLowerCase());
+    const leadEmail = String(t.lead_email).trim().toLowerCase();
+    const roster = new Map(membersByTeam.get(teamId) || []);
+    roster.set(leadEmail, roster.get(leadEmail) || t.lead_name || leadEmail.split('@')[0]);
+    const paying = Boolean(offer && ['accepted', 'confirmed'].includes(offer.status));
+    const members: AdminPhase2Member[] = [...roster.entries()]
+      .map(([email, name]) => ({
+        name,
+        email,
+        isLead: email === leadEmail,
+        claim: paying ? claimByEmail.get(email) || null : null,
+      }))
+      .sort((a, b) => Number(b.isLead) - Number(a.isLead) || a.name.localeCompare(b.name));
     const submitted = Boolean(t.submitted_at || t.github_repo_url);
     const released = Boolean(evaluation?.result_released_at);
 
@@ -137,12 +183,14 @@ async function loadData(): Promise<AdminPhase2Data> {
     } else stage = 'undecided';
 
     let payment: AdminPhase2Row['payment'] = null;
-    if (offer && ['accepted', 'confirmed'].includes(offer.status)) {
-      const statuses = [...members].map((email) => claimByEmail.get(email));
+    if (paying) {
+      const statuses = members.map((m) => m.claim?.status);
       payment = {
-        total: members.size,
-        paid: statuses.filter((s) => s && s !== 'rejected').length,
-        verified: statuses.filter((s) => s === 'verified').length,
+        total: members.length,
+        paid: statuses.filter((st) => st && st !== 'rejected').length,
+        verified: statuses.filter((st) => st === 'verified').length,
+        pending: statuses.filter((st) => st === 'claimed_provisional').length,
+        rejected: statuses.filter((st) => st === 'rejected').length,
       };
     }
 
@@ -152,7 +200,7 @@ async function loadData(): Promise<AdminPhase2Data> {
       leadName: t.lead_name,
       leadEmail: t.lead_email,
       track: offer?.track || trackOf(t.lead_email),
-      membersCount: members.size,
+      membersCount: members.length,
       submitted,
       repoUrl: t.github_repo_url || null,
       score: evaluation?.score != null ? Number(evaluation.score) : null,
@@ -162,6 +210,7 @@ async function loadData(): Promise<AdminPhase2Data> {
       releasedAt: evaluation?.result_released_at || null,
       stage,
       offer,
+      members,
       payment,
     };
   });
@@ -192,6 +241,7 @@ async function loadData(): Promise<AdminPhase2Data> {
       waitlistedReleased: count('waitlisted'),
       waitlistRemaining,
       membersPaid: rows.reduce((n, r) => n + (r.payment?.paid || 0), 0),
+      receiptsToVerify: rows.reduce((n, r) => n + (r.payment?.pending || 0), 0),
       membersToPay: rows.reduce((n, r) => n + (r.payment?.total || 0), 0),
       desks,
       undecided: count('undecided'),
