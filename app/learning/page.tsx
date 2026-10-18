@@ -1233,7 +1233,7 @@ function LearningDashboardContent() {
       </div>
 
       {/* Phase 1 Results 4:00 PM IST Countdown Banner */}
-      <Phase1ResultsCountdown className="mb-6" />
+      <Phase1ResultsCountdown variant="compact" />
 
       {/* Flagship Hackathon Feature Card */}
       <div className="p-5 sm:p-6 bg-white dark:bg-[#150709] border-2 border-burgundy/40 dark:border-burgundy/60 rounded-xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1242,16 +1242,28 @@ function LearningDashboardContent() {
             <span className="font-mono text-[10px] font-bold text-white uppercase tracking-wider px-2 py-0.5 rounded bg-burgundy">
               Flagship Hackathon · Phase 1 (Optional Team Track)
             </span>
-            <span className="font-mono text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
-              Closes 17 Oct 2026, 11:59 PM IST
-            </span>
+            {submissionsClosed ? (
+              <span className="font-mono text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Submissions closed
+              </span>
+            ) : (
+              <span className="font-mono text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                Closes {ONLINE_SUBMISSIONS_CLOSE_LABEL}
+              </span>
+            )}
           </div>
           <h2 className="font-serif text-lg sm:text-xl font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">
             Flagship Hackathon Workspace
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-sans max-w-xl leading-relaxed">
-            Form a team of 2 to 6 members, choose your domain track and problem statement, and register your
-            repository for Phase 1. <em>Hackathon participation is optional—you can also participate exclusively in Masterclasses, Qiskit Challenges, or Creative Competitions without joining a team.</em>
+            {submissionsClosed ? (
+              <>Phase 1 is closed. Open the workspace to view your team, your recorded repository and your Phase 1 result.</>
+            ) : (
+              <>
+                Form a team of 2 to 6 members, choose your domain track and problem statement, and register your
+                repository for Phase 1. <em>Hackathon participation is optional—you can also participate exclusively in Masterclasses, Qiskit Challenges, or Creative Competitions without joining a team.</em>
+              </>
+            )}
           </p>
         </div>
 

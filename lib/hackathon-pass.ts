@@ -61,6 +61,8 @@ export interface HackathonPassContext {
   submittedAt: string | null;
   resultsPublished: boolean;
   outcome: HackathonOutcome;
+  /** Display-only: a not-shortlisted team held on the Phase 2 waitlist. Pass eligibility still follows `outcome`. */
+  isWaitlisted: boolean;
 }
 
 /**
@@ -139,5 +141,8 @@ export async function getHackathonPassContext(email: string): Promise<HackathonP
     submittedAt: team.submitted_at || (team.github_repo_url ? 'submitted' : null),
     resultsPublished,
     outcome,
+    // sync_finalist_evaluations.py marks waitlisted teams as under_review with is_next_round = false
+    isWaitlisted:
+      resultsPublished && hasSubmitted && !isShortlisted && evaluation?.status === 'under_review',
   };
 }

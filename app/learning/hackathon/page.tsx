@@ -790,8 +790,8 @@ export default function HackathonWorkspacePage() {
             label="Phase 1 submissions"
             closedDetail={
               team?.github_repo_url
-                ? `Phase 1 closed on ${ONLINE_SUBMISSIONS_CLOSE_LABEL}. Your team's repository below is the final recorded submission. Jury evaluation is currently in progress; Phase 2 Finalist results and Auditorium Desk allocations (50 Desks: 25 Internal + 25 External) will be announced today at 4:00 PM IST.`
-                : `Phase 1 closed on ${ONLINE_SUBMISSIONS_CLOSE_LABEL}. Repository submission, team formation, invitations, and problem statement changes are locked. Phase 2 Finalist results will be announced today at 4:00 PM IST.`
+                ? `Phase 1 closed on ${ONLINE_SUBMISSIONS_CLOSE_LABEL}. Your team's repository below is the final recorded submission.`
+                : `Phase 1 closed on ${ONLINE_SUBMISSIONS_CLOSE_LABEL}. Repository submission, team formation, invitations, and problem statement changes are locked.`
             }
             className="mb-8"
           />
