@@ -20,6 +20,7 @@ import {
   Lock,
   MapPin,
   CalendarDays,
+  RotateCw,
 } from 'lucide-react';
 import Link from 'next/link';
 import clsx from 'clsx';
@@ -35,48 +36,8 @@ import {
   passTierLabel,
   uploadReceipt,
 } from '@/lib/payments';
-
-interface PassClaim {
-  id: string;
-  user_email: string;
-  user_name: string;
-  pass_tier: string;
-  transaction_reference: string;
-  bank_reference?: string | null;
-  receipt_url: string;
-  amount_inr: number;
-  status: 'claimed_provisional' | 'verified' | 'rejected' | string;
-  institution?: string;
-  contact_phone?: string | null;
-  checked_in: boolean;
-  qr_code_token: string;
-  admin_notes?: string | null;
-  created_at: string;
-}
-
-interface PassStatusResponse {
-  success: boolean;
-  isAuthenticated: boolean;
-  user?: {
-    email: string;
-    fullName: string;
-    institution?: string;
-    phone?: string;
-  };
-  isHackathonParticipant: boolean;
-  hackathon?: HackathonContext | null;
-  flagshipPayment?: FlagshipPaymentWindow | null;
-  pass?: PassClaim | null;
-}
-
-interface FlagshipPaymentWindow {
-  status: 'not_open' | 'open' | 'closed';
-  openedAt: string | null;
-  deadlineIso: string | null;
-  gatewayUrl: string | null;
-  expectedLabel: string;
-  windowHours: number;
-}
+import { usePassStatus } from '@/hooks/use-pass-status';
+import { handleGoogleSignInDirect } from '@/components/learning/AuthGate';
 
 function formatIst(iso: string) {
   return new Date(iso).toLocaleString('en-IN', {
@@ -128,18 +89,6 @@ function PaymentCountdown({ deadlineIso, onExpire }: { deadlineIso: string; onEx
       <span className="w-full font-mono text-[11px] opacity-80">Closes {formatIst(deadlineIso)} IST</span>
     </div>
   );
-}
-
-interface HackathonContext {
-  teamId: string;
-  teamName: string;
-  isLead: boolean;
-  submittedAt: string | null;
-  resultsPublished: boolean;
-  outcome: 'pending' | 'shortlisted' | 'not_shortlisted';
-  phase1DeadlineIso: string;
-  phase1DeadlinePassed: boolean;
-  resultsExpectedLabel: string;
 }
 
 const FLAGSHIP_INCLUSIONS = [
@@ -220,8 +169,7 @@ function StepMarker({ index, done, active }: { index: number; done: boolean; act
 }
 
 export function OnCampusPassCard() {
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<PassStatusResponse | null>(null);
+  const { data, isLoading: loading, isError, mutate } = usePassStatus();
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
 
   const [gatewayOpened, setGatewayOpened] = useState(false);
@@ -256,30 +204,20 @@ export function OnCampusPassCard() {
     }
   }, []);
 
-  const fetchPassStatus = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await fetch('/api/pass/status', { cache: 'no-store' });
-      const json: PassStatusResponse = await res.json();
-      if (res.ok && json.success) {
-        setData(json);
-        if (json.pass?.qr_code_token) {
-          generateQrCode(json.pass.qr_code_token);
-        }
-      }
-    } catch (err: any) {
-      console.error('Error fetching pass status:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [generateQrCode]);
+  const qrToken = data?.pass?.qr_code_token;
+  useEffect(() => {
+    if (qrToken) generateQrCode(qrToken);
+    else setQrDataUrl('');
+  }, [qrToken, generateQrCode]);
 
   useEffect(() => {
-    fetchPassStatus();
     try {
       setGatewayOpened(localStorage.getItem(GATEWAY_OPENED_KEY) === 'true');
     } catch {}
-  }, [fetchPassStatus]);
+    const handleAuthChange = () => mutate();
+    window.addEventListener('qff_auth_change', handleAuthChange);
+    return () => window.removeEventListener('qff_auth_change', handleAuthChange);
+  }, [mutate]);
 
   function markGatewayOpened() {
     setGatewayOpened(true);
@@ -357,14 +295,11 @@ export function OnCampusPassCard() {
         throw new Error(resJson.error || 'Failed to register pass claim.');
       }
 
-      setData((prev) => (prev ? { ...prev, pass: resJson.pass } : prev));
+      await mutate((prev) => (prev ? { ...prev, pass: resJson.pass } : prev), { revalidate: false });
       setIsResubmitting(false);
       clearFile();
       setTransactionRef('');
       setBankRef('');
-      if (resJson.pass?.qr_code_token) {
-        generateQrCode(resJson.pass.qr_code_token);
-      }
     } catch (err: any) {
       console.error('Error claiming pass:', err);
       setErrorMessage(err?.message || 'Failed to claim pass. Please try again.');
@@ -475,6 +410,81 @@ export function OnCampusPassCard() {
       <div className="p-6 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-2xl flex items-center justify-center gap-3">
         <Loader2 className="w-5 h-5 text-burgundy dark:text-[#E89BA5] animate-spin" />
         <span className="font-mono text-xs text-slate-500">Checking campus pass status...</span>
+      </div>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="p-5 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-slate-900 dark:text-[#FAF6F3]">Could not load your pass status</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              The server is busy. Do not pay again; retry in a few seconds.
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => mutate()}
+          className="inline-flex items-center justify-center gap-1.5 px-4 py-2 border border-slate-300 dark:border-[#3D1418] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#1C0A0D] text-xs font-semibold rounded-lg cursor-pointer shrink-0"
+        >
+          <RotateCw className="w-3.5 h-3.5" />
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  // Payments are matched to the signed-in account, so guests sign in before seeing the gateway
+  if (!data.isAuthenticated) {
+    return (
+      <div className="relative bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-[280px_1fr]">
+        <div className="relative bg-burgundy text-white p-5 sm:p-6 flex flex-col justify-between gap-4">
+          <div className="space-y-3">
+            <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-rose-200">
+              Admit One · On-Campus
+            </span>
+            <h2 className="font-serif text-xl sm:text-2xl font-bold leading-tight">On-Campus Festival Pass</h2>
+            <div className="space-y-1.5 text-xs text-rose-100">
+              <p className="flex items-center gap-2">
+                <CalendarDays className="w-3.5 h-3.5 shrink-0" />
+                26–30 October 2026
+              </p>
+              <p className="flex items-center gap-2">
+                <MapPin className="w-3.5 h-3.5 shrink-0" />
+                SRM University-AP, Main Campus
+              </p>
+            </div>
+          </div>
+          <div className="flex items-baseline gap-1.5 border-t border-white/20 pt-4">
+            <span className="font-serif text-4xl font-bold tabular-nums">₹{PASS_FEE_INR}</span>
+            <span className="font-mono text-[11px] text-rose-200">General Pass · all 5 days</span>
+          </div>
+          <span className={clsx(NOTCH, 'hidden lg:block -top-2.5 -right-2.5')} />
+          <span className={clsx(NOTCH, 'hidden lg:block -bottom-2.5 -right-2.5')} />
+        </div>
+        <div className="p-5 sm:p-6 border-t-2 lg:border-t-0 lg:border-l-2 border-dashed border-slate-200 dark:border-[#3D1418] flex flex-col justify-center gap-4">
+          <div className="space-y-1.5">
+            <h3 className="font-sans text-sm font-bold text-slate-900 dark:text-[#FAF6F3]">
+              Sign in before you pay
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              Your pass, QR code and Phase 1 result are linked to your Google account. Sign in first so your payment
+              can be matched to you. Hackathon finalists see the ₹{FLAGSHIP_PASS_FEE_INR} Flagship Pass here instead.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => handleGoogleSignInDirect()}
+            className="self-start inline-flex items-center gap-1.5 px-4 py-2.5 bg-burgundy hover:bg-burgundy-deep text-white text-sm font-semibold rounded-lg transition-colors cursor-pointer"
+          >
+            Sign In with Google
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     );
   }
@@ -973,6 +983,12 @@ export function OnCampusPassCard() {
                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                   Opens Easebuzz in a new tab. After paying, download the receipt; a copy is also emailed to you.
                 </p>
+                {!flagshipMode && (
+                  <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                    <strong>This is the pass payment.</strong> The ₹{PASS_FEE_INR} masterclass certificate uses the same
+                    Easebuzz form but is a separate payment; one transaction ID cannot be used for both.
+                  </p>
+                )}
               </div>
               <a
                 href={gatewayUrl}

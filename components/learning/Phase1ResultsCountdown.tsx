@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import useSWR from 'swr';
 import clsx from 'clsx';
 import { Clock, CheckCircle2, ArrowRight, Hourglass, CircleMinus } from 'lucide-react';
 import {
@@ -12,6 +11,7 @@ import {
   PHASE2_DESK_QUOTA,
   PHASE2_WAITLIST_QUOTA,
 } from '@/lib/constants';
+import { usePassStatus } from '@/hooks/use-pass-status';
 
 function splitRemaining(ms: number) {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
@@ -24,20 +24,12 @@ function splitRemaining(ms: number) {
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
-interface PassStatusHackathon {
-  teamName: string;
-  submittedAt: string | null;
-  resultsPublished: boolean;
-  outcome: 'pending' | 'shortlisted' | 'not_shortlisted';
-  isWaitlisted: boolean;
-}
-
 type ResultState = 'countdown' | 'finalising' | 'finalist' | 'waitlist' | 'not_selected' | 'no_submission' | 'published';
 
 const RESULT_COPY: Record<Exclude<ResultState, 'countdown'>, { title: string; body: string; tone: 'positive' | 'neutral' | 'muted' }> = {
   finalising: {
     title: 'Results are being finalised',
-    body: 'The announcement time has passed and the jury is publishing decisions. Your team result will appear here shortly.',
+    body: 'The announcement time has passed and the jury is publishing decisions. Team results will appear here shortly.',
     tone: 'neutral',
   },
   finalist: {
@@ -67,7 +59,8 @@ const RESULT_COPY: Record<Exclude<ResultState, 'countdown'>, { title: string; bo
   },
 };
 
-const fetcher = (url: string) => fetch(url, { cache: 'no-store' }).then((res) => res.json());
+// Spreads the post-announcement refetch so every open tab does not hit the API in the same second
+const MAX_FETCH_JITTER_MS = 20_000;
 
 interface Phase1ResultsCountdownProps {
   className?: string;
@@ -90,17 +83,22 @@ export function Phase1ResultsCountdown({ className, variant = 'full' }: Phase1Re
     return () => clearInterval(interval);
   }, [reached]);
 
-  // Team result is only requested once the announcement time has passed
-  const { data } = useSWR<{ hackathon: PassStatusHackathon | null }>(
-    reached ? '/api/pass/status' : null,
-    fetcher,
-    { refreshInterval: (latest) => (latest?.hackathon && !latest.hackathon.resultsPublished ? 60_000 : 0) }
-  );
+  // Team result is only requested once the announcement time has passed. Tabs opened after
+  // the announcement fetch immediately; tabs that were counting down wait a random delay.
+  const [fetchEnabled, setFetchEnabled] = useState(reached);
+  useEffect(() => {
+    if (!reached || fetchEnabled) return;
+    const timer = setTimeout(() => setFetchEnabled(true), Math.random() * MAX_FETCH_JITTER_MS);
+    return () => clearTimeout(timer);
+  }, [reached, fetchEnabled]);
+
+  const { data } = usePassStatus({ enabled: fetchEnabled });
 
   const team = data?.hackathon ?? null;
   let state: ResultState = 'countdown';
   if (reached) {
-    if (!team) state = 'published';
+    if (!data) state = 'finalising';
+    else if (!team) state = 'published';
     else if (!team.submittedAt) state = 'no_submission';
     else if (!team.resultsPublished) state = 'finalising';
     else if (team.outcome === 'shortlisted') state = 'finalist';
@@ -145,7 +143,7 @@ export function Phase1ResultsCountdown({ className, variant = 'full' }: Phase1Re
           {!copy && (
             <span
               className="font-mono text-sm font-semibold tabular-nums text-slate-900 dark:text-[#FAF6F3]"
-              aria-label={`${hours} hours, ${minutes} minutes, ${seconds} seconds remaining`}
+              aria-label={mounted ? `${hours} hours, ${minutes} minutes, ${seconds} seconds remaining` : undefined}
             >
               {clock}
             </span>
@@ -213,7 +211,7 @@ export function Phase1ResultsCountdown({ className, variant = 'full' }: Phase1Re
             <span className="block text-xs text-slate-500 dark:text-slate-400">Time remaining</span>
             <span
               className="block font-mono text-2xl sm:text-3xl font-semibold tabular-nums text-slate-900 dark:text-[#FAF6F3] leading-tight"
-              aria-label={`${hours} hours, ${minutes} minutes, ${seconds} seconds remaining`}
+              aria-label={mounted ? `${hours} hours, ${minutes} minutes, ${seconds} seconds remaining` : undefined}
             >
               {clock}
             </span>

@@ -1170,7 +1170,7 @@ function LearningDashboardContent() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900 dark:text-[#FAF6F3] tracking-tight leading-snug">
-              Hackathon &amp; Competition Arena
+              Participant Dashboard
             </h1>
             {!sessionUser && (
               <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 uppercase tracking-wider">
@@ -1180,8 +1180,8 @@ function LearningDashboardContent() {
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
             {sessionUser?.fullName
-              ? `Welcome back, ${(sessionUser.fullName || '').split(' ')[0]}. Compete in the flagship hackathon, solve live Qiskit challenges, or submit competition entries.`
-              : 'Official arena for the Flagship Quantum Hackathon (Phase 1), Qiskit Coding Challenges, Creative Competitions, and Masterclasses. Sign in with Google to enter.'}
+              ? `Welcome back, ${(sessionUser.fullName || '').split(' ')[0]}. Your Phase 1 result, on-campus pass (26–30 October) and masterclass certificate are below.`
+              : 'Sign in with Google to see your Phase 1 result, get your on-campus pass for 26–30 October, and track your masterclass certificate.'}
           </p>
         </div>
 
@@ -1219,21 +1219,11 @@ function LearningDashboardContent() {
         )}
       </div>
 
-      {/* On-Campus Festival Pass Hero Card (26–30 October 2026) */}
-      <OnCampusPassCard />
-
-      {/* Section Divider: Online Arenas & Competition Tracks */}
-      <div className="pt-2 flex items-center justify-between border-t border-slate-200 dark:border-[#3D1418]">
-        <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-          Online Competition Arenas &amp; Masterclasses
-        </h2>
-        <span className="font-mono text-[11px] text-slate-400">
-          Phase 1 Window
-        </span>
-      </div>
-
       {/* Phase 1 Results 4:00 PM IST Countdown Banner */}
       <Phase1ResultsCountdown variant="compact" />
+
+      {/* On-Campus Festival Pass Hero Card (26–30 October 2026) */}
+      <OnCampusPassCard />
 
       {/* Flagship Hackathon Feature Card */}
       <div className="p-5 sm:p-6 bg-white dark:bg-[#150709] border-2 border-burgundy/40 dark:border-burgundy/60 rounded-xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1275,82 +1265,6 @@ function LearningDashboardContent() {
           <span>Open Hackathon Workspace</span>
           <ArrowRight className="w-3.5 h-3.5" />
         </Link>
-      </div>
-
-      {/* Daily Competitions Grid */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Daily Competitions (3)
-          </h3>
-          <span className="font-mono text-[11px] text-slate-400 dark:text-slate-500">
-            {submittedCompsCount} / 3 Submitted
-          </span>
-        </div>
-        <SubmissionCountdown deadline={submissionDeadline} label="Online competition submissions" />
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {Object.values(DAILY_COMPETITIONS).map((comp) => {
-            const sub = competitions[comp.type];
-            const isSubmitted = Boolean(sub);
-            const supportsDoc =
-              comp.submissionType === 'url_or_document' ||
-              comp.type === 'poster' ||
-              comp.type === 'essay';
-            return (
-              <Link
-                key={comp.day}
-                href={`/learning?challenge=${comp.day}`}
-                className="p-3.5 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl hover:border-burgundy/40 dark:hover:border-[#E89BA5]/40 transition-colors flex flex-col justify-between gap-2.5 group"
-              >
-                <div>
-                  <div className="flex items-center justify-between gap-1.5">
-                    <span className="font-mono text-[10px] font-bold text-burgundy dark:text-[#E89BA5] uppercase">
-                      Day 0{comp.day} · {comp.prize}
-                    </span>
-                    {isSubmitted ? (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                    ) : submissionsClosed ? (
-                      <Lock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                    ) : (
-                      <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                    )}
-                  </div>
-                  <h4 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-[#FAF6F3] group-hover:text-burgundy dark:group-hover:text-[#E89BA5] transition-colors mt-1 line-clamp-1">
-                    {comp.title}
-                  </h4>
-                  <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5 truncate">
-                    {isSubmitted && sub?.submission_title
-                      ? `File: ${sub.submission_title}`
-                      : supportsDoc
-                      ? 'Accepts .pdf, .docx, or URL'
-                      : 'Accepts Public Video URL'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-[11px] font-mono pt-2 border-t border-slate-100 dark:border-[#250D11]">
-                  <span
-                    className={clsx(
-                      'font-semibold',
-                      isSubmitted
-                        ? 'text-emerald-700 dark:text-emerald-400'
-                        : submissionsClosed
-                        ? 'text-slate-500 dark:text-slate-400'
-                        : 'text-burgundy dark:text-[#E89BA5]'
-                    )}
-                  >
-                    {isSubmitted
-                      ? 'Submitted'
-                      : submissionsClosed
-                      ? 'Closed'
-                      : sessionUser
-                      ? 'Submit Entry'
-                      : 'Preview Challenge'}
-                  </span>
-                  <ArrowRight className="w-3 h-3 text-slate-400 group-hover:text-burgundy dark:group-hover:text-[#E89BA5] transition-colors" />
-                </div>
-              </Link>
-            );
-          })}
-        </div>
       </div>
 
       {/* Python Coding Challenge in Qiskit Feature Card */}
@@ -1410,6 +1324,10 @@ function LearningDashboardContent() {
             </h2>
             <p className="text-xs text-slate-600 dark:text-slate-300 font-sans max-w-xl leading-relaxed">
               You have completed all {totalSessionsCount} video lectures and passed every concept check quiz. Pay the optional ₹99 fee on the SRM-AP Easebuzz form and upload your receipt to claim your verified certificate.
+            </p>
+            <p className="text-xs text-slate-700 dark:text-slate-300 font-sans max-w-xl leading-relaxed">
+              <strong>Separate from the on-campus pass.</strong> The certificate and the ₹99 General Pass use the same
+              Easebuzz form but need two payments; one transaction ID cannot be used for both.
             </p>
           </div>
 
@@ -1582,6 +1500,94 @@ function LearningDashboardContent() {
                   </Link>
                 </div>
               </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Online phase archive: closed competitions and the 8–10 October timetable */}
+      <div className="pt-6 border-t border-slate-200 dark:border-[#3D1418]">
+        <h2 className="font-serif text-lg font-bold text-slate-900 dark:text-[#FAF6F3] leading-snug">
+          Online Phase Archive
+        </h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+          {submissionsClosed
+            ? `Daily competitions closed on ${ONLINE_SUBMISSIONS_CLOSE_LABEL}. Your recorded entries and the online programme remain here for reference.`
+            : `Daily competition submissions close on ${ONLINE_SUBMISSIONS_CLOSE_LABEL}.`}
+        </p>
+      </div>
+
+      {/* Daily Competitions Grid */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Daily Competitions (3)
+          </h3>
+          <span className="font-mono text-[11px] text-slate-400 dark:text-slate-500">
+            {submittedCompsCount} / 3 Submitted
+          </span>
+        </div>
+        <SubmissionCountdown deadline={submissionDeadline} label="Online competition submissions" />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {Object.values(DAILY_COMPETITIONS).map((comp) => {
+            const sub = competitions[comp.type];
+            const isSubmitted = Boolean(sub);
+            const supportsDoc =
+              comp.submissionType === 'url_or_document' ||
+              comp.type === 'poster' ||
+              comp.type === 'essay';
+            return (
+              <Link
+                key={comp.day}
+                href={`/learning?challenge=${comp.day}`}
+                className="p-3.5 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl hover:border-burgundy/40 dark:hover:border-[#E89BA5]/40 transition-colors flex flex-col justify-between gap-2.5 group"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-1.5">
+                    <span className="font-mono text-[10px] font-bold text-burgundy dark:text-[#E89BA5] uppercase">
+                      Day 0{comp.day} · {comp.prize}
+                    </span>
+                    {isSubmitted ? (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    ) : submissionsClosed ? (
+                      <Lock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    ) : (
+                      <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                    )}
+                  </div>
+                  <h4 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-[#FAF6F3] group-hover:text-burgundy dark:group-hover:text-[#E89BA5] transition-colors mt-1 line-clamp-1">
+                    {comp.title}
+                  </h4>
+                  <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5 truncate">
+                    {isSubmitted && sub?.submission_title
+                      ? `File: ${sub.submission_title}`
+                      : supportsDoc
+                      ? 'Accepts .pdf, .docx, or URL'
+                      : 'Accepts Public Video URL'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-[11px] font-mono pt-2 border-t border-slate-100 dark:border-[#250D11]">
+                  <span
+                    className={clsx(
+                      'font-semibold',
+                      isSubmitted
+                        ? 'text-emerald-700 dark:text-emerald-400'
+                        : submissionsClosed
+                        ? 'text-slate-500 dark:text-slate-400'
+                        : 'text-burgundy dark:text-[#E89BA5]'
+                    )}
+                  >
+                    {isSubmitted
+                      ? 'Submitted'
+                      : submissionsClosed
+                      ? 'Closed'
+                      : sessionUser
+                      ? 'Submit Entry'
+                      : 'Preview Challenge'}
+                  </span>
+                  <ArrowRight className="w-3 h-3 text-slate-400 group-hover:text-burgundy dark:group-hover:text-[#E89BA5] transition-colors" />
+                </div>
+              </Link>
             );
           })}
         </div>
