@@ -139,6 +139,31 @@ export function LearningSidebar() {
     };
   }, [fetchSidebarProgress]);
 
+  const shouldOpenCertModal =
+    searchParams?.get('certificate') === 'true' ||
+    searchParams?.get('cert') === '1' ||
+    searchParams?.get('cert') === 'true' ||
+    searchParams?.get('action') === 'certificate' ||
+    searchParams?.get('modal') === 'certificate';
+
+  useEffect(() => {
+    if (shouldOpenCertModal) {
+      setIsCertModalOpen(true);
+    }
+  }, [shouldOpenCertModal]);
+
+  const handleCloseCertModal = React.useCallback(() => {
+    setIsCertModalOpen(false);
+    if (typeof window !== 'undefined' && shouldOpenCertModal) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('certificate');
+      url.searchParams.delete('cert');
+      url.searchParams.delete('action');
+      url.searchParams.delete('modal');
+      window.history.replaceState({}, '', url.pathname + (url.search || ''));
+    }
+  }, [shouldOpenCertModal]);
+
   useEffect(() => {
     const handleOpenCertModal = () => {
       setIsCertModalOpen(true);
@@ -925,7 +950,7 @@ export function LearningSidebar() {
 
       <CertificateModal
         isOpen={isCertModalOpen}
-        onClose={() => setIsCertModalOpen(false)}
+        onClose={handleCloseCertModal}
         userEmail={session?.email || ''}
         userName={session?.fullName || session?.email || 'Candidate'}
       />

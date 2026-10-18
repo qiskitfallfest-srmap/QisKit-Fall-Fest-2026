@@ -14,6 +14,7 @@ import { useCurriculumSessions } from '@/hooks/use-curriculum-sessions';
 import { useQuizzes } from '@/hooks/use-quizzes';
 import { useSubmissionDeadline } from '@/hooks/use-submission-deadline';
 import { SubmissionCountdown } from '@/components/learning/SubmissionCountdown';
+import { Phase1ResultsCountdown } from '@/components/learning/Phase1ResultsCountdown';
 import { ONLINE_SUBMISSIONS_CLOSE_LABEL, isOnlineSubmissionsClosed } from '@/lib/constants';
 import {
   Award,
@@ -67,6 +68,12 @@ function LearningDashboardContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams?.get('session');
   const challengeDay = searchParams?.get('challenge');
+  const shouldOpenCertParam =
+    searchParams?.get('certificate') === 'true' ||
+    searchParams?.get('cert') === '1' ||
+    searchParams?.get('cert') === 'true' ||
+    searchParams?.get('action') === 'certificate' ||
+    searchParams?.get('modal') === 'certificate';
 
   // If someone visits /learning?session=session-1, redirect directly to /learning/session/session-1
   useEffect(() => {
@@ -74,6 +81,15 @@ function LearningDashboardContent() {
       router.replace(`/learning/session/${sessionId}`);
     }
   }, [sessionId, router]);
+
+  useEffect(() => {
+    if (shouldOpenCertParam) {
+      const timer = setTimeout(() => {
+        openCertificateModal();
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [shouldOpenCertParam]);
 
   const [competitions, setCompetitions] = useState<Record<string, any>>({});
   const [competitionUrls, setCompetitionUrls] = useState<Record<string, string>>({});
@@ -1215,6 +1231,9 @@ function LearningDashboardContent() {
           Phase 1 Window
         </span>
       </div>
+
+      {/* Phase 1 Results 4:00 PM IST Countdown Banner */}
+      <Phase1ResultsCountdown className="mb-6" />
 
       {/* Flagship Hackathon Feature Card */}
       <div className="p-5 sm:p-6 bg-white dark:bg-[#150709] border-2 border-burgundy/40 dark:border-burgundy/60 rounded-xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">

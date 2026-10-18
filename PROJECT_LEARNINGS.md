@@ -271,3 +271,41 @@ sahgyan9/Qiskit-Fall-Fest-SRMAP-2026 (PLANNING REPO)
 2. **Certificate claim**: Requires a completed course, Easebuzz Transaction ID, receipt in `media/certificate-receipts/*`, and a delivery choice (`ceremony` = valedictory ceremony in person, `email`). One row per participant; a rejected row is updated in place on resubmission. Hackathon participants are allowed.
 3. **Admin decisions**: `GET/PATCH /api/admin/payments` (`type=pass|certificate`). Rejection requires a reason (shown to the participant). Approving a certificate mints it via `mintCertificate`; approval is refused if the course is incomplete. Checked-in passes and issued certificates cannot be rejected. `reviewed_by` records the admin.
 4. **RLS pitfall**: Server routes use the anon or service client without a Supabase JWT, so RLS policies keyed on `auth.jwt() ->> 'email'` return nothing. Read participant-owned payment rows with `supabaseAdmin` after checking the session email.
+
+---
+
+### GT-36: Dual-Channel Masterclass Certificate Communication Standard & Apps Script Integration
+1. **Audience Scope & Hackathon Inclusivity**:
+   - While the **₹99 General Offline Pass** strictly excludes hackathon participants (who are guided to the ₹499 Flagship Pass upon qualification), the **₹99 Verified Masterclass Certificate** is 100% open to **all registered students** (both Hackathon participants and non-hackathon learners).
+   - Reconciles 2,247 total students across registrations, whitelist, and Unstop records.
+2. **Dual-Channel Promotion Architecture**:
+   - **Channel 1 (Cross-Promotion in General Pass Mailer)**: Includes a dedicated callout card in `sendGeneralPassAnnouncementEmail()` offering the Masterclass Certificate as an online alternative for remote students unable to travel to the SRM University-AP campus.
+   - **Channel 2 (Dedicated Certificate Campaign in Google Apps Script)**: Adds menu items 7, 8, 9 (`setupCertificateRecipientsSheet`, `sendTestCertificateEmail`, `startCertificateEmailCampaign`) and `sendCertificateAnnouncementEmail()` to `tools/google_form_webhook.gs`.
+3. **Progress-Aware Messaging & Norman Feedback**:
+   - Reads `public.user_progress` (cached in `data/quiz_progress_cache.json`) to distinguish **Fully Qualified (5/5 quizzes passed)** students from **In Progress (1 to 4 quizzes passed)** or yet-to-start learners.
+   - Fully qualified students receive immediate congratulations with a one-click claim path; in-progress students receive a clear completion roadmap.
+4. **Data Export & Deduplication Standard**:
+   - `tools/export_certificate_recipients.py` exports clean participant records to `c:\Users\sahgy\Downloads\certificate_recipients_clean.csv` and `tools/certificate_recipients.csv`.
+   - Protects university faculty and speakers (`sazzadali.b@srmap.edu.in`, `gangireddy.s@srmap.edu.in`) from promotional blasts.
+   - Idempotent execution in Google Apps Script skips any recipient whose `Certificate_Email_Status` already contains `SENT`.
+
+---
+
+### GT-37: Hackathon Phase 1 Auditorium Quota (50 Desks), Waiting Room (30 Teams) & Web Countdown Architecture
+1. **Auditorium Capacity & Exact Quota Allocation**:
+   - The on-campus auditorium provides exactly **50 team desks** for the 24-hour Phase 2 sprint (26–30 October 2026).
+   - Strict 50/50 balance enforced: **25 Internal (SRM University-AP) Finalist Teams** (Desk `INT-01` to `INT-25`) and **25 External (Other Colleges) Finalist Teams** (Desk `EXT-01` to `EXT-25`).
+   - All variations of SRM University AP (`SRM AP`, `srm ap`, `SRM University AP`, `SRMAP`, `srmist`) are normalized to SRM University-AP.
+2. **Waiting Room Standby Buffer (30 Teams)**:
+   - A buffer of **30 teams** is maintained on standby: **20 Internal teams** (`WL-INT-01` to `WL-INT-20`) and **10 External teams** (`WL-EXT-01` to `WL-EXT-10`).
+   - If any finalist team fails to confirm their desk or complete registration within the allotted window, desks are offered strictly by sequential rank to the waiting room.
+   - Breakdown of all 129 evaluated submissions: 50 Shortlisted + 30 Waiting Room + 49 Rejected = 129 Teams.
+   - Master reference workbook: `QFF_2026_Hackathon_50_Auditorium_Finalists.xlsx`.
+3. **Live Web Countdown Timer (4:00 PM IST)**:
+   - Active, real-time ticking countdown (`components/learning/Phase1ResultsCountdown.tsx`) integrated into `/learning/hackathon` and `/learning`.
+   - Replaces static closed states with high-visibility environmental feedback counting down to the official 4:00 PM IST announcement (`2026-10-18T16:00:00+05:30`).
+   - Automatically transitions to "Announcement Live" state upon reaching zero.
+4. **Payment Window Isolation & Guardrail**:
+   - The 48-hour countdown for the ₹499 Flagship Pass does **NOT** begin when results are published.
+   - Per `lib/hackathon-pass.ts`, `getFlagshipPaymentWindow()` returns `status: 'not_open'` as long as `gateway_url` or `opened_at` is null in `platform_config: flagship_payment`. The payment countdown commences only after the gateway is configured and stamped by administrators.
+

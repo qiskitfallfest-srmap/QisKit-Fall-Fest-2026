@@ -96,6 +96,10 @@ function onOpen() {
         .addItem('5. Send Test Hackathon Reminder to sahgyan9@gmail.com', 'sendTestHackathonRepoReminderEmail')
         .addItem('6. Start Hackathon Repo Reminder Campaign', 'startHackathonRepoReminderCampaign')
         .addSeparator()
+        .addItem('7. Setup "Certificate_Recipients" Sheet', 'setupCertificateRecipientsSheet')
+        .addItem('8. Send Test Certificate Email to sahgyan9@gmail.com', 'sendTestCertificateEmail')
+        .addItem('9. Start Certificate Email Campaign', 'startCertificateEmailCampaign')
+        .addSeparator()
         .addItem('Sync All Unsynced Rows to Portal', 'syncAllUnsyncedRows')
         .addItem('Send Missing Welcome Emails', 'sendMissingWelcomeEmails')
         .addSeparator()
@@ -988,6 +992,18 @@ function sendGeneralPassAnnouncementEmail(recipientEmail, participantName) {
     + '<tr><td style="padding:8px 0;font-size:14px;color:#3d3635;line-height:1.6;border-bottom:1px solid #eee4d7;"><strong style="color:#7c1415;">Step 2:</strong> In the <strong>&quot;On-Campus Festival Pass&quot;</strong> hero card at the top, click <strong>&quot;Pay &#8377;99 on University Gateway&quot;</strong> to open SRM University-AP&apos;s Easebuzz portal. Complete payment and download your receipt.</td></tr>'
     + '<tr><td style="padding:8px 0;font-size:14px;color:#3d3635;line-height:1.6;border-bottom:1px solid #eee4d7;"><strong style="color:#7c1415;">Step 3:</strong> Return to the pass card, enter your <strong>Easebuzz Transaction ID</strong> (e.g. <code>E26101518BKHN3</code>), and upload your receipt screenshot or PDF.</td></tr>'
     + '<tr><td style="padding:8px 0 0 0;font-size:14px;color:#3d3635;line-height:1.6;"><strong style="color:#7c1415;">Step 4:</strong> Your <strong>Official Digital Gate Pass with Security QR Code</strong> will be generated immediately. Click <strong>&quot;Download Pass (PNG)&quot;</strong> to save it to your phone for rapid admission at campus entrance gates.</td></tr></table>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f0f5fa;border:1px solid #bfdbfe;border-left:4px solid #1e40af;border-radius:8px;padding:20px;margin:0 0 32px 0;"><tr><td>'
+    + '<div style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#1e40af;margin-bottom:4px;">Cannot Attend In Person? (Online Alternative)</div>'
+    + '<h3 style="margin:0 0 8px 0;font-size:16px;color:#1e3a8a;font-weight:bold;">Claim Your Verified Masterclass Certificate (&#8377;99)</h3>'
+    + '<p style="margin:0 0 12px 0;font-size:14px;color:#1e293b;line-height:1.6;">If you are located outside Vijayawada / Guntur or cannot travel to SRM University-AP in person, you can still earn the official <strong>Verified Certificate of Course Completion</strong> co-certified by IBM Quantum and SRM University-AP.</p>'
+    + '<ul style="margin:0 0 14px 0;padding-left:20px;font-size:13.5px;color:#334155;line-height:1.6;">'
+    + '<li><strong>Curriculum Requirement:</strong> Complete all 5 recorded masterclasses and pass the concept check quizzes on <a href="https://www.qffsrmap2026.com/learning?certificate=true" target="_blank" style="color:#1e40af;font-weight:bold;">qffsrmap2026.com/learning?certificate=true</a>.</li>'
+    + '<li><strong>Delivery Preference:</strong> In the certificate modal, select <strong>&quot;Receive by email&quot;</strong> for direct high-resolution digitally signed PDF dispatch to your inbox, or collect in person at the valedictory ceremony.</li>'
+    + '<li><strong>Independent Purchase Note:</strong> The General Offline Pass (campus gate admission) and the Masterclass Certificate are separate purchases. Each purchase requires its own distinct Easebuzz Transaction ID (cannot share or duplicate IDs).</li>'
+    + '</ul>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="background-color:#1e40af;border-radius:6px;">'
+    + '<a href="https://www.qffsrmap2026.com/learning?certificate=true" target="_blank" style="display:inline-block;padding:10px 20px;font-size:13px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:6px;text-transform:uppercase;letter-spacing:0.6px;">Learn More &amp; Claim Certificate &rarr;</a>'
+    + '</td></tr></table></td></tr></table>'
     + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#fcf9f5;border:1px solid #e4dacb;border-radius:8px;padding:18px 20px;margin:0 0 32px 0;"><tr><td>'
     + '<div style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#b97e3e;margin-bottom:4px;">Accommodation Assistance</div>'
     + '<h3 style="margin:0 0 6px 0;font-size:16px;color:#231f20;font-weight:bold;">Travelling from Outside Vijayawada / Guntur?</h3>'
@@ -1246,6 +1262,291 @@ function sendHackathonRepoReminderEmail(recipientEmail, participantName, teamNam
     name: 'Qiskit Fall Fest 2026'
   });
 }
+
+// ============================================================================
+// VERIFIED MASTERCLASS CERTIFICATE (₹99) EMAIL CAMPAIGN
+// ============================================================================
+
+/**
+ * 7. Automatically creates and formats the 'Certificate_Recipients' tab.
+ */
+function setupCertificateRecipientsSheet() {
+  var ss = getTargetSpreadsheet();
+  if (!ss) {
+    try {
+      SpreadsheetApp.getUi().alert('Could not locate active Google Spreadsheet.');
+    } catch (e) {}
+    return;
+  }
+  
+  var sheet = ss.getSheetByName('Certificate_Recipients');
+  if (!sheet) {
+    sheet = ss.insertSheet('Certificate_Recipients');
+    sheet.appendRow([
+      'Email',
+      'Full Name',
+      'Institution',
+      'Phone',
+      'Quizzes_Passed',
+      'Certificate_Email_Status'
+    ]);
+    sheet.getRange(1, 1, 1, 6).setFontWeight('bold').setBackground('#7c1415').setFontColor('#ffffff');
+    sheet.setFrozenRows(1);
+    SpreadsheetApp.getUi().alert(
+      'Sheet "Certificate_Recipients" created successfully!\n\n' +
+      'Next Step: Open "C:\\Users\\sahgy\\Downloads\\certificate_recipients_clean.csv", copy the recipient data, and paste it into this sheet (Columns A to F). Then click:\n\n' +
+      'Qiskit Fall Fest 2026 -> 9. Start Certificate Email Campaign'
+    );
+  } else {
+    SpreadsheetApp.getUi().alert('Sheet "Certificate_Recipients" already exists.');
+  }
+}
+
+/**
+ * 8. Dispatches a single test copy of the Certificate Announcement email to sahgyan9@gmail.com.
+ */
+function sendTestCertificateEmail() {
+  var testEmail = 'sahgyan9@gmail.com';
+  try {
+    sendCertificateAnnouncementEmail(
+      testEmail,
+      'Gyan Kumar Sah (Test Mode)',
+      '5/5 (Qualified)'
+    );
+    SpreadsheetApp.getUi().alert('Test certificate announcement email successfully dispatched to ' + testEmail + '!\nPlease check your inbox.');
+  } catch (err) {
+    SpreadsheetApp.getUi().alert('Failed to send test email: ' + err.toString());
+  }
+}
+
+/**
+ * 9. Batched campaign dispatcher with safety quota check and deduplication for Masterclass Certificates.
+ */
+function startCertificateEmailCampaign() {
+  var ss = getTargetSpreadsheet();
+  if (!ss) {
+    SpreadsheetApp.getUi().alert('Could not locate active Google Spreadsheet.');
+    return;
+  }
+  
+  var sheet = ss.getSheetByName('Certificate_Recipients');
+  if (!sheet) {
+    SpreadsheetApp.getUi().alert('Please run "7. Setup Certificate_Recipients Sheet" first.');
+    return;
+  }
+  
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) {
+    SpreadsheetApp.getUi().alert('The sheet "Certificate_Recipients" has no recipient rows. Please paste the recipient data from your Downloads folder first.');
+    return;
+  }
+  
+  var quotaRemaining = MailApp.getRemainingDailyQuota();
+  if (quotaRemaining < 5) {
+    SpreadsheetApp.getUi().alert('Daily Gmail sending quota reached (' + quotaRemaining + ' left). Please try again tomorrow.');
+    return;
+  }
+  
+  var data = sheet.getRange(2, 1, lastRow - 1, 6).getValues();
+  var sentCount = 0;
+  var skippedCount = 0;
+  
+  for (var i = 0; i < data.length; i++) {
+    var rowNum = i + 2;
+    var email = String(data[i][0]).trim().toLowerCase();
+    var name = String(data[i][1]).trim() || 'Participant';
+    var quizzesPassed = String(data[i][4] || '').trim();
+    var currentStatus = String(data[i][5] || '').trim();
+    
+    if (!email || email.indexOf('@') === -1) {
+      sheet.getRange(rowNum, 6).setValue('SKIPPED (Invalid Email)');
+      continue;
+    }
+    
+    // Deduplication check: Never re-send to anyone already marked SENT
+    if (currentStatus.indexOf('SENT') !== -1) {
+      skippedCount++;
+      continue;
+    }
+    
+    if (MailApp.getRemainingDailyQuota() <= 2) {
+      Logger.log('Quota limit hit during batch. Stopping cleanly.');
+      break;
+    }
+    
+    try {
+      sendCertificateAnnouncementEmail(email, name, quizzesPassed);
+      var timestamp = Utilities.formatDate(new Date(), 'Asia/Kolkata', 'yyyy-MM-dd HH:mm:ss');
+      sheet.getRange(rowNum, 6).setValue('SENT (' + timestamp + ' IST)');
+      sentCount++;
+      Utilities.sleep(1000); // Respect Google Workspace mail rate limit
+    } catch (mailErr) {
+      sheet.getRange(rowNum, 6).setValue('ERROR: ' + mailErr.toString().slice(0, 100));
+    }
+  }
+  
+  var summary = 'Certificate Campaign run completed!\n\n' +
+    'Successfully Dispatched: ' + sentCount + '\n' +
+    'Skipped (Already Sent): ' + skippedCount + '\n' +
+    'Daily Quota Remaining: ' + MailApp.getRemainingDailyQuota();
+  
+  Logger.log(summary);
+  SpreadsheetApp.getUi().alert(summary);
+}
+
+/**
+ * Master HTML email builder for the Verified Masterclass Certificate (₹99).
+ */
+function sendCertificateAnnouncementEmail(recipientEmail, participantName, quizzesPassed) {
+  var isQualified = String(quizzesPassed || '').indexOf('Qualified') !== -1 ||
+                    String(quizzesPassed || '').indexOf('5/5') !== -1 ||
+                    String(quizzesPassed || '').indexOf('6/6') !== -1;
+
+  var subject = isQualified
+    ? 'IBM Qiskit Fall Fest 2026 — You are Qualified to Claim Your Verified Course Certificate'
+    : 'IBM Qiskit Fall Fest 2026 — Masterclass Completion & Verified Academic Certificate (₹99)';
+
+  var statusBox = '';
+  if (isQualified) {
+    statusBox = '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f0fdf4;border:1px solid #bbf7d0;border-left:4px solid #16a34a;border-radius:8px;padding:16px 20px;margin:20px 0 28px 0;"><tr><td>'
+      + '<div style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#16a34a;margin-bottom:4px;">Curriculum Status: Pre-Qualified</div>'
+      + '<div style="font-size:16px;font-weight:bold;color:#166534;margin-bottom:6px;">All Quizzes Passed (' + (quizzesPassed || '5/5') + ')</div>'
+      + '<p style="margin:0;font-size:14px;color:#14532d;line-height:1.6;">Our records indicate that you have successfully completed all required curriculum sessions and quizzes. You can proceed directly to verify your payment and generate your official credential immediately.</p>'
+      + '</td></tr></table>';
+  } else {
+    var progressLabel = quizzesPassed ? quizzesPassed : 'In Progress';
+    statusBox = '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#fffbeb;border:1px solid #fef3c7;border-left:4px solid #d97706;border-radius:8px;padding:16px 20px;margin:20px 0 28px 0;"><tr><td>'
+      + '<div style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#d97706;margin-bottom:4px;">Curriculum Progress Track</div>'
+      + '<div style="font-size:16px;font-weight:bold;color:#92400e;margin-bottom:6px;">Quizzes Passed: ' + progressLabel + ' (Requirement: 5/5)</div>'
+      + '<p style="margin:0;font-size:14px;color:#78350f;line-height:1.6;">You can watch any remaining recorded masterclasses and complete the short concept check quizzes on the portal at your own pace. Once all 5 are marked passed, your certificate unlock will activate automatically.</p>'
+      + '</td></tr></table>';
+  }
+
+  var htmlBody = '<!DOCTYPE html>'
+    + '<html lang="en" xmlns="http://www.w3.org/1999/xhtml">'
+    + '<head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0">'
+    + '<style type="text/css">body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; } table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; } img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; } body { margin: 0; padding: 0; width: 100% !important; background-color: #f5efea; }</style>'
+    + '</head>'
+    + '<body style="margin:0;padding:24px 12px;background-color:#f5efea;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Helvetica,Arial,sans-serif;color:#231f20;line-height:1.65;">'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:680px;margin:0 auto;background-color:#ffffff;border:1px solid #e4dacb;border-radius:12px;overflow:hidden;box-shadow:0 4px 18px rgba(124,20,21,0.06);">'
+    + '<tr><td style="padding:0;background-color:#faf7f2;text-align:center;">'
+    + '<img src="https://www.qffsrmap2026.com/brand/qiskit-fall-fest-banner.png" alt="IBM Qiskit Fall Fest 2026 — Partner Plus Host at SRM University-AP" width="680" style="display:block;width:100%;max-width:680px;height:auto;border:0;outline:none;">'
+    + '</td></tr>'
+    + '<tr><td style="background-color:#7c1415;padding:10px 24px;text-align:center;">'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr>'
+    + '<td style="font-family:\'Georgia\',\'Times New Roman\',serif;font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:#fdf8f0;font-weight:bold;text-align:center;">'
+    + 'IBM PARTNER PLUS · SRM UNIVERSITY-AP · VERIFIED COURSE COMPLETION CERTIFICATE'
+    + '</td></tr></table></td></tr>'
+    + '<tr><td style="padding:32px 36px 36px 36px;">'
+    + '<p style="margin:0 0 16px 0;font-size:16px;color:#231f20;font-weight:bold;">Dear ' + participantName + ',</p>'
+    + '<p style="margin:0 0 14px 0;font-size:15px;color:#3d3635;line-height:1.7;">'
+    + 'Thank you for participating in <strong>Partner Plus IBM Qiskit Fall Fest 2026</strong> at SRM University-AP. With the conclusion of our online masterclasses and challenge tracks, all enrolled participants are invited to complete their curriculum requirements and claim their official <strong>Verified Certificate of Course Completion</strong>.'
+    + '</p>'
+    + statusBox
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#fcf9f4;border:1px solid #dfcfb9;border-top:4px solid #7c1415;border-radius:8px;margin:0 0 28px 0;"><tr>'
+    + '<td style="padding:26px 24px;text-align:center;">'
+    + '<div style="display:inline-block;background-color:#faefe0;border:1px solid #d9be97;border-radius:4px;padding:4px 12px;font-size:11px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase;color:#7c1415;margin-bottom:12px;">Official IBM &amp; SRM University-AP Credential</div>'
+    + '<h2 style="margin:0 0 8px 0;font-family:\'Georgia\',\'Times New Roman\',serif;font-size:22px;color:#7c1415;font-weight:bold;line-height:1.3;">Verified Certificate of Course Completion — &#8377;99</h2>'
+    + '<p style="margin:0 0 6px 0;font-size:14px;color:#554c4a;">Co-Certified Credential · SHA-256 Tamper-Proof Hash · Unique Serial Identifier · Public Verification Link</p>'
+    + '<p style="margin:0 0 20px 0;font-size:14px;color:#7c1415;font-weight:bold;">Available via In-Person Valedictory Hand-Over OR High-Resolution Email Dispatch</p>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr>'
+    + '<td align="center" style="border-radius:6px;background-color:#7c1415;">'
+    + '<a href="https://www.qffsrmap2026.com/learning?certificate=true" target="_blank" style="display:inline-block;padding:14px 28px;font-size:14px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:6px;letter-spacing:0.8px;text-transform:uppercase;border:1px solid #630e10;">Claim Certificate on Learning Portal &rarr;</a>'
+    + '</td></tr></table>'
+    + '<p style="margin:16px 0 0 0;font-size:12px;color:#7d726e;">Direct portal link: <a href="https://www.qffsrmap2026.com/learning?certificate=true" style="color:#7c1415;text-decoration:underline;">https://www.qffsrmap2026.com/learning?certificate=true</a></p>'
+    + '</td></tr></table>'
+    + '<h2 style="margin:0 0 6px 0;font-family:\'Georgia\',\'Times New Roman\',serif;font-size:20px;color:#7c1415;font-weight:bold;">Credential Specifications &amp; Inclusions</h2>'
+    + '<div style="width:40px;height:2px;background-color:#b97e3e;margin-bottom:18px;"></div>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 26px 0;">'
+    + '<tr><td width="50%" valign="top" style="padding:0 8px 12px 0;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#faf7f2;border:1px solid #e7dcce;border-radius:8px;padding:14px 16px;"><tr><td>'
+    + '<div style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#b97e3e;margin-bottom:4px;">Academic Authority</div>'
+    + '<div style="font-size:14.5px;font-weight:bold;color:#231f20;margin-bottom:6px;">Dual Institutional Co-Certification</div>'
+    + '<div style="font-size:13.5px;color:#554c4a;line-height:1.5;">Jointly conferred by IBM Quantum / Qiskit Fall Fest and School of Engineering and Sciences, SRM University-AP.</div>'
+    + '</td></tr></table></td>'
+    + '<td width="50%" valign="top" style="padding:0 0 12px 8px;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#faf7f2;border:1px solid #e7dcce;border-radius:8px;padding:14px 16px;"><tr><td>'
+    + '<div style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#b97e3e;margin-bottom:4px;">Security &amp; Integrity</div>'
+    + '<div style="font-size:14.5px;font-weight:bold;color:#231f20;margin-bottom:6px;">SHA-256 Cryptographic Hash</div>'
+    + '<div style="font-size:13.5px;color:#554c4a;line-height:1.5;">Canonical serial number (<code>QFF26-MCL-202610-XXXX</code>) and tamper-proof verification hash stored immutably in Supabase.</div>'
+    + '</td></tr></table></td></tr>'
+    + '<tr><td width="50%" valign="top" style="padding:0 8px 0 0;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#faf7f2;border:1px solid #e7dcce;border-radius:8px;padding:14px 16px;"><tr><td>'
+    + '<div style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#b97e3e;margin-bottom:4px;">Public URL</div>'
+    + '<div style="font-size:14.5px;font-weight:bold;color:#231f20;margin-bottom:6px;">Permanent Verification Page</div>'
+    + '<div style="font-size:13.5px;color:#554c4a;line-height:1.5;">Shareable 24/7 link on LinkedIn, GitHub, and resumes for instant recruiter and admissions verification.</div>'
+    + '</td></tr></table></td>'
+    + '<td width="50%" valign="top" style="padding:0 0 0 8px;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#faf7f2;border:1px solid #e7dcce;border-radius:8px;padding:14px 16px;"><tr><td>'
+    + '<div style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#b97e3e;margin-bottom:4px;">Delivery Options</div>'
+    + '<div style="font-size:14.5px;font-weight:bold;color:#231f20;margin-bottom:6px;">Ceremony Hand-Over or Email</div>'
+    + '<div style="font-size:13.5px;color:#554c4a;line-height:1.5;">Collect in person at the valedictory ceremony on 30 October, or receive digitally signed PDF by email.</div>'
+    + '</td></tr></table></td></tr></table>'
+    + '<h2 style="margin:0 0 6px 0;font-family:\'Georgia\',\'Times New Roman\',serif;font-size:20px;color:#7c1415;font-weight:bold;">Curriculum Sessions Covered</h2>'
+    + '<div style="width:40px;height:2px;background-color:#b97e3e;margin-bottom:16px;"></div>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#ffffff;border:1px solid #e7dcce;border-radius:8px;overflow:hidden;margin:0 0 28px 0;font-size:13px;">'
+    + '<tr style="background-color:#7c1415;color:#ffffff;">'
+    + '<th style="padding:10px 14px;text-align:left;font-size:12px;letter-spacing:0.6px;text-transform:uppercase;">Session ID</th>'
+    + '<th style="padding:10px 14px;text-align:left;font-size:12px;letter-spacing:0.6px;text-transform:uppercase;">Topic &amp; Domain Focus</th>'
+    + '<th style="padding:10px 14px;text-align:left;font-size:12px;letter-spacing:0.6px;text-transform:uppercase;">Distinguished Speaker(s)</th>'
+    + '</tr>'
+    + '<tr style="border-bottom:1px solid #f0e6db;">'
+    + '<td style="padding:11px 14px;font-weight:bold;color:#7c1415;vertical-align:top;">Session 1</td>'
+    + '<td style="padding:11px 14px;color:#231f20;vertical-align:top;"><strong>Introduction to Qiskit &amp; Quantum Computing</strong><br><span style="font-size:12px;color:#6b625b;">Part 1 &amp; 2: Qiskit SDK &amp; Quantum Foundations<br>Part 3: Quantum Material</span></td>'
+    + '<td style="padding:11px 14px;color:#334155;vertical-align:top;"><strong>Raghav Singla</strong> (Application Developer, IBM)<br><strong>Jayakumar Vaithiyashankar</strong> (Founder / CEO, Anuthantra)<br><strong>Dr. Jagrati Dwivedi</strong> (QMD Foundation, NQM at IIT Delhi)</td>'
+    + '</tr>'
+    + '<tr style="border-bottom:1px solid #f0e6db;background-color:#fcfaf7;">'
+    + '<td style="padding:11px 14px;font-weight:bold;color:#7c1415;vertical-align:top;">Session 3</td>'
+    + '<td style="padding:11px 14px;color:#231f20;vertical-align:top;"><strong>Qubit Connectivity &amp; Architecture</strong></td>'
+    + '<td style="padding:11px 14px;color:#334155;vertical-align:top;"><strong>Karthikganesh Durai</strong> (Associate Director - Business Analysis at NTT DATA)</td>'
+    + '</tr>'
+    + '<tr style="border-bottom:1px solid #f0e6db;">'
+    + '<td style="padding:11px 14px;font-weight:bold;color:#7c1415;vertical-align:top;">Session 4</td>'
+    + '<td style="padding:11px 14px;color:#231f20;vertical-align:top;"><strong>Quantum Sensing &amp; Quantum Optics</strong><br><span style="font-size:12px;color:#6b625b;">Session 4A: Quantum Sensing<br>Session 4B: Quantum Optics</span></td>'
+    + '<td style="padding:11px 14px;color:#334155;vertical-align:top;"><strong>Prof. Durga B Rao Dasari</strong> (Director Quantum Software Division at Qbit Force)<br><strong>Dr. Gangi Reddy Salla</strong> (Associate Professor, SRM University-AP)</td>'
+    + '</tr>'
+    + '<tr style="border-bottom:1px solid #f0e6db;background-color:#fcfaf7;">'
+    + '<td style="padding:11px 14px;font-weight:bold;color:#7c1415;vertical-align:top;">Session 5</td>'
+    + '<td style="padding:11px 14px;color:#231f20;vertical-align:top;"><strong>Quantum Machine Learning</strong></td>'
+    + '<td style="padding:11px 14px;color:#334155;vertical-align:top;"><strong>Jay Shah</strong> (Senior Quantum Machine Learning Engineer, BQP)</td>'
+    + '</tr>'
+    + '<tr>'
+    + '<td style="padding:11px 14px;font-weight:bold;color:#7c1415;vertical-align:top;">Session 6</td>'
+    + '<td style="padding:11px 14px;color:#231f20;vertical-align:top;"><strong>Quantum Cyber Security / Cryptography</strong></td>'
+    + '<td style="padding:11px 14px;color:#334155;vertical-align:top;"><strong>Dr. Sazzad Ali Biswas</strong> (Assistant Professor, SRM University-AP)</td>'
+    + '</tr>'
+    + '</table>'
+    + '<h2 style="margin:0 0 6px 0;font-family:\'Georgia\',\'Times New Roman\',serif;font-size:20px;color:#7c1415;font-weight:bold;">How to Claim Your Verified Certificate</h2>'
+    + '<div style="width:40px;height:2px;background-color:#b97e3e;margin-bottom:16px;"></div>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#faf7f2;border:1px solid #e7dcce;border-radius:8px;padding:18px 20px;margin:0 0 32px 0;">'
+    + '<tr><td style="font-size:13px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#b97e3e;padding-bottom:12px;">Certificate Issuance Protocol</td></tr>'
+    + '<tr><td style="padding:6px 0;font-size:14px;color:#3d3635;line-height:1.6;border-bottom:1px solid #eee4d7;"><strong style="color:#7c1415;">Step 1:</strong> Visit <a href="https://www.qffsrmap2026.com/learning?certificate=true" target="_blank" style="color:#7c1415;font-weight:bold;">qffsrmap2026.com/learning?certificate=true</a> and sign in with Google.</td></tr>'
+    + '<tr><td style="padding:8px 0;font-size:14px;color:#3d3635;line-height:1.6;border-bottom:1px solid #eee4d7;"><strong style="color:#7c1415;">Step 2:</strong> Under <strong>&quot;Curriculum Sessions&quot;</strong>, ensure all 5 lecture videos are completed and quizzes passed (minimum 75% score; unlimited retakes).</td></tr>'
+    + '<tr><td style="padding:8px 0;font-size:14px;color:#3d3635;line-height:1.6;border-bottom:1px solid #eee4d7;"><strong style="color:#7c1415;">Step 3:</strong> Click the <strong>&quot;Claim Verified Certificate&quot;</strong> button, select your delivery preference (<strong>Ceremony</strong> or <strong>Email</strong>), and click <strong>&quot;Pay &#8377;99 on University Gateway&quot;</strong> to open SRM University-AP\'s Easebuzz portal. Complete payment and download your receipt.</td></tr>'
+    + '<tr><td style="padding:8px 0 0 0;font-size:14px;color:#3d3635;line-height:1.6;"><strong style="color:#7c1415;">Step 4:</strong> Enter your <strong>Easebuzz Transaction ID</strong> (e.g. <code>E26101518BKHN3</code>) and upload your payment receipt screenshot or PDF. Once confirmed, your official certificate will be minted and available for download.</td></tr></table>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#fbf7ef;border-left:4px solid #b97e3e;border-radius:0 6px 6px 0;margin:0 0 32px 0;"><tr>'
+    + '<td style="padding:16px 20px;font-size:13.5px;color:#4f443b;line-height:1.65;">'
+    + '<div style="font-weight:bold;color:#7c1415;margin-bottom:6px;font-size:14px;">Important Scope &amp; Fee Integrity Notice:</div>'
+    + 'Online participation in all masterclasses, quizzes, and competitions is <strong>100% FREE</strong>. The <strong>&#8377;99 fee</strong> is strictly an optional verification and certificate issuance charge. Please note that the <strong>General Offline Pass (&#8377;99)</strong> and the <strong>Masterclass Certificate (&#8377;99)</strong> are two distinct purchases. Each purchase requires its own separate Easebuzz transaction ID (one transaction ID covers exactly one purchase, enforced by university database rules).'
+    + '</td></tr></table>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#fbf7ef;border:1px solid #e1d3bf;border-radius:8px;padding:20px;margin:0 0 32px 0;"><tr><td>'
+    + '<h3 style="margin:0 0 6px 0;font-size:16px;color:#7c1415;font-weight:bold;">Official Participant Support &amp; Community</h3>'
+    + '<p style="margin:0 0 14px 0;font-size:14px;color:#4f443b;line-height:1.6;">For questions regarding quiz evaluations, transaction verification, or certificate delivery, join our verified WhatsApp Community or email the academic committee:</p>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="background-color:#2a6a43;border-radius:6px;">'
+    + '<a href="https://chat.whatsapp.com/HoLFUpcm46L0qDE6VBdboW" target="_blank" style="display:inline-block;padding:11px 22px;font-size:13.5px;font-weight:bold;color:#ffffff;text-decoration:none;">Join Official WhatsApp Community &rarr;</a>'
+    + '</td></tr></table></td></tr></table>'
+    + '<p style="margin:0 0 14px 0;font-size:14.5px;color:#3d3635;line-height:1.7;">Congratulations on your dedication to mastering quantum computing with IBM Qiskit and SRM University-AP.</p>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0 10px 0;"><tr><td style="border-left:3px solid #7c1415;padding-left:14px;">'
+    + '<p style="margin:0;font-size:14.5px;color:#231f20;line-height:1.5;">Best regards,<br><strong>Academic Certification Committee</strong><br>Partner Plus IBM Qiskit Fall Fest 2026<br>Department of Physics &amp; School of Engineering and Sciences<br>SRM University-AP</p>'
+    + '</td></tr></table></td></tr>'
+    + '<tr><td style="background-color:#faf7f2;border-top:1px solid #ebd9c2;padding:22px 36px;text-align:center;">'
+    + '<p style="margin:0 0 8px 0;font-family:\'Georgia\',\'Times New Roman\',serif;font-size:13px;color:#7c1415;font-weight:bold;">Partner Plus IBM Qiskit Fall Fest 2026</p>'
+    + '<p style="margin:0 0 10px 0;font-size:12px;color:#6b625b;">Department of Physics &amp; School of Engineering and Sciences, SRM University-AP</p>'
+    + '<p style="margin:0;font-size:12px;color:#857a73;">Learning Portal: <a href="https://www.qffsrmap2026.com/learning" target="_blank" style="color:#7c1415;text-decoration:underline;">qffsrmap2026.com/learning</a> &nbsp;·&nbsp; Certificate Verification: <a href="https://www.qffsrmap2026.com/verify-certificate" target="_blank" style="color:#7c1415;text-decoration:underline;">qffsrmap2026.com/verify-certificate</a> &nbsp;·&nbsp; Contact: <a href="mailto:qiskitfallfest@srmap.edu.in" style="color:#7c1415;text-decoration:underline;">qiskitfallfest@srmap.edu.in</a></p>'
+    + '</td></tr></table></body></html>';
+
+  GmailApp.sendEmail(recipientEmail, subject, 'Please view this email in an HTML-compatible client.', {
+    htmlBody: htmlBody,
+    name: 'Qiskit Fall Fest 2026'
+  });
+}
+
 
 
 

@@ -101,6 +101,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         </p>
       </div>
 
+      <div style="background-color: #f0f5fa; border: 1px solid #bfdbfe; border-left: 4px solid #1e40af; border-radius: 6px; padding: 16px; margin: 18px 0; font-size: 13px; color: #1e293b;">
+        <strong style="color: #1e3a8a; font-size: 14px;">Cannot Attend In Person? Claim Your Verified Course Completion Certificate (&#8377;99)</strong>
+        <p style="margin: 6px 0 10px 0; line-height: 1.5;">
+          If you reside outside Vijayawada / Guntur or cannot travel to campus, you can complete all 5 masterclasses and pass the quizzes on <a href="{portal_url}?certificate=true" style="color: #1e40af; font-weight: 600;">qffsrmap2026.com/learning?certificate=true</a> to earn your verified credential co-certified by IBM Quantum and SRM University-AP. Select <strong>&quot;Receive by email&quot;</strong> for direct PDF delivery to your inbox.
+        </p>
+        <p style="margin: 0; font-size: 12px; color: #64748b;">
+          <em>Note: The General Offline Pass and Masterclass Certificate are separate purchases. Each requires its own distinct Easebuzz Transaction ID.</em>
+        </p>
+      </div>
+
       <div class="note-box">
         <strong>Scope Notice:</strong>
         <p style="margin: 4px 0 0 0; line-height: 1.5;">
