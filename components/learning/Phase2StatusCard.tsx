@@ -257,13 +257,13 @@ function LeadResponse({ team, onDone }: { team: PassStatusHackathon; onDone: () 
   return (
     <div className="space-y-3">
       <div className="rounded-lg border border-slate-200 dark:border-[#3D1418] bg-slate-50 dark:bg-[#1C0A0D] p-3.5 space-y-2 text-xs text-slate-700 dark:text-slate-300">
-        <p className="font-semibold text-slate-900 dark:text-[#FAF6F3]">Accepting is a commitment to pay</p>
+        <p className="font-semibold text-slate-900 dark:text-[#FAF6F3]">Confirming your team&apos;s Phase 2 finalist desk</p>
         <ul className="list-disc pl-4 space-y-1">
-          <li>Every member of your team will attend Phase 2 on 27–28 October.</li>
+          <li>Your team will attend and build on-campus during the 24-hour sprint on 27–28 October at SRM University-AP.</li>
           <li>
-            Every member pays ₹{FLAGSHIP_PASS_FEE_INR} for the Flagship Pass {windowText}. You, as lead, pay last.
+            Every member completes their Flagship Pass (₹{FLAGSHIP_PASS_FEE_INR}) {windowText}. You, as team lead, pay last to lock in the desk.
           </li>
-          <li>If payment is not complete in time, the desk goes to the next team in the waiting room.</li>
+          <li>If payment or confirmation is not completed in time, the desk automatically passes to the next team in the waiting room.</li>
         </ul>
         <label className="flex items-start gap-2 pt-1 cursor-pointer">
           <input
@@ -273,7 +273,7 @@ function LeadResponse({ team, onDone }: { team: PassStatusHackathon; onDone: () 
             onChange={(e) => setCommitted(e.target.checked)}
           />
           <span>
-            I have confirmed with my team{memberCount ? ` (${memberCount} members)` : ''} and we will pay on time.
+            I have confirmed with my team{memberCount ? ` (${memberCount} members)` : ''} — we are ready to attend on campus and confirm our desk.
           </span>
         </label>
       </div>
@@ -285,7 +285,7 @@ function LeadResponse({ team, onDone }: { team: PassStatusHackathon; onDone: () 
           className="inline-flex items-center gap-1.5 px-4 py-2 bg-burgundy hover:bg-burgundy-deep text-white text-sm font-semibold rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-          Accept and commit to pay
+          Accept Phase 2 Invitation
         </button>
         <button
           type="button"
@@ -360,17 +360,23 @@ export function Phase2StatusCard({ team, className }: { team: PassStatusHackatho
     case 'invited':
       tone = 'celebrate';
       title = phase2.autoPromoted
-        ? 'Congratulations, a desk has opened up for your team in Phase 2'
-        : 'Congratulations, your team is selected for Phase 2';
+        ? 'Congratulations! A finalist desk has opened for your team in Phase 2'
+        : 'Congratulations! Your team has qualified for Phase 2';
       body = (
         <>
-          {phase2.autoPromoted
-            ? 'Your team was next in the waiting room and is now invited to the Phase 2 hackathon. '
-            : `Your team is one of ${PHASE2_DESK_QUOTA.total} teams chosen by the jury from ${PHASE1_SUBMISSION_COUNT} Phase 1 submissions. `}
-          You are invited to build on campus at SRM University-AP during the 24-hour Phase 2 sprint on 27–28 October.{' '}
+          {phase2.autoPromoted ? (
+            <>
+              <strong>Outstanding news!</strong> A desk has opened in the auditorium, and your team has been promoted from the waiting room to the Phase 2 on-campus hackathon.{' '}
+            </>
+          ) : (
+            <>
+              <strong>Exceptional work!</strong> Out of {PHASE1_SUBMISSION_COUNT} competing teams across India, the jury has selected your team as one of the top {PHASE2_DESK_QUOTA.total} Phase 2 finalists.{' '}
+            </>
+          )}
+          You are invited to build on campus at SRM University-AP during the flagship 24-hour hackathon sprint on 27–28 October 2026.{' '}
           {team.isLead
-            ? 'As team lead, please confirm your place for the whole team before the timer ends.'
-            : 'Your team lead now confirms the place for the team before the timer ends. Nobody pays until they accept.'}
+            ? 'As team lead, please accept the invitation below to secure your team’s auditorium desk before the countdown expires.'
+            : 'Your team lead will accept the invitation on behalf of the team to secure your auditorium desk before the countdown expires. Nobody pays until the team accepts.'}
         </>
       );
       extra = (
@@ -511,7 +517,7 @@ export function phase2Headline(team: PassStatusHackathon): string {
   switch (p.stage) {
     case 'under_review': return 'Result not released yet';
     case 'waitlisted': return p.waitlistPosition ? `Waiting room: number ${p.waitlistPosition}` : 'Your team is in the waiting room';
-    case 'invited': return team.isLead ? 'Congratulations, selected for Phase 2: confirm your place' : 'Congratulations, your team is selected for Phase 2';
+    case 'invited': return team.isLead ? 'Congratulations! Selected for Phase 2: confirm your place' : 'Congratulations! Your team is selected for Phase 2';
     case 'accepted': return 'Accepted: complete team payment';
     case 'confirmed': return 'You are in: Phase 2 desk confirmed';
     case 'declined': return 'Phase 2 invitation declined';

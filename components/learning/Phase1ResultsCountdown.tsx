@@ -34,8 +34,8 @@ const RESULT_COPY: Record<Exclude<ResultState, 'countdown'>, { title: string; bo
     tone: 'neutral',
   },
   finalist: {
-    title: 'Your team is a Phase 2 finalist',
-    body: 'Your team has an auditorium desk for the on-campus Phase 2 sprint. Confirm your place through the Flagship Pass before the payment window closes.',
+    title: 'Congratulations! Your team is a Phase 2 finalist',
+    body: `Exceptional work! Your team is one of the top ${PHASE2_DESK_QUOTA.total} finalists selected from ${PHASE1_SUBMISSION_COUNT} Phase 1 submissions across India. You have earned an auditorium desk for the on-campus sprint at SRM University-AP.`,
     tone: 'positive',
   },
   waitlist: {
