@@ -69,6 +69,22 @@ export async function getHackathonPassContext(email: string): Promise<HackathonP
     Boolean(evaluation?.is_next_round) ||
     ['shortlisted', 'finalist', 'winner'].includes(evaluation?.status || '');
 
+  const hasSubmitted = Boolean(team.submitted_at || team.github_repo_url);
+  const deadlinePassed = Date.now() > new Date(PHASE1_DEADLINE_ISO).getTime();
+
+  let outcome: HackathonOutcome;
+  if (!hasSubmitted && deadlinePassed) {
+    // If the submission window has closed and the team never submitted,
+    // they cannot be shortlisted for Phase 2. Immediately unlock the General Pass.
+    outcome = 'not_shortlisted';
+  } else if (!resultsPublished) {
+    outcome = 'pending';
+  } else if (isShortlisted) {
+    outcome = 'shortlisted';
+  } else {
+    outcome = 'not_shortlisted';
+  }
+
   return {
     teamId: String(team.id),
     teamName: team.name,
@@ -76,6 +92,6 @@ export async function getHackathonPassContext(email: string): Promise<HackathonP
     // Admin console treats a linked repo as a submission, so accept either signal
     submittedAt: team.submitted_at || (team.github_repo_url ? 'submitted' : null),
     resultsPublished,
-    outcome: !resultsPublished ? 'pending' : isShortlisted ? 'shortlisted' : 'not_shortlisted',
+    outcome,
   };
 }

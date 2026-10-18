@@ -79,7 +79,7 @@ interface HackathonContext {
 
 const FLAGSHIP_INCLUSIONS = [
   'Hackathon Phase 2 (24-hour on-campus sprint)',
-  'Flagship Tracks: Quantum Startup Pitch & QCTF (upon qualification)',
+  'Flagship Tracks: Quantum Startup Pitch & QCTF',
   'Special lunch & 2 snack servings on all 5 days',
   'Hardware setup & priority seating',
   'Everything in the General Pass',
@@ -130,6 +130,7 @@ const PASS_INCLUSIONS = [
   'Keynotes by IBM Quantum researchers',
   'Hands-on masterclass workshops',
   'Industry Tech Expo',
+  'Quantum Reference Center Tour',
   'The Great Quantum Debate & Quantum Arcade',
 ];
 
@@ -368,7 +369,7 @@ export function OnCampusPassCard() {
 
     ctx.fillStyle = '#334155';
     ctx.font = '26px sans-serif';
-    ctx.fillText('Access: Keynotes, Workshops, Industry Tech Expo, Arcade & Debates', 140, 790);
+    ctx.fillText('Access: Keynotes, Workshops, Tech Expo, Reference Center, Arcade & Debates', 140, 790);
 
     const qrImage = new Image();
     qrImage.onload = () => {
@@ -736,7 +737,8 @@ export function OnCampusPassCard() {
           <div>
             {data?.hackathon?.outcome === 'not_shortlisted' && !isResubmitting && (
               <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-0.5">
-                Team {data.hackathon.teamName} · Not shortlisted for Phase 2
+                Team {data.hackathon.teamName} ·{' '}
+                {data.hackathon.submittedAt ? 'Not shortlisted for Phase 2' : 'Phase 1 not submitted'}
               </p>
             )}
             <h3 className="font-sans text-sm font-bold text-slate-900 dark:text-[#FAF6F3]">
@@ -768,7 +770,7 @@ export function OnCampusPassCard() {
             Pass Scope &amp; Exclusions Notice
           </p>
           <p className="leading-relaxed">
-            The <strong>₹99 General Pass</strong> grants full campus entry to keynotes, workshops, tech expo exhibits, debates, and open games for all 5 days. It does <strong>not</strong> include entry to competitive flagship tracks (<strong>Hackathon Phase 2</strong>, <strong>Quantum Startup Pitch</strong>, <strong>QCTF</strong>) or the <strong>5-day special lunch and daily refreshments</strong>.
+            The <strong>₹99 General Pass</strong> grants full campus entry to keynotes, workshops, tech expo exhibits, the Quantum Reference Center tour, debates, and open games for all 5 days. It does <strong>not</strong> include entry to competitive flagship tracks (<strong>Hackathon Phase 2</strong>, <strong>Quantum Startup Pitch</strong>, <strong>QCTF</strong>) or the <strong>5-day special lunch and daily refreshments</strong>.
           </p>
           <p className="leading-relaxed text-amber-800/80 dark:text-amber-300/80">
             These flagship tracks and meals are reserved exclusively for the <strong>₹499 All-Access Flagship Pass</strong> (awarded to shortlisted hackathon teams and qualified finalists).
