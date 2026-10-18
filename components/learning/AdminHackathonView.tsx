@@ -49,12 +49,59 @@ export function AdminHackathonView() {
   const [resultsPublished, setResultsPublished] = useState<boolean | null>(null);
   const [isTogglingResults, setIsTogglingResults] = useState(false);
 
+  // ₹499 Flagship Pass payment window (opened_at starts the 48-hour countdown on shortlisted cards)
+  const [flagshipPayment, setFlagshipPayment] = useState<{ opened_at: string | null; gateway_url: string } | null>(null);
+  const [flagshipGatewayInput, setFlagshipGatewayInput] = useState('');
+  const [isSavingFlagship, setIsSavingFlagship] = useState(false);
+
   useEffect(() => {
     fetch('/api/admin/config', { cache: 'no-store' })
       .then((res) => (res.ok ? res.json() : null))
-      .then((json) => setResultsPublished(Boolean(json?.config?.hackathon_phase1_results?.published)))
-      .catch(() => setResultsPublished(false));
+      .then((json) => {
+        setResultsPublished(Boolean(json?.config?.hackathon_phase1_results?.published));
+        const fp = json?.config?.flagship_payment;
+        setFlagshipPayment({ opened_at: fp?.opened_at || null, gateway_url: fp?.gateway_url || '' });
+        setFlagshipGatewayInput(fp?.gateway_url || '');
+      })
+      .catch(() => {
+        setResultsPublished(false);
+        setFlagshipPayment({ opened_at: null, gateway_url: '' });
+      });
   }, []);
+
+  async function saveFlagshipPayment(open: boolean) {
+    const gatewayUrl = flagshipGatewayInput.trim();
+    if (open && !/^https:\/\//.test(gatewayUrl)) {
+      alert('Enter the ₹499 Easebuzz payment link (https://...) first.');
+      return;
+    }
+    const confirmed = window.confirm(
+      open
+        ? 'Open ₹499 Flagship Pass payment now? Every shortlisted participant sees the payment link and a 48-hour countdown starting now. This cannot be paused.'
+        : 'Close Flagship Pass payment? Shortlisted participants go back to the "payment opens soon" message and the countdown is reset.'
+    );
+    if (!confirmed) return;
+
+    const value = { opened_at: open ? new Date().toISOString() : null, gateway_url: gatewayUrl };
+    setIsSavingFlagship(true);
+    try {
+      const res = await fetch('/api/admin/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'flagship_payment', value }),
+      });
+      if (!res.ok) throw new Error('Failed to update Flagship Pass payment.');
+      setFlagshipPayment(value);
+    } catch (err: any) {
+      alert(err?.message || 'Failed to update Flagship Pass payment.');
+    } finally {
+      setIsSavingFlagship(false);
+    }
+  }
+
+  const flagshipDeadline = flagshipPayment?.opened_at
+    ? new Date(new Date(flagshipPayment.opened_at).getTime() + 48 * 60 * 60 * 1000)
+    : null;
 
   async function handleToggleResults() {
     const next = !resultsPublished;
@@ -556,6 +603,51 @@ export function AdminHackathonView() {
         >
           {isTogglingResults ? 'Saving...' : resultsPublished ? 'Hide Results' : 'Publish Results'}
         </button>
+      </div>
+
+      {/* Flagship Pass Payment Window */}
+      <div
+        className={`p-4 rounded-xl border space-y-3 ${
+          flagshipPayment?.opened_at
+            ? 'bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900/50'
+            : 'bg-white border-slate-200 dark:bg-[#150709] dark:border-[#3D1418]'
+        }`}
+      >
+        <div className="space-y-0.5">
+          <p className="text-sm font-bold text-slate-900 dark:text-[#FAF6F3]">
+            ₹499 Flagship Pass payment:{' '}
+            {flagshipPayment === null
+              ? 'Loading...'
+              : flagshipPayment.opened_at && flagshipDeadline
+                ? `Opened · closes ${flagshipDeadline.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })} IST`
+                : 'Not open'}
+          </p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-2xl">
+            Until opened, shortlisted participants see &quot;Payment opens on 19 October 2026&quot;. Opening starts a 48-hour countdown on their cards and lets each member submit a ₹499 receipt.
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input
+            type="url"
+            value={flagshipGatewayInput}
+            onChange={(e) => setFlagshipGatewayInput(e.target.value)}
+            disabled={Boolean(flagshipPayment?.opened_at)}
+            placeholder="₹499 Easebuzz payment link (https://...)"
+            className="flex-1 px-3 py-2 text-xs font-mono border border-slate-300 dark:border-[#3D1418] rounded-lg bg-white dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] disabled:opacity-60"
+          />
+          <button
+            type="button"
+            onClick={() => saveFlagshipPayment(!flagshipPayment?.opened_at)}
+            disabled={flagshipPayment === null || isSavingFlagship}
+            className={`px-4 py-2 rounded-lg text-xs font-semibold shrink-0 transition-colors cursor-pointer disabled:opacity-50 ${
+              flagshipPayment?.opened_at
+                ? 'border border-slate-300 dark:border-[#3D1418] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#1C0A0D]'
+                : 'bg-burgundy hover:bg-burgundy-deep text-white'
+            }`}
+          >
+            {isSavingFlagship ? 'Saving...' : flagshipPayment?.opened_at ? 'Close Payment' : 'Open Payment'}
+          </button>
+        </div>
       </div>
 
       {/* Top Banner & Action Controls */}

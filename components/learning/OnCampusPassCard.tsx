@@ -25,11 +25,14 @@ import Link from 'next/link';
 import clsx from 'clsx';
 import {
   EASEBUZZ_GATEWAY_URL,
+  FLAGSHIP_PASS_FEE_INR,
   MAX_RECEIPT_SIZE_MB,
+  PASS_FEE_INR,
   TXN_FORMAT_HINT,
   TXN_PATTERN,
   isAcceptedReceipt,
   normalizeTxn,
+  passTierLabel,
   uploadReceipt,
 } from '@/lib/payments';
 
@@ -62,7 +65,69 @@ interface PassStatusResponse {
   };
   isHackathonParticipant: boolean;
   hackathon?: HackathonContext | null;
+  flagshipPayment?: FlagshipPaymentWindow | null;
   pass?: PassClaim | null;
+}
+
+interface FlagshipPaymentWindow {
+  status: 'not_open' | 'open' | 'closed';
+  openedAt: string | null;
+  deadlineIso: string | null;
+  gatewayUrl: string | null;
+  expectedLabel: string;
+  windowHours: number;
+}
+
+function formatIst(iso: string) {
+  return new Date(iso).toLocaleString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    day: 'numeric',
+    month: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+// Live time left in the Flagship payment window; calls onExpire once it reaches zero
+function PaymentCountdown({ deadlineIso, onExpire }: { deadlineIso: string; onExpire: () => void }) {
+  const deadlineMs = new Date(deadlineIso).getTime();
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const remaining = Math.max(0, deadlineMs - now);
+  useEffect(() => {
+    if (remaining === 0) onExpire();
+  }, [remaining, onExpire]);
+
+  const hours = Math.floor(remaining / 3_600_000);
+  const minutes = Math.floor((remaining % 3_600_000) / 60_000);
+  const seconds = Math.floor((remaining % 60_000) / 1000);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const urgent = remaining < 6 * 3_600_000;
+
+  return (
+    <div
+      className={clsx(
+        'flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 rounded-lg border px-3.5 py-2.5',
+        urgent
+          ? 'border-rose-200 bg-rose-50 text-rose-900 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200'
+          : 'border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-amber-200'
+      )}
+    >
+      <span className="flex items-center gap-1.5 text-xs font-semibold">
+        <Clock className="w-3.5 h-3.5 shrink-0" />
+        Time left to pay
+      </span>
+      <span className="font-mono text-lg font-bold tabular-nums">
+        {pad(hours)}:{pad(minutes)}:{pad(seconds)}
+      </span>
+      <span className="w-full font-mono text-[11px] opacity-80">Closes {formatIst(deadlineIso)} IST</span>
+    </div>
+  );
 }
 
 interface HackathonContext {
@@ -169,6 +234,11 @@ export function OnCampusPassCard() {
   const [uploadStatus, setUploadStatus] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Shortlisted members: receipt form for the ₹499 Flagship Pass, and client-side window expiry
+  const [flagshipFormOpen, setFlagshipFormOpen] = useState(false);
+  const [flagshipWindowExpired, setFlagshipWindowExpired] = useState(false);
+  const handleFlagshipWindowExpire = useCallback(() => setFlagshipWindowExpired(true), []);
 
   const generateQrCode = useCallback(async (token: string) => {
     try {
@@ -365,11 +435,18 @@ export function OnCampusPassCard() {
 
     ctx.fillStyle = '#6C151E';
     ctx.font = 'bold 36px sans-serif';
-    ctx.fillText('GENERAL OFFLINE PASS (₹99)', 140, 740);
+    const isFlagshipPass = pass.pass_tier === 'flagship_offline';
+    ctx.fillText(`${passTierLabel(pass.pass_tier).toUpperCase()} (₹${pass.amount_inr})`, 140, 740);
 
     ctx.fillStyle = '#334155';
     ctx.font = '26px sans-serif';
-    ctx.fillText('Access: Keynotes, Workshops, Tech Expo, Reference Center, Arcade & Debates', 140, 790);
+    ctx.fillText(
+      isFlagshipPass
+        ? 'Access: Hackathon Phase 2, Flagship Tracks, Meals & all General Pass events'
+        : 'Access: Keynotes, Workshops, Tech Expo, Reference Center, Arcade & Debates',
+      140,
+      790
+    );
 
     const qrImage = new Image();
     qrImage.onload = () => {
@@ -405,7 +482,12 @@ export function OnCampusPassCard() {
   // Hackathon teams awaiting results, or shortlisted: Flagship Pass track.
   // An existing General Pass claim still takes precedence so it is never hidden.
   const hackathon = data?.hackathon;
-  if (data?.isHackathonParticipant && hackathon && !data.pass) {
+  const flagship = data?.flagshipPayment;
+  const flagshipStatus =
+    flagship?.status === 'open' && flagshipWindowExpired ? 'closed' : flagship?.status || 'not_open';
+  const showFlagshipForm = hackathon?.outcome === 'shortlisted' && flagshipFormOpen && flagshipStatus === 'open';
+
+  if (data?.isHackathonParticipant && hackathon && !data.pass && !showFlagshipForm) {
     const isShortlisted = hackathon.outcome === 'shortlisted';
     const hasSubmitted = Boolean(hackathon.submittedAt);
     const deadlinePassed = hackathon.phase1DeadlinePassed;
@@ -514,14 +596,60 @@ export function OnCampusPassCard() {
 
             <StepRow
               index={3}
-              state={isShortlisted ? 'active' : 'locked'}
-              title="Get the ₹499 Flagship Pass"
+              state={!isShortlisted ? 'locked' : flagshipStatus === 'closed' ? 'missed' : 'active'}
+              title={`Pay ₹${FLAGSHIP_PASS_FEE_INR} per person for the Flagship Pass`}
             >
-              <p className={clsx('text-xs', isShortlisted ? 'text-slate-500 dark:text-slate-400' : 'text-slate-400 dark:text-slate-500')}>
-                {isShortlisted
-                  ? 'Payment instructions for the Flagship Pass will be shared with your team by email. Do not buy the ₹99 General Pass.'
-                  : 'Opens for shortlisted teams after results.'}
-              </p>
+              {!isShortlisted ? (
+                <p className="text-xs text-slate-400 dark:text-slate-500">Opens for shortlisted teams after results.</p>
+              ) : flagshipStatus === 'open' && flagship?.deadlineIso && flagship.gatewayUrl ? (
+                <div className="space-y-3">
+                  <PaymentCountdown deadlineIso={flagship.deadlineIso} onExpire={handleFlagshipWindowExpire} />
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                    Every team member pays ₹{FLAGSHIP_PASS_FEE_INR} separately and submits their own receipt here.
+                    Pay before the timer ends; unpaid places may be released.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <a
+                      href={flagship.gatewayUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-burgundy hover:bg-burgundy-deep text-white text-xs font-semibold rounded-lg transition-colors"
+                    >
+                      Pay ₹{FLAGSHIP_PASS_FEE_INR} on Easebuzz
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => setFlagshipFormOpen(true)}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 border border-slate-300 dark:border-[#3D1418] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#1C0A0D] text-xs font-semibold rounded-lg cursor-pointer"
+                    >
+                      I have paid: submit receipt
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ) : flagshipStatus === 'closed' ? (
+                <p className="text-xs text-rose-700 dark:text-rose-300 leading-relaxed">
+                  The {flagship?.windowHours ?? 48}-hour payment window closed
+                  {flagship?.deadlineIso ? ` on ${formatIst(flagship.deadlineIso)} IST` : ''}. If you paid in time but
+                  did not submit your receipt, contact the organizing committee.
+                </p>
+              ) : (
+                <div className="p-3.5 rounded-xl border border-amber-200/80 dark:border-amber-900/40 bg-amber-50/90 dark:bg-amber-950/20 text-xs text-amber-900 dark:text-amber-200/90 space-y-1.5 leading-relaxed">
+                  <p className="font-semibold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 shrink-0" />
+                    Payment opens on {flagship?.expectedLabel || '19 October 2026'}
+                  </p>
+                  <p>Your Phase 2 place is confirmed. There is nothing to pay today.</p>
+                  <p>
+                    When payment opens, the payment link and a countdown appear on this card. Each team member then has{' '}
+                    <strong>{flagship?.windowHours ?? 48} hours</strong> to pay ₹{FLAGSHIP_PASS_FEE_INR} and submit their receipt here.
+                  </p>
+                  <p>
+                    Do not pay on the ₹{PASS_FEE_INR} General Pass form. That payment does not count towards the Flagship Pass.
+                  </p>
+                </div>
+              )}
             </StepRow>
           </ol>
 
@@ -569,7 +697,7 @@ export function OnCampusPassCard() {
             {tone.label}
           </span>
           <span className="font-mono text-[11px] font-semibold opacity-90">
-            General Offline Pass · ₹{pass.amount_inr}
+            {passTierLabel(pass.pass_tier)} · ₹{pass.amount_inr}
           </span>
         </div>
 
@@ -684,12 +812,51 @@ export function OnCampusPassCard() {
   }
 
   // Claim flow: ticket stub (left) + three-step checkout (right)
+  const flagshipMode = hackathon?.outcome === 'shortlisted' || pass?.pass_tier === 'flagship_offline';
+  const fee = flagshipMode ? FLAGSHIP_PASS_FEE_INR : PASS_FEE_INR;
+  const gatewayUrl = flagshipMode && flagship?.gatewayUrl ? flagship.gatewayUrl : EASEBUZZ_GATEWAY_URL;
+  // Shortlisted members reach this form via "I have paid", so the pay step counts as done
+  const payStepDone = gatewayOpened || isResubmitting || flagshipMode;
   const fileDone = Boolean(selectedFile);
   const txnDone = transactionRef.trim().length >= 6;
 
   return (
     <div className="relative bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-[280px_1fr]">
       {/* Ticket stub */}
+      {flagshipMode ? (
+        <div className="relative bg-[#201617] text-white p-5 sm:p-6 flex flex-col justify-between gap-5">
+          <div className="space-y-3">
+            <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-amber-300">
+              Admit One · Phase 2 Finalists
+            </span>
+            <h2 className="font-serif text-xl sm:text-2xl font-bold leading-tight">Flagship Pass</h2>
+            <div className="space-y-1.5 text-xs text-slate-300">
+              <p className="flex items-center gap-2">
+                <CalendarDays className="w-3.5 h-3.5 shrink-0" />
+                26–30 October 2026
+              </p>
+              <p className="flex items-center gap-2">
+                <MapPin className="w-3.5 h-3.5 shrink-0" />
+                SRM University-AP, Main Campus
+              </p>
+            </div>
+            <ul className="space-y-1 text-xs text-slate-200 pt-1">
+              {FLAGSHIP_INCLUSIONS.map((item) => (
+                <li key={item} className="flex items-start gap-2">
+                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-amber-300" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="flex items-baseline gap-1.5 border-t border-white/15 pt-4">
+            <span className="font-serif text-4xl font-bold tabular-nums">₹{FLAGSHIP_PASS_FEE_INR}</span>
+            <span className="font-mono text-[11px] text-slate-400">per person · all 5 days</span>
+          </div>
+          <span className={clsx(NOTCH, 'hidden lg:block -top-2.5 -right-2.5')} />
+          <span className={clsx(NOTCH, 'hidden lg:block -bottom-2.5 -right-2.5')} />
+        </div>
+      ) : (
       <div className="relative bg-burgundy text-white p-5 sm:p-6 flex flex-col justify-between gap-5">
         <div className="space-y-3">
           <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-rose-200">
@@ -727,6 +894,7 @@ export function OnCampusPassCard() {
         <span className={clsx(NOTCH, 'hidden lg:block -top-2.5 -right-2.5')} />
         <span className={clsx(NOTCH, 'hidden lg:block -bottom-2.5 -right-2.5')} />
       </div>
+      )}
 
       {/* Checkout steps */}
       <form
@@ -741,19 +909,27 @@ export function OnCampusPassCard() {
                 {data.hackathon.submittedAt ? 'Not shortlisted for Phase 2' : 'Phase 1 not submitted'}
               </p>
             )}
+            {flagshipMode && !isResubmitting && (
+              <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-0.5">
+                Team {data?.hackathon?.teamName} · Shortlisted for Phase 2
+              </p>
+            )}
             <h3 className="font-sans text-sm font-bold text-slate-900 dark:text-[#FAF6F3]">
               {isResubmitting
                 ? 'Update your receipt details'
-                : data?.hackathon?.outcome === 'not_shortlisted'
+                : flagshipMode
+                  ? `Submit your ₹${FLAGSHIP_PASS_FEE_INR} payment receipt`
+                  : data?.hackathon?.outcome === 'not_shortlisted'
                   ? 'You can still attend: get your pass in three steps'
                   : 'Get your pass in three steps'}
             </h3>
           </div>
-          {isResubmitting && (
+          {(isResubmitting || (flagshipMode && !pass)) && (
             <button
               type="button"
               onClick={() => {
                 setIsResubmitting(false);
+                setFlagshipFormOpen(false);
                 setErrorMessage('');
               }}
               className="font-mono text-[11px] text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer"
@@ -763,7 +939,14 @@ export function OnCampusPassCard() {
           )}
         </div>
 
+        {flagshipMode && flagshipStatus === 'open' && flagship?.deadlineIso && (
+          <div className="mb-5">
+            <PaymentCountdown deadlineIso={flagship.deadlineIso} onExpire={handleFlagshipWindowExpire} />
+          </div>
+        )}
+
         {/* Scope & Exclusions Notice */}
+        {!flagshipMode && (
         <div className="mb-5 p-3.5 bg-amber-50/90 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40 rounded-xl text-xs text-amber-900 dark:text-amber-200/90 space-y-1.5">
           <p className="font-semibold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
             <AlertCircle className="w-3.5 h-3.5 shrink-0" />
@@ -776,33 +959,34 @@ export function OnCampusPassCard() {
             These flagship tracks and meals are reserved exclusively for the <strong>₹499 All-Access Flagship Pass</strong> (awarded to shortlisted hackathon teams and qualified finalists).
           </p>
         </div>
+        )}
 
         <ol className="space-y-5">
           {/* Step 1 */}
           <li className="flex gap-3">
-            <StepMarker index={1} done={gatewayOpened || isResubmitting} active={!gatewayOpened} />
+            <StepMarker index={1} done={payStepDone} active={!payStepDone} />
             <div className="flex-1 min-w-0 space-y-2">
               <div>
                 <p className="text-sm font-semibold text-slate-900 dark:text-[#FAF6F3]">
-                  Pay ₹99 on the SRM-AP payment gateway
+                  Pay ₹{fee} on the SRM-AP payment gateway
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                   Opens Easebuzz in a new tab. After paying, download the receipt; a copy is also emailed to you.
                 </p>
               </div>
               <a
-                href={EASEBUZZ_GATEWAY_URL}
+                href={gatewayUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={markGatewayOpened}
                 className={clsx(
                   'inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg transition-colors',
-                  gatewayOpened
+                  payStepDone
                     ? 'border border-slate-300 dark:border-[#3D1418] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#1C0A0D]'
                     : 'bg-burgundy hover:bg-burgundy-deep text-white'
                 )}
               >
-                {gatewayOpened ? 'Open Gateway Again' : 'Pay ₹99 on Easebuzz'}
+                {payStepDone ? 'Open Gateway Again' : `Pay ₹${fee} on Easebuzz`}
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
             </div>
@@ -810,7 +994,7 @@ export function OnCampusPassCard() {
 
           {/* Step 2 */}
           <li className="flex gap-3">
-            <StepMarker index={2} done={fileDone} active={gatewayOpened && !fileDone} />
+            <StepMarker index={2} done={fileDone} active={payStepDone && !fileDone} />
             <div className="flex-1 min-w-0 space-y-2">
               <p className="text-sm font-semibold text-slate-900 dark:text-[#FAF6F3]">
                 Upload the receipt

@@ -8,6 +8,19 @@ export const EASEBUZZ_GATEWAY_URL =
   'https://forms.easebuzz.in/register/SRMAPIA9oJ/QiskitFallFestSRMAP2026';
 
 export const PASS_FEE_INR = 99;
+// Per person, for members of teams shortlisted for Hackathon Phase 2
+export const FLAGSHIP_PASS_FEE_INR = 499;
+
+export type PassTier = 'general_offline' | 'flagship_offline';
+
+export const PASS_TIER_LABEL: Record<PassTier, string> = {
+  general_offline: 'General Offline Pass',
+  flagship_offline: 'Flagship Pass',
+};
+
+export function passTierLabel(tier: string | null | undefined): string {
+  return PASS_TIER_LABEL[tier as PassTier] || PASS_TIER_LABEL.general_offline;
+}
 export const CERTIFICATE_FEE_INR = 99;
 
 export const MAX_RECEIPT_SIZE_MB = 15;

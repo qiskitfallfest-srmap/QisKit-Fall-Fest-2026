@@ -2,13 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import {
+  FLAGSHIP_PASS_FEE_INR,
   PASS_FEE_INR,
   TXN_PATTERN,
   normalizeBankRef,
   normalizeTxn,
   receiptUrlPrefix,
 } from '@/lib/payments';
-import { getHackathonPassContext, RESULTS_EXPECTED_LABEL } from '@/lib/hackathon-pass';
+import {
+  getFlagshipPaymentWindow,
+  getHackathonPassContext,
+  RESULTS_EXPECTED_LABEL,
+} from '@/lib/hackathon-pass';
 import crypto from 'crypto';
 
 export const dynamic = 'force-dynamic';
@@ -28,8 +33,8 @@ export async function POST(request: NextRequest) {
 
     const normalizedEmail = session.email.trim().toLowerCase();
 
-    // 1. Guardrail: hackathon teams wait for Phase 1 results. Shortlisted teams take the
-    // ₹499 Flagship Pass; teams not shortlisted may buy the General Pass once results are out.
+    // 1. Guardrail: hackathon teams wait for Phase 1 results. Shortlisted members claim the
+    // ₹499 Flagship Pass (window checked below); teams not shortlisted get the General Pass.
     const hackathon = await getHackathonPassContext(normalizedEmail);
 
     if (hackathon && hackathon.outcome === 'pending') {
@@ -41,15 +46,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (hackathon && hackathon.outcome === 'shortlisted') {
-      return NextResponse.json(
-        {
-          error:
-            'Your team is shortlisted for Phase 2. Please do not buy the ₹99 General Pass; you will receive instructions for the ₹499 Flagship Pass.',
-        },
-        { status: 403 }
-      );
-    }
+    const isFlagship = hackathon?.outcome === 'shortlisted';
 
     // 2. Parse and validate body
     const body = await request.json();
@@ -118,6 +115,28 @@ export async function POST(request: NextRequest) {
 
     const existingClaim = existingClaims?.[0];
 
+    // New Flagship claims only inside the payment window; correcting an existing claim stays allowed
+    if (isFlagship && !existingClaim) {
+      const paymentWindow = await getFlagshipPaymentWindow();
+      if (paymentWindow.status === 'not_open') {
+        return NextResponse.json(
+          {
+            error: `The ₹499 Flagship Pass payment is not open yet. It is expected to open on ${paymentWindow.expectedLabel}; you will be notified by email.`,
+          },
+          { status: 403 }
+        );
+      }
+      if (paymentWindow.status === 'closed') {
+        return NextResponse.json(
+          {
+            error:
+              'The 48-hour Flagship Pass payment window has closed. Please contact the organizing committee.',
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     if (existingClaim?.status === 'verified') {
       return NextResponse.json(
         { error: 'Your pass is already verified. No further action is needed.' },
@@ -136,11 +155,11 @@ export async function POST(request: NextRequest) {
     const claimFields = {
       user_email: normalizedEmail,
       user_name: session.fullName || normalizedEmail.split('@')[0],
-      pass_tier: 'general_offline',
+      pass_tier: isFlagship ? 'flagship_offline' : 'general_offline',
       transaction_reference: normalizedTxn,
       bank_reference: trimmedBankRef,
       receipt_url: trimmedReceipt,
-      amount_inr: PASS_FEE_INR,
+      amount_inr: isFlagship ? FLAGSHIP_PASS_FEE_INR : PASS_FEE_INR,
       status: 'claimed_provisional',
       institution: reg?.institution || 'SRM University-AP',
       contact_phone: reg?.phone || null,

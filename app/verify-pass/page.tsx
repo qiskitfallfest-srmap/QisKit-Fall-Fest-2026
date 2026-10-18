@@ -229,7 +229,7 @@ function VerifyPassContent() {
                 </span>
               </div>
               <span className={`font-mono text-xs font-semibold px-2 py-0.5 rounded ${style.chip} text-white shrink-0`}>
-                ₹{passData.amountInr} General Pass
+                ₹{passData.amountInr} {passData.passTier === 'flagship_offline' ? 'Flagship Pass' : 'General Pass'}
               </span>
             </div>
 
@@ -257,7 +257,7 @@ function VerifyPassContent() {
                     Pass Type
                   </span>
                   <p className="font-bold text-burgundy dark:text-[#E89BA5] mt-0.5">
-                    General Offline Pass
+                    {passData.passTier === 'flagship_offline' ? 'Flagship Pass' : 'General Offline Pass'}
                   </p>
                 </div>
                 <div>
