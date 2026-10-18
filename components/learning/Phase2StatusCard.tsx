@@ -12,9 +12,10 @@ import {
   Hourglass,
   Loader2,
   Mail,
+  Trophy,
   Users,
 } from 'lucide-react';
-import { WHATSAPP_COMMUNITY_URL } from '@/lib/constants';
+import { PHASE1_SUBMISSION_COUNT, PHASE2_DESK_QUOTA, WHATSAPP_COMMUNITY_URL } from '@/lib/constants';
 import { FLAGSHIP_PASS_FEE_INR } from '@/lib/payments';
 import { usePassStatus, type PassStatusHackathon, type Phase2TeamStatus } from '@/hooks/use-pass-status';
 
@@ -305,7 +306,7 @@ function LeadResponse({ team, onDone }: { team: PassStatusHackathon; onDone: () 
   );
 }
 
-type Tone = 'positive' | 'waiting' | 'action' | 'muted';
+type Tone = 'celebrate' | 'positive' | 'waiting' | 'action' | 'muted';
 
 /**
  * The team's Phase 2 standing: released result, waiting-room position, invitation
@@ -357,14 +358,20 @@ export function Phase2StatusCard({ team, className }: { team: PassStatusHackatho
       break;
 
     case 'invited':
-      tone = 'action';
+      tone = 'celebrate';
       title = phase2.autoPromoted
-        ? 'A desk opened up: your team is invited to Phase 2'
-        : 'Your team is invited to Phase 2';
-      body = team.isLead ? (
-        <>As team lead, you accept or decline for the whole team before the timer ends.</>
-      ) : (
-        <>Your team lead needs to accept the invitation before the timer ends. Nobody pays until they accept.</>
+        ? 'Congratulations, a desk has opened up for your team in Phase 2'
+        : 'Congratulations, your team is selected for Phase 2';
+      body = (
+        <>
+          {phase2.autoPromoted
+            ? 'Your team was next in the waiting room and is now invited to the Phase 2 hackathon. '
+            : `Your team is one of ${PHASE2_DESK_QUOTA.total} teams chosen by the jury from ${PHASE1_SUBMISSION_COUNT} Phase 1 submissions. `}
+          You are invited to build on campus at SRM University-AP during the 24-hour Phase 2 sprint on 27–28 October.{' '}
+          {team.isLead
+            ? 'As team lead, please confirm your place for the whole team before the timer ends.'
+            : 'Your team lead now confirms the place for the team before the timer ends. Nobody pays until they accept.'}
+        </>
       );
       extra = (
         <div className="space-y-3">
@@ -377,7 +384,7 @@ export function Phase2StatusCard({ team, className }: { team: PassStatusHackatho
 
     case 'accepted':
       tone = phase2.payBy ? 'action' : 'positive';
-      title = phase2.payBy ? 'Invitation accepted: complete team payment' : 'Invitation accepted: your desk is held';
+      title = phase2.payBy ? 'Place accepted: complete team payment' : 'Your Phase 2 desk is held';
       body = phase2.payBy ? (
         <>
           Every member pays the ₹{FLAGSHIP_PASS_FEE_INR} Flagship Pass from their own account. The team lead pays last.
@@ -401,9 +408,9 @@ export function Phase2StatusCard({ team, className }: { team: PassStatusHackatho
       break;
 
     case 'confirmed':
-      tone = 'positive';
-      title = 'Your Phase 2 desk is confirmed';
-      body = 'All payments are in. Receipts are verified by the organizing team; your passes update once verified. See you on 27 October.';
+      tone = 'celebrate';
+      title = 'You are in: your Phase 2 desk is confirmed';
+      body = 'Congratulations to the whole team. All payments are in; receipts are verified by the organizing team and your passes update once verified. See you on campus on 27 October.';
       extra = <PaymentChecklist phase2={phase2} isLead={team.isLead} />;
       break;
 
@@ -455,9 +462,11 @@ export function Phase2StatusCard({ team, className }: { team: PassStatusHackatho
       break;
   }
 
-  const Icon = tone === 'positive' ? CheckCircle2 : tone === 'muted' ? CircleMinus : tone === 'action' ? Mail : Hourglass;
+  const Icon = tone === 'celebrate' ? Trophy : tone === 'positive' ? CheckCircle2 : tone === 'muted' ? CircleMinus : tone === 'action' ? Mail : Hourglass;
   const iconColor =
-    tone === 'positive'
+    tone === 'celebrate'
+      ? 'text-amber-600 dark:text-amber-400'
+      : tone === 'positive'
       ? 'text-emerald-600 dark:text-emerald-400'
       : tone === 'muted'
         ? 'text-slate-400'
@@ -468,7 +477,13 @@ export function Phase2StatusCard({ team, className }: { team: PassStatusHackatho
   return (
     <section
       aria-label="Phase 2 status"
-      className={clsx('rounded-xl border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] p-5 sm:p-6 space-y-4', className)}
+      className={clsx(
+        'rounded-xl border p-5 sm:p-6 space-y-4',
+        tone === 'celebrate'
+          ? 'border-amber-300 bg-amber-50/40 dark:border-amber-800/70 dark:bg-[#150709]'
+          : 'border-slate-200 bg-white dark:border-[#3D1418] dark:bg-[#150709]',
+        className
+      )}
     >
       <div className="space-y-2">
         <div className="flex items-center gap-2 text-xs font-medium">
@@ -490,15 +505,15 @@ export function Phase2StatusCard({ team, className }: { team: PassStatusHackatho
 
 /** One-line title for compact notices. */
 export function phase2Headline(team: PassStatusHackathon): string {
-  if (team.phase2?.stage === 'accepted' && !team.phase2.payBy) return 'Desk held: payment link coming soon';
+  if (team.phase2?.stage === 'accepted' && !team.phase2.payBy) return 'Phase 2 desk held: payment link coming soon';
   const p = team.phase2;
   if (!p) return 'Phase 1 results';
   switch (p.stage) {
     case 'under_review': return 'Result not released yet';
     case 'waitlisted': return p.waitlistPosition ? `Waiting room: number ${p.waitlistPosition}` : 'Your team is in the waiting room';
-    case 'invited': return team.isLead ? 'Action needed: accept your Phase 2 invitation' : 'Invited to Phase 2: lead must accept';
+    case 'invited': return team.isLead ? 'Congratulations, selected for Phase 2: confirm your place' : 'Congratulations, your team is selected for Phase 2';
     case 'accepted': return 'Accepted: complete team payment';
-    case 'confirmed': return 'Phase 2 desk confirmed';
+    case 'confirmed': return 'You are in: Phase 2 desk confirmed';
     case 'declined': return 'Phase 2 invitation declined';
     case 'expired': return 'Phase 2 invitation expired';
     case 'revoked': return 'Phase 2 invitation withdrawn';

@@ -615,8 +615,8 @@ export function OnCampusPassCard() {
                   ? 'Congratulations. Your team will build on campus during the 24-hour sprint.'
                   : stage === 'invited'
                     ? hackathon.isLead
-                      ? 'Your team is invited. Accept the invitation in the Phase 2 card above before paying.'
-                      : 'Your team is invited. Your team lead must accept before anyone pays.'
+                      ? 'Congratulations, your team is selected. Confirm your place in the Phase 2 card in the hackathon workspace.'
+                      : 'Congratulations, your team is selected. Your team lead confirms the place before anyone pays.'
                     : stage === 'waitlisted'
                       ? 'Your team is in the waiting room. Do not pay yet; this card updates if a desk opens.'
                       : 'Results are released team by team. Your result appears here once released.'}
