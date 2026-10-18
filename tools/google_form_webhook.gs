@@ -98,7 +98,8 @@ function onOpen() {
         .addSeparator()
         .addItem('7. Setup "Certificate_Recipients" Sheet', 'setupCertificateRecipientsSheet')
         .addItem('8. Send Test Certificate Email to sahgyan9@gmail.com', 'sendTestCertificateEmail')
-        .addItem('9. Start Certificate Email Campaign', 'startCertificateEmailCampaign')
+        .addItem('9. Start Certificate Campaign (5/5 Qualified Only - 220 students)', 'startQualifiedOnlyCertificateCampaign')
+        .addItem('10. Start Certificate Campaign (All Recipients)', 'startCertificateEmailCampaign')
         .addSeparator()
         .addItem('Sync All Unsynced Rows to Portal', 'syncAllUnsyncedRows')
         .addItem('Send Missing Welcome Emails', 'sendMissingWelcomeEmails')
@@ -1294,8 +1295,10 @@ function setupCertificateRecipientsSheet() {
     sheet.setFrozenRows(1);
     SpreadsheetApp.getUi().alert(
       'Sheet "Certificate_Recipients" created successfully!\n\n' +
-      'Next Step: Open "C:\\Users\\sahgy\\Downloads\\certificate_recipients_clean.csv", copy the recipient data, and paste it into this sheet (Columns A to F). Then click:\n\n' +
-      'Qiskit Fall Fest 2026 -> 9. Start Certificate Email Campaign'
+      'RECOMMENDED: For the 220 pre-qualified students, open:\n' +
+      '"C:\\Users\\sahgy\\Downloads\\certificate_recipients_qualified_220.csv"\n\n' +
+      'Copy the recipient rows and paste them into this sheet (Columns A to F). Then click:\n' +
+      'Qiskit Fall Fest 2026 -> 9. Start Certificate Campaign (5/5 Qualified Only - 220 students)'
     );
   } else {
     SpreadsheetApp.getUi().alert('Sheet "Certificate_Recipients" already exists.');
@@ -1320,9 +1323,21 @@ function sendTestCertificateEmail() {
 }
 
 /**
- * 9. Batched campaign dispatcher with safety quota check and deduplication for Masterclass Certificates.
+ * 9. Batched campaign dispatcher ONLY for pre-qualified students (5/5 or 6/5 quizzes passed).
+ * Recommended first run: Consumes exactly ~220 email quota with 100% conversion readiness.
+ */
+function startQualifiedOnlyCertificateCampaign() {
+  executeCertificateEmailCampaign(true);
+}
+
+/**
+ * 10. Batched campaign dispatcher for ALL students in the Certificate_Recipients sheet.
  */
 function startCertificateEmailCampaign() {
+  executeCertificateEmailCampaign(false);
+}
+
+function executeCertificateEmailCampaign(qualifiedOnly) {
   var ss = getTargetSpreadsheet();
   if (!ss) {
     SpreadsheetApp.getUi().alert('Could not locate active Google Spreadsheet.');
@@ -1350,11 +1365,12 @@ function startCertificateEmailCampaign() {
   var data = sheet.getRange(2, 1, lastRow - 1, 6).getValues();
   var sentCount = 0;
   var skippedCount = 0;
+  var nonQualifiedSkipped = 0;
   
   for (var i = 0; i < data.length; i++) {
     var rowNum = i + 2;
     var email = String(data[i][0]).trim().toLowerCase();
-    var name = String(data[i][1]).trim() || 'Participant';
+    var rawName = String(data[i][1]).trim();
     var quizzesPassed = String(data[i][4] || '').trim();
     var currentStatus = String(data[i][5] || '').trim();
     
@@ -1368,14 +1384,29 @@ function startCertificateEmailCampaign() {
       skippedCount++;
       continue;
     }
+
+    var isQualified = quizzesPassed.indexOf('Qualified') !== -1 ||
+                      quizzesPassed.indexOf('5/5') !== -1 ||
+                      quizzesPassed.indexOf('6/5') !== -1 ||
+                      quizzesPassed.indexOf('6/6') !== -1;
+
+    if (qualifiedOnly && !isQualified) {
+      nonQualifiedSkipped++;
+      continue;
+    }
     
     if (MailApp.getRemainingDailyQuota() <= 2) {
       Logger.log('Quota limit hit during batch. Stopping cleanly.');
       break;
     }
+
+    var cleanName = rawName;
+    if (!cleanName || /^\d/.test(cleanName) || cleanName.length < 2) {
+      cleanName = 'Participant';
+    }
     
     try {
-      sendCertificateAnnouncementEmail(email, name, quizzesPassed);
+      sendCertificateAnnouncementEmail(email, cleanName, quizzesPassed);
       var timestamp = Utilities.formatDate(new Date(), 'Asia/Kolkata', 'yyyy-MM-dd HH:mm:ss');
       sheet.getRange(rowNum, 6).setValue('SENT (' + timestamp + ' IST)');
       sentCount++;
@@ -1385,9 +1416,10 @@ function startCertificateEmailCampaign() {
     }
   }
   
-  var summary = 'Certificate Campaign run completed!\n\n' +
+  var summary = 'Certificate Campaign (' + (qualifiedOnly ? '5/5 Qualified Only' : 'All Recipients') + ') run completed!\n\n' +
     'Successfully Dispatched: ' + sentCount + '\n' +
     'Skipped (Already Sent): ' + skippedCount + '\n' +
+    (qualifiedOnly ? ('Skipped (In Progress / Unstarted): ' + nonQualifiedSkipped + '\n') : '') +
     'Daily Quota Remaining: ' + MailApp.getRemainingDailyQuota();
   
   Logger.log(summary);
