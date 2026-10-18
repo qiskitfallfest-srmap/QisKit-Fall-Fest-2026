@@ -10,10 +10,11 @@ import {
   receiptUrlPrefix,
 } from '@/lib/payments';
 import {
-  getFlagshipPaymentWindow,
+  getTeamFlagshipPaymentWindow,
   getHackathonPassContext,
   RESULTS_EXPECTED_LABEL,
 } from '@/lib/hackathon-pass';
+import { confirmOfferIfComplete } from '@/lib/phase2-waiting-room';
 import crypto from 'crypto';
 
 export const dynamic = 'force-dynamic';
@@ -40,7 +41,12 @@ export async function POST(request: NextRequest) {
     if (hackathon && hackathon.outcome === 'pending') {
       return NextResponse.json(
         {
-          error: `Your team is in Hackathon Phase 1. Results are announced by ${RESULTS_EXPECTED_LABEL}; your pass options will appear here then.`,
+          error:
+            hackathon.phase2.stage === 'invited'
+              ? 'Your team has a Phase 2 invitation. Your team lead must accept it before anyone pays.'
+              : hackathon.phase2.stage === 'waitlisted'
+                ? 'Your team is in the Phase 2 waiting room. Please do not pay yet; your pass options appear here once a decision is made.'
+                : `Your team's Phase 1 result has not been released yet (expected from ${RESULTS_EXPECTED_LABEL}). Your pass options will appear here then.`,
         },
         { status: 403 }
       );
@@ -115,13 +121,14 @@ export async function POST(request: NextRequest) {
 
     const existingClaim = existingClaims?.[0];
 
-    // New Flagship claims only inside the payment window; correcting an existing claim stays allowed
+    // New Flagship claims only inside the team's own payment window; correcting an existing claim stays allowed
     if (isFlagship && !existingClaim) {
-      const paymentWindow = await getFlagshipPaymentWindow();
+      const paymentWindow = await getTeamFlagshipPaymentWindow(hackathon!.phase2);
       if (paymentWindow.status === 'not_open') {
         return NextResponse.json(
           {
-            error: `The ₹499 Flagship Pass payment is not open yet. It is expected to open on ${paymentWindow.expectedLabel}; you will be notified by email.`,
+            error:
+              'The ₹499 Flagship Pass payment link is not published yet. It will appear on this card; your deadline is shown there.',
           },
           { status: 403 }
         );
@@ -129,12 +136,22 @@ export async function POST(request: NextRequest) {
       if (paymentWindow.status === 'closed') {
         return NextResponse.json(
           {
-            error:
-              'The 48-hour Flagship Pass payment window has closed. Please contact the organizing committee.',
+            error: 'Your team’s Flagship Pass payment window has closed. Please contact the organizing committee.',
           },
           { status: 403 }
         );
       }
+    }
+
+    // The team lead pays last, after every accepted teammate has submitted a receipt
+    if (isFlagship && hackathon!.isLead && hackathon!.phase2.payment && !hackathon!.phase2.payment.allOthersPaid) {
+      const { othersPaid, othersTotal } = hackathon!.phase2.payment;
+      return NextResponse.json(
+        {
+          error: `As team lead you pay last. ${othersPaid} of ${othersTotal} teammates have submitted their receipts so far.`,
+        },
+        { status: 403 }
+      );
     }
 
     if (existingClaim?.status === 'verified') {
@@ -194,6 +211,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Failed to record pass claim. Please check your details and try again.' },
         { status: 500 }
+      );
+    }
+
+    // Lead's receipt completes the team: mark the Phase 2 desk confirmed
+    if (isFlagship && hackathon!.isLead) {
+      await confirmOfferIfComplete(hackathon!.teamId, normalizedEmail).catch((err) =>
+        console.error('[Pass Claim] Failed to confirm Phase 2 offer:', err)
       );
     }
 

@@ -12,6 +12,7 @@ import {
   PHASE2_WAITLIST_QUOTA,
 } from '@/lib/constants';
 import { usePassStatus } from '@/hooks/use-pass-status';
+import { Phase2StatusCard, phase2Headline } from '@/components/learning/Phase2StatusCard';
 
 function splitRemaining(ms: number) {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
@@ -99,6 +100,15 @@ export function Phase1ResultsCountdown({ className, variant = 'full' }: Phase1Re
   if (reached) {
     if (!data) state = 'finalising';
     else if (!team) state = 'published';
+    else if (team.phase2) {
+      const stage = team.phase2.stage;
+      state =
+        stage === 'under_review' ? 'finalising'
+        : stage === 'waitlisted' ? 'waitlist'
+        : stage === 'no_submission' ? 'no_submission'
+        : ['invited', 'accepted', 'confirmed'].includes(stage) ? 'finalist'
+        : 'not_selected';
+    }
     else if (!team.submittedAt) state = 'no_submission';
     else if (!team.resultsPublished) state = 'finalising';
     else if (team.outcome === 'shortlisted') state = 'finalist';
@@ -108,7 +118,14 @@ export function Phase1ResultsCountdown({ className, variant = 'full' }: Phase1Re
 
   const { hours, minutes, seconds } = splitRemaining(remainingMs);
   const clock = mounted ? `${pad(hours)}:${pad(minutes)}:${pad(seconds)}` : '--:--:--';
-  const copy = state === 'countdown' ? null : RESULT_COPY[state];
+  const baseCopy = state === 'countdown' ? null : RESULT_COPY[state];
+
+  // After the announcement, team members get their rolling Phase 2 status instead of the static copy
+  const phase2 = reached && team?.phase2 ? team.phase2 : null;
+  if (phase2 && variant === 'full') {
+    return <Phase2StatusCard team={team!} className={className} />;
+  }
+  const copy = phase2 && baseCopy ? { ...baseCopy, title: phase2Headline(team!) } : baseCopy;
 
   const StatusIcon =
     state === 'countdown' ? Clock

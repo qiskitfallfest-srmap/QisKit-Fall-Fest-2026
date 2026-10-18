@@ -5,6 +5,46 @@ import { PHASE1_RESULTS_ANNOUNCE_ISO } from '@/lib/constants';
 
 export const PASS_STATUS_KEY = '/api/pass/status';
 
+export type Phase2Stage =
+  | 'under_review'
+  | 'no_submission'
+  | 'waitlisted'
+  | 'invited'
+  | 'accepted'
+  | 'confirmed'
+  | 'declined'
+  | 'expired'
+  | 'revoked'
+  | 'not_selected';
+
+export interface Phase2TeamStatus {
+  stage: Phase2Stage;
+  track: 'internal' | 'external';
+  invitedAt: string | null;
+  respondBy: string | null;
+  payBy: string | null;
+  paymentWindowHours: number;
+  autoPromoted: boolean;
+  closeReason: string | null;
+  declineReason: string | null;
+  score: number | null;
+  maxScore: number | null;
+  feedback: string | null;
+  waitlistPosition: number | null;
+  waitlistSize: number | null;
+  waitingRoomClosed: boolean;
+  payment: {
+    members: { name: string; email: string; isLead: boolean; paid: boolean; verified: boolean }[];
+    othersTotal: number;
+    othersPaid: number;
+    allOthersPaid: boolean;
+    leadPaid: boolean;
+  } | null;
+}
+
+// Stages where the team is waiting on someone else; poll so the page updates on its own
+const LIVE_STAGES: Phase2Stage[] = ['under_review', 'waitlisted', 'invited', 'accepted'];
+
 export interface PassStatusHackathon {
   teamId: string;
   teamName: string;
@@ -13,6 +53,7 @@ export interface PassStatusHackathon {
   resultsPublished: boolean;
   outcome: 'pending' | 'shortlisted' | 'not_shortlisted';
   isWaitlisted?: boolean;
+  phase2?: Phase2TeamStatus;
   phase1DeadlineIso: string;
   phase1DeadlinePassed: boolean;
   resultsExpectedLabel: string;
@@ -85,7 +126,9 @@ export function usePassStatus(options?: { enabled?: boolean }) {
       revalidateOnFocus: false,
       dedupingInterval: 10_000,
       refreshInterval: (latest) =>
-        latest?.hackathon && !latest.hackathon.resultsPublished && Date.now() >= announceMs
+        latest?.hackathon?.phase2 &&
+        LIVE_STAGES.includes(latest.hackathon.phase2.stage) &&
+        Date.now() >= announceMs
           ? 60_000
           : 0,
     }

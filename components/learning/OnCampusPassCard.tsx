@@ -509,6 +509,9 @@ export function OnCampusPassCard() {
 
   if (data?.isHackathonParticipant && hackathon && !data.pass && !showFlagshipForm) {
     const isShortlisted = hackathon.outcome === 'shortlisted';
+    const stage = hackathon.phase2?.stage;
+    const teamPayment = hackathon.phase2?.payment;
+    const leadWaitingForTeam = Boolean(hackathon.isLead && teamPayment && !teamPayment.allOthersPaid);
     const hasSubmitted = Boolean(hackathon.submittedAt);
     const deadlinePassed = hackathon.phase1DeadlinePassed;
     const submittedLabel =
@@ -610,7 +613,13 @@ export function OnCampusPassCard() {
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {isShortlisted
                   ? 'Congratulations. Your team will build on campus during the 24-hour sprint.'
-                  : `Shortlisted teams are announced by ${hackathon.resultsExpectedLabel}.`}
+                  : stage === 'invited'
+                    ? hackathon.isLead
+                      ? 'Your team is invited. Accept the invitation in the Phase 2 card above before paying.'
+                      : 'Your team is invited. Your team lead must accept before anyone pays.'
+                    : stage === 'waitlisted'
+                      ? 'Your team is in the waiting room. Do not pay yet; this card updates if a desk opens.'
+                      : 'Results are released team by team. Your result appears here once released.'}
               </p>
             </StepRow>
 
@@ -621,6 +630,16 @@ export function OnCampusPassCard() {
             >
               {!isShortlisted ? (
                 <p className="text-xs text-slate-400 dark:text-slate-500">Opens for shortlisted teams after results.</p>
+              ) : flagshipStatus === 'open' && leadWaitingForTeam ? (
+                <div className="space-y-3">
+                  {flagship?.deadlineIso && (
+                    <PaymentCountdown deadlineIso={flagship.deadlineIso} onExpire={handleFlagshipWindowExpire} />
+                  )}
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                    As team lead you pay last. {teamPayment?.othersPaid} of {teamPayment?.othersTotal} teammates have
+                    submitted their receipts. Your payment button appears here once all of them have.
+                  </p>
+                </div>
               ) : flagshipStatus === 'open' && flagship?.deadlineIso && flagship.gatewayUrl ? (
                 <div className="space-y-3">
                   <PaymentCountdown deadlineIso={flagship.deadlineIso} onExpire={handleFlagshipWindowExpire} />
@@ -658,12 +677,11 @@ export function OnCampusPassCard() {
                 <div className="p-3.5 rounded-xl border border-amber-200/80 dark:border-amber-900/40 bg-amber-50/90 dark:bg-amber-950/20 text-xs text-amber-900 dark:text-amber-200/90 space-y-1.5 leading-relaxed">
                   <p className="font-semibold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5 shrink-0" />
-                    Payment opens on {flagship?.expectedLabel || '19 October 2026'}
+                    Payment link coming shortly
                   </p>
-                  <p>Your Phase 2 place is confirmed. There is nothing to pay today.</p>
                   <p>
-                    When payment opens, the payment link and a countdown appear on this card. Each team member then has{' '}
-                    <strong>{flagship?.windowHours ?? 48} hours</strong> to pay ₹{FLAGSHIP_PASS_FEE_INR} and submit their receipt here.
+                    Your team accepted its Phase 2 place. The ₹{FLAGSHIP_PASS_FEE_INR} payment link appears on this card
+                    shortly; your team&apos;s deadline is shown in the Phase 2 card.
                   </p>
                   <p>
                     Do not pay on the ₹{PASS_FEE_INR} General Pass form. That payment does not count towards the Flagship Pass.

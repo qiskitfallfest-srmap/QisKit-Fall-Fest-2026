@@ -1223,7 +1223,9 @@ function LearningDashboardContent() {
       <Phase1ResultsCountdown variant="compact" />
 
       {/* On-Campus Festival Pass Hero Card (26–30 October 2026) */}
-      <OnCampusPassCard />
+      <div id="campus-pass" className="scroll-mt-24">
+        <OnCampusPassCard />
+      </div>
 
       {/* Flagship Hackathon Feature Card */}
       <div className="p-5 sm:p-6 bg-white dark:bg-[#150709] border-2 border-burgundy/40 dark:border-burgundy/60 rounded-xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">

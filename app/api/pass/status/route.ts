@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import {
-  getFlagshipPaymentWindow,
+  getTeamFlagshipPaymentWindow,
   getHackathonPassContext,
   PHASE1_DEADLINE_ISO,
   RESULTS_EXPECTED_LABEL,
@@ -49,7 +49,7 @@ export async function GET() {
     const isHackathonParticipant = Boolean(hackathon && hackathon.outcome !== 'not_shortlisted');
     const reg = regRes.data?.[0];
     const flagshipPayment =
-      hackathon?.outcome === 'shortlisted' ? await getFlagshipPaymentWindow() : null;
+      hackathon?.outcome === 'shortlisted' ? await getTeamFlagshipPaymentWindow(hackathon.phase2) : null;
 
     return NextResponse.json({
       success: true,

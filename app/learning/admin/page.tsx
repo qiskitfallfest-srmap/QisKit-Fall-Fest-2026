@@ -10,8 +10,10 @@ import { AdminQuizzesManager } from '@/components/learning/AdminQuizzesManager';
 import { AdminCodingChallengeView } from '@/components/learning/AdminCodingChallengeView';
 import { AdminCompetitionsView } from '@/components/learning/AdminCompetitionsView';
 import { AdminPaymentsManager } from '@/components/learning/AdminPaymentsManager';
+import { AdminPhase2View } from '@/components/learning/AdminPhase2View';
 import {
   Shield,
+  ListChecks,
   Ticket,
   UserPlus,
   Users,
@@ -37,7 +39,7 @@ import { extractParticipantsFromCSV, ParsedParticipant } from '@/lib/csv';
 
 export default function AdminConsolePage() {
   const [session, setSession] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'analytics' | 'hackathon' | 'competitions' | 'whitelist' | 'overrides' | 'sessions' | 'quizzes' | 'coding' | 'payments'>('hackathon');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'phase2' | 'hackathon' | 'competitions' | 'whitelist' | 'overrides' | 'sessions' | 'quizzes' | 'coding' | 'payments'>('hackathon');
 
   const [emails, setEmails] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -398,6 +400,19 @@ export default function AdminConsolePage() {
 
             <button
               type="button"
+              onClick={() => setActiveTab('phase2')}
+              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+                activeTab === 'phase2'
+                  ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
+                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
+              }`}
+            >
+              <ListChecks className="w-4 h-4" />
+              <span>Phase 2 Results</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setActiveTab('hackathon')}
               className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
                 activeTab === 'hackathon'
@@ -505,6 +520,8 @@ export default function AdminConsolePage() {
           {activeTab === 'payments' && <AdminPaymentsManager />}
 
           {/* TAB: HACKATHON TEAMS & PARTICIPANTS */}
+          {activeTab === 'phase2' && <AdminPhase2View />}
+
           {activeTab === 'hackathon' && <AdminHackathonView />}
 
           {/* TAB: DAILY COMPETITIONS & JURY REGISTRY */}

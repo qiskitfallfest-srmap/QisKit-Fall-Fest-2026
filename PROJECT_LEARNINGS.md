@@ -309,3 +309,13 @@ sahgyan9/Qiskit-Fall-Fest-SRMAP-2026 (PLANNING REPO)
    - The 48-hour countdown for the ₹499 Flagship Pass does **NOT** begin when results are published.
    - Per `lib/hackathon-pass.ts`, `getFlagshipPaymentWindow()` returns `status: 'not_open'` as long as `gateway_url` or `opened_at` is null in `platform_config: flagship_payment`. The payment countdown commences only after the gateway is configured and stamped by administrators.
 
+
+---
+
+### GT-38: Rolling Phase 2 Results, Waiting Room Auto-Promotion & Lead-Pays-Last Flagship Payment
+1. **Per-team release instead of one publish switch**: Jury decisions are released team by team from `/learning/admin` > Phase 2 Results (`components/learning/AdminPhase2View.tsx`, `app/api/admin/phase2/route.ts`). `submission_evaluations.result_released_at` gates visibility; `participant_feedback` is the note shown to the team (the `comments` JSON stays internal). The legacy `hackathon_phase1_results.published` flag still releases everything at once, so keep it `false`.
+2. **Offers table**: `hackathon_phase2_offers` (migration `20261018150000_create_phase2_waiting_room.sql`), one row per team (`UNIQUE team_id`). States: `invited -> accepted -> confirmed`, or `declined | expired | revoked`. Only the team lead accepts/declines (`app/api/hackathon/phase2/route.ts`).
+3. **Auto-promotion**: Any close of an `invited`/`accepted` offer invites the highest-scoring waitlisted team (`status in under_review, needs_discussion`) in the same track that never had an offer (`lib/phase2-waiting-room.ts`). Concurrency safety comes from conditional `UPDATE ... WHERE status IN (...)` (only the closer promotes) plus the unique `team_id` (two promoters cannot invite the same team). Track = lead email `@srmap.edu.in` or SRM AP institution in `participant_universities`.
+4. **Deadlines are lazy**: overdue offers expire on any admin GET, on the affected team's `/api/pass/status`, and every few minutes via `/api/cron/phase2-sweep` (Bearer `PHASE2_SWEEP_SECRET`, called by Supabase pg_cron + pg_net).
+5. **Payment order**: accepted members pay ₹499 individually; `/api/pass/claim` refuses the lead's claim until every other accepted member has a non-rejected `flagship_offline` claim. The lead's claim marks the offer `confirmed`. Payment deadline is per team (`pay_by`); `flagship_payment.gateway_url` only supplies the Easebuzz link.
+6. **Participant copy**: `components/learning/Phase2StatusCard.tsx` covers every stage (not released, waitlist position, invited, paying, confirmed, declined, expired, revoked, not selected / waiting room closed) with calm wording and a contact line. Waitlisted and invited teams cannot buy the General Pass until their outcome is final.
