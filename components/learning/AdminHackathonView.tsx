@@ -646,6 +646,14 @@ export function AdminHackathonView() {
             {isSavingFlagship ? 'Saving...' : flagshipPayment?.opened_at ? 'Unpublish Link' : 'Publish Link'}
           </button>
         </div>
+        <Link
+          href="/flagship-pass-guide"
+          target="_blank"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-burgundy dark:text-[#F07A86] hover:underline"
+        >
+          {flagshipPayment?.opened_at ? 'Open the participant payment guide' : 'Preview the participant payment guide (admins only until published)'}
+          <ExternalLink className="w-3.5 h-3.5" />
+        </Link>
       </div>
 
       {/* Top Banner & Action Controls */}

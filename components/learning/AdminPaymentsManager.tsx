@@ -17,6 +17,7 @@ import {
   Check,
   RotateCcw,
   Inbox,
+  Info,
 } from 'lucide-react';
 import clsx from 'clsx';
 import type { CertificateDeliveryMode } from '@/lib/payments';
@@ -31,6 +32,9 @@ const DELIVERY_LABEL: Record<DeliveryMode, string> = {
   email: 'Email',
   both: 'Both: ceremony (in person) and email',
 };
+
+// A Flagship Pass and certificate bought together share one transaction ID by design (API: isCombinedFlagshipTxn)
+const isInfoFlag = (flag: string) => flag.startsWith('Combined payment');
 
 interface PaymentItem {
   id: string;
@@ -448,10 +452,10 @@ export function AdminPaymentsManager() {
                     </div>
                     <div className="flex flex-col items-end gap-1 shrink-0">
                       <StatusBadge status={p.status} />
-                      {p.flags.length > 0 && (
+                      {p.flags.some((f) => !isInfoFlag(f)) && (
                         <span className="flex items-center gap-1 text-[10px] font-semibold text-amber-700 dark:text-amber-400">
                           <AlertTriangle className="w-3 h-3" />
-                          {p.flags.length}
+                          {p.flags.filter((f) => !isInfoFlag(f)).length}
                         </span>
                       )}
                     </div>
@@ -572,15 +576,29 @@ export function AdminPaymentsManager() {
               </dl>
 
               {selected.flags.length > 0 && (
-                <div className="p-4">
-                  <ul className="space-y-1.5 text-xs text-amber-900 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
-                    {selected.flags.map((f) => (
-                      <li key={f} className="flex items-start gap-1.5">
-                        <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-px text-amber-600" />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
+                <div className="p-4 space-y-2">
+                  {selected.flags.some(isInfoFlag) && (
+                    <ul className="space-y-1.5 text-xs text-sky-900 dark:text-sky-200 bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 rounded-lg p-3">
+                      {selected.flags.filter(isInfoFlag).map((f) => (
+                        <li key={f} className="flex items-start gap-1.5">
+                          <Info className="w-3.5 h-3.5 shrink-0 mt-px text-sky-600" />
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {selected.flags.some((f) => !isInfoFlag(f)) && (
+                    <ul className="space-y-1.5 text-xs text-amber-900 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                      {selected.flags
+                        .filter((f) => !isInfoFlag(f))
+                        .map((f) => (
+                          <li key={f} className="flex items-start gap-1.5">
+                            <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-px text-amber-600" />
+                            {f}
+                          </li>
+                        ))}
+                    </ul>
+                  )}
                 </div>
               )}
 
