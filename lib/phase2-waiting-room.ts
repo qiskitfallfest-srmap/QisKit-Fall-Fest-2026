@@ -1,6 +1,9 @@
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { PHASE2_DESK_QUOTA } from '@/lib/constants';
 import { getParticipantUniversitiesMap } from '@/lib/participant-universities';
+import { trackForLeadEmail, type Phase2Track } from '@/lib/participant-track';
+
+export { trackForLeadEmail, type Phase2Track };
 
 // Rolling Phase 2 invitations. Schema: supabase/migrations/20261018150000_create_phase2_waiting_room.sql
 //
@@ -18,7 +21,6 @@ export const WAITING_ROOM_CONFIG_KEY = 'phase2_waiting_room';
 export const DEFAULT_RESPONSE_HOURS = 24;
 export const DEFAULT_PAYMENT_HOURS = 24;
 
-export type Phase2Track = 'internal' | 'external';
 export type OfferStatus = 'invited' | 'accepted' | 'confirmed' | 'declined' | 'expired' | 'revoked';
 
 export const ACTIVE_OFFER_STATUSES: OfferStatus[] = ['invited', 'accepted', 'confirmed'];
@@ -66,15 +68,6 @@ const DEFAULT_CONFIG: WaitingRoomConfig = {
   responseHours: DEFAULT_RESPONSE_HOURS,
   paymentHours: DEFAULT_PAYMENT_HOURS,
 };
-
-// Same normalization as the jury sheet (GT-37): any SRM AP spelling counts as internal
-const SRM_AP_PATTERN = /\bsrm\s*(university)?[\s-]*a\.?p\b|\bsrmap\b|\bsrmist\b/i;
-
-export function trackForLeadEmail(leadEmail: string, institution?: string | null): Phase2Track {
-  const email = leadEmail.trim().toLowerCase();
-  if (email.endsWith('@srmap.edu.in')) return 'internal';
-  return institution && SRM_AP_PATTERN.test(institution) ? 'internal' : 'external';
-}
 
 /** Track lookup using the lead's recorded university (platform_config participant_universities). */
 export async function getTrackResolver(): Promise<(leadEmail: string) => Phase2Track> {

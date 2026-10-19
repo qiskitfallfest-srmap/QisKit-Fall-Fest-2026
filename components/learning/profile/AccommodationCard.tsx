@@ -333,8 +333,9 @@ function PersonForm({
 /**
  * Accommodation for external participants. Renders nothing for SRM AP participants.
  * A team lead sees one row per external member and can answer for each of them.
+ * `mayBeExternal` comes from data the page already has; a load failure is only shown when it is true.
  */
-export function AccommodationCard() {
+export function AccommodationCard({ mayBeExternal }: { mayBeExternal: boolean }) {
   const { data, error, isLoading, mutate } = useAccommodation();
   const [editing, setEditing] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState('');
@@ -361,8 +362,7 @@ export function AccommodationCard() {
   }, [data]);
 
   if (!data) {
-    if (isLoading || !error) return null;
-    // Eligibility is unknown without data, so a failure is shown instead of hiding the card
+    if (isLoading || !error || !mayBeExternal) return null;
     return (
       <Card id="accommodation" title="Accommodation">
         <div role="alert" className="flex flex-wrap items-center justify-between gap-3">

@@ -25,6 +25,7 @@ import { useProfileOverview, type ProfileOverview } from '@/hooks/use-profile-ov
 import { phase2Headline } from '@/components/learning/Phase2StatusCard';
 import { markNoticesSeen, readSeenNoticeIds } from '@/lib/notices';
 import type { AccommodationStatus } from '@/lib/accommodation';
+import { trackForLeadEmail } from '@/lib/participant-track';
 import { deriveActionItems, type ActionItem, type ProfileTab } from './action-items';
 import {
   AccountSection,
@@ -347,7 +348,12 @@ function OverviewSection({
         />
       </div>
 
-      <AccommodationCard />
+      <AccommodationCard
+        mayBeExternal={
+          hackathon?.phase2?.track === 'external' ||
+          trackForLeadEmail(overview.profile.email, overview.profile.institution || status?.user?.institution) === 'external'
+        }
+      />
 
       {latest.length > 0 && (
         <Card
