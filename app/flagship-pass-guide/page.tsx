@@ -26,12 +26,16 @@ export const metadata: Metadata = {
 const SELECTIONS: { field: string; choice: string; note?: string }[] = [
   { field: 'I confirm the above', choice: 'Tick it first' },
   {
+    field: `Offline Entry Pass (Platinum) – ₹${PASS_FEE_INR}`,
+    choice: 'Set to No',
+    note: 'Important: setting Platinum to No is what reveals the Diamond Pass field below it.',
+  },
+  { field: `Diamond Pass – ₹${FLAGSHIP_PASS_FEE_INR}`, choice: 'Set to Yes', note: 'This is your Flagship Pass.' },
+  {
     field: `Certificate – ₹${CERTIFICATE_FEE_INR}`,
     choice: 'Yes or No',
     note: 'Yes only if your masterclass certificate is unlocked and you have not paid for it yet. Otherwise No.',
   },
-  { field: `Offline Entry Pass (Platinum) – ₹${PASS_FEE_INR}`, choice: 'No' },
-  { field: `Diamond Pass – ₹${FLAGSHIP_PASS_FEE_INR}`, choice: 'Yes' },
   { field: 'Easebuzz Privacy Policy consent', choice: 'Tick it' },
 ];
 
@@ -113,8 +117,7 @@ export default async function FlagshipPassGuidePage() {
           <h1 className="text-3xl sm:text-4xl font-serif font-bold tracking-tight">Flagship Pass payment guide</h1>
           <p className="text-[15px] sm:text-base leading-relaxed text-[#3D3334] dark:text-[#E2D5D3] max-w-2xl">
             The ₹{FLAGSHIP_PASS_FEE_INR} Flagship Pass is called the <strong>Diamond Pass</strong> on the Easebuzz form. That
-            option stays hidden until you tick <strong>&ldquo;I confirm the above&rdquo;</strong>. If you skip the box, the form
-            only offers the ₹{PASS_FEE_INR} Platinum pass, which is the wrong pass for finalists.
+            option stays hidden until you tick <strong>&ldquo;I confirm the above&rdquo;</strong> AND change <strong>&ldquo;Offline Entry Pass (Platinum) – ₹{PASS_FEE_INR}&rdquo; to &ldquo;No&rdquo;</strong>. Only after selecting Platinum to No does the Diamond Pass field appear.
           </p>
         </header>
 
@@ -173,11 +176,11 @@ export default async function FlagshipPassGuidePage() {
             </Link>
           </Step>
 
-          <Step n={2} title="Tick “I confirm the above” before anything else">
+          <Step n={2} title="Tick “I confirm the above” and set Platinum Pass to No">
             <p>
-              When you scroll down, there is no Diamond Pass option yet. Tick the box marked in blue. Tick it only if your
-              team is officially shortlisted: a Diamond Pass bought without shortlist confirmation is cancelled without a
-              refund.
+              When you scroll down, there is no Diamond Pass option yet. First tick the confirmation box marked in blue.
+              Then, change <strong>Offline Entry Pass (Platinum) – ₹{PASS_FEE_INR}</strong> from Yes to <strong>No</strong>.
+              Only after selecting Platinum to No does the ₹{FLAGSHIP_PASS_FEE_INR} Diamond Pass field open below it.
             </p>
             <Screenshot
               src="/images/payment-guide/step-tick.png"
@@ -187,19 +190,22 @@ export default async function FlagshipPassGuidePage() {
             />
           </Step>
 
-          <Step n={3} title="Choose your options">
-            <p>Once the box is ticked, a new Diamond Pass field appears. Set the fields as marked:</p>
+          <Step n={3} title="Select Diamond Pass: Yes">
+            <p>
+              Once you set Offline Entry Pass (Platinum) to No, the <strong>Diamond Pass</strong> dropdown opens below it.
+              Set the fields as follows:
+            </p>
             <ol className="list-decimal pl-5 space-y-1.5">
+              <li>
+                <strong>Offline Entry Pass (Platinum):</strong> must be set to <strong>No</strong> (crucial: this is what reveals the Diamond Pass option).
+              </li>
+              <li>
+                <strong>Diamond Pass:</strong> choose <strong>Yes</strong> (this is your ₹{FLAGSHIP_PASS_FEE_INR} Flagship Pass).
+              </li>
               <li>
                 <strong>Certificate:</strong> choose <strong>Yes</strong> only if your masterclass certificate is unlocked
                 (all video lectures and quizzes complete) and you have not paid for it yet. If you already paid, or have not
                 finished the course, choose <strong>No</strong>.
-              </li>
-              <li>
-                <strong>Offline Entry Pass (Platinum):</strong> choose <strong>No</strong>.
-              </li>
-              <li>
-                <strong>Diamond Pass:</strong> choose <strong>Yes</strong>.
               </li>
               <li>Tick the Easebuzz Privacy Policy consent box.</li>
             </ol>

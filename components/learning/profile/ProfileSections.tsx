@@ -423,7 +423,7 @@ export function TeamPaymentsCard({ status, email }: { status: PassStatusResponse
             Important: Select &ldquo;Diamond Pass&rdquo; (₹{FLAGSHIP_PASS_FEE_INR}) on Easebuzz
           </p>
           <p className="leading-relaxed">
-            Tick &ldquo;I confirm the above&rdquo; first to reveal the Diamond Pass. Do not select the ₹99 Platinum pass.{' '}
+            Tick &ldquo;I confirm the above&rdquo; first, then set <strong>&ldquo;Offline Entry Pass (Platinum)&rdquo; to &ldquo;No&rdquo;</strong> to reveal the ₹{FLAGSHIP_PASS_FEE_INR} Diamond Pass dropdown. Do not pay for the ₹99 Platinum pass.{' '}
             <Link href="/flagship-pass-guide" className="font-semibold text-burgundy dark:text-[#F07A86] hover:underline inline-flex items-center gap-0.5">
               Read the payment guide <ArrowRight className="h-3 w-3 inline" />
             </Link>
