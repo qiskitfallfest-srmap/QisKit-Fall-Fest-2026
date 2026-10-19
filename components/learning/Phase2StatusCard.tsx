@@ -264,6 +264,7 @@ function LeadResponse({ team, onDone }: { team: PassStatusHackathon; onDone: () 
             Every member completes their Flagship Pass (₹{FLAGSHIP_PASS_FEE_INR}) {windowText}. You, as team lead, pay last to lock in the desk.
           </li>
           <li>If payment or confirmation is not completed in time, the desk automatically passes to the next team in the waiting room.</li>
+          <li>Your problem statement may be updated by an industry partner, or replaced with one in the same vertical.</li>
         </ul>
         <label className="flex items-start gap-2 pt-1 cursor-pointer">
           <input

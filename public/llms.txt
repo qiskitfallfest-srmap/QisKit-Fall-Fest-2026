@@ -44,7 +44,7 @@ Registration Platform: Official Platform (https://www.qffsrmap2026.com/learning)
 
 ## Hackathon Universal Challenge Framework (Phase 1: 5-13 October 2026)
 
-- [Universal Challenge Framework Overview](https://www.qffsrmap2026.com/docs/hackathon-challenge-framework.md#framework): Multi-track hackathon for teams of 2 to 4 members focusing on co-designing quantum algorithms with hardware architectures.
+- [Universal Challenge Framework Overview](https://www.qffsrmap2026.com/docs/hackathon-challenge-framework.md#framework): Multi-track hackathon for teams of 2 to 6 members focusing on co-designing quantum algorithms with hardware architectures.
 - [Fixed Processor Specifications (A, B, C)](https://www.qffsrmap2026.com/docs/hackathon-challenge-framework.md#processors): Processor A (5-qubit linear Falcon/Yorktown), Processor B (7-qubit heavy-hex), and Processor C (8-10 qubit experimental graph).
 - [Custom Processor D Innovation Task](https://www.qffsrmap2026.com/docs/hackathon-challenge-framework.md#processor-d): Up to 12 qubits, custom coupling map, bounded native gate errors, and rigorous architectural rationale resolving identified algorithm bottlenecks.
 - [100-Point Evaluation Rubric](https://www.qffsrmap2026.com/docs/hackathon-challenge-framework.md#rubric): 40 points for Solution Correctness & Domain Performance; 30 points for Architectural Benchmarking (A/B/C); 30 points for Custom Processor D Innovation.

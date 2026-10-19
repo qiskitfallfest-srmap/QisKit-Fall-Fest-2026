@@ -829,7 +829,7 @@ export const offlineSchedule: Day[] = [
         initials: "HP",
         duration: "24 hrs",
         timezone: "IST",
-        learn: ["Continue your Phase 1 track and problem statement, using the updated version refined with partner companies and industry collaborators, over 24 continuous hours"],
+        learn: ["Build on your Phase 1 work using the industry-refined problem statement for your vertical, over 24 continuous hours"],
       },
     ],
   },

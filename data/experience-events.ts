@@ -327,7 +327,7 @@ export const BUILD_ITEMS: ExperienceHeroItem[] = [
     accent: '#521018',
     category: 'build',
     credit: 'FINAL JURY DEFENSE',
-    meta: ['JURY EVALUATION', '29th Oct 2026', 'Breakout Rooms 1–4 · 10:30 AM – 12:30 PM'],
+    meta: ['JURY EVALUATION', 'Date to be announced', 'Venue and time to be announced'],
     registrationUrl: 'https://qiskit.org/fallfest',
     registrationLabel: 'View Presentations',
   },

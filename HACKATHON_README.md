@@ -33,15 +33,16 @@ This document serves as the master specification containing every track, all 20 
 
 | Phase | Designation | Mode | Venue / Platform | Timeline | Key Milestone |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Phase 1** | Online Sprint | Online | Platform / GitHub | 5 Oct – 13 Oct 2026 | Submissions close 13 Oct, 11:59 PM IST |
-| **Jury** | Finalist Selection | Hybrid | Technical Committee | 14 Oct – 16 Oct 2026 | Comprehensive code & rubric audit |
-| **Notice** | Finalist Announcement | Online | Web Portal | 17 Oct 2026 | Top 10–12 teams per track qualified |
-| **Phase 2** | Onsite Hackathon | In-Person | Auditorium X-Lab, SRM University-AP | 28 Oct 6:00 PM – 29 Oct 6:00 PM 2026 | Continuation of each team's Phase 1 track and problem statement (updated version refined with industry partners) |
-| **Finals** | Pitch & Demonstrations| In-Person | Main Stage Auditorium | 28 Oct 2026 (Evening) | Jury presentations & award distribution |
+| **Phase 1** | Online Sprint | Online | Learning Portal / GitHub | 8 Oct – 17 Oct 2026 | Submissions closed 17 Oct, 11:59 PM IST |
+| **Jury** | Finalist Selection | Hybrid | Technical Committee | Before 18 Oct 2026 | Code and rubric evaluation of 129 submissions |
+| **Notice** | Results | Online | Learning Portal | 18 Oct 2026 | 50 teams shortlisted (25 internal, 25 external); 30-team waiting room |
+| **Phase 2** | Onsite Hackathon | In-Person | Auditorium X-Lab, SRM University-AP | 28 Oct 6:00 PM – 29 Oct 6:00 PM 2026 | Continuation of Phase 1 work on an industry-refined problem statement in the same vertical |
+| **Finals** | Pitch & Demonstrations | In-Person | To be announced | To be announced (depends on jury availability) | Jury presentations; awards on 30 Oct 2026 |
 
 ### Team Composition Rules
 - **Team Size:** 2 to 6 members during Phase 1 team formation (1 Leader + 1 to 5 Teammates).
-- **Onsite Finalist Rule:** 2 to 4 members per team for Phase 2 onsite finals.
+- **Onsite Finalist Rule:** Phase 2 continues with the same verified 2 to 6 member roster.
+- **Problem Statements in Phase 2:** Phase 2 continues your Phase 1 work. Each problem statement is being refined with partner companies and industry collaborators, and teams receive the updated version from the organizers. If no industry partner is available for a problem statement, the affected teams will move to an industry-backed problem statement within the same vertical (one of the 5 tracks). The processor-architecture skills from Phase 1 (A/B benchmarking, routing analysis, and the move to Processors C and D) apply to every problem statement. Affected teams will be told before Phase 2 begins.
 - **Whitelist Enforcement:** Every teammate's email must be registered on the official portal whitelist.
 - **Exclusivity:** A participant can belong to only one team across the entire festival. Once an invitation is accepted, the participant cannot create or join any other team.
 

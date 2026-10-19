@@ -3,9 +3,9 @@
 **Event Designation:** QFF 2026 Flagship Hackathon (Phase 1 Online Sprint & Phase 2 Onsite Finals)  
 **Theme:** Algorithm-Architecture Co-Design  
 **Phase 1 Dates:** 5 October 2026 to 13 October 2026 (Submissions close 13 October, 11:59 PM IST)  
-**Phase 1 Finalist Announcement:** 17 October 2026 (~200 participants / top 10-12 teams per track)  
+**Phase 1 Results:** 18 October 2026 (50 teams shortlisted for Phase 2: 25 internal, 25 external; 30-team waiting room)  
 **Phase 2 Onsite Finals:** 28 October 2026, 6:00 PM to 29 October 2026, 6:00 PM IST (24 hours in Auditorium X-Lab, SRM University-AP)  
-**Team Composition:** 2 to 4 members per team.
+**Team Composition:** 2 to 6 members per team (1 leader + 1 to 5 teammates); Phase 2 continues with the same verified roster.
 
 ---
 

@@ -39,7 +39,7 @@ Yes. Masterclass registration and participation is individual, even if you plan 
 ## 3. Flagship Hackathon (Phase 1 & Phase 2)
 
 ### What is the team size?
-Hackathon teams must consist of **2 to 4 members**. Solo participation is not permitted for the hackathon.
+Hackathon teams must consist of **2 to 6 members** (1 leader + 1 to 5 teammates). Solo participation is not permitted. Phase 2 continues with the same verified roster.
 
 ### How does Phase 1 work?
 Phase 1 is an online sprint from **5 to 13 October 2026**. Teams select one of five domain tracks (Chemistry, Optimization, Simulation, QML, PQC) and benchmark their algorithm across three fixed quantum backends (Processors A, B, and C). Teams then propose a custom 12-qubit Processor D that resolves identified communication bottlenecks. Submissions close on **13 October at 11:59 PM IST**.
@@ -58,10 +58,12 @@ Submissions are evaluated on a **100-point rubric**:
 - **30 Points:** Custom Processor D Innovation, bottleneck resolution, and engineering rationale
 
 ### When are finalists announced?
-Phase 1 finalists (~200 participants / top 10-12 teams per track) will be announced on the night of **17 October 2026**.
+Phase 1 results were announced on **18 October 2026**: **50 teams** (25 internal, 25 external) were shortlisted for the Phase 2 auditorium desks, with a **30-team waiting room** (20 internal, 10 external). Results are released team by team on the learning portal, and waitlisted teams are invited in jury-score order if a desk opens.
 
 ### What is Phase 2?
-Phase 2 is a **24-hour onsite hackathon** in **Auditorium X-Lab** at SRM University-AP, from **28 October 2026, 6:00 PM to 29 October 2026, 6:00 PM IST**, where shortlisted teams continue in person with the same track and problem statement they chose in Phase 1. The problem statements are being refined together with partner companies and industry collaborators, and teams receive the updated version from the organizers.
+Phase 2 is a **24-hour onsite hackathon** in **Auditorium X-Lab** at SRM University-AP, from **28 October 2026, 6:00 PM to 29 October 2026, 6:00 PM IST**, where shortlisted teams continue in person.
+
+Phase 2 continues your Phase 1 work. Each problem statement is being refined with partner companies and industry collaborators, and teams receive the updated version from the organizers. If no industry partner is available for a problem statement, the affected teams will move to an industry-backed problem statement within the same vertical (one of the 5 tracks). The processor-architecture skills from Phase 1 (A/B benchmarking, routing analysis, and the move to Processors C and D) apply to every problem statement. Affected teams will be told before Phase 2 begins.
 
 ---
 
