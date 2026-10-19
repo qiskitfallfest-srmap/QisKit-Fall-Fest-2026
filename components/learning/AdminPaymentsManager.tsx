@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Ticket,
   Award,
+  Trophy,
   Search,
   RefreshCw,
   Download,
@@ -23,6 +24,11 @@ import clsx from 'clsx';
 import type { CertificateDeliveryMode } from '@/lib/payments';
 
 type PaymentType = 'pass' | 'certificate';
+type PassTier = 'general_offline' | 'flagship_offline';
+// Queue shown on the page: the two pass tiers share festival_pass_claims but are reviewed separately
+type View = 'general' | 'flagship' | 'certificate';
+const VIEW_TYPE: Record<View, PaymentType> = { general: 'pass', flagship: 'pass', certificate: 'certificate' };
+const VIEW_TIER: Record<View, PassTier | null> = { general: 'general_offline', flagship: 'flagship_offline', certificate: null };
 type ReviewStatus = 'pending' | 'verified' | 'rejected';
 type StatusFilter = ReviewStatus | 'all' | 'checked_in' | 'to_deliver';
 type DeliveryMode = CertificateDeliveryMode;
@@ -39,6 +45,7 @@ const isInfoFlag = (flag: string) => flag.startsWith('Combined payment');
 interface PaymentItem {
   id: string;
   type: PaymentType;
+  passTier: PassTier | null;
   name: string;
   email: string;
   institution: string | null;
@@ -64,20 +71,40 @@ interface PaymentItem {
   flags: string[];
 }
 
-interface Metrics {
-  pass: { pending: number; verified: number; rejected: number; checkedIn: number };
-  certificate: { pending: number; verified: number; rejected: number; toDeliver: number };
+interface PassMetrics {
+  pending: number;
+  verified: number;
+  rejected: number;
+  checkedIn: number;
+  collected: number;
 }
 
+interface Metrics {
+  general: PassMetrics;
+  flagship: PassMetrics;
+  certificate: { pending: number; verified: number; rejected: number; collected: number; toDeliver: number };
+}
+
+const EMPTY_PASS_METRICS: PassMetrics = { pending: 0, verified: 0, rejected: 0, checkedIn: 0, collected: 0 };
 const EMPTY_METRICS: Metrics = {
-  pass: { pending: 0, verified: 0, rejected: 0, checkedIn: 0 },
-  certificate: { pending: 0, verified: 0, rejected: 0, toDeliver: 0 },
+  general: EMPTY_PASS_METRICS,
+  flagship: EMPTY_PASS_METRICS,
+  certificate: { pending: 0, verified: 0, rejected: 0, collected: 0, toDeliver: 0 },
 };
 
-const TYPE_META: Record<PaymentType, { label: string; short: string; other: string }> = {
-  pass: { label: 'General Offline Pass', short: 'Offline Pass', other: 'Certificate' },
-  certificate: { label: 'Course Certificate', short: 'Certificate', other: 'Offline Pass' },
+const VIEW_META: Record<View, { label: string; short: string; fee: number }> = {
+  general: { label: 'General Offline Pass', short: 'General Pass', fee: 99 },
+  flagship: { label: 'Flagship Pass', short: 'Flagship Pass', fee: 499 },
+  certificate: { label: 'Course Certificate', short: 'Certificate', fee: 99 },
 };
+
+/** Which queue a submission belongs to (pass rows split by tier). */
+function viewOf(p: Pick<PaymentItem, 'type' | 'passTier'>): View {
+  if (p.type === 'certificate') return 'certificate';
+  return p.passTier === 'flagship_offline' ? 'flagship' : 'general';
+}
+
+const OTHER_LABEL: Record<PaymentType, string> = { pass: 'Certificate', certificate: 'Offline Pass' };
 
 const STATUS_STYLE: Record<ReviewStatus, string> = {
   pending:
@@ -129,7 +156,8 @@ function csvCell(value: unknown) {
 }
 
 export function AdminPaymentsManager() {
-  const [type, setType] = useState<PaymentType>('pass');
+  const [view, setView] = useState<View>('general');
+  const type = VIEW_TYPE[view];
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('pending');
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -153,6 +181,8 @@ export function AdminPaymentsManager() {
     setLoadError('');
     try {
       const params = new URLSearchParams({ type, status: statusFilter });
+      const tier = VIEW_TIER[view];
+      if (tier) params.set('tier', tier);
       if (debouncedSearch) params.set('search', debouncedSearch);
       const res = await fetch(`/api/admin/payments?${params.toString()}`, { cache: 'no-store' });
       const json = await res.json();
@@ -165,7 +195,7 @@ export function AdminPaymentsManager() {
     } finally {
       setLoading(false);
     }
-  }, [type, statusFilter, debouncedSearch]);
+  }, [type, view, statusFilter, debouncedSearch]);
 
   useEffect(() => {
     fetchItems();
@@ -190,10 +220,11 @@ export function AdminPaymentsManager() {
     setActionError('');
   }, [selected?.id, selected?.adminNotes]);
 
-  function switchType(next: PaymentType) {
-    if (next === type) return;
-    setType(next);
-    if (statusFilter === 'checked_in' || statusFilter === 'to_deliver') setStatusFilter('pending');
+  function switchView(next: View) {
+    if (next === view) return;
+    const crossesTable = VIEW_TYPE[next] !== type;
+    setView(next);
+    if (crossesTable && (statusFilter === 'checked_in' || statusFilter === 'to_deliver')) setStatusFilter('pending');
   }
 
   async function decide(
@@ -260,7 +291,7 @@ export function AdminPaymentsManager() {
       'Submitted At',
     ];
     const rows = items.map((p) => [
-      TYPE_META[p.type].short,
+      VIEW_META[viewOf(p)].short,
       p.name,
       p.email,
       p.institution,
@@ -281,35 +312,35 @@ export function AdminPaymentsManager() {
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
     const a = document.createElement('a');
     a.href = url;
-    a.download = `qff26_${type}_payments_${statusFilter}_${Date.now()}.csv`;
+    a.download = `qff26_${view}_payments_${statusFilter}_${Date.now()}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
 
-  const m = metrics[type];
+  const m = metrics[view];
   const statusTabs: { key: StatusFilter; label: string; count?: number }[] = [
     { key: 'pending', label: 'Pending', count: m.pending },
     { key: 'verified', label: 'Verified', count: m.verified },
     { key: 'rejected', label: 'Rejected', count: m.rejected },
-    ...(type === 'pass'
-      ? [{ key: 'checked_in' as StatusFilter, label: 'Checked in', count: metrics.pass.checkedIn }]
-      : [{ key: 'to_deliver' as StatusFilter, label: 'To deliver', count: metrics.certificate.toDeliver }]),
+    ...(view === 'certificate'
+      ? [{ key: 'to_deliver' as StatusFilter, label: 'To deliver', count: metrics.certificate.toDeliver }]
+      : [{ key: 'checked_in' as StatusFilter, label: 'Checked in', count: metrics[view].checkedIn }]),
     { key: 'all', label: 'All' },
   ];
 
   return (
     <div className="space-y-4">
       {/* Purchase type switch */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {(['pass', 'certificate'] as PaymentType[]).map((t) => {
-          const active = t === type;
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+        {(['general', 'flagship', 'certificate'] as View[]).map((t) => {
+          const active = t === view;
           const tm = metrics[t];
-          const Icon = t === 'pass' ? Ticket : Award;
+          const Icon = t === 'certificate' ? Award : t === 'flagship' ? Trophy : Ticket;
           return (
             <button
               key={t}
               type="button"
-              onClick={() => switchType(t)}
+              onClick={() => switchView(t)}
               className={clsx(
                 CARD,
                 'p-4 text-left transition-colors cursor-pointer',
@@ -321,8 +352,8 @@ export function AdminPaymentsManager() {
               <div className="flex items-center justify-between gap-3">
                 <span className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-[#FAF6F3]">
                   <Icon className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
-                  {TYPE_META[t].label}
-                  <span className="font-mono text-[11px] font-semibold text-slate-400">₹99</span>
+                  {VIEW_META[t].label}
+                  <span className="font-mono text-[11px] font-semibold text-slate-400">₹{VIEW_META[t].fee}</span>
                 </span>
                 {tm.pending > 0 && (
                   <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 text-[11px] font-bold">
@@ -339,15 +370,15 @@ export function AdminPaymentsManager() {
                 </span>
                 <span>
                   <strong className="block font-serif text-lg text-slate-900 dark:text-[#FAF6F3]">
-                    ₹{(tm.verified * 99).toLocaleString('en-IN')}
+                    ₹{tm.collected.toLocaleString('en-IN')}
                   </strong>
                   collected
                 </span>
                 <span>
                   <strong className="block font-serif text-lg text-slate-900 dark:text-[#FAF6F3]">
-                    {t === 'pass' ? metrics.pass.checkedIn : metrics.certificate.toDeliver}
+                    {t === 'certificate' ? metrics.certificate.toDeliver : metrics[t].checkedIn}
                   </strong>
-                  {t === 'pass' ? 'checked in' : 'to deliver'}
+                  {t === 'certificate' ? 'to deliver' : 'checked in'}
                 </span>
               </div>
             </button>
@@ -419,7 +450,7 @@ export function AdminPaymentsManager() {
         {/* Queue */}
         <div className={clsx(CARD, 'overflow-hidden')}>
           <div className="px-4 py-2.5 border-b border-slate-100 dark:border-[#3D1418] font-mono text-[10px] uppercase tracking-wider text-slate-500 flex justify-between">
-            <span>{TYPE_META[type].short} submissions</span>
+            <span>{VIEW_META[view].short} submissions</span>
             <span>{items.length}{items.length === 500 ? '+' : ''}</span>
           </div>
           <ul className="max-h-[70vh] overflow-y-auto divide-y divide-slate-100 dark:divide-[#200A0E]">
@@ -488,7 +519,7 @@ export function AdminPaymentsManager() {
               <dl className="p-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-xs">
                 <dt className="text-slate-500">Purchase</dt>
                 <dd className="text-slate-800 dark:text-slate-200 font-semibold">
-                  {TYPE_META[selected.type].label}
+                  {VIEW_META[viewOf(selected)].label}
                   {selected.amountInr != null && <span className="font-mono"> · ₹{selected.amountInr}</span>}
                 </dd>
 
@@ -562,7 +593,7 @@ export function AdminPaymentsManager() {
                   </>
                 )}
 
-                <dt className="text-slate-500">{TYPE_META[selected.type].other}</dt>
+                <dt className="text-slate-500">{OTHER_LABEL[selected.type]}</dt>
                 <dd className="text-slate-700 dark:text-slate-300">
                   {selected.otherPurchaseStatus ? STATUS_LABEL[selected.otherPurchaseStatus] : 'Not purchased'}
                 </dd>

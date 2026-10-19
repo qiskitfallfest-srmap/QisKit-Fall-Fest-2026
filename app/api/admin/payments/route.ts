@@ -8,14 +8,16 @@ import { COMBINED_FLAGSHIP_CERTIFICATE_INR, isCombinedFlagshipTxn } from '@/lib/
 export const dynamic = 'force-dynamic';
 
 /**
- * Admin review queue for the two ₹99 Easebuzz purchases.
- *   type=pass         -> festival_pass_claims (General Offline Pass)
+ * Admin review queue for the Easebuzz purchases.
+ *   type=pass         -> festival_pass_claims; tier=general_offline (₹99) or flagship_offline (₹499)
  *   type=certificate  -> certificate_payment_submissions (masterclass certificate)
  * Both are normalized to one PaymentItem shape so the console renders a single queue.
  */
 
 type PaymentType = 'pass' | 'certificate';
 type ReviewStatus = 'pending' | 'verified' | 'rejected';
+type PassTier = 'general_offline' | 'flagship_offline';
+const PASS_TIERS: PassTier[] = ['general_offline', 'flagship_offline'];
 
 const PASS_STATUS: Record<ReviewStatus, string> = {
   pending: 'claimed_provisional',
@@ -44,50 +46,59 @@ async function requireAdmin() {
   return session && session.isAdmin ? session : null;
 }
 
-async function countBy(table: string, column: string, value: string | boolean) {
-  const { count } = await supabaseAdmin
-    .from(table)
-    .select('*', { count: 'exact', head: true })
-    .eq(column, value);
+type Filters = Record<string, string | boolean>;
+
+async function countBy(table: string, filters: Filters) {
+  let query = supabaseAdmin.from(table).select('*', { count: 'exact', head: true });
+  for (const [column, value] of Object.entries(filters)) query = query.eq(column, value);
+  const { count } = await query;
   return count || 0;
 }
 
-async function loadMetrics() {
-  const [
-    passPending,
-    passVerified,
-    passRejected,
-    passCheckedIn,
-    certPending,
-    certVerified,
-    certRejected,
-    certToDeliverRes,
-  ] = await Promise.all([
-    countBy('festival_pass_claims', 'status', PASS_STATUS.pending),
-    countBy('festival_pass_claims', 'status', PASS_STATUS.verified),
-    countBy('festival_pass_claims', 'status', PASS_STATUS.rejected),
-    countBy('festival_pass_claims', 'checked_in', true),
-    countBy('certificate_payment_submissions', 'status', CERT_STATUS.pending),
-    countBy('certificate_payment_submissions', 'status', CERT_STATUS.verified),
-    countBy('certificate_payment_submissions', 'status', CERT_STATUS.rejected),
-    supabaseAdmin
-      .from('certificate_payment_submissions')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', CERT_STATUS.verified)
-      .is('delivered_at', null),
+// Sum of amount_inr over verified rows: a Flagship Pass is ₹499, so "collected" cannot be count x ₹99
+async function sumVerified(table: string, filters: Filters) {
+  let query = supabaseAdmin.from(table).select('amount_inr').eq('status', 'verified');
+  for (const [column, value] of Object.entries(filters)) query = query.eq(column, value);
+  const { data } = await query.limit(10000);
+  return (data || []).reduce((sum: number, r: any) => sum + (Number(r.amount_inr) || 0), 0);
+}
+
+async function passMetrics(tier: PassTier) {
+  const t = { pass_tier: tier };
+  const [pending, verified, rejected, checkedIn, collected] = await Promise.all([
+    countBy('festival_pass_claims', { ...t, status: PASS_STATUS.pending }),
+    countBy('festival_pass_claims', { ...t, status: PASS_STATUS.verified }),
+    countBy('festival_pass_claims', { ...t, status: PASS_STATUS.rejected }),
+    countBy('festival_pass_claims', { ...t, checked_in: true }),
+    sumVerified('festival_pass_claims', t),
   ]);
+  return { pending, verified, rejected, checkedIn, collected };
+}
+
+async function loadMetrics() {
+  const [general, flagship, certPending, certVerified, certRejected, certCollected, certToDeliverRes] =
+    await Promise.all([
+      passMetrics('general_offline'),
+      passMetrics('flagship_offline'),
+      countBy('certificate_payment_submissions', { status: CERT_STATUS.pending }),
+      countBy('certificate_payment_submissions', { status: CERT_STATUS.verified }),
+      countBy('certificate_payment_submissions', { status: CERT_STATUS.rejected }),
+      sumVerified('certificate_payment_submissions', {}),
+      supabaseAdmin
+        .from('certificate_payment_submissions')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', CERT_STATUS.verified)
+        .is('delivered_at', null),
+    ]);
 
   return {
-    pass: {
-      pending: passPending,
-      verified: passVerified,
-      rejected: passRejected,
-      checkedIn: passCheckedIn,
-    },
+    general,
+    flagship,
     certificate: {
       pending: certPending,
       verified: certVerified,
       rejected: certRejected,
+      collected: certCollected,
       toDeliver: certToDeliverRes.count || 0,
     },
   };
@@ -103,12 +114,15 @@ export async function GET(request: NextRequest) {
     const type: PaymentType = searchParams.get('type') === 'certificate' ? 'certificate' : 'pass';
     const status = searchParams.get('status') || 'pending';
     const search = sanitizeSearch(searchParams.get('search'));
+    const tierParam = searchParams.get('tier') as PassTier | null;
+    const tier = type === 'pass' && tierParam && PASS_TIERS.includes(tierParam) ? tierParam : null;
 
     const table = type === 'pass' ? 'festival_pass_claims' : 'certificate_payment_submissions';
     const nameColumn = type === 'pass' ? 'user_name' : 'candidate_name';
     const statusMap = type === 'pass' ? PASS_STATUS : CERT_STATUS;
 
     let query = supabaseAdmin.from(table).select('*').order('created_at', { ascending: true });
+    if (tier) query = query.eq('pass_tier', tier);
 
     if (status === 'checked_in' && type === 'pass') {
       query = query.eq('checked_in', true);
@@ -218,6 +232,7 @@ export async function GET(request: NextRequest) {
       return {
         id: r.id,
         type,
+        passTier: type === 'pass' ? r.pass_tier || 'general_offline' : null,
         name: (type === 'pass' ? r.user_name : r.candidate_name) || email,
         email,
         institution: r.institution || null,

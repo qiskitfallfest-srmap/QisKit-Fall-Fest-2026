@@ -249,9 +249,12 @@ export default async function FlagshipPassGuidePage() {
 
           <Step n={5} title="Submit your receipt on the dashboard">
             <p>
-              Save the Easebuzz receipt and note the <strong>Transaction ID</strong> (for example E26101518BKHN3). Then, on
-              your Flagship Pass card, click <strong>I have paid: submit receipt</strong> and enter that Transaction ID with
-              the receipt.
+              Save the Easebuzz receipt. Then, on your Flagship Pass card, click <strong>I have paid: submit receipt</strong>{' '}
+              and enter the transaction ID with the receipt.
+            </p>
+            <p>
+              The receipt shows two IDs. Enter the <strong>Easebuzz Transaction ID</strong>, which starts with E followed by
+              digits (for example E26101518BKHN3). Do not enter the Application Transaction ID.
             </p>
             <div className="flex gap-3 p-4 rounded-xl border border-[rgba(108,21,30,0.16)] dark:border-[rgba(240,120,132,0.20)] bg-white dark:bg-[#1A0A0C] text-sm">
               <Receipt className="w-4 h-4 mt-0.5 flex-none text-[#7D111C] dark:text-[#F07A86]" />

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import type { AdminPhase2Data, AdminPhase2Member, AdminPhase2Row, AdminPhase2Stage } from '@/app/api/admin/phase2/route';
 import { PROBLEM_STATEMENTS } from '@/data/learning/problem-statements';
+import { CERTIFICATE_FEE_INR } from '@/lib/payments';
 
 const PS_TITLE_MAP = new Map(PROBLEM_STATEMENTS.map((ps) => [ps.id, ps.title]));
 
@@ -188,6 +189,19 @@ function MemberPayments({
                             <p className="text-[11px] text-slate-500 dark:text-slate-400">
                               ₹{claim.amountInr} · {formatIst(claim.submittedAt)}
                             </p>
+                            {claim.certificate && (
+                              <p className="text-[11px] text-sky-700 dark:text-sky-300">
+                                {claim.certificate.combined
+                                  ? `+ certificate on the same receipt (₹${claim.amountInr + CERTIFICATE_FEE_INR})`
+                                  : 'Certificate paid separately'}
+                                {' · '}
+                                {claim.certificate.status === 'verified'
+                                  ? 'verified'
+                                  : claim.certificate.status === 'rejected'
+                                    ? 'rejected'
+                                    : 'to verify in Payments'}
+                              </p>
+                            )}
                             {claim.status === 'rejected' && claim.adminNotes && (
                               <p className="text-[11px] text-rose-600 dark:text-rose-300">{claim.adminNotes}</p>
                             )}

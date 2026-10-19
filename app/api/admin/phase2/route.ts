@@ -59,6 +59,8 @@ export interface AdminPhase2Claim {
   adminNotes: string | null;
   submittedAt: string;
   checkedIn: boolean;
+  /** The member's certificate payment, if any; combined = paid on the same Easebuzz receipt as this pass */
+  certificate: { status: string; combined: boolean } | null;
 }
 
 export interface AdminPhase2Member {
@@ -153,8 +155,22 @@ async function loadData(): Promise<AdminPhase2Data> {
         adminNotes: c.admin_notes || null,
         submittedAt: c.created_at,
         checkedIn: Boolean(c.checked_in),
+        certificate: null,
       })
     );
+
+    const { data: certs } = await supabaseAdmin
+      .from('certificate_payment_submissions')
+      .select('user_email, status, transaction_reference')
+      .in('user_email', payingEmails);
+    (certs || []).forEach((c: any) => {
+      const claim = claimByEmail.get(String(c.user_email).toLowerCase());
+      if (!claim) return;
+      claim.certificate = {
+        status: c.status,
+        combined: String(c.transaction_reference).toUpperCase() === claim.transactionReference.toUpperCase(),
+      };
+    });
   }
 
   const deadlinePassed = Date.now() > Date.parse(PHASE1_DEADLINE_ISO);
