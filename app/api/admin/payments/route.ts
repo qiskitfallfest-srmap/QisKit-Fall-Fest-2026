@@ -3,6 +3,7 @@ import { getServerSession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { checkCertificateEligibility, mintCertificate } from '@/lib/certificate';
 import { resolveCertificateName } from '@/lib/certificate-name';
+import { COMBINED_FLAGSHIP_CERTIFICATE_INR, isCombinedFlagshipTxn } from '@/lib/payments';
 
 export const dynamic = 'force-dynamic';
 
@@ -140,7 +141,10 @@ export async function GET(request: NextRequest) {
         ? supabaseAdmin.from(otherTable).select('user_email, status').in('user_email', emails)
         : Promise.resolve({ data: [] as any[] }),
       txns.length
-        ? supabaseAdmin.from(otherTable).select('transaction_reference').in('transaction_reference', txns)
+        ? supabaseAdmin
+            .from(otherTable)
+            .select(type === 'pass' ? 'transaction_reference, user_email' : 'transaction_reference, user_email, pass_tier')
+            .in('transaction_reference', txns)
         : Promise.resolve({ data: [] as any[] }),
       type === 'certificate' && emails.length
         ? supabaseAdmin
@@ -154,9 +158,13 @@ export async function GET(request: NextRequest) {
     for (const r of otherByEmailRes.data || []) {
       otherStatusByEmail.set(String(r.user_email).toLowerCase(), toReviewStatus(r.status));
     }
-    const txnsInOther = new Set(
-      (otherByTxnRes.data || []).map((r: any) => String(r.transaction_reference).toUpperCase())
-    );
+    const otherByTxn = new Map<string, { email: string; passTier: string | null }>();
+    for (const r of (otherByTxnRes.data || []) as any[]) {
+      otherByTxn.set(String(r.transaction_reference).toUpperCase(), {
+        email: String(r.user_email || '').toLowerCase(),
+        passTier: r.pass_tier ?? null,
+      });
+    }
     const serialByEmail = new Map<string, string>();
     for (const r of issuedRes.data || []) {
       serialByEmail.set(String(r.user_email).toLowerCase(), r.serial_number);
@@ -185,7 +193,17 @@ export async function GET(request: NextRequest) {
       const txn = String(r.transaction_reference).toUpperCase();
       const flags: string[] = [];
 
-      if (txnsInOther.has(txn)) {
+      const other = otherByTxn.get(txn);
+      const combined =
+        other &&
+        (type === 'pass'
+          ? isCombinedFlagshipTxn(r.pass_tier, email, other.email)
+          : isCombinedFlagshipTxn(other.passTier, other.email, email));
+      if (combined) {
+        flags.push(
+          `Combined payment: Flagship Pass + certificate on one receipt (should total ₹${COMBINED_FLAGSHIP_CERTIFICATE_INR})`
+        );
+      } else if (other) {
         flags.push(
           type === 'pass'
             ? 'Transaction ID also submitted for a certificate'

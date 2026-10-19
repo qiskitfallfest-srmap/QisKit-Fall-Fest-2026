@@ -666,6 +666,14 @@ export function OnCampusPassCard() {
                     Every team member pays ₹{FLAGSHIP_PASS_FEE_INR} separately and submits their own receipt here.
                     Pay before the timer ends; unpaid places may be released.
                   </p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                    On Easebuzz this pass is called the Diamond Pass, and it appears only after you tick &ldquo;I confirm
+                    the above&rdquo;.{' '}
+                    <Link href="/flagship-pass-guide" className="font-semibold text-burgundy dark:text-[#F07A86] hover:underline">
+                      Read the payment guide before paying
+                    </Link>
+                    .
+                  </p>
                   <div className="flex flex-wrap items-center gap-2.5">
                     <a
                       href={flagship.gatewayUrl}

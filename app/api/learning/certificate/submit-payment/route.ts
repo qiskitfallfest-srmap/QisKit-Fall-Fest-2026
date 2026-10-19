@@ -8,6 +8,7 @@ import {
   TXN_FORMAT_HINT,
   TXN_PATTERN,
   isCertificateDeliveryMode,
+  isCombinedFlagshipTxn,
   normalizeBankRef,
   normalizeTxn,
   receiptUrlPrefix,
@@ -65,7 +66,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Transaction ID must be unused: not by another candidate, not by any offline pass
+    // 2. Transaction ID must be unused: not by another candidate, not by any offline pass,
+    // except the candidate's own Flagship Pass bought together with the certificate (₹598)
     const [{ data: certTxnRows }, { data: passTxnRows }] = await Promise.all([
       supabase
         .from('certificate_payment_submissions')
@@ -74,12 +76,13 @@ export async function POST(request: NextRequest) {
         .limit(1),
       supabase
         .from('festival_pass_claims')
-        .select('id')
+        .select('id, user_email, pass_tier')
         .ilike('transaction_reference', normalizedTxn)
         .limit(1),
     ]);
 
-    if (passTxnRows?.length) {
+    const passTxn = passTxnRows?.[0];
+    if (passTxn && !isCombinedFlagshipTxn(passTxn.pass_tier, passTxn.user_email, normalizedEmail)) {
       return NextResponse.json(
         {
           error:

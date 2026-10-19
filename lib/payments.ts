@@ -23,6 +23,24 @@ export function passTierLabel(tier: string | null | undefined): string {
 }
 export const CERTIFICATE_FEE_INR = 99;
 
+// Shortlisted hackathon members may buy the Flagship Pass and the certificate in one
+// Easebuzz payment. That single transaction ID is then valid for both submissions.
+export const COMBINED_FLAGSHIP_CERTIFICATE_INR = FLAGSHIP_PASS_FEE_INR + CERTIFICATE_FEE_INR;
+
+/** True when a pass claim and a certificate submission may share one transaction ID. */
+export function isCombinedFlagshipTxn(
+  passTier: string | null | undefined,
+  passEmail: string | null | undefined,
+  certificateEmail: string | null | undefined
+): boolean {
+  return (
+    passTier === 'flagship_offline' &&
+    !!passEmail &&
+    !!certificateEmail &&
+    passEmail.trim().toLowerCase() === certificateEmail.trim().toLowerCase()
+  );
+}
+
 export const MAX_RECEIPT_SIZE_MB = 15;
 
 // ceremony = printed copy in person, email = digital copy by email, both = printed and emailed.

@@ -5,6 +5,7 @@ import {
   FLAGSHIP_PASS_FEE_INR,
   PASS_FEE_INR,
   TXN_PATTERN,
+  isCombinedFlagshipTxn,
   normalizeBankRef,
   normalizeTxn,
   receiptUrlPrefix,
@@ -76,7 +77,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Transaction ID must not belong to another attendee, or to a certificate purchase
+    // 3. Transaction ID must not belong to another attendee, or to a certificate purchase,
+    // except a Flagship Pass the attendee bought together with their own certificate (₹598)
     const [{ data: txnOwners }, { data: certTxnRows }] = await Promise.all([
       supabaseAdmin
         .from('festival_pass_claims')
@@ -85,12 +87,16 @@ export async function POST(request: NextRequest) {
         .limit(1),
       supabaseAdmin
         .from('certificate_payment_submissions')
-        .select('id')
+        .select('id, user_email')
         .ilike('transaction_reference', normalizedTxn)
         .limit(1),
     ]);
 
-    if (certTxnRows?.length) {
+    const certTxn = certTxnRows?.[0];
+    if (
+      certTxn &&
+      !isCombinedFlagshipTxn(isFlagship ? 'flagship_offline' : 'general_offline', normalizedEmail, certTxn.user_email)
+    ) {
       return NextResponse.json(
         {
           error:

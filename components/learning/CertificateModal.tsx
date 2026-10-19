@@ -28,6 +28,7 @@ import {
   CERTIFICATE_DELIVERY_LABEL,
   CERTIFICATE_FEE_INR,
   CERTIFICATE_PRINT_NOTE,
+  COMBINED_FLAGSHIP_CERTIFICATE_INR,
   type CertificateDeliveryMode,
   deliveryIncludesPrint,
   deliveryStatusText,
@@ -631,7 +632,7 @@ export function CertificateModal({
                     <p className="flex items-start gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
                       <Info className="w-3.5 h-3.5 shrink-0 mt-px" />
                       <span>
-                        The certificate is a separate payment from the On-Campus Pass. Your General Offline or Flagship Pass does not cover it, and a Transaction ID already used for a pass cannot be reused here.
+                        The certificate is a separate payment from the On-Campus Pass. Your General Offline or Flagship Pass does not cover it, and a Transaction ID already used for a General Offline Pass cannot be reused here. Hackathon finalists who paid the Flagship Pass and the certificate together (₹{COMBINED_FLAGSHIP_CERTIFICATE_INR}) can submit that same Transaction ID here.
                       </span>
                     </p>
                   </div>

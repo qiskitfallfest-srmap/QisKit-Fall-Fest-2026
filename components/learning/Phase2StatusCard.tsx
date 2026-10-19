@@ -162,6 +162,13 @@ function PaymentChecklist({ phase2, isLead }: { phase2: Phase2TeamStatus; isLead
           after everyone else.
         </p>
       )}
+      <Link
+        href="/flagship-pass-guide"
+        className="inline-flex items-center gap-1 text-xs font-semibold text-burgundy dark:text-[#F07A86] hover:underline"
+      >
+        How to fill the Easebuzz form (what to select)
+        <ArrowRight className="w-3.5 h-3.5" />
+      </Link>
     </div>
   );
 }
