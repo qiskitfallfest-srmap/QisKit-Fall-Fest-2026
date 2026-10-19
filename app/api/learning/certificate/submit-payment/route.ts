@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
 import { checkCertificateEligibility } from '@/lib/certificate';
+import { resolveCertificateName } from '@/lib/certificate-name';
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 import {
   CERTIFICATE_DELIVERY_LABEL,
@@ -121,7 +122,7 @@ export async function POST(request: NextRequest) {
 
     const fields = {
       user_email: normalizedEmail,
-      candidate_name: session.fullName || normalizedEmail.split('@')[0],
+      candidate_name: await resolveCertificateName(normalizedEmail, session.fullName || normalizedEmail.split('@')[0]),
       transaction_reference: normalizedTxn,
       bank_reference: trimmedBankRef,
       receipt_url: trimmedReceipt,

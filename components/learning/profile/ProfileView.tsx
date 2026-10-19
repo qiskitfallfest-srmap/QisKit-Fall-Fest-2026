@@ -13,6 +13,7 @@ import {
   Clock,
   Hourglass,
   LayoutGrid,
+  MessageSquare,
   Loader2,
   RefreshCw,
   UserRound,
@@ -33,6 +34,15 @@ import {
   PaymentsSection,
 } from './ProfileSections';
 import { AccommodationCard } from './AccommodationCard';
+import { useCertificateName } from './CertificateNameCard';
+import {
+  RequestsSection,
+  decisionKey,
+  isDecided,
+  markDecisionsSeen,
+  readSeenDecisions,
+  useParticipantRequests,
+} from './RequestsSection';
 import { Card, StatusPill, buttonStyles, formatIst, initials, timeLeft, useResultsOut, type Tone } from './profile-ui';
 
 const TABS: { id: ProfileTab; label: string; icon: React.ElementType }[] = [
@@ -40,6 +50,7 @@ const TABS: { id: ProfileTab; label: string; icon: React.ElementType }[] = [
   { id: 'notices', label: 'Notices', icon: Bell },
   { id: 'hackathon', label: 'Hackathon', icon: Users },
   { id: 'payments', label: 'Payments', icon: Wallet },
+  { id: 'requests', label: 'Requests', icon: MessageSquare },
   { id: 'activity', label: 'Activity', icon: BookOpen },
   { id: 'account', label: 'Account', icon: UserRound },
 ];
@@ -351,11 +362,23 @@ export function ProfileView() {
 
   const { data: overview, error, isLoading, mutate } = useProfileOverview();
   const { data: status, mutate: mutateStatus } = usePassStatus();
+  const { data: requestsData } = useParticipantRequests();
+  const { data: certName } = useCertificateName();
   const [seen, setSeen] = useState<Set<string>>(new Set());
+  const [seenDecisions, setSeenDecisions] = useState<Set<string>>(new Set());
+  const newForm = searchParams?.get('new');
 
   useEffect(() => {
     setSeen(readSeenNoticeIds());
+    setSeenDecisions(readSeenDecisions());
   }, []);
+
+  // Decisions count as read once the Requests tab has been opened
+  useEffect(() => {
+    if (tab === 'requests' && requestsData?.requests.length) {
+      markDecisionsSeen(requestsData.requests.filter(isDecided).map(decisionKey));
+    }
+  }, [tab, requestsData?.requests]);
 
   // Opening the Notices tab marks everything there as read (the badge and dots clear on next visit)
   useEffect(() => {
@@ -376,7 +399,43 @@ export function ProfileView() {
     [pathname, router, searchParams]
   );
 
-  const actions = useMemo(() => deriveActionItems(overview, status), [overview, status]);
+  const unseenDecisions = useMemo(
+    () =>
+      (requestsData?.requests || []).filter(
+        (r) => isDecided(r) && r.requester_email === overview?.profile.email && !seenDecisions.has(decisionKey(r))
+      ),
+    [requestsData, seenDecisions, overview?.profile.email]
+  );
+
+  const actions = useMemo<ActionItem[]>(
+    () => [
+      ...deriveActionItems(overview, status),
+      ...(overview?.certificate.eligible && certName && !certName.locked && !certName.confirmedAt
+        ? [
+            {
+              id: 'certificate-name',
+              kind: 'action' as const,
+              title: 'Confirm the name for your certificate',
+              detail: 'It is printed exactly as you confirm it and cannot be changed after the certificate is issued.',
+              cta: { label: 'Review name', tab: 'account' as const },
+            },
+          ]
+        : []),
+      ...unseenDecisions.map((r) => ({
+        id: `decision-${r.id}`,
+        kind: 'action' as const,
+        title:
+          r.kind === 'question'
+            ? 'The organizers replied to your question'
+            : r.status === 'approved'
+              ? 'Your team change request was approved'
+              : 'Your team change request was not approved',
+        detail: r.admin_response ? r.admin_response.slice(0, 140) : undefined,
+        cta: { label: 'View reply', tab: 'requests' as const },
+      })),
+    ],
+    [overview, status, unseenDecisions, certName]
+  );
   const unread = overview?.notices.filter((n) => !seen.has(n.id)).length ?? 0;
 
   if (isLoading) {
@@ -406,6 +465,7 @@ export function ProfileView() {
   const badges: Partial<Record<ProfileTab, number>> = {
     overview: actions.filter((a) => a.kind === 'action').length,
     notices: unread,
+    requests: unseenDecisions.length,
   };
 
   return (
@@ -459,6 +519,13 @@ export function ProfileView() {
         {tab === 'notices' && <NoticesSection notices={overview.notices} seen={seen} />}
         {tab === 'hackathon' && <HackathonSection overview={overview} status={status} />}
         {tab === 'payments' && <PaymentsSection overview={overview} status={status} />}
+        {tab === 'requests' && (
+          <RequestsSection
+            overview={overview}
+            initialForm={newForm === 'question' || newForm === 'roster' ? newForm : null}
+            onRosterChanged={() => mutate()}
+          />
+        )}
         {tab === 'activity' && <ActivitySection overview={overview} />}
         {tab === 'account' && (
           <AccountSection

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { checkCertificateEligibility, mintCertificate } from '@/lib/certificate';
+import { resolveCertificateName } from '@/lib/certificate-name';
 
 export const dynamic = 'force-dynamic';
 
@@ -344,7 +345,8 @@ export async function PATCH(request: NextRequest) {
         } else {
           const minted = await mintCertificate({
             userEmail: sub.user_email,
-            recipientName: sub.candidate_name || sub.user_email,
+            // The participant's confirmed certificate name wins over the name captured at payment
+            recipientName: await resolveCertificateName(sub.user_email, sub.candidate_name || sub.user_email),
             orderId: null,
             averageScore: eligibility.averageQuizScore,
           });

@@ -3,7 +3,7 @@ import { PHASE1_RESULTS_ANNOUNCE_ISO } from '@/lib/constants';
 import type { PassStatusResponse } from '@/hooks/use-pass-status';
 import type { ProfileOverview } from '@/hooks/use-profile-overview';
 
-export type ProfileTab = 'overview' | 'notices' | 'hackathon' | 'payments' | 'activity' | 'account';
+export type ProfileTab = 'overview' | 'notices' | 'hackathon' | 'payments' | 'requests' | 'activity' | 'account';
 
 export interface ActionItem {
   id: string;

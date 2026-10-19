@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
 import { verifyPaymentSignature, razorpayInstance } from '@/lib/razorpay';
 import { checkCertificateEligibility, mintCertificate } from '@/lib/certificate';
+import { resolveCertificateName } from '@/lib/certificate-name';
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 
 export async function POST(req: NextRequest) {
@@ -95,10 +96,10 @@ export async function POST(req: NextRequest) {
     const eligibility = await checkCertificateEligibility(normalizedEmail);
 
     const averageScore = eligibility.averageQuizScore || 85.0;
-    const recipientName =
-      (updatedOrder?.metadata as any)?.candidateName ||
-      session.fullName ||
-      session.email.split('@')[0];
+    const recipientName = await resolveCertificateName(
+      normalizedEmail,
+      (updatedOrder?.metadata as any)?.candidateName || session.fullName || session.email.split('@')[0]
+    );
 
     // 5. Mint official academic certificate and upload to Supabase Storage
     const mintResult = await mintCertificate({

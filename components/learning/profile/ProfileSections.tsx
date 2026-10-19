@@ -25,6 +25,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import { Phase2StatusCard } from '@/components/learning/Phase2StatusCard';
+import { CertificateNameCard } from './CertificateNameCard';
 import { FLAGSHIP_PASS_FEE_INR, passTierLabel } from '@/lib/payments';
 import { REGISTRATION_URL, WHATSAPP_COMMUNITY_URL } from '@/lib/constants';
 import { NOTICE_SEVERITY_LABEL, type Notice } from '@/lib/notices';
@@ -156,10 +157,15 @@ export function HackathonSection({ overview, status }: { overview: ProfileOvervi
         title={team.name}
         description={team.isLead ? 'You are the team lead.' : 'You are a team member.'}
         action={
-          <Link href="/learning/hackathon" className={buttonStyles.secondary}>
-            Workspace
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/learning/profile?tab=requests&new=roster" className={buttonStyles.secondary}>
+              {team.isLead ? 'Request a team change' : 'Request to leave'}
+            </Link>
+            <Link href="/learning/hackathon" className={buttonStyles.secondary}>
+              Workspace
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
         }
       >
         <dl className="divide-y divide-slate-100 dark:divide-[#250D11] -mt-2">
@@ -668,6 +674,7 @@ export function ActivitySection({ overview }: { overview: ProfileOverview }) {
         </Card>
       </div>
 
+      {overview.certificate.eligible && <CertificateNameCard eligible id="certificate-name" />}
       <CertificateCard overview={overview} />
     </div>
   );
@@ -795,6 +802,8 @@ export function AccountSection({ overview, onNameSaved }: { overview: ProfileOve
           from your sign-in email.
         </p>
       </Card>
+
+      <CertificateNameCard eligible={overview.certificate.eligible} />
 
       <Card title="Help">
         <div className="flex flex-col sm:flex-row gap-2">

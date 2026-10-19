@@ -13,6 +13,7 @@ import { AdminPaymentsManager } from '@/components/learning/AdminPaymentsManager
 import { AdminPhase2View } from '@/components/learning/AdminPhase2View';
 import { AdminNoticesManager } from '@/components/learning/AdminNoticesManager';
 import { AdminAccommodationView } from '@/components/learning/AdminAccommodationView';
+import { AdminRequestsView } from '@/components/learning/AdminRequestsView';
 import { AdminWhitelistManager } from '@/components/learning/AdminWhitelistManager';
 import { AdminOverridesPanel } from '@/components/learning/AdminOverridesPanel';
 import {
@@ -29,6 +30,7 @@ import {
   Award,
   Trophy,
   Bell,
+  Inbox,
   BedDouble,
 } from 'lucide-react';
 
@@ -44,7 +46,8 @@ type AdminTab =
   | 'coding'
   | 'payments'
   | 'notices'
-  | 'accommodation';
+  | 'accommodation'
+  | 'requests';
 
 const NAV_GROUPS: { label: string; items: { id: AdminTab; label: string; icon: React.ElementType }[] }[] = [
   {
@@ -58,6 +61,7 @@ const NAV_GROUPS: { label: string; items: { id: AdminTab; label: string; icon: R
     label: 'Participants',
     items: [
       { id: 'whitelist', label: 'Access & Whitelist', icon: Users },
+      { id: 'requests', label: 'Requests & Questions', icon: Inbox },
       { id: 'payments', label: 'Payments', icon: Ticket },
       { id: 'accommodation', label: 'Accommodation', icon: BedDouble },
       { id: 'notices', label: 'Notices', icon: Bell },
@@ -162,6 +166,7 @@ export default function AdminConsolePage() {
     payments: <AdminPaymentsManager />,
     accommodation: <AdminAccommodationView />,
     notices: <AdminNoticesManager />,
+    requests: <AdminRequestsView />,
     competitions: <AdminCompetitionsView />,
     coding: <AdminCodingChallengeView />,
     quizzes: <AdminQuizzesManager />,
