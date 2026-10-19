@@ -105,6 +105,8 @@ export interface DailyCompetition {
   urlPlaceholder: string;
   submissionDeadline: string;
   prize: string;
+  /** Cash prize in INR by award rank (index 0 = first place). Unset until the split is confirmed. */
+  prizePool?: number[];
 }
 
 export type VerticalType =

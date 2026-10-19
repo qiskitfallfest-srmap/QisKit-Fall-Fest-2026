@@ -48,3 +48,6 @@ __pycache__/
 # Local scratch & temporary backups
 .tmp/
 .vercel
+
+# Jury evaluation workbook (participant emails and verdicts)
+QFF2026_Online_Competitions_Evaluation_Master.xlsx

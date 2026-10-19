@@ -25,6 +25,7 @@ export const DAILY_COMPETITIONS: Record<number, DailyCompetition> = {
     urlPlaceholder: 'https://www.instagram.com/reel/... or https://www.linkedin.com/posts/...',
     submissionDeadline: '17 October 2026, 11:59 PM IST',
     prize: 'Up to ₹10,000',
+    prizePool: [5000, 3000, 2000],
   },
   2: {
     day: 2,
@@ -51,6 +52,7 @@ export const DAILY_COMPETITIONS: Record<number, DailyCompetition> = {
     urlPlaceholder: 'https://canva.com/design/... or https://drive.google.com/file/...',
     submissionDeadline: '17 October 2026, 11:59 PM IST',
     prize: 'Up to ₹5,000',
+    prizePool: [3000, 2000],
   },
   3: {
     day: 3,
@@ -77,5 +79,6 @@ export const DAILY_COMPETITIONS: Record<number, DailyCompetition> = {
     urlPlaceholder: 'https://docs.google.com/document/d/... (ensure link is set to Anyone with link can view)',
     submissionDeadline: '17 October 2026, 11:59 PM IST',
     prize: 'Up to ₹5,000',
+    prizePool: [3000, 2000],
   },
 };

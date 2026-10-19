@@ -8,7 +8,19 @@ import type {
   AdminCompetitionResultStage,
   AdminCompetitionResultsData,
 } from '@/app/api/admin/competition-results/route';
-import { COMPETITION_TYPES, OUTCOME_LABEL, type CompetitionType } from '@/lib/competition-results';
+import {
+  AWARD_RANKS,
+  AWARD_RANK_LABEL,
+  COMPETITION_TYPES,
+  OUTCOME_LABEL,
+  formatInr,
+  type CompetitionType,
+} from '@/lib/competition-results';
+import { DAILY_COMPETITIONS } from '@/data/learning/competitions';
+
+const COMPETITION_PRIZE_POOL = Object.fromEntries(
+  Object.values(DAILY_COMPETITIONS).map((c) => [c.type, c.prizePool])
+) as Record<CompetitionType, number[] | undefined>;
 
 type Filter = 'undecided' | 'ready' | 'released' | 'all';
 
@@ -84,6 +96,7 @@ function Stat({ label, value, detail }: { label: string; value: React.ReactNode;
 interface Draft {
   status: string;
   score: string;
+  awardRank: string;
   feedback: string;
 }
 
@@ -188,6 +201,7 @@ export function AdminCompetitionResultsView() {
       drafts[r.id] || {
         status: r.outcome ? r.juryStatus : 'under_review',
         score: r.score != null ? String(r.score) : '',
+        awardRank: r.awardRank != null ? String(r.awardRank) : '',
         feedback: r.feedback,
       }
     );
@@ -232,7 +246,8 @@ export function AdminCompetitionResultsView() {
           <h2 className="font-serif text-xl font-semibold text-slate-900 dark:text-[#FAF6F3]">Competition Results</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Decide and release results entry by entry. Participants see nothing until a result is released; after that,
-            changes to the decision, score or comment show up for them immediately.
+            changes to the decision, score or comment show up for them immediately. A released winner with a placement
+            appears on the Results tab of every participant&apos;s profile; admins see unreleased placements there as a preview.
           </p>
         </div>
         <button type="button" className={btnSecondary} onClick={() => { setLoading(true); load(); }} disabled={busy}>
@@ -358,7 +373,10 @@ export function AdminCompetitionResultsView() {
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span className={clsx('px-2 py-0.5 rounded-full text-[11px] font-semibold', STAGE_TONE[r.stage])}>{STAGE_LABEL[r.stage]}</span>
                         {r.outcome && (
-                          <span className={clsx('text-[11px] font-semibold', OUTCOME_TONE[r.outcome])}>{OUTCOME_LABEL[r.outcome]}</span>
+                          <span className={clsx('text-[11px] font-semibold', OUTCOME_TONE[r.outcome])}>
+                            {OUTCOME_LABEL[r.outcome]}
+                            {r.awardRank != null && ` · ${AWARD_RANK_LABEL[r.awardRank]}`}
+                          </span>
                         )}
                         {r.notesCount > 0 && (
                           <span className="inline-flex items-center gap-0.5 text-[11px] text-slate-500 dark:text-slate-400" title="Internal jury notes">
@@ -391,6 +409,21 @@ export function AdminCompetitionResultsView() {
                                   ))}
                                 </select>
                               </label>
+                              {draft.status === 'winner' && (
+                                <label className="text-xs text-slate-600 dark:text-slate-300 space-y-1">
+                                  <span className="block">Placement</span>
+                                  <select className={clsx(inputCls, 'cursor-pointer')} value={draft.awardRank}
+                                    onChange={(e) => setDrafts((d) => ({ ...d, [r.id]: { ...draft, awardRank: e.target.value } }))}>
+                                    <option value="">Not placed</option>
+                                    {AWARD_RANKS.filter((rank) => rank <= (COMPETITION_PRIZE_POOL[r.type]?.length ?? 3)).map((rank) => (
+                                      <option key={rank} value={rank}>
+                                        {AWARD_RANK_LABEL[rank]}
+                                        {COMPETITION_PRIZE_POOL[r.type]?.[rank - 1] != null && ` · ${formatInr(COMPETITION_PRIZE_POOL[r.type]![rank - 1])}`}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </label>
+                              )}
                               <label className="text-xs text-slate-600 dark:text-slate-300 space-y-1">
                                 <span className="block">Score (0–100)</span>
                                 <input type="number" min={0} max={100} step="0.01" className={clsx(inputCls, 'w-28')} value={draft.score}
@@ -411,12 +444,12 @@ export function AdminCompetitionResultsView() {
                             <button type="button" className={btnSecondary} disabled={busy}
                               onClick={async () => {
                                 const ok = await act(
-                                  { action: 'save', id: r.id, status: draft.status, score: draft.score, feedback: draft.feedback },
+                                  { action: 'save', id: r.id, status: draft.status, score: draft.score, awardRank: draft.status === 'winner' ? draft.awardRank : '', feedback: draft.feedback },
                                   'Saved.'
                                 );
                                 if (ok) setDrafts((d) => { const n = { ...d }; delete n[r.id]; return n; });
                               }}>
-                              Save decision, score & comment
+                              Save decision, placement, score & comment
                             </button>
                             <p className="text-[11px] text-slate-500 dark:text-slate-400">
                               {r.stage === 'released'

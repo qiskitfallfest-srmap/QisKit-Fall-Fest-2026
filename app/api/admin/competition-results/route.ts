@@ -5,6 +5,8 @@ import { invalidateCache } from '@/lib/redis';
 import {
   COMPETITION_TYPES,
   OUTCOME_BY_STATUS,
+  isAwardRank,
+  type AwardRank,
   type CompetitionOutcome,
   type CompetitionType,
 } from '@/lib/competition-results';
@@ -26,6 +28,8 @@ export interface AdminCompetitionResultRow {
   outcome: CompetitionOutcome | null;
   score: number | null;
   maxScore: number;
+  /** Placement among the winners; null when not placed or before the award_rank migration */
+  awardRank: AwardRank | null;
   feedback: string;
   releasedAt: string | null;
   notesCount: number;
@@ -49,7 +53,7 @@ async function requireAdmin() {
 }
 
 async function loadData(): Promise<AdminCompetitionResultsData> {
-  const [subsRes, evalsRes] = await Promise.all([
+  const [subsRes, evalsRes, ranksRes] = await Promise.all([
     supabaseAdmin
       .from('competition_submissions')
       .select('id, email, competition_type, submission_url, submission_title, submitted_at'),
@@ -57,9 +61,16 @@ async function loadData(): Promise<AdminCompetitionResultsData> {
       .from('submission_evaluations')
       .select('target_id, status, score, max_score, participant_feedback, result_released_at, comments')
       .in('category', COMPETITION_TYPES),
+    // Separate query so the view keeps working before the award_rank migration
+    supabaseAdmin
+      .from('submission_evaluations')
+      .select('target_id, award_rank')
+      .in('category', COMPETITION_TYPES)
+      .not('award_rank', 'is', null),
   ]);
   if (subsRes.error) throw subsRes.error;
   if (evalsRes.error) throw evalsRes.error;
+  const rankById = new Map((ranksRes.data || []).map((ev: any) => [String(ev.target_id), Number(ev.award_rank)]));
 
   const subs = subsRes.data || [];
   const evalById = new Map((evalsRes.data || []).map((ev: any) => [String(ev.target_id), ev]));
@@ -95,6 +106,7 @@ async function loadData(): Promise<AdminCompetitionResultsData> {
         outcome,
         score: ev?.score != null ? Number(ev.score) : null,
         maxScore: ev?.max_score != null ? Number(ev.max_score) : 100,
+        awardRank: juryStatus === 'winner' && isAwardRank(rankById.get(String(s.id))) ? (rankById.get(String(s.id)) as AwardRank) : null,
         feedback: ev?.participant_feedback || '',
         releasedAt,
         notesCount: Array.isArray(ev?.comments) ? ev.comments.length : 0,
@@ -182,6 +194,8 @@ export async function POST(request: NextRequest) {
           }
           update.status = body.status;
           update.is_next_round = ['winner', 'finalist', 'shortlisted'].includes(body.status);
+          // Only winners hold a placement
+          if (body.status !== 'winner' && body.awardRank !== undefined) update.award_rank = null;
           // Without a decision there is nothing to show; a later decision needs a fresh release
           if (body.status === 'under_review') update.result_released_at = null;
         }
@@ -192,12 +206,25 @@ export async function POST(request: NextRequest) {
           }
           update.score = score;
         }
+        if (body.awardRank !== undefined && body.status === 'winner') {
+          const rank = body.awardRank === '' || body.awardRank == null ? null : Number(body.awardRank);
+          if (rank != null && !isAwardRank(rank)) {
+            return NextResponse.json({ error: 'Placement must be 1st, 2nd or 3rd.' }, { status: 400 });
+          }
+          update.award_rank = rank;
+        }
         if (body.feedback !== undefined) {
           update.participant_feedback = String(body.feedback || '').trim().slice(0, 2000) || null;
         }
         const { error } = await supabaseAdmin
           .from('submission_evaluations')
           .upsert(update, { onConflict: 'category,target_id' });
+        if (error?.code === '23505') {
+          return NextResponse.json(
+            { error: 'Another entry in this competition already holds that placement. Clear it there first.' },
+            { status: 409 }
+          );
+        }
         if (error) throw error;
         results.push({ id, ok: true });
         break;

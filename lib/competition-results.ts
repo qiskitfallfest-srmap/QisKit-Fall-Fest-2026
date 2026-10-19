@@ -61,3 +61,95 @@ export function toCompetitionResult(ev: EvaluationRow | null | undefined): Compe
     releasedAt: ev.result_released_at,
   };
 }
+
+/* ───────────────────────── Placements (winners board) ───────────────────────── */
+
+export type AwardRank = 1 | 2 | 3;
+
+export const AWARD_RANKS: AwardRank[] = [1, 2, 3];
+
+export const AWARD_RANK_LABEL: Record<AwardRank, string> = {
+  1: 'First Place',
+  2: 'Second Place',
+  3: 'Third Place',
+};
+
+export function isAwardRank(value: unknown): value is AwardRank {
+  return value === 1 || value === 2 || value === 3;
+}
+
+export function formatInr(amount: number): string {
+  return `₹${amount.toLocaleString('en-IN')}`;
+}
+
+export interface CompetitionWinner {
+  /** Public ID, e.g. QFF26-REELS-1, verifiable at /awards/[id] once released */
+  awardId: string;
+  rank: AwardRank;
+  name: string;
+  institution: string | null;
+  entryTitle: string | null;
+  /** The winning work: reel link or uploaded poster/essay file */
+  entryUrl: string | null;
+  prizeInr: number | null;
+  isYou: boolean;
+  /** false = admin preview of a placement that is not announced yet */
+  released: boolean;
+  releasedAt: string | null;
+}
+
+export interface CompetitionWinnersBoard {
+  type: CompetitionType;
+  title: string;
+  prizePool: number[] | null;
+  winners: CompetitionWinner[];
+}
+
+/** The viewer's own entry in one competition and where it stands. */
+export interface YourCompetitionEntry {
+  type: CompetitionType;
+  title: string;
+  entryTitle: string | null;
+  entryUrl: string | null;
+  submittedAt: string | null;
+  /**
+   * pending: winners of this competition are not announced yet.
+   * not_selected: announced, and this entry is not among the winners (explicitly or by default).
+   */
+  status: CompetitionOutcome | 'pending';
+  awardId: string | null;
+  rank: AwardRank | null;
+  feedback: string | null;
+}
+
+export interface CompetitionWinnersResponse {
+  success: boolean;
+  boards: CompetitionWinnersBoard[];
+  yourEntries: YourCompetitionEntry[];
+  /** True when the boards include unreleased placements (admins only). */
+  preview: boolean;
+}
+
+/* ───────────────────────── Public award IDs ───────────────────────── */
+
+const AWARD_CODE: Record<CompetitionType, string> = { reels: 'REELS', poster: 'POSTER', essay: 'ESSAY' };
+
+/** Public site used in shared images and captions, so links point at production even from a local preview. */
+export const AWARD_SITE_URL = 'https://www.qffsrmap2026.com';
+
+/** e.g. QFF26-REELS-1. One placement per competition and rank, so no lookup table is needed. */
+export function awardId(type: CompetitionType, rank: AwardRank): string {
+  return `QFF26-${AWARD_CODE[type]}-${rank}`;
+}
+
+export function parseAwardId(id: string): { type: CompetitionType; rank: AwardRank } | null {
+  const m = /^QFF26-([A-Z]+)-([1-3])$/.exec(String(id).trim().toUpperCase());
+  if (!m) return null;
+  const type = (Object.keys(AWARD_CODE) as CompetitionType[]).find((t) => AWARD_CODE[t] === m[1]);
+  const rank = Number(m[2]);
+  return type && isAwardRank(rank) ? { type, rank } : null;
+}
+
+export function awardUrl(type: CompetitionType, rank: AwardRank): string {
+  return `${AWARD_SITE_URL}/awards/${awardId(type, rank)}`;
+}

@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import clsx from 'clsx';
+import { mutate as mutateKey } from 'swr';
 import {
   AlertCircle,
   ArrowRight,
@@ -16,6 +17,7 @@ import {
   MessageSquare,
   Loader2,
   RefreshCw,
+  Trophy,
   UserRound,
   Users,
   Wallet,
@@ -38,6 +40,13 @@ import {
 import { AccommodationCard, OPEN_ACCOMMODATION_EVENT, useAccommodation } from './AccommodationCard';
 import { useCertificateName } from './CertificateNameCard';
 import {
+  COMPETITION_WINNERS_KEY,
+  ResultsSection,
+  YourAwardCallout,
+  boardsWithWinners,
+  useCompetitionWinners,
+} from './ResultsSection';
+import {
   RequestsSection,
   decisionKey,
   isDecided,
@@ -50,6 +59,7 @@ import { Card, StatusPill, buttonStyles, formatIst, initials, timeLeft, useResul
 const TABS: { id: ProfileTab; label: string; icon: React.ElementType }[] = [
   { id: 'overview', label: 'Overview', icon: LayoutGrid },
   { id: 'notices', label: 'Notices', icon: Bell },
+  { id: 'results', label: 'Results', icon: Trophy },
   { id: 'hackathon', label: 'Hackathon', icon: Users },
   { id: 'payments', label: 'Payments', icon: Wallet },
   { id: 'requests', label: 'Requests', icon: MessageSquare },
@@ -316,6 +326,7 @@ function OverviewSection({
 
   return (
     <div className="space-y-6">
+      <YourAwardCallout onOpen={() => onTab('results')} />
       <ActionList items={actions} onTab={onTab} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -390,6 +401,9 @@ export function ProfileView() {
   const { data: requestsData } = useParticipantRequests();
   const { data: certName } = useCertificateName();
   const { data: accommodation } = useAccommodation();
+  const { data: winners } = useCompetitionWinners();
+  // The Results tab appears once there is something announced (or, for admins, something to preview)
+  const hasResults = boardsWithWinners(winners).length > 0;
   const [seen, setSeen] = useState<Set<string>>(new Set());
   const [seenDecisions, setSeenDecisions] = useState<Set<string>>(new Set());
   const newForm = searchParams?.get('new');
@@ -505,7 +519,7 @@ export function ProfileView() {
         className="md:sticky md:top-[82px] xl:top-[88px] z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 bg-[#FAF7F4]/95 dark:bg-[#100405]/95 backdrop-blur border-b border-slate-200 dark:border-[#3D1418]"
       >
         <div role="tablist" className="flex gap-1 overflow-x-auto no-scrollbar -mb-px">
-          {TABS.map((t) => {
+          {TABS.filter((t) => t.id !== 'results' || hasResults || tab === 'results').map((t) => {
             const active = t.id === tab;
             const count = badges[t.id] || 0;
             return (
@@ -544,6 +558,7 @@ export function ProfileView() {
           <OverviewSection overview={overview} status={status} actions={actions} seen={seen} onTab={setTab} />
         )}
         {tab === 'notices' && <NoticesSection notices={overview.notices} seen={seen} />}
+        {tab === 'results' && <ResultsSection isAdmin={overview.profile.isAdmin} />}
         {tab === 'hackathon' && <HackathonSection overview={overview} status={status} onRosterChanged={() => mutate()} />}
         {tab === 'payments' && <PaymentsSection overview={overview} status={status} />}
         {tab === 'requests' && (
@@ -560,6 +575,8 @@ export function ProfileView() {
             onNameSaved={(name) => {
               mutate({ ...overview, profile: { ...overview.profile, fullName: name } }, { revalidate: true });
               mutateStatus();
+              // Award cards and the winners board print the profile name
+              mutateKey(COMPETITION_WINNERS_KEY);
             }}
           />
         )}
