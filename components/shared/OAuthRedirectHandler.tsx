@@ -22,11 +22,17 @@ export function OAuthRedirectHandler() {
       if (event === 'SIGNED_IN' && session?.access_token && !isSyncingRef.current) {
         isSyncingRef.current = true;
         try {
-          await fetch('/api/auth/session', {
+          const res = await fetch('/api/auth/session', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ accessToken: session.access_token }),
           });
+          const data = await res.json().catch(() => null);
+          if (res.ok && data?.session) {
+            const { invalidateClientSessionCache } = await import('@/lib/session-client');
+            invalidateClientSessionCache();
+            window.dispatchEvent(new CustomEvent('qff_auth_change', { detail: data.session }));
+          }
 
           // Clean URL hash
           if (window.location.hash && window.history?.replaceState) {
@@ -66,11 +72,17 @@ export function OAuthRedirectHandler() {
       }
 
       if (session?.access_token) {
-        await fetch('/api/auth/session', {
+        const res = await fetch('/api/auth/session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ accessToken: session.access_token }),
         });
+        const data = await res.json().catch(() => null);
+        if (res.ok && data?.session) {
+          const { invalidateClientSessionCache } = await import('@/lib/session-client');
+          invalidateClientSessionCache();
+          window.dispatchEvent(new CustomEvent('qff_auth_change', { detail: data.session }));
+        }
 
         // Clean up hash fragment from the URL for security and clean navigation
         if (window.history?.replaceState) {

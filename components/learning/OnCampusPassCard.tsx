@@ -38,6 +38,7 @@ import {
 } from '@/lib/payments';
 import { usePassStatus } from '@/hooks/use-pass-status';
 import { handleGoogleSignInDirect } from '@/components/learning/AuthGate';
+import { supabase } from '@/lib/supabase';
 
 function formatIst(iso: string) {
   return new Date(iso).toLocaleString('en-IN', {
@@ -212,6 +213,8 @@ export function OnCampusPassCard() {
 
   // AuthGate re-announces the same session on every load; refetch only when the account changes
   const loadedEmail = data ? (data.isAuthenticated ? data.user?.email ?? null : null) : undefined;
+  const loadedEmailRef = useRef(loadedEmail);
+  loadedEmailRef.current = loadedEmail;
 
   useEffect(() => {
     try {
@@ -220,14 +223,30 @@ export function OnCampusPassCard() {
   }, []);
 
   useEffect(() => {
-    if (loadedEmail === undefined) return;
     const handleAuthChange = (e: Event) => {
       const nextEmail = (e as CustomEvent).detail?.email?.trim().toLowerCase() ?? null;
-      if (nextEmail !== loadedEmail) mutate();
+      if (nextEmail !== loadedEmailRef.current) mutate();
     };
     window.addEventListener('qff_auth_change', handleAuthChange);
-    return () => window.removeEventListener('qff_auth_change', handleAuthChange);
-  }, [loadedEmail, mutate]);
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (
+        event === 'SIGNED_IN' ||
+        event === 'INITIAL_SESSION' ||
+        event === 'TOKEN_REFRESHED' ||
+        event === 'SIGNED_OUT'
+      ) {
+        mutate();
+      }
+    });
+
+    return () => {
+      window.removeEventListener('qff_auth_change', handleAuthChange);
+      subscription.unsubscribe();
+    };
+  }, [mutate]);
 
   function markGatewayOpened() {
     setGatewayOpened(true);

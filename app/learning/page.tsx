@@ -156,13 +156,41 @@ function LearningDashboardContent() {
       }
     };
     window.addEventListener('qff_auth_change', handleAuthChange);
-    return () => window.removeEventListener('qff_auth_change', handleAuthChange);
+
+    // Also subscribe to Supabase auth state changes for seamless sign-in sync
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, sbSession) => {
+      if (
+        event === 'SIGNED_IN' ||
+        event === 'INITIAL_SESSION' ||
+        event === 'TOKEN_REFRESHED'
+      ) {
+        if (sbSession?.user) {
+          await fetchSessionUser(true);
+          fetchProgress();
+          fetchCompetitions();
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setSessionUser(null);
+        setProgress({});
+        setCompetitions({});
+      }
+    });
+
+    return () => {
+      window.removeEventListener('qff_auth_change', handleAuthChange);
+      subscription.unsubscribe();
+    };
   }, []);
 
-  async function fetchSessionUser() {
+  async function fetchSessionUser(forceRefresh = false) {
     try {
-      const { getClientSession } = await import('@/lib/session-client');
-      const data = await getClientSession();
+      const { getClientSession, invalidateClientSessionCache } = await import('@/lib/session-client');
+      if (forceRefresh) {
+        invalidateClientSessionCache();
+      }
+      const data = await getClientSession(forceRefresh);
       if (data?.session) {
         setSessionUser({
           email: data.session.email,
