@@ -87,7 +87,7 @@ export function deriveActionItems(overview: ProfileOverview | undefined, status:
             id: 'flagship-lead-pay',
             kind: 'action',
             title: `Pay your ₹${FLAGSHIP_PASS_FEE_INR} Flagship Pass to confirm the desk`,
-            detail: 'Every teammate has paid. Your payment completes the team.',
+            detail: 'Every teammate has paid. Select Diamond Pass on Easebuzz (tick "I confirm the above" first).',
             dueIso: phase2.payBy,
             cta: { label: 'Pay now', href: PASS_HREF },
           });
@@ -97,7 +97,7 @@ export function deriveActionItems(overview: ProfileOverview | undefined, status:
           id: 'flagship-member-pay',
           kind: 'action',
           title: `Pay your ₹${FLAGSHIP_PASS_FEE_INR} Flagship Pass`,
-          detail: 'Pay on Easebuzz and upload the receipt from your own account. Your lead pays after all members.',
+          detail: 'Select Diamond Pass on Easebuzz (tick "I confirm the above" first). Check the payment guide before paying.',
           dueIso: phase2.payBy,
           cta: { label: 'Pay now', href: PASS_HREF },
         });

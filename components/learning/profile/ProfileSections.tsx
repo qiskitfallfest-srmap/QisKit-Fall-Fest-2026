@@ -418,10 +418,28 @@ export function TeamPaymentsCard({ status, email }: { status: PassStatusResponse
       )}
 
       {!isConfirmed && phase2.paymentLinkPublished && (
-        <div className="mt-4">
+        <div className="mt-4 p-3 rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/80 dark:bg-amber-950/20 text-xs text-amber-900 dark:text-amber-200/90 space-y-1">
+          <p className="font-semibold text-amber-800 dark:text-amber-300">
+            Important: Select &ldquo;Diamond Pass&rdquo; (₹{FLAGSHIP_PASS_FEE_INR}) on Easebuzz
+          </p>
+          <p className="leading-relaxed">
+            Tick &ldquo;I confirm the above&rdquo; first to reveal the Diamond Pass. Do not select the ₹99 Platinum pass.{' '}
+            <Link href="/flagship-pass-guide" className="font-semibold text-burgundy dark:text-[#F07A86] hover:underline inline-flex items-center gap-0.5">
+              Read the payment guide <ArrowRight className="h-3 w-3 inline" />
+            </Link>
+          </p>
+        </div>
+      )}
+
+      {!isConfirmed && phase2.paymentLinkPublished && (
+        <div className="mt-4 flex flex-wrap items-center gap-2.5">
           <Link href={PASS_HREF} className={buttonStyles.primary}>
             <Wallet className="h-4 w-4" />
             Go to Flagship Pass payment
+          </Link>
+          <Link href="/flagship-pass-guide" className={buttonStyles.secondary}>
+            Payment guide
+            <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
       )}
