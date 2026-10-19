@@ -8,6 +8,30 @@ import {
   invalidatePlatformConfigCache,
 } from '@/lib/redis';
 
+async function countWhere(table: string, filters: Record<string, string | boolean | null>) {
+  let query = supabaseAdmin.from(table).select('*', { count: 'exact', head: true });
+  for (const [column, value] of Object.entries(filters)) {
+    query = value === null ? query.is(column, null) : query.eq(column, value);
+  }
+  const { count, error } = await query;
+  // A missing table (migration not run yet) reads as nothing waiting
+  return error ? 0 : count || 0;
+}
+
+/**
+ * Work waiting on an organizer. Not cached: these change on every review action
+ * and the header should reflect them immediately.
+ */
+async function loadAttention() {
+  const [passPending, certPending, certToDeliver, accommodationRequested] = await Promise.all([
+    countWhere('festival_pass_claims', { status: 'claimed_provisional' }),
+    countWhere('certificate_payment_submissions', { status: 'pending_verification' }),
+    countWhere('certificate_payment_submissions', { status: 'verified', delivered_at: null }),
+    countWhere('accommodation_requests', { needs_accommodation: true, status: 'requested' }),
+  ]);
+  return { passPending, certPending, certToDeliver, accommodationRequested };
+}
+
 export async function GET() {
   const session = await getServerSession();
   if (!session || !session.isAdmin) {
@@ -46,7 +70,7 @@ export async function GET() {
       }
     );
 
-    return NextResponse.json(payload);
+    return NextResponse.json({ ...payload, attention: await loadAttention() });
   } catch (error) {
     console.error('Error fetching admin config:', error);
     return NextResponse.json({ error: 'Failed to fetch config' }, { status: 500 });
