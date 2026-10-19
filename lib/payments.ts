@@ -25,12 +25,39 @@ export const CERTIFICATE_FEE_INR = 99;
 
 export const MAX_RECEIPT_SIZE_MB = 15;
 
-export type CertificateDeliveryMode = 'ceremony' | 'email';
+// ceremony = printed copy in person, email = digital copy by email, both = printed and emailed.
+// The SVG download on the portal is available in every case.
+export type CertificateDeliveryMode = 'ceremony' | 'email' | 'both';
 
 export const CERTIFICATE_DELIVERY_LABEL: Record<CertificateDeliveryMode, string> = {
-  ceremony: 'Collect in person at the valedictory ceremony',
-  email: 'Receive by email',
+  ceremony: 'Printed copy at the valedictory ceremony',
+  email: 'Digital copy by email',
+  both: 'Both: printed copy and digital copy by email',
 };
+
+export function isCertificateDeliveryMode(value: unknown): value is CertificateDeliveryMode {
+  return typeof value === 'string' && Object.prototype.hasOwnProperty.call(CERTIFICATE_DELIVERY_LABEL, value);
+}
+
+export const deliveryIncludesPrint = (mode: string | null | undefined) => mode === 'ceremony' || mode === 'both';
+export const deliveryIncludesEmail = (mode: string | null | undefined) => mode === 'email' || mode === 'both';
+
+/** Participant-facing sentence for where their certificate delivery stands. */
+export function deliveryStatusText(mode: string | null | undefined, delivered: boolean, email: string): string {
+  if (mode === 'ceremony') {
+    return delivered ? 'Printed copy collected at the valedictory ceremony.' : 'Collect your printed certificate in person at the valedictory ceremony.';
+  }
+  if (mode === 'both') {
+    return delivered
+      ? `Printed copy collected and digital copy emailed to ${email}.`
+      : `Collect your printed certificate at the valedictory ceremony. A digital copy will also be emailed to ${email}.`;
+  }
+  return delivered ? `Emailed to ${email}.` : `A copy will be emailed to ${email}.`;
+}
+
+// Printed copies are handed over on campus, so collecting one needs an on-campus pass.
+// The pass does not cover the certificate fee: the two are separate payments.
+export const CERTIFICATE_PRINT_NOTE = `Collecting the printed copy means attending on campus with a General Offline Pass (₹${PASS_FEE_INR}) or Flagship Pass (₹${FLAGSHIP_PASS_FEE_INR}). The pass does not cover the ₹${CERTIFICATE_FEE_INR} certificate fee.`;
 
 export type ReceiptFolder = 'pass-receipts' | 'certificate-receipts';
 

@@ -26,11 +26,20 @@ import {
 } from 'lucide-react';
 import { Phase2StatusCard } from '@/components/learning/Phase2StatusCard';
 import { CertificateNameCard } from './CertificateNameCard';
-import { FLAGSHIP_PASS_FEE_INR, passTierLabel } from '@/lib/payments';
+import { mutate } from 'swr';
+import {
+  CERTIFICATE_DELIVERY_LABEL,
+  CERTIFICATE_PRINT_NOTE,
+  FLAGSHIP_PASS_FEE_INR,
+  type CertificateDeliveryMode,
+  deliveryIncludesPrint,
+  deliveryStatusText,
+  passTierLabel,
+} from '@/lib/payments';
 import { REGISTRATION_URL, WHATSAPP_COMMUNITY_URL } from '@/lib/constants';
 import { NOTICE_SEVERITY_LABEL, type Notice } from '@/lib/notices';
 import type { PassStatusResponse } from '@/hooks/use-pass-status';
-import type { ProfileOverview } from '@/hooks/use-profile-overview';
+import { PROFILE_OVERVIEW_KEY, type ProfileOverview } from '@/hooks/use-profile-overview';
 import {
   Card,
   DetailRow,
@@ -373,6 +382,7 @@ function PaymentRow({
   note,
   receiptUrl,
   action,
+  detail,
 }: {
   title: string;
   amount: number;
@@ -382,6 +392,7 @@ function PaymentRow({
   note?: string | null;
   receiptUrl?: string | null;
   action?: React.ReactNode;
+  detail?: React.ReactNode;
 }) {
   return (
     <li className="py-3.5 first:pt-0 last:pb-0 space-y-2">
@@ -407,6 +418,7 @@ function PaymentRow({
           {note}
         </p>
       )}
+      {detail}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
         {receiptUrl && (
           <a
@@ -422,6 +434,117 @@ function PaymentRow({
         {action}
       </div>
     </li>
+  );
+}
+
+function CertificateDeliveryChoice({
+  mode,
+  delivered,
+  email,
+  hasPass,
+}: {
+  mode: CertificateDeliveryMode | null;
+  delivered: boolean;
+  email: string;
+  hasPass: boolean;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [choice, setChoice] = useState<CertificateDeliveryMode | ''>(mode || '');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  async function save() {
+    if (!choice) return;
+    setBusy(true);
+    setError('');
+    try {
+      const res = await fetch('/api/user/certificate-delivery', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deliveryMode: choice }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.success) throw new Error(json.error || 'Could not update your delivery choice.');
+      await mutate(PROFILE_OVERVIEW_KEY);
+      setEditing(false);
+    } catch (err: any) {
+      setError(err?.message || 'Could not update your delivery choice.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const showPrintNote = deliveryIncludesPrint(editing ? choice : mode) && !delivered;
+
+  return (
+    <div className="rounded-md bg-slate-50 dark:bg-[#1C0A0D] px-2.5 py-2 space-y-2 text-xs text-slate-700 dark:text-slate-300">
+      {editing ? (
+        <fieldset className="space-y-1.5">
+          <legend className="font-semibold text-slate-800 dark:text-slate-200 mb-1">How do you want to receive it?</legend>
+          {(Object.keys(CERTIFICATE_DELIVERY_LABEL) as CertificateDeliveryMode[]).map((m) => (
+            <label key={m} className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="profile-certificate-delivery"
+                value={m}
+                checked={choice === m}
+                onChange={() => setChoice(m)}
+                className="accent-[#800020]"
+              />
+              {CERTIFICATE_DELIVERY_LABEL[m]}
+            </label>
+          ))}
+          <div className="flex gap-2 pt-1">
+            <button type="button" onClick={save} disabled={busy || !choice || choice === mode} className={buttonStyles.primary}>
+              {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              Save
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => {
+                setEditing(false);
+                setChoice(mode || '');
+                setError('');
+              }}
+              className={buttonStyles.secondary}
+            >
+              Cancel
+            </button>
+          </div>
+        </fieldset>
+      ) : (
+        <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <span>
+            <span className="font-semibold">Delivery:</span>{' '}
+            {mode ? deliveryStatusText(mode, delivered, email) : 'Not chosen yet.'}
+          </span>
+          {!delivered && (
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="font-semibold text-burgundy dark:text-[#E89BA5] hover:underline cursor-pointer"
+            >
+              {mode ? 'Change' : 'Choose'}
+            </button>
+          )}
+        </p>
+      )}
+      {showPrintNote && (
+        <p className={clsx(!hasPass && 'text-amber-800 dark:text-amber-300')}>
+          {CERTIFICATE_PRINT_NOTE}
+          {!hasPass && (
+            <>
+              {' '}You have no on-campus pass yet.{' '}
+              <Link href={PASS_HREF} className="font-semibold underline">
+                Get a pass
+              </Link>
+            </>
+          )}
+        </p>
+      )}
+      {error && <p className="text-rose-600 dark:text-rose-300">{error}</p>}
+    </div>
   );
 }
 
@@ -474,16 +597,18 @@ export function PaymentsSection({ overview, status }: { overview: ProfileOvervie
                     ? { tone: 'success', label: 'Delivered' }
                     : passTone(cert.status === 'pending_verification' ? 'claimed_provisional' : cert.status)
                 }
-                note={
-                  cert.status === 'rejected'
-                    ? cert.admin_notes || 'The receipt could not be matched.'
-                    : cert.delivery_mode === 'email'
-                      ? 'Delivery: by email.'
-                      : cert.delivery_mode === 'ceremony'
-                        ? 'Delivery: collect in person at the valedictory ceremony.'
-                        : null
-                }
+                note={cert.status === 'rejected' ? cert.admin_notes || 'The receipt could not be matched.' : null}
                 receiptUrl={cert.receipt_url}
+                detail={
+                  cert.status !== 'rejected' && (
+                    <CertificateDeliveryChoice
+                      mode={cert.delivery_mode}
+                      delivered={Boolean(cert.delivered_at)}
+                      email={overview.profile.email}
+                      hasPass={Boolean(pass && pass.status !== 'rejected')}
+                    />
+                  )
+                }
                 action={
                   <button
                     type="button"
@@ -542,7 +667,7 @@ export function CertificateCard({ overview }: { overview: ProfileOverview }) {
   return (
     <Card
       title="Masterclass certificate"
-      description="Optional ₹99 verified certificate after all lectures and quizzes."
+      description="Optional ₹99 verified certificate after all lectures and quizzes. Separate from the on-campus pass."
       action={<StatusPill tone={state.tone}>{state.label}</StatusPill>}
     >
       {!c.alreadyIssued && (

@@ -4,10 +4,10 @@ import { checkCertificateEligibility } from '@/lib/certificate';
 import { resolveCertificateName } from '@/lib/certificate-name';
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 import {
-  CERTIFICATE_DELIVERY_LABEL,
   CERTIFICATE_FEE_INR,
   TXN_FORMAT_HINT,
   TXN_PATTERN,
+  isCertificateDeliveryMode,
   normalizeBankRef,
   normalizeTxn,
   receiptUrlPrefix,
@@ -30,9 +30,9 @@ export async function POST(request: NextRequest) {
     const trimmedBankRef = normalizeBankRef(body.bankReference);
     const deliveryMode = String(body.deliveryMode || '');
 
-    if (!Object.prototype.hasOwnProperty.call(CERTIFICATE_DELIVERY_LABEL, deliveryMode)) {
+    if (!isCertificateDeliveryMode(deliveryMode)) {
       return NextResponse.json(
-        { error: 'Choose how you want to receive the certificate: at the valedictory ceremony or by email.' },
+        { error: 'Choose how you want to receive the certificate: printed at the valedictory ceremony, by email, or both.' },
         { status: 400 }
       );
     }

@@ -27,7 +27,10 @@ import {
 import {
   CERTIFICATE_DELIVERY_LABEL,
   CERTIFICATE_FEE_INR,
+  CERTIFICATE_PRINT_NOTE,
   type CertificateDeliveryMode,
+  deliveryIncludesPrint,
+  deliveryStatusText,
   EASEBUZZ_GATEWAY_URL,
   MAX_RECEIPT_SIZE_MB,
   TXN_FORMAT_HINT,
@@ -351,13 +354,11 @@ export function CertificateModal({
 
               {data?.paymentSubmission?.delivery_mode && (
                 <p className="text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] rounded-lg p-3 text-left">
-                  {data.paymentSubmission.delivery_mode === 'ceremony'
-                    ? data.paymentSubmission.delivered_at
-                      ? 'Collected at the valedictory ceremony.'
-                      : 'Collect your printed certificate in person at the valedictory ceremony.'
-                    : data.paymentSubmission.delivered_at
-                      ? `Emailed to ${data.userEmail || userEmail}.`
-                      : `A copy will be emailed to ${data.userEmail || userEmail}.`}
+                  {deliveryStatusText(
+                    data.paymentSubmission.delivery_mode,
+                    Boolean(data.paymentSubmission.delivered_at),
+                    data.userEmail || userEmail
+                  )}
                 </p>
               )}
 
@@ -630,7 +631,7 @@ export function CertificateModal({
                     <p className="flex items-start gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
                       <Info className="w-3.5 h-3.5 shrink-0 mt-px" />
                       <span>
-                        The certificate is a separate payment from the On-Campus Pass. A Transaction ID already used for a pass cannot be reused here.
+                        The certificate is a separate payment from the On-Campus Pass. Your General Offline or Flagship Pass does not cover it, and a Transaction ID already used for a pass cannot be reused here.
                       </span>
                     </p>
                   </div>
@@ -746,11 +747,22 @@ export function CertificateModal({
                           <span className="block text-[11px] text-slate-500 dark:text-slate-400">
                             {mode === 'ceremony'
                               ? 'Pick up the printed certificate in person at the valedictory ceremony.'
-                              : `Sent to ${data?.userEmail || userEmail} after your payment is verified.`}
+                              : mode === 'email'
+                                ? `Sent to ${data?.userEmail || userEmail} after your payment is verified.`
+                                : `Printed copy at the ceremony, and a digital copy sent to ${data?.userEmail || userEmail}.`}
                           </span>
                         </span>
                       </label>
                     ))}
+                    {deliveryIncludesPrint(deliveryMode) && (
+                      <p className="flex items-start gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1">
+                        <Info className="w-3.5 h-3.5 shrink-0 mt-px" />
+                        <span>{CERTIFICATE_PRINT_NOTE}</span>
+                      </p>
+                    )}
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                      You can change this later from your profile until the certificate is delivered.
+                    </p>
                   </div>
 
                   <div className="flex gap-2">
@@ -976,7 +988,7 @@ function CertificateAbout({ totalSessions }: { totalSessions: number }) {
     {
       icon: Printer,
       title: 'Digital and printed',
-      body: 'Download the digital copy, and collect a printed copy at the valedictory ceremony or get it by email.',
+      body: 'Download the digital copy any time. Choose a printed copy at the valedictory ceremony, a copy by email, or both.',
     },
   ];
 

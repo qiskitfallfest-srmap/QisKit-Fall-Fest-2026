@@ -19,15 +19,17 @@ import {
   Inbox,
 } from 'lucide-react';
 import clsx from 'clsx';
+import type { CertificateDeliveryMode } from '@/lib/payments';
 
 type PaymentType = 'pass' | 'certificate';
 type ReviewStatus = 'pending' | 'verified' | 'rejected';
 type StatusFilter = ReviewStatus | 'all' | 'checked_in' | 'to_deliver';
-type DeliveryMode = 'ceremony' | 'email';
+type DeliveryMode = CertificateDeliveryMode;
 
 const DELIVERY_LABEL: Record<DeliveryMode, string> = {
   ceremony: 'Valedictory ceremony (in person)',
   email: 'Email',
+  both: 'Both: ceremony (in person) and email',
 };
 
 interface PaymentItem {
@@ -705,7 +707,11 @@ export function AdminPaymentsManager() {
                       ) : (
                         <>
                           <Check className="w-4 h-4" />
-                          {selected.deliveryMode === 'ceremony' ? 'Mark handed over at ceremony' : 'Mark emailed'}
+                          {selected.deliveryMode === 'ceremony'
+                            ? 'Mark handed over at ceremony'
+                            : selected.deliveryMode === 'both'
+                              ? 'Mark handed over and emailed'
+                              : 'Mark emailed'}
                         </>
                       )}
                     </button>

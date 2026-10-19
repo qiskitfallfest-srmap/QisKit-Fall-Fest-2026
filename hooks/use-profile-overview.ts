@@ -2,6 +2,7 @@
 
 import useSWR from 'swr';
 import type { Notice } from '@/lib/notices';
+import type { CertificateDeliveryMode } from '@/lib/payments';
 
 export const PROFILE_OVERVIEW_KEY = '/api/user/overview';
 
@@ -32,7 +33,7 @@ export interface CertificatePayment {
   amount_inr: number;
   status: 'pending_verification' | 'verified' | 'rejected' | string;
   admin_notes: string | null;
-  delivery_mode: 'ceremony' | 'email' | null;
+  delivery_mode: CertificateDeliveryMode | null;
   delivered_at: string | null;
   receipt_url: string | null;
   created_at: string;
