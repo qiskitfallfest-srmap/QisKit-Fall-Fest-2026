@@ -12,8 +12,14 @@ import {
   Search,
   Settings2,
   Copy,
+  Layers,
+  X,
+  Filter as FilterIcon,
 } from 'lucide-react';
 import type { AdminPhase2Data, AdminPhase2Member, AdminPhase2Row, AdminPhase2Stage } from '@/app/api/admin/phase2/route';
+import { PROBLEM_STATEMENTS } from '@/data/learning/problem-statements';
+
+const PS_TITLE_MAP = new Map(PROBLEM_STATEMENTS.map((ps) => [ps.id, ps.title]));
 
 type Filter = 'undecided' | 'invited' | 'accepted' | 'confirmed' | 'verify' | 'waitlisted' | 'not_selected' | 'closed' | 'all';
 
@@ -267,6 +273,9 @@ export function AdminPhase2View() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [filter, setFilter] = useState<Filter>('undecided');
+  const [selectedVertical, setSelectedVertical] = useState<string>('all');
+  const [selectedPS, setSelectedPS] = useState<string>('all');
+  const [showInsights, setShowInsights] = useState(true);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -343,15 +352,41 @@ export function AdminPhase2View() {
 
   const rows = useMemo(() => data?.rows || [], [data]);
   const rankById = useMemo(() => new Map(rows.map((r, i) => [r.teamId, i + 1])), [rows]);
+
+  const availableVerticals = useMemo(() => {
+    const set = new Set<string>();
+    rows.forEach((r) => {
+      if (r.vertical && r.vertical !== 'Unspecified') set.add(r.vertical);
+    });
+    return Array.from(set).sort();
+  }, [rows]);
+
+  const availablePS = useMemo(() => {
+    const set = new Set<string>();
+    rows.forEach((r) => {
+      if (selectedVertical === 'all' || r.vertical === selectedVertical) {
+        if (r.problemStatementId && r.problemStatementId !== 'Unspecified') set.add(r.problemStatementId);
+      }
+    });
+    return Array.from(set).sort();
+  }, [rows, selectedVertical]);
+
   const visible = useMemo(() => {
     const f = FILTERS.find((x) => x.key === filter)!;
     const q = query.trim().toLowerCase();
     return rows.filter(
       (r) =>
         f.match(r) &&
-        (!q || r.name.toLowerCase().includes(q) || r.leadEmail.toLowerCase().includes(q) || r.leadName?.toLowerCase().includes(q))
+        (selectedVertical === 'all' || r.vertical === selectedVertical) &&
+        (selectedPS === 'all' || r.problemStatementId === selectedPS) &&
+        (!q ||
+          r.name.toLowerCase().includes(q) ||
+          r.leadEmail.toLowerCase().includes(q) ||
+          r.leadName?.toLowerCase().includes(q) ||
+          r.vertical?.toLowerCase().includes(q) ||
+          r.problemStatementId?.toLowerCase().includes(q))
     );
-  }, [rows, filter, query]);
+  }, [rows, filter, query, selectedVertical, selectedPS]);
 
   const selectedRows = rows.filter((r) => selected.has(r.teamId));
   const canDecide = (r: AdminPhase2Row) => !r.offer || ['declined', 'expired', 'revoked'].includes(r.offer.status);
@@ -529,6 +564,124 @@ export function AdminPhase2View() {
         })}
       </div>
 
+      {/* Domain Track & Problem Statement Insights Card */}
+      <div className="p-4 rounded-xl border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-[#250D11] pb-3">
+          <div className="flex items-center gap-2">
+            <Layers className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-[#FAF6F3]">
+              Domain Track & Problem Statement Breakdown
+            </h3>
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              ({s.dispatched} Phase 2 offered teams)
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {(selectedVertical !== 'all' || selectedPS !== 'all') && (
+              <button
+                type="button"
+                className="text-xs text-rose-600 dark:text-rose-400 hover:underline cursor-pointer flex items-center gap-1"
+                onClick={() => { setSelectedVertical('all'); setSelectedPS('all'); }}
+              >
+                <X className="w-3 h-3" /> Clear filters
+              </button>
+            )}
+            <button
+              type="button"
+              className={btnSecondary}
+              onClick={() => setShowInsights((v) => !v)}
+            >
+              {showInsights ? 'Hide Breakdown' : 'Show Breakdown'}
+            </button>
+          </div>
+        </div>
+
+        {showInsights && (
+          <div className="space-y-4">
+            {/* Domain Verticals */}
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                Domain Verticals (Click to filter table):
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+                {Object.entries(s.verticalsBreakdown || {}).sort((a, b) => b[1].total - a[1].total).map(([vert, counts]) => {
+                  const isSelected = selectedVertical === vert;
+                  return (
+                    <button
+                      key={vert}
+                      type="button"
+                      onClick={() => {
+                        setSelectedVertical(isSelected ? 'all' : vert);
+                        setSelectedPS('all');
+                      }}
+                      className={clsx(
+                        'p-3 rounded-lg border text-left transition-all cursor-pointer space-y-1',
+                        isSelected
+                          ? 'border-burgundy bg-burgundy/5 dark:bg-burgundy/20 ring-1 ring-burgundy'
+                          : 'border-slate-200 dark:border-[#3D1418] hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50/50 dark:bg-[#1C0A0D]'
+                      )}
+                    >
+                      <p className="font-semibold text-xs text-slate-900 dark:text-[#FAF6F3] truncate" title={vert}>
+                        {vert}
+                      </p>
+                      <div className="flex items-baseline justify-between text-xs">
+                        <span className="font-bold text-slate-900 dark:text-[#FAF6F3] tabular-nums">
+                          {counts.total} teams
+                        </span>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 tabular-nums">
+                          {counts.participants} members
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400">
+                        <span className="text-emerald-700 dark:text-emerald-300 font-medium">{counts.accepted} accepted</span>
+                        <span>·</span>
+                        <span className="text-blue-700 dark:text-blue-300 font-medium">{counts.invited} invited</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Problem Statements */}
+            <div className="pt-2 border-t border-slate-100 dark:border-[#250D11]">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                Problem Statements Chosen ({Object.keys(s.problemStatementsBreakdown || {}).length} unique PS):
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(s.problemStatementsBreakdown || {})
+                  .filter(([_, info]) => selectedVertical === 'all' || info.vertical === selectedVertical)
+                  .sort((a, b) => b[1].total - a[1].total || a[0].localeCompare(b[0]))
+                  .map(([ps, info]) => {
+                    const isSelected = selectedPS === ps;
+                    return (
+                      <button
+                        key={ps}
+                        type="button"
+                        onClick={() => setSelectedPS(isSelected ? 'all' : ps)}
+                        className={clsx(
+                          'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer',
+                          isSelected
+                            ? 'bg-burgundy text-white border-burgundy'
+                            : 'bg-white dark:bg-[#100405] border-slate-200 dark:border-[#3D1418] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#1C0A0D]'
+                        )}
+                        title={PS_TITLE_MAP.get(ps) || ps}
+                      >
+                        <span className="font-mono font-bold">{ps}</span>
+                        <span className="opacity-75 tabular-nums">({info.total}t · {info.participants}p)</span>
+                        <span className={clsx(
+                          'w-1.5 h-1.5 rounded-full',
+                          info.accepted > 0 ? 'bg-emerald-500' : 'bg-blue-500'
+                        )} />
+                      </button>
+                    );
+                  })}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {showSettings && (
         <div className="p-4 rounded-xl border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] space-y-4">
           <div className="flex flex-wrap items-end gap-4">
@@ -597,10 +750,35 @@ export function AdminPhase2View() {
             </button>
           );
         })}
-        <div className="relative ml-auto">
-          <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input className={clsx(inputCls, 'pl-8 w-56')} placeholder="Search team or lead" value={query}
-            onChange={(e) => setQuery(e.target.value)} />
+
+        <div className="flex items-center gap-2 ml-auto flex-wrap">
+          <select
+            className={clsx(inputCls, 'text-xs py-1.5 cursor-pointer max-w-[160px]')}
+            value={selectedVertical}
+            onChange={(e) => { setSelectedVertical(e.target.value); setSelectedPS('all'); }}
+          >
+            <option value="all">All Tracks</option>
+            {availableVerticals.map((v) => (
+              <option key={v} value={v}>{v}</option>
+            ))}
+          </select>
+
+          <select
+            className={clsx(inputCls, 'text-xs py-1.5 cursor-pointer max-w-[130px]')}
+            value={selectedPS}
+            onChange={(e) => setSelectedPS(e.target.value)}
+          >
+            <option value="all">All PS</option>
+            {availablePS.map((ps) => (
+              <option key={ps} value={ps}>{ps}</option>
+            ))}
+          </select>
+
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input className={clsx(inputCls, 'pl-8 w-48 text-xs py-1.5')} placeholder="Search team, lead, track..." value={query}
+              onChange={(e) => setQuery(e.target.value)} />
+          </div>
         </div>
       </div>
 
@@ -633,7 +811,7 @@ export function AdminPhase2View() {
               </th>
               <th className="p-3 w-10">#</th>
               <th className="p-3">Team</th>
-              <th className="p-3">Track</th>
+              <th className="p-3">Track & Problem Statement</th>
               <th className="p-3 text-right">Score</th>
               <th className="p-3">Status</th>
               <th className="p-3 w-8" />
@@ -658,7 +836,29 @@ export function AdminPhase2View() {
                       <p className="font-medium text-slate-900 dark:text-[#FAF6F3]">{r.name}</p>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400">{r.leadName} · {r.membersCount} members</p>
                     </td>
-                    <td className="p-3 text-xs text-slate-600 dark:text-slate-300">{r.track === 'internal' ? 'Internal' : 'External'}</td>
+                    <td className="p-3">
+                      <span className="font-semibold text-xs text-slate-900 dark:text-[#FAF6F3] block">
+                        {r.vertical || 'Unspecified'}
+                      </span>
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                        <span
+                          className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-slate-100 text-slate-800 dark:bg-[#250D11] dark:text-slate-200 border border-slate-200 dark:border-[#3D1418]"
+                          title={PS_TITLE_MAP.get(r.problemStatementId) || r.problemStatementId}
+                        >
+                          {r.problemStatementId}
+                        </span>
+                        <span
+                          className={clsx(
+                            'px-1.5 py-0.5 rounded text-[10px] font-semibold',
+                            r.track === 'internal'
+                              ? 'bg-purple-100 text-purple-800 dark:bg-purple-950/50 dark:text-purple-300'
+                              : 'bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300'
+                          )}
+                        >
+                          {r.track === 'internal' ? 'SRM AP' : 'External'}
+                        </span>
+                      </div>
+                    </td>
                     <td className="p-3 text-right tabular-nums font-medium text-slate-900 dark:text-[#FAF6F3]">{r.score ?? '–'}</td>
                     <td className="p-3">
                       <div className="flex flex-wrap items-center gap-1.5">
@@ -697,7 +897,24 @@ export function AdminPhase2View() {
                   {isOpen && (
                     <tr className="border-b border-slate-200 dark:border-[#3D1418] bg-slate-50 dark:bg-[#1C0A0D]">
                       <td colSpan={7} className="p-4">
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                        <div className="space-y-4">
+                          {/* Problem Statement Card */}
+                          <div className="p-3 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] space-y-1">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Chosen Problem Statement</span>
+                              <span className="font-mono font-bold text-xs px-2 py-0.5 rounded bg-slate-100 dark:bg-[#250D11] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-[#3D1418]">
+                                {r.problemStatementId}
+                              </span>
+                            </div>
+                            <p className="text-sm font-semibold text-slate-900 dark:text-[#FAF6F3]">
+                              {PS_TITLE_MAP.get(r.problemStatementId) || r.problemStatementId}
+                            </p>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                              Domain Track: <strong className="text-slate-700 dark:text-slate-200">{r.vertical}</strong> · Quota Allocation: <strong className="text-slate-700 dark:text-slate-200">{r.track === 'internal' ? 'SRM University-AP (Internal Desk)' : 'External University Desk'}</strong>
+                            </p>
+                          </div>
+
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                           {/* Score + note */}
                           <div className="space-y-3">
                             <div className="flex items-end gap-3">
@@ -779,7 +996,8 @@ export function AdminPhase2View() {
                           </div>
                         </div>
                         <MemberPayments row={r} busy={busy} onReview={reviewClaim} />
-                      </td>
+                      </div>
+                    </td>
                     </tr>
                   )}
                 </React.Fragment>

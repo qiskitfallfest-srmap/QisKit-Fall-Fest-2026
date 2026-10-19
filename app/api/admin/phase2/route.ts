@@ -31,6 +31,8 @@ export interface AdminPhase2Row {
   name: string;
   leadName: string;
   leadEmail: string;
+  vertical: string;
+  problemStatementId: string;
   track: Phase2Track;
   membersCount: number;
   submitted: boolean;
@@ -86,6 +88,8 @@ export interface AdminPhase2Data {
     membersToPay: number;
     desks: Record<Phase2Track, { active: number; quota: number }>;
     undecided: number;
+    verticalsBreakdown: Record<string, { total: number; accepted: number; invited: number; participants: number }>;
+    problemStatementsBreakdown: Record<string, { total: number; accepted: number; invited: number; participants: number; vertical: string }>;
   };
 }
 
@@ -98,7 +102,7 @@ async function loadData(): Promise<AdminPhase2Data> {
   await sweepExpiredOffers();
 
   const [teamsRes, membersRes, evalsRes, offersRes, config, flagship] = await Promise.all([
-    supabaseAdmin.from('hackathon_teams').select('id, name, lead_name, lead_email, submitted_at, github_repo_url'),
+    supabaseAdmin.from('hackathon_teams').select('id, name, lead_name, lead_email, submitted_at, github_repo_url, vertical, problem_statement_id'),
     supabaseAdmin.from('team_members').select('team_id, email, full_name').eq('status', 'accepted'),
     supabaseAdmin
       .from('submission_evaluations')
@@ -199,6 +203,8 @@ async function loadData(): Promise<AdminPhase2Data> {
       name: t.name,
       leadName: t.lead_name,
       leadEmail: t.lead_email,
+      vertical: t.vertical || 'Unspecified',
+      problemStatementId: t.problem_statement_id || 'Unspecified',
       track: offer?.track || trackOf(t.lead_email),
       membersCount: members.length,
       submitted,
@@ -220,8 +226,34 @@ async function loadData(): Promise<AdminPhase2Data> {
   const count = (stage: AdminPhase2Stage) => rows.filter((r) => r.stage === stage).length;
   const desks = { internal: { active: 0, quota: DESKS_PER_TRACK.internal }, external: { active: 0, quota: DESKS_PER_TRACK.external } };
   const waitlistRemaining = { internal: 0, external: 0 };
+  const verticalsBreakdown: Record<string, { total: number; accepted: number; invited: number; participants: number }> = {};
+  const problemStatementsBreakdown: Record<string, { total: number; accepted: number; invited: number; participants: number; vertical: string }> = {};
+
   rows.forEach((r) => {
-    if (r.offer && ACTIVE_OFFER_STATUSES.includes(r.offer.status)) desks[r.track].active += 1;
+    if (r.offer && ACTIVE_OFFER_STATUSES.includes(r.offer.status)) {
+      desks[r.track].active += 1;
+
+      const v = r.vertical || 'Unspecified';
+      const ps = r.problemStatementId || 'Unspecified';
+      const isAccepted = ['accepted', 'confirmed'].includes(r.stage);
+      const isInvited = r.stage === 'invited';
+
+      if (!verticalsBreakdown[v]) {
+        verticalsBreakdown[v] = { total: 0, accepted: 0, invited: 0, participants: 0 };
+      }
+      verticalsBreakdown[v].total += 1;
+      verticalsBreakdown[v].participants += r.membersCount;
+      if (isAccepted) verticalsBreakdown[v].accepted += 1;
+      if (isInvited) verticalsBreakdown[v].invited += 1;
+
+      if (!problemStatementsBreakdown[ps]) {
+        problemStatementsBreakdown[ps] = { total: 0, accepted: 0, invited: 0, participants: 0, vertical: v };
+      }
+      problemStatementsBreakdown[ps].total += 1;
+      problemStatementsBreakdown[ps].participants += r.membersCount;
+      if (isAccepted) problemStatementsBreakdown[ps].accepted += 1;
+      if (isInvited) problemStatementsBreakdown[ps].invited += 1;
+    }
     if (!r.offer && WAITLIST_EVAL_STATUSES.includes(r.juryStatus || '') && !config.closedAt) waitlistRemaining[r.track] += 1;
   });
 
@@ -245,6 +277,8 @@ async function loadData(): Promise<AdminPhase2Data> {
       membersToPay: rows.reduce((n, r) => n + (r.payment?.total || 0), 0),
       desks,
       undecided: count('undecided'),
+      verticalsBreakdown,
+      problemStatementsBreakdown,
     },
   };
 }
