@@ -16,6 +16,8 @@ import { useSubmissionDeadline } from '@/hooks/use-submission-deadline';
 import { SubmissionCountdown } from '@/components/learning/SubmissionCountdown';
 import { Phase1ResultsCountdown } from '@/components/learning/Phase1ResultsCountdown';
 import { ONLINE_SUBMISSIONS_CLOSE_LABEL, isOnlineSubmissionsClosed } from '@/lib/constants';
+import type { CompetitionResult } from '@/lib/competition-results';
+import { CompetitionResultPanel, COMPETITION_OUTCOME_TONE } from '@/components/learning/CompetitionResultPanel';
 import {
   Award,
   Send,
@@ -92,6 +94,7 @@ function LearningDashboardContent() {
   }, [shouldOpenCertParam]);
 
   const [competitions, setCompetitions] = useState<Record<string, any>>({});
+  const [competitionResults, setCompetitionResults] = useState<Record<string, CompetitionResult>>({});
   const [competitionUrls, setCompetitionUrls] = useState<Record<string, string>>({});
   const [submissionModes, setSubmissionModes] = useState<Record<string, 'file' | 'url'>>({
     poster: 'file',
@@ -153,6 +156,7 @@ function LearningDashboardContent() {
         setSessionUser(null);
         setProgress({});
         setCompetitions({});
+        setCompetitionResults({});
       }
     };
     window.addEventListener('qff_auth_change', handleAuthChange);
@@ -175,6 +179,7 @@ function LearningDashboardContent() {
         setSessionUser(null);
         setProgress({});
         setCompetitions({});
+        setCompetitionResults({});
       }
     });
 
@@ -227,6 +232,7 @@ function LearningDashboardContent() {
       } else {
         setCompetitionUserOverride(null);
       }
+      setCompetitionResults(data.results || {});
       if (data.submissions) {
         setCompetitions(data.submissions);
         const urls: Record<string, string> = {};
@@ -497,6 +503,7 @@ function LearningDashboardContent() {
 
     const recordedSub = competitions[challenge.type];
     const isCurrentChallengeSubmitted = Boolean(recordedSub);
+    const recordedResult = isCurrentChallengeSubmitted ? competitionResults[challenge.type] : undefined;
     const supportsDocUpload =
       challenge.submissionType === 'url_or_document' ||
       challenge.type === 'poster' ||
@@ -615,6 +622,8 @@ function LearningDashboardContent() {
               <span>Prize Award</span>
             </div>
           </div>
+
+          {recordedResult && <CompetitionResultPanel result={recordedResult} />}
 
           <div className="bg-slate-50 dark:bg-[#1C0A0D] rounded-xl p-5 sm:p-6 border border-slate-200/80 dark:border-[#3D1418] space-y-4">
             <span className="font-mono text-xs font-bold uppercase tracking-wider text-burgundy dark:text-[#E89BA5] block">
@@ -1605,6 +1614,7 @@ function LearningDashboardContent() {
           {Object.values(DAILY_COMPETITIONS).map((comp) => {
             const sub = competitions[comp.type];
             const isSubmitted = Boolean(sub);
+            const result = isSubmitted ? competitionResults[comp.type] : undefined;
             const supportsDoc =
               comp.submissionType === 'url_or_document' ||
               comp.type === 'poster' ||
@@ -1643,14 +1653,18 @@ function LearningDashboardContent() {
                   <span
                     className={clsx(
                       'font-semibold',
-                      isSubmitted
+                      result
+                        ? COMPETITION_OUTCOME_TONE[result.outcome]
+                        : isSubmitted
                         ? 'text-emerald-700 dark:text-emerald-400'
                         : submissionsClosed
                         ? 'text-slate-500 dark:text-slate-400'
                         : 'text-burgundy dark:text-[#E89BA5]'
                     )}
                   >
-                    {isSubmitted
+                    {result
+                      ? `Result: ${result.label}`
+                      : isSubmitted
                       ? 'Submitted'
                       : submissionsClosed
                       ? 'Closed'

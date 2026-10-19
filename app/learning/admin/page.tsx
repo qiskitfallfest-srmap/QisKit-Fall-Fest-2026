@@ -9,6 +9,7 @@ import { AdminSessionsManager } from '@/components/learning/AdminSessionsManager
 import { AdminQuizzesManager } from '@/components/learning/AdminQuizzesManager';
 import { AdminCodingChallengeView } from '@/components/learning/AdminCodingChallengeView';
 import { AdminCompetitionsView } from '@/components/learning/AdminCompetitionsView';
+import { AdminCompetitionResultsView } from '@/components/learning/AdminCompetitionResultsView';
 import { AdminPaymentsManager } from '@/components/learning/AdminPaymentsManager';
 import { AdminPhase2View } from '@/components/learning/AdminPhase2View';
 import { AdminNoticesManager } from '@/components/learning/AdminNoticesManager';
@@ -40,6 +41,7 @@ type AdminTab =
   | 'phase2'
   | 'hackathon'
   | 'competitions'
+  | 'competition_results'
   | 'whitelist'
   | 'overrides'
   | 'sessions'
@@ -72,6 +74,7 @@ const NAV_GROUPS: { label: string; items: { id: AdminTab; label: string; icon: R
     label: 'Learning',
     items: [
       { id: 'competitions', label: 'Daily Competitions', icon: Award },
+      { id: 'competition_results', label: 'Competition Results', icon: ListChecks },
       { id: 'coding', label: 'Coding Challenge', icon: Terminal },
       { id: 'quizzes', label: 'Quizzes & Locking', icon: ListChecks },
       { id: 'sessions', label: 'Session Videos', icon: Video },
@@ -173,6 +176,7 @@ export default function AdminConsolePage() {
     notices: <AdminNoticesManager />,
     requests: <AdminRequestsView />,
     competitions: <AdminCompetitionsView />,
+    competition_results: <AdminCompetitionResultsView />,
     coding: <AdminCodingChallengeView />,
     quizzes: <AdminQuizzesManager />,
     sessions: <AdminSessionsManager />,

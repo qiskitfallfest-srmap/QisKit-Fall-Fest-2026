@@ -4,24 +4,22 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Trophy,
   Search,
-  Filter,
   Download,
   RefreshCw,
   ExternalLink,
   Trash2,
   FileText,
   Video,
-  FileSpreadsheet,
   AlertCircle,
   CheckCircle2,
   Loader2,
   FileCode,
-  Calendar,
   Layers,
-  Clock,
   Sliders,
   MessageSquare,
   XCircle,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { useEvaluationPolling } from './useEvaluationPolling';
 import { EvaluationDrawer } from './EvaluationDrawer';
@@ -56,6 +54,97 @@ interface Stats {
 
 const COMPETITION_EVALUATION_CATEGORIES = ['reels', 'poster', 'essay'] as const;
 
+type TrackFilter = 'all' | 'reels' | 'poster' | 'essay';
+type PipelineFilter = 'all' | 'ready' | 'shortlisted' | 'rejected' | 'downloaded' | 'documents';
+type SortBy = 'newest' | 'score';
+
+const PIPELINE_FILTERS: {
+  key: PipelineFilter;
+  label: string;
+  activeTone: string;
+  match: (s: CompetitionSubmissionItem) => boolean;
+}[] = [
+  { key: 'all', label: 'All Entries', activeTone: 'text-burgundy dark:text-[#E89BA5]', match: () => true },
+  {
+    key: 'ready',
+    label: 'Ready for Review',
+    activeTone: 'text-burgundy dark:text-[#E89BA5]',
+    match: (s) => !s.evaluation?.downloaded && s.evaluation?.status !== 'rejected',
+  },
+  { key: 'shortlisted', label: 'Shortlisted', activeTone: 'text-emerald-700 dark:text-emerald-300', match: (s) => Boolean(s.evaluation?.is_next_round) },
+  { key: 'rejected', label: 'Rejected', activeTone: 'text-rose-700 dark:text-rose-300', match: (s) => s.evaluation?.status === 'rejected' },
+  { key: 'downloaded', label: 'Downloaded & Inspected', activeTone: 'text-sky-700 dark:text-sky-300', match: (s) => Boolean(s.evaluation?.downloaded) },
+  { key: 'documents', label: 'Uploaded Docs', activeTone: 'text-amber-700 dark:text-amber-300', match: (s) => s.isDocument },
+];
+
+function TrackBadge({ type }: { type: CompetitionSubmissionItem['competition_type'] }) {
+  if (type === 'reels') {
+    return (
+      <span className="px-2 py-0.5 rounded text-2xs font-semibold bg-burgundy/10 text-burgundy border border-burgundy/20 dark:bg-burgundy/25 dark:text-[#E89BA5] dark:border-burgundy/40 flex items-center gap-1 w-fit">
+        <Video className="w-3 h-3" />
+        Day 1 Reel
+      </span>
+    );
+  }
+  if (type === 'poster') {
+    return (
+      <span className="px-2 py-0.5 rounded text-2xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800 flex items-center gap-1 w-fit">
+        <Layers className="w-3 h-3" />
+        Day 2 Poster
+      </span>
+    );
+  }
+  return (
+    <span className="px-2 py-0.5 rounded text-2xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 flex items-center gap-1 w-fit">
+      <FileText className="w-3 h-3" />
+      Day 3 Essay
+    </span>
+  );
+}
+
+function FormatBadge({ sub }: { sub: CompetitionSubmissionItem }) {
+  const url = (sub.submission_url || '').toLowerCase();
+  const base = 'px-2 py-0.5 rounded text-2xs font-semibold border flex items-center gap-1 w-fit';
+  if (sub.documentType === 'pdf') {
+    return (
+      <span className={`${base} bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800`}>
+        <FileCode className="w-3 h-3" />
+        PDF Document
+      </span>
+    );
+  }
+  if (sub.documentType === 'docx') {
+    return (
+      <span className={`${base} bg-slate-100 text-slate-700 border-slate-200 dark:bg-[#1C0A0D] dark:text-slate-300 dark:border-[#3D1418]`}>
+        <FileText className="w-3 h-3" />
+        Word (DOCX)
+      </span>
+    );
+  }
+  if (sub.competition_type === 'reels' && url.includes('drive.google')) {
+    return (
+      <span className={`${base} bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800`}>
+        <AlertCircle className="w-3 h-3" />
+        Drive Link (Needs Social URL)
+      </span>
+    );
+  }
+  const label =
+    sub.competition_type === 'reels' && url.includes('instagram.com')
+      ? 'Instagram Reel'
+      : sub.competition_type === 'reels' && (url.includes('linkedin.com') || url.includes('lnkd.in'))
+      ? 'LinkedIn Video'
+      : sub.competition_type === 'reels' && (url.includes('youtube.com') || url.includes('youtu.be'))
+      ? 'YouTube Short'
+      : 'Web Link';
+  return (
+    <span className={`${base} bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700`}>
+      <ExternalLink className="w-3 h-3" />
+      {label}
+    </span>
+  );
+}
+
 export function AdminCompetitionsView() {
   const [submissions, setSubmissions] = useState<CompetitionSubmissionItem[]>([]);
   const [stats, setStats] = useState<Stats>({
@@ -67,7 +156,10 @@ export function AdminCompetitionsView() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState<'all' | 'reels' | 'poster' | 'essay' | 'documents' | 'shortlisted' | 'rejected' | 'downloaded'>('all');
+  const [trackFilter, setTrackFilter] = useState<TrackFilter>('all');
+  const [pipelineFilter, setPipelineFilter] = useState<PipelineFilter>('all');
+  const [sortBy, setSortBy] = useState<SortBy>('newest');
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [feedbackMsg, setFeedbackMsg] = useState<{ text: string; isError: boolean } | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -260,51 +352,39 @@ export function AdminCompetitionsView() {
     }
   };
 
-  const filteredSubmissions = useMemo(() => {
-    return submissions.filter((sub) => {
-      // Type and evaluation filter
-      if (typeFilter === 'documents' && !sub.isDocument) return false;
-      if (typeFilter === 'shortlisted' && !sub.evaluation?.is_next_round) return false;
-      if (typeFilter === 'rejected' && sub.evaluation?.status !== 'rejected') return false;
-      if (typeFilter === 'downloaded' && !sub.evaluation?.downloaded) return false;
-      if (
-        typeFilter !== 'all' &&
-        typeFilter !== 'documents' &&
-        typeFilter !== 'shortlisted' &&
-        typeFilter !== 'rejected' &&
-        typeFilter !== 'downloaded' &&
-        sub.competition_type !== typeFilter
-      ) {
-        return false;
-      }
-
-      // Search query
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase().trim();
-        const matchesEmail = sub.email.toLowerCase().includes(query);
-        const matchesName = (sub.fullName || '').toLowerCase().includes(query);
-        const matchesTitle = (sub.submission_title || '').toLowerCase().includes(query);
-        const matchesNotes = (sub.notes || '').toLowerCase().includes(query);
-        const matchesType = sub.competition_type.toLowerCase().includes(query);
-        return matchesEmail || matchesName || matchesTitle || matchesNotes || matchesType;
-      }
-
-      return true;
+  const toggleExpand = (id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
     });
-  }, [submissions, typeFilter, searchQuery]);
+  };
 
-  const shortlistedCount = useMemo(
-    () => submissions.filter((s) => s.evaluation?.is_next_round).length,
-    [submissions]
+  const inTrack = useMemo(
+    () => submissions.filter((sub) => trackFilter === 'all' || sub.competition_type === trackFilter),
+    [submissions, trackFilter]
   );
-  const rejectedCount = useMemo(
-    () => submissions.filter((s) => s.evaluation?.status === 'rejected').length,
-    [submissions]
-  );
-  const downloadedCount = useMemo(
-    () => submissions.filter((s) => s.evaluation?.downloaded).length,
-    [submissions]
-  );
+
+  const filteredSubmissions = useMemo(() => {
+    const pipeline = PIPELINE_FILTERS.find((f) => f.key === pipelineFilter)!;
+    const query = searchQuery.toLowerCase().trim();
+    const list = inTrack.filter((sub) => {
+      if (!pipeline.match(sub)) return false;
+      if (!query) return true;
+      return (
+        sub.email.toLowerCase().includes(query) ||
+        (sub.fullName || '').toLowerCase().includes(query) ||
+        (sub.submission_title || '').toLowerCase().includes(query) ||
+        (sub.notes || '').toLowerCase().includes(query) ||
+        sub.competition_type.toLowerCase().includes(query)
+      );
+    });
+    if (sortBy === 'score') {
+      return [...list].sort((x, y) => (y.evaluation?.score ?? -1) - (x.evaluation?.score ?? -1));
+    }
+    return list;
+  }, [inTrack, pipelineFilter, searchQuery, sortBy]);
 
   const exportCSV = () => {
     if (filteredSubmissions.length === 0) return;
@@ -484,406 +564,296 @@ export function AdminCompetitionsView() {
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        {/* Search Input */}
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search by participant name, email, submission title or notes..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] text-slate-900 dark:text-[#FAF6F3] placeholder-slate-400 focus:outline-hidden focus:border-burgundy dark:focus:border-[#E89BA5]"
-          />
+      {/* Review Pipeline */}
+      <div className="p-4 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl shadow-xs space-y-3">
+        <div className="flex flex-wrap items-center gap-1.5 p-2 bg-slate-50 dark:bg-[#1C0A0D]/70 rounded-lg border border-slate-200 dark:border-[#3D1418]">
+          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-2">Review Pipeline:</span>
+          {PIPELINE_FILTERS.map((f) => {
+            const n = inTrack.filter(f.match).length;
+            return (
+              <button
+                key={f.key}
+                type="button"
+                onClick={() => setPipelineFilter(f.key)}
+                className={`px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                  pipelineFilter === f.key
+                    ? `bg-white dark:bg-[#250D11] shadow-xs border border-slate-200 dark:border-[#3D1418] ${f.activeTone}`
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                }`}
+              >
+                {f.label} ({n})
+              </button>
+            );
+          })}
         </div>
 
-        {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
-          <button
-            type="button"
-            onClick={() => setTypeFilter('all')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer shrink-0 ${
-              typeFilter === 'all'
-                ? 'bg-burgundy text-white dark:bg-[#E89BA5] dark:text-[#100405]'
-                : 'bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1E0B0E]'
-            }`}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+          <div className="lg:col-span-2 relative">
+            <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search participant, email, title, notes..."
+              className="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] rounded-lg focus:outline-none focus:ring-1 focus:ring-burgundy"
+            />
+          </div>
+          <select
+            value={trackFilter}
+            onChange={(e) => setTrackFilter(e.target.value as TrackFilter)}
+            className="w-full px-2.5 py-1.5 text-xs border border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] rounded-lg focus:outline-none focus:ring-1 focus:ring-burgundy"
           >
-            All Tracks ({submissions.length})
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setTypeFilter('reels')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer shrink-0 ${
-              typeFilter === 'reels'
-                ? 'bg-burgundy text-white dark:bg-burgundy'
-                : 'bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1E0B0E]'
-            }`}
+            <option value="all">All Competitions ({submissions.length})</option>
+            <option value="reels">Day 1 · Tech Reels ({stats.reels})</option>
+            <option value="poster">Day 2 · Digital Poster ({stats.poster})</option>
+            <option value="essay">Day 3 · Essay ({stats.essay})</option>
+          </select>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortBy)}
+            className="w-full px-2.5 py-1.5 text-xs border border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#1C0A0D] text-slate-900 dark:text-[#FAF6F3] rounded-lg focus:outline-none focus:ring-1 focus:ring-burgundy"
           >
-            Reels (Day 1)
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setTypeFilter('poster')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer shrink-0 ${
-              typeFilter === 'poster'
-                ? 'bg-amber-600 text-white dark:bg-amber-500'
-                : 'bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1E0B0E]'
-            }`}
-          >
-            Posters (Day 2)
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setTypeFilter('essay')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer shrink-0 ${
-              typeFilter === 'essay'
-                ? 'bg-emerald-600 text-white dark:bg-emerald-500'
-                : 'bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1E0B0E]'
-            }`}
-          >
-            Essays (Day 3)
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setTypeFilter('documents')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer shrink-0 ${
-              typeFilter === 'documents'
-                ? 'bg-burgundy text-white dark:bg-[#E89BA5] dark:text-[#100405]'
-                : 'bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1E0B0E]'
-            }`}
-          >
-            Docs Only ({stats.documentsCount})
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setTypeFilter('shortlisted')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer shrink-0 ${
-              typeFilter === 'shortlisted'
-                ? 'bg-emerald-600 text-white'
-                : 'bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1E0B0E]'
-            }`}
-          >
-            Round 2 Shortlisted ({shortlistedCount})
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setTypeFilter('rejected')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer shrink-0 ${
-              typeFilter === 'rejected'
-                ? 'bg-rose-600 text-white'
-                : 'bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1E0B0E]'
-            }`}
-          >
-            Rejected ({rejectedCount})
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setTypeFilter('downloaded')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer shrink-0 ${
-              typeFilter === 'downloaded'
-                ? 'bg-sky-600 text-white'
-                : 'bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1E0B0E]'
-            }`}
-          >
-            Downloaded ({downloadedCount})
-          </button>
+            <option value="newest">Newest first</option>
+            <option value="score">Highest score first</option>
+          </select>
         </div>
       </div>
 
-      {/* Submissions List Table */}
-      <div className="bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl shadow-xs overflow-hidden">
-        {isLoading ? (
-          <div className="p-12 text-center text-slate-500 dark:text-slate-400 flex flex-col items-center justify-center gap-3">
-            <Loader2 className="w-6 h-6 animate-spin text-burgundy dark:text-[#E89BA5]" />
-            <p className="text-xs">Loading competition registry...</p>
-          </div>
-        ) : filteredSubmissions.length === 0 ? (
-          <div className="p-12 text-center text-slate-500 dark:text-slate-400 space-y-2">
-            <Trophy className="w-8 h-8 mx-auto text-slate-300 dark:text-slate-600" />
-            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-              No competition submissions found
-            </p>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto">
-              {searchQuery
-                ? 'No entries match your search query. Try clearing the filter.'
-                : 'No participants have submitted entries for this category yet.'}
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-slate-50 dark:bg-[#1D0A0E] border-b border-slate-200 dark:border-[#3D1418] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold">
-                  <th className="py-3 px-4">Participant</th>
-                  <th className="py-3 px-4">Track</th>
-                  <th className="py-3 px-4">Format</th>
-                  <th className="py-3 px-4">Title & Details</th>
-                  <th className="py-3 px-4">Submitted At</th>
-                  <th className="py-3 px-4">Evaluation & Audit</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-[#280C10]">
-                {filteredSubmissions.map((sub) => {
-                  const trackBadge =
-                    sub.competition_type === 'reels' ? (
-                      <span className="px-2 py-0.5 rounded text-2xs font-semibold bg-burgundy/10 text-burgundy border border-burgundy/20 dark:bg-burgundy/25 dark:text-[#E89BA5] dark:border-burgundy/40 flex items-center gap-1 w-fit">
-                        <Video className="w-3 h-3" />
-                        Day 1 Reel
+      {/* Submission Cards */}
+      {isLoading ? (
+        <div className="p-12 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl text-center text-slate-500 dark:text-slate-400 flex flex-col items-center justify-center gap-3">
+          <Loader2 className="w-6 h-6 animate-spin text-burgundy dark:text-[#E89BA5]" />
+          <p className="text-xs">Loading competition registry...</p>
+        </div>
+      ) : filteredSubmissions.length === 0 ? (
+        <div className="p-12 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl text-center text-slate-500 dark:text-slate-400 space-y-2">
+          <Trophy className="w-8 h-8 mx-auto text-slate-300 dark:text-slate-600" />
+          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">No competition submissions found</p>
+          <p className="text-xs text-slate-400 max-w-sm mx-auto">
+            {searchQuery
+              ? 'No entries match your search query. Try clearing the filter.'
+              : 'No entries in this part of the review pipeline.'}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {filteredSubmissions.map((sub, idx) => {
+            const isExpanded = expandedIds.has(sub.id);
+            const busy = actionInProgressId === sub.id;
+            return (
+              <div
+                key={sub.id}
+                className="bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] rounded-xl shadow-xs overflow-hidden"
+              >
+                {/* Entry Header Strip */}
+                <div
+                  onClick={() => toggleExpand(sub.id)}
+                  className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/70 dark:hover:bg-[#1C0A0D]/70 transition-colors"
+                >
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-bold text-base text-slate-900 dark:text-[#FAF6F3]">
+                        #{idx + 1} {sub.fullName || sub.email.split('@')[0]}
                       </span>
-                    ) : sub.competition_type === 'poster' ? (
-                      <span className="px-2 py-0.5 rounded text-2xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800 flex items-center gap-1 w-fit">
-                        <Layers className="w-3 h-3" />
-                        Day 2 Poster
-                      </span>
-                    ) : (
-                      <span className="px-2 py-0.5 rounded text-2xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 flex items-center gap-1 w-fit">
-                        <FileText className="w-3 h-3" />
-                        Day 3 Essay
-                      </span>
-                    );
+                      <TrackBadge type={sub.competition_type} />
+                      <FormatBadge sub={sub} />
+                      {sub.evaluation?.is_next_round && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                          Shortlisted
+                        </span>
+                      )}
+                      {sub.evaluation?.status === 'rejected' && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-700 flex items-center gap-1">
+                          <XCircle className="w-3 h-3 text-rose-600 dark:text-rose-400" />
+                          Rejected
+                        </span>
+                      )}
+                      {sub.evaluation?.result_released_at && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-sky-50 text-sky-800 dark:bg-sky-950/50 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
+                          Result released
+                        </span>
+                      )}
+                    </div>
 
-                  const isDrive = (sub.submission_url || '').toLowerCase().includes('drive.google');
-                  const isInstagram = (sub.submission_url || '').toLowerCase().includes('instagram.com');
-                  const isLinkedIn =
-                    (sub.submission_url || '').toLowerCase().includes('linkedin.com') ||
-                    (sub.submission_url || '').toLowerCase().includes('lnkd.in');
-                  const isYouTube =
-                    (sub.submission_url || '').toLowerCase().includes('youtube.com') ||
-                    (sub.submission_url || '').toLowerCase().includes('youtu.be');
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600 dark:text-slate-300">
+                      <span className="font-mono">{sub.email}</span>
+                      <span>·</span>
+                      <span className="truncate max-w-md">
+                        {sub.submission_title ? <strong>{sub.submission_title}</strong> : <em className="text-slate-400">No custom title</em>}
+                      </span>
+                      <span>·</span>
+                      <span className="text-slate-500 dark:text-slate-400">
+                        {new Date(sub.submitted_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  </div>
 
-                  const formatBadge =
-                    sub.documentType === 'pdf' ? (
-                      <span className="px-2 py-0.5 rounded text-2xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800 flex items-center gap-1 w-fit">
-                        <FileCode className="w-3 h-3" />
-                        PDF Document
-                      </span>
-                    ) : sub.documentType === 'docx' ? (
-                      <span className="px-2 py-0.5 rounded text-2xs font-semibold bg-slate-100 text-slate-700 border border-slate-200 dark:bg-[#1C0A0D] dark:text-slate-300 dark:border-[#3D1418] flex items-center gap-1 w-fit">
-                        <FileText className="w-3 h-3" />
-                        Word (DOCX)
-                      </span>
-                    ) : sub.competition_type === 'reels' && isDrive ? (
-                      <span className="px-2 py-0.5 rounded text-2xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800 flex items-center gap-1 w-fit">
-                        <AlertCircle className="w-3 h-3" />
-                        Drive Link (Needs Social URL)
-                      </span>
-                    ) : sub.competition_type === 'reels' && isInstagram ? (
-                      <span className="px-2 py-0.5 rounded text-2xs font-semibold bg-pink-50 text-pink-700 border border-pink-200 dark:bg-pink-950/40 dark:text-pink-300 dark:border-pink-800 flex items-center gap-1 w-fit">
-                        <ExternalLink className="w-3 h-3" />
-                        Instagram Reel
-                      </span>
-                    ) : sub.competition_type === 'reels' && isLinkedIn ? (
-                      <span className="px-2 py-0.5 rounded text-2xs font-semibold bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800 flex items-center gap-1 w-fit">
-                        <ExternalLink className="w-3 h-3" />
-                        LinkedIn Video
-                      </span>
-                    ) : sub.competition_type === 'reels' && isYouTube ? (
-                      <span className="px-2 py-0.5 rounded text-2xs font-semibold bg-red-50 text-red-700 border border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800 flex items-center gap-1 w-fit">
-                        <ExternalLink className="w-3 h-3" />
-                        YouTube Short
-                      </span>
-                    ) : (
-                      <span className="px-2 py-0.5 rounded text-2xs font-semibold bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 flex items-center gap-1 w-fit">
-                        <ExternalLink className="w-3 h-3" />
-                        Web Link
-                      </span>
-                    );
-
-                  const formattedDate = new Date(sub.submitted_at).toLocaleString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  });
-
-                  return (
-                    <tr
-                      key={sub.id}
-                      className="hover:bg-slate-50/70 dark:hover:bg-[#1A0A0D]/70 transition-colors"
+                  <div className="flex items-center gap-3 shrink-0 self-start md:self-center">
+                    <a
+                      href={sub.submission_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="px-2.5 py-1 rounded bg-slate-900 dark:bg-[#250D11] hover:bg-slate-800 text-white text-xs font-medium flex items-center gap-1.5 transition-colors shadow-2xs"
                     >
-                      {/* Participant */}
-                      <td className="py-3 px-4">
-                        <div className="font-semibold text-slate-900 dark:text-[#FAF6F3]">
-                          {sub.fullName || 'Anonymous Participant'}
+                      <span>Open Entry</span>
+                      <ExternalLink className="w-3 h-3 text-slate-400" />
+                    </a>
+                    <button type="button" aria-label={isExpanded ? 'Collapse' : 'Expand'} className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
+                      {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Evaluation & Review Strip */}
+                <div className="border-t border-slate-100 dark:border-[#3D1418] bg-slate-50/70 dark:bg-[#180709] px-4 py-2.5 sm:px-5 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleQuickDownload(sub)}
+                      disabled={busy}
+                      className={`px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer disabled:opacity-50 ${
+                        sub.evaluation?.downloaded
+                          ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100'
+                          : 'bg-burgundy hover:bg-burgundy-deep text-white'
+                      }`}
+                      title="Download / inspect the entry and register the inspection"
+                    >
+                      {busy ? (
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      ) : sub.evaluation?.downloaded ? (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      ) : (
+                        <Download className="w-3.5 h-3.5" />
+                      )}
+                      <span>
+                        {sub.evaluation?.downloaded
+                          ? `Inspected (${sub.evaluation.downloaded_by?.split(' ')[0] || 'Admin'})`
+                          : sub.isDocument
+                          ? 'Download Document'
+                          : 'Open & Mark Inspected'}
+                      </span>
+                    </button>
+                    {sub.evaluation?.downloaded && sub.evaluation.downloaded_at && (
+                      <span className="text-[11px] text-slate-400 dark:text-slate-500 hidden md:inline">
+                        Verified {new Date(sub.evaluation.downloaded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleQuickToggleNextRound(sub)}
+                      disabled={busy}
+                      className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer disabled:opacity-50 ${
+                        sub.evaluation?.is_next_round
+                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-500'
+                          : 'bg-white dark:bg-[#1C0A0D] hover:bg-slate-100 dark:hover:bg-[#250D11] text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-[#3D1418]'
+                      }`}
+                      title="Toggle shortlist"
+                    >
+                      <CheckCircle2 className={`w-3.5 h-3.5 ${sub.evaluation?.is_next_round ? 'text-white' : 'text-slate-400'}`} />
+                      <span>{sub.evaluation?.is_next_round ? 'Shortlisted' : 'Shortlist'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleQuickToggleReject(sub)}
+                      disabled={busy}
+                      className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer disabled:opacity-50 ${
+                        sub.evaluation?.status === 'rejected'
+                          ? 'bg-rose-600 hover:bg-rose-700 text-white border border-rose-500'
+                          : 'bg-white dark:bg-[#1C0A0D] hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/40 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-[#3D1418]'
+                      }`}
+                      title={sub.evaluation?.status === 'rejected' ? 'Undo rejection (restore to review)' : 'Reject submission'}
+                    >
+                      <XCircle className={`w-3.5 h-3.5 ${sub.evaluation?.status === 'rejected' ? 'text-white' : 'text-slate-400'}`} />
+                      <span>{sub.evaluation?.status === 'rejected' ? 'Rejected' : 'Reject'}</span>
+                    </button>
+
+                    {sub.evaluation?.score !== null && sub.evaluation?.score !== undefined && (
+                      <span className="px-2.5 py-1 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 font-mono font-bold">
+                        {sub.evaluation.score}/100 pts
+                      </span>
+                    )}
+
+                    {sub.evaluation?.comments && sub.evaluation.comments.length > 0 && (
+                      <span className="px-2 py-1 rounded-md bg-slate-100 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                        <MessageSquare className="w-3 h-3 text-burgundy dark:text-[#E89BA5]" />
+                        <span>{sub.evaluation.comments.length}</span>
+                      </span>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => openEvaluationDesk(sub)}
+                      className="px-3 py-1.5 rounded-lg bg-slate-900 dark:bg-[#250D11] hover:bg-slate-800 text-white font-semibold flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                    >
+                      <Sliders className="w-3.5 h-3.5" />
+                      <span>Review Desk</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(sub)}
+                      disabled={deletingId === sub.id}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 transition-colors cursor-pointer disabled:opacity-50"
+                      title="Reset submission (allow resubmission)"
+                    >
+                      {deletingId === sub.id ? <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-600" /> : <Trash2 className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Expanded Entry Details */}
+                {isExpanded && (
+                  <div className="border-t border-slate-100 dark:border-[#3D1418] bg-slate-50/50 dark:bg-[#1C0A0D]/50 p-4 sm:p-5 grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
+                    <dl className="space-y-2">
+                      <div>
+                        <dt className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Submission URL</dt>
+                        <dd className="font-mono break-all text-slate-700 dark:text-slate-300">{sub.submission_url}</dd>
+                      </div>
+                      {sub.notes && sub.notes !== 'file_upload' && (
+                        <div>
+                          <dt className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Participant notes</dt>
+                          <dd className="text-slate-700 dark:text-slate-300 whitespace-pre-line">{sub.notes}</dd>
                         </div>
-                        <div className="text-2xs text-slate-500 dark:text-slate-400 font-mono">
-                          {sub.email}
-                        </div>
-                      </td>
-
-                      {/* Track */}
-                      <td className="py-3 px-4">{trackBadge}</td>
-
-                      {/* Format */}
-                      <td className="py-3 px-4">{formatBadge}</td>
-
-                      {/* Title & Notes */}
-                      <td className="py-3 px-4 max-w-xs">
-                        {sub.submission_title ? (
-                          <div className="font-medium text-slate-800 dark:text-slate-200 truncate">
-                            {sub.submission_title}
-                          </div>
-                        ) : (
-                          <div className="text-slate-400 italic">No custom title</div>
-                        )}
-                        {sub.notes && sub.notes !== 'file_upload' && (
-                          <p className="text-2xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
-                            {sub.notes}
-                          </p>
-                        )}
-                      </td>
-
-                      {/* Submitted At */}
-                      <td className="py-3 px-4 whitespace-nowrap text-slate-500 dark:text-slate-400">
-                        {formattedDate}
-                      </td>
-
-                      {/* Evaluation & Audit Status */}
-                      <td className="py-3 px-4">
-                        <div className="flex flex-col gap-1">
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            {sub.evaluation?.downloaded ? (
-                              <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
-                                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                                <span>Downloaded ({sub.evaluation.downloaded_by?.split(' ')[0] || 'Admin'})</span>
-                              </span>
-                            ) : (
-                              <span className="text-[10px] text-slate-400 dark:text-slate-500 flex items-center gap-1">
-                                <Clock className="w-3 h-3" /> Not inspected
-                              </span>
-                            )}
-
-                            {sub.evaluation?.is_next_round && (
-                              <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-300 dark:border-emerald-700">
-                                Round 2
-                              </span>
-                            )}
-
-                            {sub.evaluation?.status === 'rejected' && (
-                              <span className="text-[10px] font-bold text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-950/60 px-1.5 py-0.5 rounded border border-rose-300 dark:border-rose-700 flex items-center gap-1">
-                                <XCircle className="w-3 h-3 text-rose-600 dark:text-rose-400" />
-                                Rejected
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            {sub.evaluation?.score !== null && sub.evaluation?.score !== undefined && (
-                              <span className="text-2xs font-mono font-bold text-amber-700 dark:text-amber-300">
-                                {sub.evaluation.score}/100 pts
-                              </span>
-                            )}
-                            {sub.evaluation?.comments && sub.evaluation.comments.length > 0 && (
-                              <span className="text-2xs text-slate-500 flex items-center gap-0.5">
-                                <MessageSquare className="w-2.5 h-2.5 text-burgundy dark:text-[#E89BA5]" />
-                                <span>{sub.evaluation.comments.length} notes</span>
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Actions */}
-                      <td className="py-3 px-4 text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {/* Quick Download / View & Tick */}
-                          <button
-                            type="button"
-                            onClick={() => handleQuickDownload(sub)}
-                            disabled={actionInProgressId === sub.id}
-                            className={`px-2.5 py-1.5 rounded-lg text-2xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
-                              sub.evaluation?.downloaded
-                                ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100'
-                                : 'bg-burgundy text-white hover:bg-burgundy/90 dark:bg-[#E89BA5] dark:text-[#100405]'
-                            }`}
-                            title="Download / Inspect and register verification"
-                          >
-                            {actionInProgressId === sub.id ? (
-                              <RefreshCw className="w-3 h-3 animate-spin" />
-                            ) : sub.evaluation?.downloaded ? (
-                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                            ) : (
-                              <Download className="w-3 h-3" />
-                            )}
-                            <span>{sub.evaluation?.downloaded ? 'Inspected' : 'Download'}</span>
-                          </button>
-
-                          {/* Quick Toggle Next Round */}
-                          <button
-                            type="button"
-                            onClick={() => handleQuickToggleNextRound(sub)}
-                            disabled={actionInProgressId === sub.id}
-                            className={`px-2.5 py-1.5 rounded-lg text-2xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
-                              sub.evaluation?.is_next_round
-                                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                                : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200'
-                            }`}
-                            title="Toggle Round 2 Shortlist"
-                          >
-                            <CheckCircle2 className="w-3 h-3" />
-                            <span>{sub.evaluation?.is_next_round ? 'Shortlisted' : 'Shortlist'}</span>
-                          </button>
-
-                          {/* Quick Toggle Reject */}
-                          <button
-                            type="button"
-                            onClick={() => handleQuickToggleReject(sub)}
-                            disabled={actionInProgressId === sub.id}
-                            className={`px-2.5 py-1.5 rounded-lg text-2xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
-                              sub.evaluation?.status === 'rejected'
-                                ? 'bg-rose-600 hover:bg-rose-700 text-white border border-rose-500'
-                                : 'bg-white hover:bg-rose-50 hover:text-rose-700 dark:bg-slate-800 text-slate-700 dark:text-slate-200 dark:hover:bg-rose-950/40 dark:hover:text-rose-300 border border-slate-200 dark:border-slate-700'
-                            }`}
-                            title={sub.evaluation?.status === 'rejected' ? 'Undo rejection (restore to review)' : 'Reject submission'}
-                          >
-                            <XCircle className="w-3 h-3" />
-                            <span>{sub.evaluation?.status === 'rejected' ? 'Rejected' : 'Reject'}</span>
-                          </button>
-
-                          {/* Open Review Desk Drawer */}
-                          <button
-                            type="button"
-                            onClick={() => openEvaluationDesk(sub)}
-                            className="px-2.5 py-1.5 rounded-lg bg-slate-900 dark:bg-[#250D11] hover:bg-slate-800 text-white text-2xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
-                            title="Open evaluation rubric and discussion notes"
-                          >
-                            <Sliders className="w-3 h-3" />
-                            <span>Review Desk</span>
-                          </button>
-
-                          {/* Delete Button */}
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(sub)}
-                            disabled={deletingId === sub.id}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 transition-colors cursor-pointer disabled:opacity-50"
-                            title="Reset submission (allow resubmission)"
-                          >
-                            {deletingId === sub.id ? (
-                              <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-600" />
-                            ) : (
-                              <Trash2 className="w-3.5 h-3.5" />
-                            )}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                      )}
+                      <div>
+                        <dt className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Submission ID</dt>
+                        <dd className="font-mono text-slate-500 dark:text-slate-400">{sub.id}</dd>
+                      </div>
+                    </dl>
+                    <div className="space-y-2">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        Inspection log ({sub.evaluation?.downloads?.length || 0})
+                      </p>
+                      {sub.evaluation?.downloads && sub.evaluation.downloads.length > 0 ? (
+                        <ul className="space-y-1 text-slate-700 dark:text-slate-300">
+                          {sub.evaluation.downloads.map((d, i) => (
+                            <li key={`${d.evaluator_email}-${d.downloaded_at}-${i}`}>
+                              {d.evaluator_name} · {new Date(d.downloaded_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-slate-400 italic">Not inspected yet.</p>
+                      )}
+                      {sub.evaluation?.last_evaluated_by_name && (
+                        <p className="text-slate-500 dark:text-slate-400">
+                          Last evaluated by {sub.evaluation.last_evaluated_by_name}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Evaluation Drawer Modal */}
       {selectedSubForEvaluation && (

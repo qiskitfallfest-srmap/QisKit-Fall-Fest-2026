@@ -47,6 +47,10 @@ export interface SubmissionEvaluation {
   comments: EvaluationComment[];
   last_evaluated_by_email: string | null;
   last_evaluated_by_name: string | null;
+  /** NULL keeps the decision hidden from the participant/team */
+  result_released_at?: string | null;
+  /** Note shown to the participant/team with the released result */
+  participant_feedback?: string | null;
   created_at: string;
   updated_at: string;
 }

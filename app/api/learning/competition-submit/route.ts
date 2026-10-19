@@ -9,6 +9,7 @@ import {
   getCompetitionSubmissionsCached,
   invalidateCompetitionSubmissionsCache,
 } from '@/lib/redis';
+import { COMPETITION_TYPES, toCompetitionResult } from '@/lib/competition-results';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -40,9 +41,30 @@ export async function GET() {
       getUserCompetitionOverride(normalizedEmail),
     ]);
 
+    // Released results are read live (not from the submissions cache) so a
+    // release from the admin console shows up on the next dashboard load.
+    const submissionIds = Object.values(submissionsMap)
+      .map((sub: any) => sub?.id)
+      .filter(Boolean)
+      .map(String);
+    const results: Record<string, ReturnType<typeof toCompetitionResult>> = {};
+    if (submissionIds.length) {
+      const { data: evals } = await supabaseAdmin
+        .from('submission_evaluations')
+        .select('target_id, status, score, max_score, participant_feedback, result_released_at')
+        .in('category', COMPETITION_TYPES)
+        .in('target_id', submissionIds)
+        .not('result_released_at', 'is', null);
+      for (const [type, sub] of Object.entries(submissionsMap)) {
+        const result = toCompetitionResult((evals || []).find((ev: any) => String(ev.target_id) === String((sub as any)?.id)));
+        if (result) results[type] = result;
+      }
+    }
+
     return NextResponse.json(
       {
         submissions: submissionsMap,
+        results,
         userOverride: userOverride || null,
       },
       {
