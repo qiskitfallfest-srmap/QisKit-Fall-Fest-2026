@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import {
-  MIN_REASON_LENGTH,
+  MIN_MEMBER_REASON_LENGTH,
   PARTICIPANT_REQUESTS_TABLE,
   QUESTION_CATEGORIES,
   ROSTER_CHANGE_CONFIG_KEY,
   checkRosterChange,
+  composeRosterMessage,
   getTeamContext,
   isMissingTable,
   parseRosterChanges,
@@ -58,7 +59,8 @@ export async function GET() {
 
 /**
  * POST { kind: 'question', category, subject?, message }
- * POST { kind: 'roster_change', reason, changes: { add: [...], drop: [...] }, confirmed: true }
+ * POST { kind: 'roster_change', changes: { add: [{ ..., reason }], drop: [{ ..., reason }], note? }, confirmed: true }
+ * Any accepted member or the lead can propose a change; the organizers review it.
  */
 export async function POST(request: NextRequest) {
   const session = await getServerSession();
@@ -134,20 +136,12 @@ export async function POST(request: NextRequest) {
       }
 
       const changes = parseRosterChanges(body.changes);
-      // Members can only ask to leave; adding or removing others is the lead's call
-      if (!team.isLead && (changes.add.length > 0 || changes.drop.some((d) => d.email !== email))) {
-        return NextResponse.json(
-          { error: 'Only the team lead can add or remove teammates. You can request to leave the team.' },
-          { status: 403 }
+      const missingReason = [...changes.drop, ...changes.add].filter((c) => (c.reason || '').length < MIN_MEMBER_REASON_LENGTH);
+      if (missingReason.length) {
+        const errors = missingReason.map(
+          (c) => `Give a reason for ${c.name || c.email} (at least ${MIN_MEMBER_REASON_LENGTH} characters).`
         );
-      }
-
-      const reason = String(body.reason || '').trim();
-      if (reason.length < MIN_REASON_LENGTH) {
-        return NextResponse.json(
-          { error: `Explain the reason in at least ${MIN_REASON_LENGTH} characters so the organizers can review it.` },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: errors[0], errors }, { status: 400 });
       }
       if (body.confirmed !== true) {
         return NextResponse.json(
@@ -169,7 +163,7 @@ export async function POST(request: NextRequest) {
           requester_name: name,
           team_id: team.teamId,
           team_name: team.teamName,
-          message: reason.slice(0, 3000),
+          message: composeRosterMessage(changes).slice(0, 3000),
           changes,
         })
         .select('*')
@@ -206,11 +200,25 @@ export async function PATCH(request: NextRequest) {
     if (body?.action !== 'withdraw' || !body?.id) {
       return NextResponse.json({ error: 'Invalid action.' }, { status: 400 });
     }
+    // The requester can withdraw; the lead can also withdraw a team change a member sent
+    const { data: rows } = await supabaseAdmin
+      .from(PARTICIPANT_REQUESTS_TABLE)
+      .select('id, kind, team_id, requester_email')
+      .eq('id', body.id)
+      .limit(1);
+    const target = rows?.[0];
+    let allowed = target?.requester_email === email;
+    if (target && !allowed && target.kind === 'roster_change' && target.team_id) {
+      const team = await getTeamContext(email);
+      allowed = Boolean(team?.isLead && team.teamId === String(target.team_id));
+    }
+    if (!allowed) {
+      return NextResponse.json({ error: 'This request is no longer open.' }, { status: 409 });
+    }
     const { data, error } = await supabaseAdmin
       .from(PARTICIPANT_REQUESTS_TABLE)
       .update({ status: 'withdrawn', updated_at: new Date().toISOString() })
       .eq('id', body.id)
-      .eq('requester_email', email)
       .eq('status', 'open')
       .select('*');
     if (error) throw error;

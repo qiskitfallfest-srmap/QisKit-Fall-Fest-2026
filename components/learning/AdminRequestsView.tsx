@@ -87,9 +87,12 @@ function RequestCard({ r, onDone }: { r: AdminRequest; onDone: (message: string)
             <p className="text-xs font-semibold text-slate-500 mb-1">Requested change</p>
             <ul className="text-sm space-y-1">
               {drop.map((d) => (
-                <li key={d.email} className="flex items-center gap-2 text-rose-700 dark:text-rose-300">
-                  <UserMinus className="h-4 w-4 shrink-0" />
-                  Remove {d.name} <span className="text-xs text-slate-500">{d.email}</span>
+                <li key={d.email} className="flex items-start gap-2 text-rose-700 dark:text-rose-300">
+                  <UserMinus className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span>
+                    Remove {d.name} <span className="text-xs text-slate-500">{d.email}</span>
+                    {d.reason && <span className="block text-xs text-slate-700 dark:text-slate-300">{d.reason}</span>}
+                  </span>
                 </li>
               ))}
               {add.map((a) => (
@@ -97,6 +100,7 @@ function RequestCard({ r, onDone }: { r: AdminRequest; onDone: (message: string)
                   <UserPlus className="h-4 w-4 shrink-0 mt-0.5" />
                   <span>
                     Add {a.name} <span className="text-xs text-slate-500">{a.email} · {a.institution}</span>
+                    {a.reason && <span className="block text-xs text-slate-700 dark:text-slate-300">{a.reason}</span>}
                   </span>
                 </li>
               ))}
@@ -123,10 +127,20 @@ function RequestCard({ r, onDone }: { r: AdminRequest; onDone: (message: string)
         </div>
       )}
 
-      <div>
-        <p className="text-xs font-semibold text-slate-500 mb-1">{r.kind === 'question' ? 'Question' : 'Reason given'}</p>
-        <p className="text-sm text-slate-800 dark:text-slate-200 whitespace-pre-line">{r.message}</p>
-      </div>
+      {r.kind === 'roster_change' && [...drop, ...add].some((c) => c.reason) ? (
+        // Reasons are listed per person above; only the optional team note remains
+        r.changes?.note && (
+          <div>
+            <p className="text-xs font-semibold text-slate-500 mb-1">Note from the team</p>
+            <p className="text-sm text-slate-800 dark:text-slate-200 whitespace-pre-line">{r.changes.note}</p>
+          </div>
+        )
+      ) : (
+        <div>
+          <p className="text-xs font-semibold text-slate-500 mb-1">{r.kind === 'question' ? 'Question' : 'Reason given'}</p>
+          <p className="text-sm text-slate-800 dark:text-slate-200 whitespace-pre-line">{r.message}</p>
+        </div>
+      )}
 
       {r.check?.errors.length ? (
         <div className="rounded-lg border border-rose-200 bg-rose-50 dark:border-rose-900 dark:bg-rose-950/30 px-3 py-2 text-xs text-rose-800 dark:text-rose-200 space-y-1">

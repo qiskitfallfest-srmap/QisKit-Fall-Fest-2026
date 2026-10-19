@@ -17,6 +17,7 @@ import {
   LogOut,
   Mail,
   MessageCircle,
+  PencilLine,
   PlayCircle,
   Receipt,
   Terminal,
@@ -26,6 +27,7 @@ import {
 } from 'lucide-react';
 import { Phase2StatusCard } from '@/components/learning/Phase2StatusCard';
 import { CertificateNameCard } from './CertificateNameCard';
+import { TeamChangeForm, useParticipantRequests } from './RequestsSection';
 import { mutate } from 'swr';
 import {
   CERTIFICATE_DELIVERY_LABEL,
@@ -127,10 +129,21 @@ export function NoticesSection({ notices, seen }: { notices: Notice[]; seen: Set
 
 /* ───────────────────────────── Hackathon ───────────────────────────── */
 
-export function HackathonSection({ overview, status }: { overview: ProfileOverview; status?: PassStatusResponse }) {
+export function HackathonSection({
+  overview,
+  status,
+  onRosterChanged,
+}: {
+  overview: ProfileOverview;
+  status?: PassStatusResponse;
+  onRosterChanged: () => void;
+}) {
   const team = overview.team;
   const hackathon = status?.hackathon;
   const resultsOut = useResultsOut();
+  const { data: requests, mutate: mutateRequests } = useParticipantRequests();
+  const [editing, setEditing] = useState(false);
+  const [flash, setFlash] = useState('');
 
   if (!team) {
     return (
@@ -157,9 +170,33 @@ export function HackathonSection({ overview, status }: { overview: ProfileOvervi
 
   const accepted = team.members.filter((m) => m.status === 'accepted');
   const invited = team.members.filter((m) => m.status === 'invited');
+  const openEdit = requests?.requests.find((r) => r.kind === 'roster_change' && r.status === 'open') || null;
+  const editsClosed = Boolean(requests?.rosterChangesClosed);
+  const canEdit = Boolean(requests?.available) && !editsClosed && !openEdit;
+
+  if (editing && canEdit) {
+    return (
+      <TeamChangeForm
+        overview={overview}
+        note={requests?.rosterChangesNote || null}
+        onCancel={() => setEditing(false)}
+        onDone={() => {
+          setEditing(false);
+          setFlash('Edit request sent. Your team stays as it is until the organizers approve it.');
+          mutateRequests();
+          onRosterChanged();
+        }}
+      />
+    );
+  }
 
   return (
     <div className="space-y-4">
+      {flash && (
+        <p role="status" className="rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-2.5 text-sm text-emerald-900 dark:text-emerald-200">
+          {flash}
+        </p>
+      )}
       {hackathon?.phase2 && resultsOut && <Phase2StatusCard team={hackathon} />}
 
       <Card
@@ -167,9 +204,19 @@ export function HackathonSection({ overview, status }: { overview: ProfileOvervi
         description={team.isLead ? 'You are the team lead.' : 'You are a team member.'}
         action={
           <div className="flex flex-wrap gap-2">
-            <Link href="/learning/profile?tab=requests&new=roster" className={buttonStyles.secondary}>
-              {team.isLead ? 'Request a team change' : 'Request to leave'}
-            </Link>
+            {canEdit && (
+              <button
+                type="button"
+                onClick={() => {
+                  setFlash('');
+                  setEditing(true);
+                }}
+                className={buttonStyles.secondary}
+              >
+                <PencilLine aria-hidden="true" className="h-3.5 w-3.5" />
+                Request to Edit
+              </button>
+            )}
             <Link href="/learning/hackathon" className={buttonStyles.secondary}>
               Workspace
               <ArrowRight className="h-3.5 w-3.5" />
@@ -202,6 +249,21 @@ export function HackathonSection({ overview, status }: { overview: ProfileOvervi
             )}
           </DetailRow>
         </dl>
+
+        {(openEdit || editsClosed) && (
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-200 dark:border-amber-900/60 bg-amber-50/60 dark:bg-amber-950/15 px-3 py-2.5 text-sm text-amber-900 dark:text-amber-200">
+            <span>
+              {openEdit
+                ? `An edit request${openEdit.requester_email === overview.profile.email ? ' from you' : ` from ${openEdit.requester_name}`} is under review. Only one can be open at a time.`
+                : 'Team edit requests are closed.'}
+            </span>
+            {openEdit && (
+              <Link href="/learning/profile?tab=requests" className="text-xs font-semibold underline">
+                View request
+              </Link>
+            )}
+          </div>
+        )}
 
         <h3 className="mt-4 mb-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
           Members ({accepted.length})

@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import useSWR from 'swr';
 import clsx from 'clsx';
 import { ArrowRight, Loader2, MessageSquare, Plus, Trash2, UserMinus, UserPlus, Users, X } from 'lucide-react';
 import {
-  MIN_REASON_LENGTH,
+  EMAIL_RE,
+  MIN_MEMBER_REASON_LENGTH,
   QUESTION_CATEGORIES,
   TEAM_SIZE,
   type ParticipantRequest,
@@ -152,223 +153,302 @@ function QuestionForm({ onDone, onCancel }: { onDone: () => void; onCancel: () =
 
 /* ───────────────────────────── Team change form ───────────────────────────── */
 
-function TeamChangeForm({
+interface DraftAdd extends RosterAdd {
+  key: number;
+  reason: string;
+}
+
+/**
+ * One request that removes and/or adds members, with a reason per person.
+ * Any member can send it; the lead cannot be removed. Nothing changes until the organizers approve.
+ */
+export function TeamChangeForm({
   overview,
-  isLead,
   note,
   onDone,
   onCancel,
 }: {
   overview: ProfileOverview;
-  isLead: boolean;
   note: string | null;
   onDone: () => void;
   onCancel: () => void;
 }) {
-  const me = overview.profile.email;
-  const members = (overview.team?.members || []).filter((m) => !m.isLead);
-  const [drop, setDrop] = useState<Set<string>>(() => new Set(isLead ? [] : [me]));
-  const [adds, setAdds] = useState<RosterAdd[]>([]);
-  const [reason, setReason] = useState('');
+  const roster = useMemo(
+    () => [...(overview.team?.members || [])].sort((a, b) => Number(b.isLead) - Number(a.isLead)),
+    [overview.team]
+  );
+  const [dropReasons, setDropReasons] = useState<Record<string, string>>({});
+  const [adds, setAdds] = useState<DraftAdd[]>([]);
+  const [nextKey, setNextKey] = useState(0);
+  const [teamNote, setTeamNote] = useState('');
   const [confirmed, setConfirmed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
+  const [showMissing, setShowMissing] = useState(false);
+  const errorRef = useRef<HTMLUListElement>(null);
 
-  const accepted = (overview.team?.members || []).filter((m) => m.status === 'accepted').length;
-  const droppedAccepted = members.filter((m) => drop.has(m.email) && m.status === 'accepted').length;
+  const dropped = roster.filter((m) => m.email in dropReasons);
+  const accepted = roster.filter((m) => m.status === 'accepted').length;
+  const droppedAccepted = dropped.filter((m) => m.status === 'accepted').length;
   const filledAdds = adds.filter((a) => a.email.trim());
   const finalSize = accepted - droppedAccepted + filledAdds.length;
   const sizeOk = finalSize >= TEAM_SIZE.min && finalSize <= TEAM_SIZE.max;
-  const hasChange = drop.size > 0 || filledAdds.length > 0;
-  const reasonOk = reason.trim().length >= MIN_REASON_LENGTH;
+  const reasonShort = (r: string | undefined) => (r || '').trim().length < MIN_MEMBER_REASON_LENGTH;
 
   function toggleDrop(email: string) {
-    setDrop((prev) => {
-      const next = new Set(prev);
-      if (next.has(email)) next.delete(email);
-      else next.add(email);
+    setDropReasons((prev) => {
+      const next = { ...prev };
+      if (email in next) delete next[email];
+      else next[email] = '';
       return next;
     });
   }
 
-  function updateAdd(i: number, patch: Partial<RosterAdd>) {
-    setAdds((prev) => prev.map((a, idx) => (idx === i ? { ...a, ...patch } : a)));
+  function addRow() {
+    setAdds((prev) => [...prev, { key: nextKey, email: '', name: '', institution: '', reason: '' }]);
+    setNextKey((k) => k + 1);
+    // Focus the new email field once it renders
+    setTimeout(() => document.getElementById(`add-email-${nextKey}`)?.focus(), 0);
+  }
+
+  function updateAdd(key: number, patch: Partial<DraftAdd>) {
+    setAdds((prev) => prev.map((a) => (a.key === key ? { ...a, ...patch } : a)));
   }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const local: string[] = [];
-    if (!hasChange) local.push('Choose at least one member to remove or add.');
-    if (!sizeOk) local.push(`The team must have ${TEAM_SIZE.min} to ${TEAM_SIZE.max} members after the change.`);
-    filledAdds.forEach((a) => {
-      if (!a.name.trim() || !a.institution.trim()) local.push(`Fill name and institution for ${a.email}.`);
+    const rosterEmails = new Set(roster.map((m) => m.email.toLowerCase()));
+    if (dropped.length === 0 && filledAdds.length === 0) local.push('Tick at least one member to remove, or add a new member.');
+    dropped.forEach((m) => {
+      if (reasonShort(dropReasons[m.email])) local.push(`Give a reason for removing ${m.isYou ? 'yourself' : m.name}.`);
     });
-    if (!reasonOk) local.push(`Give a clear reason (at least ${MIN_REASON_LENGTH} characters).`);
-    if (!confirmed) local.push('Confirm that everyone affected has agreed.');
-    if (local.length) return setErrors(local);
+    filledAdds.forEach((a) => {
+      if (!EMAIL_RE.test(a.email)) local.push(`${a.email} is not a valid email address.`);
+      else if (rosterEmails.has(a.email)) local.push(`${a.email} is already on this team.`);
+      if (!a.name.trim() || !a.institution.trim()) local.push(`Fill name and institution for ${a.email}.`);
+      if (reasonShort(a.reason)) local.push(`Give a reason for adding ${a.name.trim() || a.email}.`);
+    });
+    if (!sizeOk) local.push(`The team must have ${TEAM_SIZE.min} to ${TEAM_SIZE.max} members after the change.`);
+    if (!confirmed) local.push('Confirm that everyone affected knows about this request.');
+    if (local.length) {
+      setShowMissing(true);
+      setErrors(local);
+      setTimeout(() => errorRef.current?.focus(), 0);
+      return;
+    }
 
     setBusy(true);
     setErrors([]);
     try {
       await postJson('/api/requests', 'POST', {
         kind: 'roster_change',
-        reason,
         confirmed,
         changes: {
-          drop: members.filter((m) => drop.has(m.email)).map((m) => ({ email: m.email, name: m.name })),
-          add: filledAdds,
+          drop: dropped.map((m) => ({ email: m.email, name: m.name, reason: dropReasons[m.email] })),
+          add: filledAdds.map(({ email, name, institution, reason }) => ({ email, name, institution, reason })),
+          note: teamNote,
         },
       });
       onDone();
     } catch (err: any) {
       setErrors(err.errors?.length ? err.errors : [err.message]);
+      setTimeout(() => errorRef.current?.focus(), 0);
     } finally {
       setBusy(false);
     }
   }
 
+  const summary = [
+    dropped.length ? `Removing ${dropped.length}` : '',
+    filledAdds.length ? `adding ${filledAdds.length}` : '',
+  ]
+    .filter(Boolean)
+    .join(', ');
+
   return (
     <Card
-      title={isLead ? 'Request a team change' : 'Request to leave the team'}
-      description={
-        isLead
-          ? 'Rosters are locked. The organizers review each change and apply it if approved. Your team stays as it is until then.'
-          : 'Only the team lead can add or remove others. If you need to leave, tell the organizers why.'
-      }
+      title="Request to edit the team"
+      description="Tick anyone who should leave and add anyone who should join, with a reason for each. The organizers review the request; your team stays as it is until they approve it. Everyone on the team can see this request."
     >
-      <form onSubmit={submit} className="space-y-5">
+      <form onSubmit={submit} noValidate aria-busy={busy} className="space-y-5">
         {note && <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line">{note}</p>}
 
-        {isLead && (
-          <fieldset>
-            <legend className={labelClass}>Remove members</legend>
-            {members.length === 0 ? (
-              <p className="text-sm text-slate-500">No teammates to remove.</p>
-            ) : (
-              <ul className="divide-y divide-slate-100 dark:divide-[#250D11] rounded-lg border border-slate-200 dark:border-[#3D1418]">
-                {members.map((m) => {
-                  const checked = drop.has(m.email);
-                  return (
-                    <li key={m.email}>
-                      <label className={clsx('flex items-center gap-3 px-3 py-2.5 cursor-pointer', checked && 'bg-rose-50/70 dark:bg-rose-950/20')}>
-                        <input type="checkbox" checked={checked} onChange={() => toggleDrop(m.email)} className="accent-[#6C151E] h-4 w-4" />
-                        <span className="min-w-0 flex-1">
-                          <span className={clsx('block text-sm font-medium truncate', checked ? 'text-rose-800 dark:text-rose-200 line-through' : 'text-slate-900 dark:text-[#FAF6F3]')}>
-                            {m.name}
-                          </span>
-                          <span className="block text-xs text-slate-500 truncate">{m.email}</span>
-                        </span>
-                        {m.status === 'invited' && <StatusPill tone="neutral">Invite pending</StatusPill>}
+        <fieldset>
+          <legend className={labelClass}>Current team: tick to remove</legend>
+          <ul className="divide-y divide-slate-100 dark:divide-[#250D11] rounded-lg border border-slate-200 dark:border-[#3D1418]">
+            {roster.map((m) => {
+              const checked = m.email in dropReasons;
+              const reasonId = `drop-reason-${m.email.replace(/[^a-z0-9]/gi, '')}`;
+              const invalid = showMissing && checked && reasonShort(dropReasons[m.email]);
+              return (
+                <li key={m.email} className={clsx(checked && 'bg-rose-50/70 dark:bg-rose-950/20')}>
+                  <label
+                    className={clsx(
+                      'flex items-center gap-3 px-3 py-2.5',
+                      m.isLead ? 'cursor-not-allowed' : 'cursor-pointer'
+                    )}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      disabled={m.isLead}
+                      onChange={() => toggleDrop(m.email)}
+                      aria-label={m.isLead ? `${m.name}, team lead, cannot be removed` : `Remove ${m.isYou ? 'yourself' : m.name}`}
+                      className="accent-[#6C151E] h-4 w-4 disabled:opacity-40"
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span
+                        className={clsx(
+                          'block text-sm font-medium truncate',
+                          checked ? 'text-rose-800 dark:text-rose-200 line-through' : 'text-slate-900 dark:text-[#FAF6F3]'
+                        )}
+                      >
+                        {m.name}
+                        {m.isYou && <span className="ml-1.5 text-xs font-normal text-slate-600 dark:text-slate-400 no-underline">(you)</span>}
+                      </span>
+                      <span className="block text-xs text-slate-600 dark:text-slate-400 truncate">{m.email}</span>
+                    </span>
+                    {m.isLead ? (
+                      <StatusPill tone="info">Lead, cannot be removed</StatusPill>
+                    ) : checked ? (
+                      <StatusPill tone="danger">To remove</StatusPill>
+                    ) : m.status === 'invited' ? (
+                      <StatusPill tone="neutral">Invite pending</StatusPill>
+                    ) : null}
+                  </label>
+                  {checked && (
+                    <div className="px-3 pb-3 pl-10">
+                      <label htmlFor={reasonId} className={labelClass}>
+                        {m.isYou ? 'Why are you leaving?' : `Why should ${m.name} be removed?`}
                       </label>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </fieldset>
-        )}
+                      <textarea
+                        id={reasonId}
+                        value={dropReasons[m.email]}
+                        onChange={(e) => setDropReasons((prev) => ({ ...prev, [m.email]: e.target.value }))}
+                        rows={2}
+                        maxLength={500}
+                        aria-invalid={invalid || undefined}
+                        aria-describedby={`${reasonId}-hint`}
+                        className={clsx(field, invalid && 'border-rose-500')}
+                      />
+                      <p id={`${reasonId}-hint`} className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                        For example: exam on 28 Oct, cannot attend Phase 2. At least {MIN_MEMBER_REASON_LENGTH} characters.
+                      </p>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </fieldset>
 
-        {isLead && (
-          <fieldset className="space-y-3">
-            <legend className={labelClass}>Add members</legend>
-            {adds.map((a, i) => (
-              <div key={i} className="rounded-lg border border-slate-200 dark:border-[#3D1418] p-3 space-y-2 relative">
-                <button
-                  type="button"
-                  onClick={() => setAdds((prev) => prev.filter((_, idx) => idx !== i))}
-                  aria-label="Remove this new member"
-                  className="absolute top-2 right-2 p-1 rounded text-slate-400 hover:text-rose-600 cursor-pointer"
-                >
-                  <X className="h-4 w-4" />
-                </button>
+        <fieldset className="space-y-3">
+          <legend className={labelClass}>New members</legend>
+          {adds.length === 0 && <p className="text-sm text-slate-600 dark:text-slate-400">No one added yet.</p>}
+          {adds.map((a, i) => {
+            const label = a.name.trim() || `new member ${i + 1}`;
+            const reasonInvalid = showMissing && Boolean(a.email.trim()) && reasonShort(a.reason);
+            return (
+              <div
+                key={a.key}
+                role="group"
+                aria-label={`New member ${i + 1}`}
+                className="rounded-lg border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/40 dark:bg-emerald-950/10 p-3 space-y-2"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">To add</p>
+                  <button
+                    type="button"
+                    onClick={() => setAdds((prev) => prev.filter((x) => x.key !== a.key))}
+                    aria-label={`Discard ${label}`}
+                    className="inline-flex min-h-8 items-center gap-1 rounded-md px-2 text-xs font-semibold text-slate-600 hover:text-rose-700 dark:text-slate-400 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-burgundy/40"
+                  >
+                    <X aria-hidden="true" className="h-3.5 w-3.5" />
+                    Discard
+                  </button>
+                </div>
                 <div>
-                  <label htmlFor={`add-email-${i}`} className={labelClass}>Email they signed in with</label>
+                  <label htmlFor={`add-email-${a.key}`} className={labelClass}>Gmail or email they sign in with</label>
                   <input
-                    id={`add-email-${i}`}
+                    id={`add-email-${a.key}`}
                     type="email"
                     inputMode="email"
                     autoComplete="off"
                     value={a.email}
-                    onChange={(e) => updateAdd(i, { email: e.target.value.trim().toLowerCase() })}
+                    onChange={(e) => updateAdd(a.key, { email: e.target.value.trim().toLowerCase() })}
                     className={field}
                   />
                 </div>
                 <div className="grid sm:grid-cols-2 gap-2">
                   <div>
-                    <label htmlFor={`add-name-${i}`} className={labelClass}>Full name</label>
-                    <input id={`add-name-${i}`} value={a.name} onChange={(e) => updateAdd(i, { name: e.target.value })} maxLength={70} className={field} />
+                    <label htmlFor={`add-name-${a.key}`} className={labelClass}>Full name</label>
+                    <input id={`add-name-${a.key}`} value={a.name} onChange={(e) => updateAdd(a.key, { name: e.target.value })} maxLength={70} className={field} />
                   </div>
                   <div>
-                    <label htmlFor={`add-inst-${i}`} className={labelClass}>Institution</label>
-                    <input id={`add-inst-${i}`} value={a.institution} onChange={(e) => updateAdd(i, { institution: e.target.value })} maxLength={120} className={field} />
+                    <label htmlFor={`add-inst-${a.key}`} className={labelClass}>Institution</label>
+                    <input id={`add-inst-${a.key}`} value={a.institution} onChange={(e) => updateAdd(a.key, { institution: e.target.value })} maxLength={120} className={field} />
                   </div>
                 </div>
+                <div>
+                  <label htmlFor={`add-reason-${a.key}`} className={labelClass}>Why should {a.name.trim() || 'they'} join?</label>
+                  <textarea
+                    id={`add-reason-${a.key}`}
+                    value={a.reason}
+                    onChange={(e) => updateAdd(a.key, { reason: e.target.value })}
+                    rows={2}
+                    maxLength={500}
+                    aria-invalid={reasonInvalid || undefined}
+                    aria-describedby={`add-reason-${a.key}-hint`}
+                    className={clsx(field, reasonInvalid && 'border-rose-500')}
+                  />
+                  <p id={`add-reason-${a.key}-hint`} className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                    For example: worked with us on the Phase 1 notebook and replaces Rahul. At least {MIN_MEMBER_REASON_LENGTH} characters.
+                  </p>
+                </div>
               </div>
-            ))}
-            <button
-              type="button"
-              onClick={() => setAdds((prev) => [...prev, { email: '', name: '', institution: '' }])}
-              disabled={finalSize >= TEAM_SIZE.max}
-              className={buttonStyles.secondary}
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Add a member
-            </button>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              New members must have signed in at the portal once and must not be on another team.
-            </p>
-          </fieldset>
-        )}
+            );
+          })}
+          <button type="button" onClick={addRow} disabled={finalSize >= TEAM_SIZE.max} className={buttonStyles.secondary}>
+            <Plus aria-hidden="true" className="h-3.5 w-3.5" />
+            Add a member
+          </button>
+          <p className="text-xs text-slate-600 dark:text-slate-400">
+            New members must have signed in at the portal once with this email and must not be on another team.
+          </p>
+        </fieldset>
 
-        {isLead && (
-          <div
-            className={clsx(
-              'flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-sm',
-              sizeOk ? 'bg-slate-50 dark:bg-[#1C0A0D] text-slate-700 dark:text-slate-200' : 'bg-rose-50 dark:bg-rose-950/30 text-rose-800 dark:text-rose-200'
-            )}
-            aria-live="polite"
-          >
-            <span className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Team after change: <strong>{finalSize} members</strong>
-            </span>
-            <span className="text-xs">Allowed: {TEAM_SIZE.min} to {TEAM_SIZE.max}</span>
-          </div>
-        )}
+        <div
+          className={clsx(
+            'flex flex-wrap items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm',
+            sizeOk ? 'bg-slate-50 dark:bg-[#1C0A0D] text-slate-700 dark:text-slate-200' : 'bg-rose-50 dark:bg-rose-950/30 text-rose-800 dark:text-rose-200'
+          )}
+          aria-live="polite"
+        >
+          <span className="flex items-center gap-2">
+            <Users aria-hidden="true" className="h-4 w-4" />
+            {summary ? `${summary.charAt(0).toUpperCase()}${summary.slice(1)}. ` : ''}Team after change: <strong>{finalSize} members</strong>
+          </span>
+          <span className="text-xs">Allowed: {TEAM_SIZE.min} to {TEAM_SIZE.max}</span>
+        </div>
 
         <div>
-          <label htmlFor="roster-reason" className={labelClass}>Reason for this change</label>
-          <textarea
-            id="roster-reason"
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            rows={4}
-            maxLength={3000}
-            placeholder={
-              isLead
-                ? 'Explain why each person is being removed or added, e.g. "Rahul has a university exam on 28 Oct and cannot attend Phase 2. Priya worked with us on the Phase 1 notebook and will replace him."'
-                : 'Explain why you need to leave the team.'
-            }
-            className={field}
-          />
-          <p className={clsx('mt-1 text-xs', reasonOk ? 'text-slate-500' : 'text-slate-500 dark:text-slate-400')}>
-            {reason.trim().length < MIN_REASON_LENGTH
-              ? `${MIN_REASON_LENGTH - reason.trim().length} more characters needed. Requests without a clear reason are not approved.`
-              : 'Requests are reviewed by the organizers. A vague reason may be declined.'}
-          </p>
+          <label htmlFor="roster-note" className={labelClass}>Anything else the organizers should know (optional)</label>
+          <textarea id="roster-note" value={teamNote} onChange={(e) => setTeamNote(e.target.value)} rows={2} maxLength={1000} className={field} />
         </div>
 
         <label className="flex items-start gap-2.5 text-sm text-slate-700 dark:text-slate-200 cursor-pointer">
           <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} className="accent-[#6C151E] h-4 w-4 mt-0.5" />
-          <span>
-            {isLead
-              ? 'Everyone being added has agreed to join, and everyone being removed has been told.'
-              : 'My team lead knows I am requesting to leave.'}
-          </span>
+          <span>Everyone being added has agreed to join, and everyone being removed, and the team lead, know about this request.</span>
         </label>
 
         {errors.length > 0 && (
-          <ul className="rounded-lg border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/30 px-3 py-2 text-sm text-rose-800 dark:text-rose-200 space-y-1" role="alert">
+          <ul
+            ref={errorRef}
+            tabIndex={-1}
+            role="alert"
+            className="rounded-lg border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/30 px-3 py-2 text-sm text-rose-800 dark:text-rose-200 space-y-1 focus:outline-none"
+          >
             {errors.map((e) => (
               <li key={e}>{e}</li>
             ))}
@@ -377,8 +457,8 @@ function TeamChangeForm({
 
         <div className="flex gap-2">
           <button type="submit" disabled={busy} className={buttonStyles.primary}>
-            {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-            Send for review
+            {busy && <Loader2 aria-hidden="true" className="h-3.5 w-3.5 animate-spin" />}
+            {busy ? 'Sending…' : 'Send for review'}
           </button>
           <button type="button" onClick={onCancel} disabled={busy} className={buttonStyles.secondary}>Cancel</button>
         </div>
@@ -389,7 +469,17 @@ function TeamChangeForm({
 
 /* ───────────────────────────── History ───────────────────────────── */
 
-function RequestItem({ r, mine, onWithdraw }: { r: ParticipantRequest; mine: boolean; onWithdraw: (id: string) => void }) {
+function RequestItem({
+  r,
+  mine,
+  canWithdraw,
+  onWithdraw,
+}: {
+  r: ParticipantRequest;
+  mine: boolean;
+  canWithdraw: boolean;
+  onWithdraw: (id: string) => void;
+}) {
   const view = STATUS_VIEW[r.status];
   const add = r.changes?.add || [];
   const drop = r.changes?.drop || [];
@@ -398,7 +488,9 @@ function RequestItem({ r, mine, onWithdraw }: { r: ParticipantRequest; mine: boo
       ? r.subject || QUESTION_CATEGORIES[r.category as QuestionCategory] || 'Question'
       : drop.length === 1 && add.length === 0 && drop[0].email === r.requester_email
         ? 'Request to leave the team'
-        : 'Team change request';
+        : 'Team edit request';
+  // Requests sent before per-person reasons only have the overall message
+  const perPerson = [...drop, ...add].some((c) => c.reason);
 
   return (
     <li className="rounded-lg border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] p-4 space-y-3">
@@ -416,21 +508,33 @@ function RequestItem({ r, mine, onWithdraw }: { r: ParticipantRequest; mine: boo
       {r.kind === 'roster_change' && (drop.length > 0 || add.length > 0) && (
         <ul className="text-sm space-y-1">
           {drop.map((d) => (
-            <li key={`d-${d.email}`} className="flex items-center gap-2 text-rose-800 dark:text-rose-200">
-              <UserMinus className="h-4 w-4 shrink-0" />
-              Remove {d.name || d.email}
+            <li key={`d-${d.email}`} className="flex items-start gap-2">
+              <UserMinus aria-hidden="true" className="h-4 w-4 shrink-0 mt-0.5 text-rose-700 dark:text-rose-300" />
+              <span>
+                <span className="text-rose-800 dark:text-rose-200">Remove {d.name || d.email}</span>
+                {d.reason && <span className="block text-slate-700 dark:text-slate-300">{d.reason}</span>}
+              </span>
             </li>
           ))}
           {add.map((a) => (
-            <li key={`a-${a.email}`} className="flex items-center gap-2 text-emerald-800 dark:text-emerald-200">
-              <UserPlus className="h-4 w-4 shrink-0" />
-              Add {a.name} ({a.email})
+            <li key={`a-${a.email}`} className="flex items-start gap-2">
+              <UserPlus aria-hidden="true" className="h-4 w-4 shrink-0 mt-0.5 text-emerald-700 dark:text-emerald-300" />
+              <span>
+                <span className="text-emerald-800 dark:text-emerald-200">
+                  Add {a.name} ({a.email})
+                </span>
+                {a.reason && <span className="block text-slate-700 dark:text-slate-300">{a.reason}</span>}
+              </span>
             </li>
           ))}
         </ul>
       )}
 
-      <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line">{r.message}</p>
+      {r.kind === 'roster_change' && perPerson ? (
+        r.changes?.note && <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line">Note: {r.changes.note}</p>
+      ) : (
+        <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line">{r.message}</p>
+      )}
 
       {r.admin_response && (
         <div
@@ -451,7 +555,7 @@ function RequestItem({ r, mine, onWithdraw }: { r: ParticipantRequest; mine: boo
         <p className="text-xs text-emerald-700 dark:text-emerald-300">Approved and applied to your team on {formatIst(r.applied_at)} IST.</p>
       )}
 
-      {mine && r.status === 'open' && (
+      {canWithdraw && r.status === 'open' && (
         <button
           type="button"
           onClick={() => onWithdraw(r.id)}
@@ -545,7 +649,6 @@ export function RequestsSection({
       {form === 'roster' && team && canRoster && (
         <TeamChangeForm
           overview={overview}
-          isLead={team.isLead}
           note={data.rosterChangesNote}
           onDone={() => done('Change request sent for review. Your team stays as it is until it is approved.')}
           onCancel={() => setForm(null)}
@@ -586,7 +689,7 @@ export function RequestsSection({
             <span className="flex items-center justify-between">
               <span className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-[#FAF6F3]">
                 <Users className="h-4 w-4 text-burgundy dark:text-[#E89BA5]" />
-                {team?.isLead === false ? 'Request to leave the team' : 'Add or remove team members'}
+                Request to edit the team
               </span>
               {canRoster && <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-burgundy" />}
             </span>
@@ -597,9 +700,7 @@ export function RequestsSection({
                   ? 'Team change requests are closed.'
                   : openRoster
                     ? 'Your team already has a request under review (see below).'
-                    : team.isLead
-                      ? 'Needs a clear reason. Applied only after the organizers approve it.'
-                      : 'Needs a clear reason. Reviewed by the organizers.'}
+                    : 'Remove or add members, with a reason for each. Applied only after the organizers approve it.'}
             </span>
           </button>
         </div>
@@ -611,7 +712,13 @@ export function RequestsSection({
         ) : (
           <ul className="space-y-3">
             {data.requests.map((r) => (
-              <RequestItem key={r.id} r={r} mine={r.requester_email === me} onWithdraw={withdraw} />
+              <RequestItem
+                key={r.id}
+                r={r}
+                mine={r.requester_email === me}
+                canWithdraw={r.requester_email === me || (r.kind === 'roster_change' && Boolean(team?.isLead))}
+                onWithdraw={withdraw}
+              />
             ))}
           </ul>
         )}

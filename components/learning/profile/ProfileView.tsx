@@ -544,7 +544,7 @@ export function ProfileView() {
           <OverviewSection overview={overview} status={status} actions={actions} seen={seen} onTab={setTab} />
         )}
         {tab === 'notices' && <NoticesSection notices={overview.notices} seen={seen} />}
-        {tab === 'hackathon' && <HackathonSection overview={overview} status={status} />}
+        {tab === 'hackathon' && <HackathonSection overview={overview} status={status} onRosterChanged={() => mutate()} />}
         {tab === 'payments' && <PaymentsSection overview={overview} status={status} />}
         {tab === 'requests' && (
           <RequestsSection
