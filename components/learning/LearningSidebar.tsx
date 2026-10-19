@@ -21,6 +21,7 @@ import {
   Trophy,
   CheckCircle2,
   ArrowLeft,
+  UserRound,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { supabase } from '@/lib/supabase';
@@ -32,6 +33,8 @@ import { useCodingChallengeStatus } from '@/hooks/use-coding-challenge';
 import { CertificateModal } from '@/components/learning/CertificateModal';
 import { useLearningSidebar } from '@/components/learning/LearningShell';
 import { handleGoogleSignInDirect } from '@/components/learning/AuthGate';
+import { useProfileOverview } from '@/hooks/use-profile-overview';
+import { readSeenNoticeIds } from '@/lib/notices';
 
 const DAYS = [
   { id: 1, label: 'Day 1: Foundations' },
@@ -55,6 +58,7 @@ export function LearningSidebar() {
   const { isLocked: isChallengeLocked } = useCodingChallengeStatus();
 
   const isHackathon = pathname === '/learning/hackathon';
+  const isProfile = pathname === '/learning/profile';
   const isCodingChallenge = pathname === '/learning/qiskit-challenge' || pathname?.startsWith('/learning/qiskit-challenge');
   const activeChallengeDay = searchParams?.get('challenge');
 
@@ -97,6 +101,17 @@ export function LearningSidebar() {
   const [progress, setProgress] = useState<Record<string, any>>({});
   const [competitions, setCompetitions] = useState<Record<string, any>>({});
   const [isCertModalOpen, setIsCertModalOpen] = useState(false);
+  const { data: profileOverview } = useProfileOverview({ enabled: Boolean(session) });
+  const [seenNoticeIds, setSeenNoticeIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const refresh = () => setSeenNoticeIds(readSeenNoticeIds());
+    refresh();
+    window.addEventListener('qff_notices_seen', refresh);
+    return () => window.removeEventListener('qff_notices_seen', refresh);
+  }, []);
+
+  const unreadNotices = (profileOverview?.notices || []).filter((n) => !seenNoticeIds.has(n.id)).length;
 
   const fetchSidebarProgress = React.useCallback(async () => {
     try {
@@ -239,7 +254,9 @@ export function LearningSidebar() {
 
   // Active Label for mobile header
   let activeMobileTitle = 'Curriculum Hub';
-  if (isCodingChallenge) {
+  if (isProfile) {
+    activeMobileTitle = 'My Profile';
+  } else if (isCodingChallenge) {
     activeMobileTitle = 'Python Coding Challenge in Qiskit';
   } else if (isHackathon) {
     activeMobileTitle = 'Hackathon Workspace';
@@ -270,6 +287,46 @@ export function LearningSidebar() {
   // Navigation Items Renderer
   const renderNavContent = () => (
     <>
+      {session && (
+        <Link
+          href="/learning/profile"
+          onClick={() => setIsMobileMenuOpen(false)}
+          className={clsx(
+            'w-full flex items-center justify-between px-3 py-2 mb-1 rounded-lg transition-colors text-xs sm:text-sm font-semibold group',
+            isProfile
+              ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] border border-burgundy/20 dark:border-burgundy/40'
+              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1C0A0D] border border-transparent'
+          )}
+        >
+          <div className="flex items-center gap-2">
+            <UserRound
+              className={clsx(
+                'w-3.5 h-3.5 shrink-0',
+                isProfile
+                  ? 'text-burgundy dark:text-[#E89BA5]'
+                  : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
+              )}
+            />
+            <span>My Profile</span>
+          </div>
+          {unreadNotices > 0 ? (
+            <span
+              className="shrink-0 min-w-[1.25rem] px-1.5 rounded-full bg-burgundy dark:bg-[#E89BA5] text-white dark:text-[#150709] text-[10px] font-bold leading-5 text-center"
+              title={`${unreadNotices} unread notice${unreadNotices === 1 ? '' : 's'}`}
+            >
+              {unreadNotices}
+            </span>
+          ) : (
+            <ChevronRight
+              className={clsx(
+                'w-3.5 h-3.5 shrink-0',
+                isProfile ? 'text-burgundy dark:text-[#E89BA5]' : 'text-slate-300 dark:text-slate-600'
+              )}
+            />
+          )}
+        </Link>
+      )}
+
       <Link
         href="/learning"
         onClick={() => setIsMobileMenuOpen(false)}
@@ -768,11 +825,13 @@ export function LearningSidebar() {
     return (
       <div className="p-3 border-t border-slate-100 dark:border-[#3D1418] bg-slate-50 dark:bg-[#1C0A0D] shrink-0 mt-auto">
         <div className="flex flex-col gap-1.5">
-          <div className="flex flex-col min-w-0">
-            <span
-              title={session.fullName || session.email}
-              className="font-semibold text-xs text-slate-800 dark:text-[#FAF6F3] truncate"
-            >
+          <Link
+            href="/learning/profile"
+            onClick={() => setIsMobileMenuOpen(false)}
+            title="Open your profile"
+            className="flex flex-col min-w-0 rounded-md -mx-1 px-1 py-0.5 hover:bg-white dark:hover:bg-[#250D11] transition-colors"
+          >
+            <span className="font-semibold text-xs text-slate-800 dark:text-[#FAF6F3] truncate">
               {session.fullName || session.email}
             </span>
             <span
@@ -781,7 +840,7 @@ export function LearningSidebar() {
             >
               {session.email}
             </span>
-          </div>
+          </Link>
 
           <div className="flex items-center gap-1.5 pt-1.5 border-t border-slate-200/60 dark:border-[#3D1418]">
             {session.isAdmin && (

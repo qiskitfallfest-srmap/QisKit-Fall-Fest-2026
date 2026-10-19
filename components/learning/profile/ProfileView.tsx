@@ -1,0 +1,475 @@
+'use client';
+
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import clsx from 'clsx';
+import {
+  AlertCircle,
+  ArrowRight,
+  Bell,
+  BookOpen,
+  CheckCircle2,
+  Clock,
+  Hourglass,
+  LayoutGrid,
+  Loader2,
+  RefreshCw,
+  UserRound,
+  Users,
+  Wallet,
+} from 'lucide-react';
+import { usePassStatus, type PassStatusResponse } from '@/hooks/use-pass-status';
+import { useProfileOverview, type ProfileOverview } from '@/hooks/use-profile-overview';
+import { phase2Headline } from '@/components/learning/Phase2StatusCard';
+import { markNoticesSeen, readSeenNoticeIds } from '@/lib/notices';
+import { deriveActionItems, type ActionItem, type ProfileTab } from './action-items';
+import {
+  AccountSection,
+  ActivitySection,
+  HackathonSection,
+  NoticeItem,
+  NoticesSection,
+  PaymentsSection,
+} from './ProfileSections';
+import { AccommodationCard } from './AccommodationCard';
+import { Card, StatusPill, buttonStyles, formatIst, initials, timeLeft, useResultsOut, type Tone } from './profile-ui';
+
+const TABS: { id: ProfileTab; label: string; icon: React.ElementType }[] = [
+  { id: 'overview', label: 'Overview', icon: LayoutGrid },
+  { id: 'notices', label: 'Notices', icon: Bell },
+  { id: 'hackathon', label: 'Hackathon', icon: Users },
+  { id: 'payments', label: 'Payments', icon: Wallet },
+  { id: 'activity', label: 'Activity', icon: BookOpen },
+  { id: 'account', label: 'Account', icon: UserRound },
+];
+
+function isTab(value: string | null): value is ProfileTab {
+  return TABS.some((t) => t.id === value);
+}
+
+/* ───────────────────────────── Header ───────────────────────────── */
+
+function ProfileHeader({ overview, status }: { overview: ProfileOverview; status?: PassStatusResponse }) {
+  const p = overview.profile;
+  const team = overview.team;
+  const hackathon = status?.hackathon;
+  const resultsOut = useResultsOut();
+
+  return (
+    <div className="flex items-start gap-3 sm:gap-4">
+      <div
+        aria-hidden="true"
+        className="flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-full bg-burgundy text-white text-base sm:text-lg font-semibold"
+      >
+        {initials(p.fullName)}
+      </div>
+      <div className="min-w-0 flex-1">
+        <h1 className="font-serif text-xl sm:text-2xl font-bold text-slate-900 dark:text-[#FAF6F3] leading-tight break-words">
+          {p.fullName}
+        </h1>
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 break-all">
+          {p.email}
+          {p.institution && <span className="hidden sm:inline"> · {p.institution}</span>}
+        </p>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {team ? (
+            <StatusPill tone="info">
+              <Users className="h-3 w-3" />
+              {team.isLead ? 'Team lead' : 'Member'} · {team.name}
+            </StatusPill>
+          ) : (
+            <StatusPill tone="neutral">Participant</StatusPill>
+          )}
+          {hackathon?.phase2 && resultsOut && (
+            <StatusPill tone={phase2Tone(hackathon.phase2.stage)}>{phase2Headline(hackathon)}</StatusPill>
+          )}
+          {p.isAdmin && <StatusPill tone="neutral">Admin</StatusPill>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function phase2Tone(stage: string): Tone {
+  if (stage === 'confirmed') return 'success';
+  if (stage === 'invited' || stage === 'accepted') return 'warning';
+  if (stage === 'waitlisted' || stage === 'under_review') return 'neutral';
+  return 'neutral';
+}
+
+/* ───────────────────────────── Overview ───────────────────────────── */
+
+function ActionList({ items, onTab }: { items: ActionItem[]; onTab: (t: ProfileTab) => void }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+
+  if (items.length === 0) {
+    return (
+      <div className="flex items-center gap-3 rounded-xl border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/60 dark:bg-emerald-950/20 px-4 py-3.5">
+        <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+        <p className="text-sm text-emerald-900 dark:text-emerald-200">Nothing needs your attention right now.</p>
+      </div>
+    );
+  }
+
+  return (
+    <section aria-labelledby="attention-heading" className="space-y-2">
+      <h2 id="attention-heading" className="text-sm font-semibold text-slate-900 dark:text-[#FAF6F3]">
+        Needs your attention
+      </h2>
+      <ul className="space-y-2">
+        {items.map((item) => {
+          const urgent = item.dueIso && Date.parse(item.dueIso) - now < 6 * 3_600_000;
+          const cta = item.cta;
+          const ctaClass = item.kind === 'action' ? buttonStyles.primary : buttonStyles.secondary;
+          return (
+            <li
+              key={item.id}
+              className={clsx(
+                'flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border px-4 py-3.5',
+                item.kind === 'action'
+                  ? urgent
+                    ? 'border-rose-200 bg-rose-50/60 dark:border-rose-900/70 dark:bg-rose-950/20'
+                    : 'border-amber-200 bg-amber-50/60 dark:border-amber-900/60 dark:bg-amber-950/15'
+                  : 'border-slate-200 bg-white dark:border-[#3D1418] dark:bg-[#150709]'
+              )}
+            >
+              <div className="flex items-start gap-3 min-w-0 flex-1">
+                {item.kind === 'action' ? (
+                  <AlertCircle className={clsx('h-5 w-5 shrink-0 mt-0.5', urgent ? 'text-rose-600' : 'text-amber-600')} />
+                ) : (
+                  <Hourglass className="h-5 w-5 shrink-0 mt-0.5 text-slate-400" />
+                )}
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-[#FAF6F3] leading-snug">{item.title}</p>
+                  {item.detail && <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-0.5">{item.detail}</p>}
+                  {item.dueIso && (
+                    <p
+                      className={clsx(
+                        'mt-1 inline-flex items-center gap-1 text-xs font-semibold',
+                        urgent ? 'text-rose-700 dark:text-rose-300' : 'text-slate-600 dark:text-slate-300'
+                      )}
+                    >
+                      <Clock className="h-3.5 w-3.5" />
+                      Due {formatIst(item.dueIso)} IST ({timeLeft(item.dueIso, now)})
+                    </p>
+                  )}
+                </div>
+              </div>
+              {cta &&
+                (cta.href ? (
+                  <Link href={cta.href} className={clsx(ctaClass, 'sm:shrink-0')}>
+                    {cta.label}
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => (cta.tab ? onTab(cta.tab) : cta.event && window.dispatchEvent(new Event(cta.event)))}
+                    className={clsx(ctaClass, 'sm:shrink-0')}
+                  >
+                    {cta.label}
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
+                ))}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+function SummaryTile({
+  icon: Icon,
+  label,
+  value,
+  sub,
+  tone = 'neutral',
+  onClick,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  sub?: string;
+  tone?: Tone;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group text-left rounded-xl border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] p-4 hover:border-burgundy/40 dark:hover:border-burgundy/60 hover:shadow-sm transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-burgundy/40"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+          <Icon className="h-3.5 w-3.5" />
+          {label}
+        </span>
+        <ArrowRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-burgundy dark:group-hover:text-[#E89BA5] transition-colors" />
+      </div>
+      <p
+        className={clsx(
+          'mt-2 text-sm font-semibold leading-snug',
+          tone === 'success'
+            ? 'text-emerald-700 dark:text-emerald-300'
+            : tone === 'warning'
+              ? 'text-amber-700 dark:text-amber-300'
+              : tone === 'danger'
+                ? 'text-rose-700 dark:text-rose-300'
+                : 'text-slate-900 dark:text-[#FAF6F3]'
+        )}
+      >
+        {value}
+      </p>
+      {sub && <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 line-clamp-2">{sub}</p>}
+    </button>
+  );
+}
+
+function OverviewSection({
+  overview,
+  status,
+  actions,
+  seen,
+  onTab,
+}: {
+  overview: ProfileOverview;
+  status?: PassStatusResponse;
+  actions: ActionItem[];
+  seen: Set<string>;
+  onTab: (t: ProfileTab) => void;
+}) {
+  const hackathon = status?.hackathon;
+  const resultsOut = useResultsOut();
+  const sessions = overview.activity.sessions;
+  const done = sessions.filter((s) => s.videoCompleted && s.quizPassed).length;
+  const pass = status?.pass;
+
+  const hackValue = !overview.team
+    ? 'Not on a team'
+    : hackathon?.phase2 && resultsOut
+      ? phase2Headline(hackathon)
+      : overview.team.repoUrl
+        ? 'Phase 1 submitted'
+        : 'Team formed';
+  const hackTone: Tone = hackathon?.phase2 ? phase2Tone(hackathon.phase2.stage) : 'neutral';
+
+  const pay = hackathon?.phase2?.payment;
+  const payValue = pay
+    ? `Team: ${pay.members.filter((m) => m.paid).length} of ${pay.members.length} paid`
+    : pass
+      ? pass.status === 'verified'
+        ? 'Pass verified'
+        : pass.status === 'rejected'
+          ? 'Pass payment not accepted'
+          : 'Pass under review'
+      : 'No payments';
+  const payTone: Tone = pay
+    ? pay.members.every((m) => m.paid)
+      ? 'success'
+      : 'warning'
+    : pass?.status === 'verified'
+      ? 'success'
+      : pass?.status === 'rejected'
+        ? 'danger'
+        : pass
+          ? 'warning'
+          : 'neutral';
+
+  const latest = overview.notices.slice(0, 2);
+
+  return (
+    <div className="space-y-6">
+      <ActionList items={actions} onTab={onTab} />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <SummaryTile
+          icon={Users}
+          label="Hackathon"
+          value={hackValue}
+          sub={overview.team ? `${overview.team.name} · ${overview.team.members.filter((m) => m.status === 'accepted').length} members` : undefined}
+          tone={hackTone}
+          onClick={() => onTab('hackathon')}
+        />
+        <SummaryTile icon={Wallet} label="Payments" value={payValue} tone={payTone} onClick={() => onTab('payments')} />
+        <SummaryTile
+          icon={BookOpen}
+          label="Masterclasses"
+          value={`${done} of ${sessions.length} complete`}
+          sub={overview.certificate.alreadyIssued ? 'Certificate issued' : overview.certificate.eligible ? 'Certificate unlocked' : undefined}
+          tone={done === sessions.length ? 'success' : 'neutral'}
+          onClick={() => onTab('activity')}
+        />
+        <SummaryTile
+          icon={Bell}
+          label="Notices"
+          value={
+            overview.notices.length === 0
+              ? 'No notices'
+              : `${overview.notices.filter((n) => !seen.has(n.id)).length} unread of ${overview.notices.length}`
+          }
+          onClick={() => onTab('notices')}
+        />
+      </div>
+
+      <AccommodationCard />
+
+      {latest.length > 0 && (
+        <Card
+          title="Latest notices"
+          action={
+            <button type="button" onClick={() => onTab('notices')} className={buttonStyles.ghost}>
+              View all
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          }
+        >
+          <div className="space-y-3">
+            {latest.map((n) => (
+              <NoticeItem key={n.id} notice={n} unread={!seen.has(n.id)} />
+            ))}
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+/* ───────────────────────────── Shell ───────────────────────────── */
+
+export function ProfileView() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams?.get('tab') ?? null;
+  const tab: ProfileTab = isTab(tabParam) ? tabParam : 'overview';
+
+  const { data: overview, error, isLoading, mutate } = useProfileOverview();
+  const { data: status, mutate: mutateStatus } = usePassStatus();
+  const [seen, setSeen] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    setSeen(readSeenNoticeIds());
+  }, []);
+
+  // Opening the Notices tab marks everything there as read (the badge and dots clear on next visit)
+  useEffect(() => {
+    if (tab === 'notices' && overview?.notices.length) {
+      markNoticesSeen(overview.notices.map((n) => n.id));
+    }
+  }, [tab, overview?.notices]);
+
+  const setTab = useCallback(
+    (next: ProfileTab) => {
+      const params = new URLSearchParams(searchParams?.toString());
+      if (next === 'overview') params.delete('tab');
+      else params.set('tab', next);
+      const qs = params.toString();
+      router.replace(`${pathname}${qs ? `?${qs}` : ''}`, { scroll: false });
+      document.getElementById('profile-tabs')?.scrollIntoView({ block: 'nearest' });
+    },
+    [pathname, router, searchParams]
+  );
+
+  const actions = useMemo(() => deriveActionItems(overview, status), [overview, status]);
+  const unread = overview?.notices.filter((n) => !seen.has(n.id)).length ?? 0;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center gap-2 py-24 text-sm text-slate-500">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        Loading your profile
+      </div>
+    );
+  }
+
+  // A failed background refresh keeps the last good data on screen
+  if (!overview) {
+    return (
+      <div className="max-w-md mx-auto py-20 px-4 text-center space-y-3">
+        <AlertCircle className="h-8 w-8 mx-auto text-rose-500" />
+        <p className="text-sm font-semibold text-slate-900 dark:text-[#FAF6F3]">Could not load your profile</p>
+        <p className="text-xs text-slate-500">{error?.message}</p>
+        <button type="button" onClick={() => mutate()} className={buttonStyles.secondary}>
+          <RefreshCw className="h-3.5 w-3.5" />
+          Try again
+        </button>
+      </div>
+    );
+  }
+
+  const badges: Partial<Record<ProfileTab, number>> = {
+    overview: actions.filter((a) => a.kind === 'action').length,
+    notices: unread,
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-5">
+      <ProfileHeader overview={overview} status={status} />
+
+      <nav
+        id="profile-tabs"
+        aria-label="Profile sections"
+        className="md:sticky md:top-[82px] xl:top-[88px] z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 bg-[#FAF7F4]/95 dark:bg-[#100405]/95 backdrop-blur border-b border-slate-200 dark:border-[#3D1418]"
+      >
+        <div role="tablist" className="flex gap-1 overflow-x-auto no-scrollbar -mb-px">
+          {TABS.map((t) => {
+            const active = t.id === tab;
+            const count = badges[t.id] || 0;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                aria-controls={`profile-panel-${t.id}`}
+                onClick={() => setTab(t.id)}
+                className={clsx(
+                  'inline-flex items-center gap-1.5 shrink-0 whitespace-nowrap px-3 py-3 text-sm font-semibold border-b-2 transition-colors cursor-pointer focus-visible:outline-none focus-visible:bg-burgundy/5',
+                  active
+                    ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
+                    : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
+                )}
+              >
+                <t.icon className="h-4 w-4" />
+                {t.label}
+                {count > 0 && (
+                  <span
+                    className="ml-0.5 min-w-[1.25rem] rounded-full bg-burgundy dark:bg-[#E89BA5] px-1.5 text-[11px] leading-5 text-white dark:text-[#150709] text-center"
+                    aria-label={`${count} ${t.id === 'notices' ? 'unread' : 'to do'}`}
+                  >
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+
+      <div role="tabpanel" id={`profile-panel-${tab}`} aria-label={TABS.find((t) => t.id === tab)?.label}>
+        {tab === 'overview' && (
+          <OverviewSection overview={overview} status={status} actions={actions} seen={seen} onTab={setTab} />
+        )}
+        {tab === 'notices' && <NoticesSection notices={overview.notices} seen={seen} />}
+        {tab === 'hackathon' && <HackathonSection overview={overview} status={status} />}
+        {tab === 'payments' && <PaymentsSection overview={overview} status={status} />}
+        {tab === 'activity' && <ActivitySection overview={overview} />}
+        {tab === 'account' && (
+          <AccountSection
+            overview={overview}
+            onNameSaved={(name) => {
+              mutate({ ...overview, profile: { ...overview.profile, fullName: name } }, { revalidate: true });
+              mutateStatus();
+            }}
+          />
+        )}
+      </div>
+    </div>
+  );
+}

@@ -11,6 +11,8 @@ import { AdminCodingChallengeView } from '@/components/learning/AdminCodingChall
 import { AdminCompetitionsView } from '@/components/learning/AdminCompetitionsView';
 import { AdminPaymentsManager } from '@/components/learning/AdminPaymentsManager';
 import { AdminPhase2View } from '@/components/learning/AdminPhase2View';
+import { AdminNoticesManager } from '@/components/learning/AdminNoticesManager';
+import { AdminAccommodationView } from '@/components/learning/AdminAccommodationView';
 import {
   Shield,
   ListChecks,
@@ -34,12 +36,14 @@ import {
   Terminal,
   Award,
   Trophy,
+  Bell,
+  BedDouble,
 } from 'lucide-react';
 import { extractParticipantsFromCSV, ParsedParticipant } from '@/lib/csv';
 
 export default function AdminConsolePage() {
   const [session, setSession] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'analytics' | 'phase2' | 'hackathon' | 'competitions' | 'whitelist' | 'overrides' | 'sessions' | 'quizzes' | 'coding' | 'payments'>('hackathon');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'phase2' | 'hackathon' | 'competitions' | 'whitelist' | 'overrides' | 'sessions' | 'quizzes' | 'coding' | 'payments' | 'notices' | 'accommodation'>('hackathon');
 
   const [emails, setEmails] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -504,6 +508,32 @@ export default function AdminConsolePage() {
 
             <button
               type="button"
+              onClick={() => setActiveTab('notices')}
+              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+                activeTab === 'notices'
+                  ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
+                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
+              }`}
+            >
+              <Bell className="w-4 h-4" />
+              <span>Participant Notices</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('accommodation')}
+              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+                activeTab === 'accommodation'
+                  ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
+                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
+              }`}
+            >
+              <BedDouble className="w-4 h-4" />
+              <span>Accommodation</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setActiveTab('overrides')}
               className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
                 activeTab === 'overrides'
@@ -518,6 +548,10 @@ export default function AdminConsolePage() {
 
           {/* TAB: ₹99 PAYMENTS REVIEW (OFFLINE PASS + CERTIFICATE) */}
           {activeTab === 'payments' && <AdminPaymentsManager />}
+
+          {activeTab === 'notices' && <AdminNoticesManager />}
+
+          {activeTab === 'accommodation' && <AdminAccommodationView />}
 
           {/* TAB: HACKATHON TEAMS & PARTICIPANTS */}
           {activeTab === 'phase2' && <AdminPhase2View />}
