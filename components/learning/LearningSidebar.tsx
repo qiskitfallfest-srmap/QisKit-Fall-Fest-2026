@@ -36,6 +36,8 @@ import { handleGoogleSignInDirect } from '@/components/learning/AuthGate';
 import { useProfileOverview } from '@/hooks/use-profile-overview';
 import { readSeenNoticeIds } from '@/lib/notices';
 
+const PROFILE_SEEN_KEY = 'qff_profile_seen';
+
 const DAYS = [
   { id: 1, label: 'Day 1: Foundations' },
   { id: 2, label: 'Day 2: Architecture & Optics' },
@@ -112,6 +114,23 @@ export function LearningSidebar() {
   }, []);
 
   const unreadNotices = (profileOverview?.notices || []).filter((n) => !seenNoticeIds.has(n.id)).length;
+
+  // "New" tag on the profile link until the participant has opened it once.
+  // Starts true so the tag never flashes in before localStorage is read.
+  const [profileSeen, setProfileSeen] = useState(true);
+  useEffect(() => {
+    try {
+      if (isProfile) {
+        localStorage.setItem(PROFILE_SEEN_KEY, '1');
+        setProfileSeen(true);
+      } else {
+        setProfileSeen(localStorage.getItem(PROFILE_SEEN_KEY) === '1');
+      }
+    } catch {
+      setProfileSeen(true);
+    }
+  }, [isProfile]);
+  const profileNeedsAttention = unreadNotices > 0 || !profileSeen;
 
   const fetchSidebarProgress = React.useCallback(async () => {
     try {
@@ -315,6 +334,10 @@ export function LearningSidebar() {
               title={`${unreadNotices} unread notice${unreadNotices === 1 ? '' : 's'}`}
             >
               {unreadNotices}
+            </span>
+          ) : !profileSeen ? (
+            <span className="shrink-0 px-1.5 py-0.5 rounded bg-burgundy dark:bg-[#E89BA5] text-white dark:text-[#150709] text-[9px] font-bold uppercase tracking-wider leading-none">
+              New
             </span>
           ) : (
             <ChevronRight
@@ -882,6 +905,21 @@ export function LearningSidebar() {
             </span>
           </div>
 
+          <div className="flex items-center gap-2 shrink-0">
+          {session && !isProfile && (
+            <Link
+              href="/learning/profile"
+              onClick={() => setIsMobileMenuOpen(false)}
+              aria-label={profileNeedsAttention ? 'Profile (new)' : 'Profile'}
+              className="relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-slate-50 dark:bg-[#1C0A0D] text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+            >
+              <UserRound className="w-3.5 h-3.5 text-burgundy dark:text-[#E89BA5]" />
+              <span>Profile</span>
+              {profileNeedsAttention && (
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-burgundy dark:bg-[#E89BA5] ring-2 ring-white dark:ring-[#150709]" />
+              )}
+            </Link>
+          )}
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen((prev) => !prev)}
@@ -901,6 +939,7 @@ export function LearningSidebar() {
               </>
             )}
           </button>
+          </div>
         </div>
 
         {/* Mobile Dropdown Drawer */}

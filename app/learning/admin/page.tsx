@@ -27,6 +27,7 @@ import {
   Video,
   Terminal,
   ChevronRight,
+  AlertTriangle,
   Award,
   Trophy,
   Bell,
@@ -123,12 +124,16 @@ export default function AdminConsolePage() {
 
   const [whitelistCount, setWhitelistCount] = useState<number | null>(null);
   const [stats, setStats] = useState<any>({});
+  const [config, setConfig] = useState<Record<string, any>>({});
   const [attention, setAttention] = useState<Attention | null>(null);
 
   const fetchConfig = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/config');
       const data = await res.json();
+      if (data.config) {
+        setConfig(data.config);
+      }
       if (data.stats) {
         setStats(data.stats);
       }
@@ -172,8 +177,13 @@ export default function AdminConsolePage() {
     quizzes: <AdminQuizzesManager />,
     sessions: <AdminSessionsManager />,
     analytics: <AdminAnalyticsView />,
-    overrides: <AdminOverridesPanel />,
+    overrides: <AdminOverridesPanel onChange={fetchConfig} />,
   };
+
+  const activeOverrides = [
+    config.lecture_lock_override?.enabled === true && 'Lecture locks are bypassed for all participants.',
+    config.hackathon_release_override?.enabled === true && 'The hackathon workspace is open to all participants early.',
+  ].filter(Boolean) as string[];
 
   return (
     <AuthGate onSessionChange={setSession}>
@@ -232,6 +242,32 @@ export default function AdminConsolePage() {
               </div>
             )}
           </div>
+
+          {activeOverrides.length > 0 && (
+            <div
+              role="alert"
+              className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 rounded-lg border border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/10 text-amber-900 dark:text-amber-200"
+            >
+              <div className="flex items-start gap-2.5">
+                <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                <div className="text-xs leading-relaxed">
+                  <p className="font-bold">Release override on</p>
+                  {activeOverrides.map((text) => (
+                    <p key={text}>{text}</p>
+                  ))}
+                </div>
+              </div>
+              {activeTab !== 'overrides' && (
+                <button
+                  type="button"
+                  onClick={() => selectTab('overrides')}
+                  className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-[#150709] border border-amber-300 dark:border-amber-500/40 hover:bg-amber-100 dark:hover:bg-amber-500/20 transition-colors cursor-pointer"
+                >
+                  Review overrides
+                </button>
+              )}
+            </div>
+          )}
 
           <div className="lg:grid lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-8 lg:items-start">
           {/* Navigation: native select on small screens, grouped sidebar on desktop */}

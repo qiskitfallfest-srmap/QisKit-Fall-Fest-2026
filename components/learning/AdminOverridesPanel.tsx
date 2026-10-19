@@ -3,7 +3,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Settings } from 'lucide-react';
 
-export function AdminOverridesPanel() {
+const OVERRIDE_WARNING: Record<string, string> = {
+  lecture_lock_override: 'This unlocks every lecture for all participants on the live site.',
+  hackathon_release_override: 'This opens the hackathon workspace to all participants on the live site.',
+};
+
+interface Props {
+  /** Called after an override changes so the page can update its warning bar. */
+  onChange?: () => void;
+}
+
+export function AdminOverridesPanel({ onChange }: Props) {
   const [config, setConfig] = useState<any>({});
   const [isUpdatingConfig, setIsUpdatingConfig] = useState(false);
 
@@ -25,6 +35,12 @@ export function AdminOverridesPanel() {
 
   // Toggle config override
   async function handleToggleOverride(key: string, currentValue: boolean) {
+    // Turning an override on changes what every participant sees, so confirm first.
+    // Turning it off restores normal behaviour and needs no confirmation.
+    if (!currentValue && !confirm(`${OVERRIDE_WARNING[key]}
+
+Turn it on?`)) return;
+
     try {
       setIsUpdatingConfig(true);
       const res = await fetch('/api/admin/config', {
@@ -38,6 +54,7 @@ export function AdminOverridesPanel() {
       const data = await res.json();
       if (data.success) {
         await fetchConfig();
+        onChange?.();
       }
     } catch (err) {
       console.error('Error toggling override:', err);
@@ -53,8 +70,8 @@ export function AdminOverridesPanel() {
         <h2 className="text-base font-bold">Testing & System Release Overrides</h2>
       </div>
       <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-        Enable these switches to test the entire participant journey immediately without
-        waiting for real-world festival calendar dates.
+        These switches affect all participants on the live site, not just you. Use them for
+        testing only, and turn them off afterwards.
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
@@ -79,7 +96,7 @@ export function AdminOverridesPanel() {
             disabled={isUpdatingConfig}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
               config.lecture_lock_override?.enabled === true
-                ? 'bg-emerald-600 text-white'
+                ? 'bg-amber-500 text-white'
                 : 'bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
             }`}
           >
@@ -108,7 +125,7 @@ export function AdminOverridesPanel() {
             disabled={isUpdatingConfig}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
               config.hackathon_release_override?.enabled === true
-                ? 'bg-emerald-600 text-white'
+                ? 'bg-amber-500 text-white'
                 : 'bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
             }`}
           >
