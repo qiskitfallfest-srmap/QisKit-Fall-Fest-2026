@@ -311,24 +311,39 @@ export function LearningSidebar() {
           href="/learning/profile"
           onClick={() => setIsMobileMenuOpen(false)}
           className={clsx(
-            'w-full flex items-center justify-between px-3 py-2 mb-1 rounded-lg transition-colors text-xs sm:text-sm font-semibold group',
+            'w-full flex items-center justify-between gap-2 px-3 py-2 mb-1 rounded-lg transition-colors text-xs sm:text-sm font-semibold group',
             isProfile
               ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] border border-burgundy/20 dark:border-burgundy/40'
-              : profileNeedsAttention
-                ? 'text-slate-800 dark:text-[#FAF6F3] bg-burgundy/5 dark:bg-burgundy/10 border border-burgundy/40 dark:border-[#E89BA5]/50 ring-2 ring-burgundy/15 dark:ring-[#E89BA5]/15 hover:bg-burgundy/10 dark:hover:bg-burgundy/20'
+              : !profileSeen
+                ? // Dashed white callout: reads as an announcement, not as the selected item
+                  'bg-white dark:bg-[#150709] text-slate-800 dark:text-[#FAF6F3] border border-dashed border-burgundy/50 dark:border-[#E89BA5]/50 hover:bg-slate-50 dark:hover:bg-[#1C0A0D]'
                 : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1C0A0D] border border-transparent'
           )}
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-start gap-2 min-w-0">
             <UserRound
               className={clsx(
-                'w-3.5 h-3.5 shrink-0',
-                isProfile
+                'w-3.5 h-3.5 shrink-0 mt-0.5',
+                isProfile || !profileSeen
                   ? 'text-burgundy dark:text-[#E89BA5]'
                   : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
               )}
             />
-            <span>My Profile</span>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span>My Profile</span>
+                {!profileSeen && !isProfile && (
+                  <span className="shrink-0 px-1.5 py-0.5 rounded bg-burgundy dark:bg-[#E89BA5] text-white dark:text-[#150709] text-[9px] font-bold uppercase tracking-wider leading-none">
+                    New
+                  </span>
+                )}
+              </div>
+              {!profileSeen && !isProfile && (
+                <span className="block mt-0.5 text-[11px] font-normal leading-snug text-slate-500 dark:text-slate-400">
+                  Notices, payments, stay and team requests
+                </span>
+              )}
+            </div>
           </div>
           {unreadNotices > 0 ? (
             <span
@@ -337,15 +352,11 @@ export function LearningSidebar() {
             >
               {unreadNotices}
             </span>
-          ) : !profileSeen ? (
-            <span className="shrink-0 px-1.5 py-0.5 rounded bg-burgundy dark:bg-[#E89BA5] text-white dark:text-[#150709] text-[9px] font-bold uppercase tracking-wider leading-none">
-              New
-            </span>
           ) : (
             <ChevronRight
               className={clsx(
                 'w-3.5 h-3.5 shrink-0',
-                isProfile ? 'text-burgundy dark:text-[#E89BA5]' : 'text-slate-300 dark:text-slate-600'
+                isProfile || !profileSeen ? 'text-burgundy dark:text-[#E89BA5]' : 'text-slate-300 dark:text-slate-600'
               )}
             />
           )}
