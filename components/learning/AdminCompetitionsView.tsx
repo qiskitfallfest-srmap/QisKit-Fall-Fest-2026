@@ -20,6 +20,9 @@ import {
   XCircle,
   ChevronDown,
   ChevronUp,
+  Save,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { useEvaluationPolling } from './useEvaluationPolling';
 import { EvaluationDrawer } from './EvaluationDrawer';
@@ -167,6 +170,11 @@ export function AdminCompetitionsView() {
   const [selectedSubForEvaluation, setSelectedSubForEvaluation] = useState<CompetitionSubmissionItem | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [actionInProgressId, setActionInProgressId] = useState<string | null>(null);
+
+  // Inline evaluation drafts and saving state
+  const [drafts, setDrafts] = useState<Record<string, { score: string; note: string }>>({});
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const fetchSubmissions = useCallback(async () => {
     try {
@@ -359,6 +367,83 @@ export function AdminCompetitionsView() {
       else next.add(id);
       return next;
     });
+  };
+
+  const getDraft = (sub: CompetitionSubmissionItem) => {
+    const d = drafts[sub.id];
+    const currentScore =
+      sub.evaluation?.score !== null && sub.evaluation?.score !== undefined
+        ? String(sub.evaluation.score)
+        : '';
+    return {
+      score: d?.score !== undefined ? d.score : currentScore,
+      note: d?.note !== undefined ? d.note : '',
+    };
+  };
+
+  const handleSaveInline = async (sub: CompetitionSubmissionItem) => {
+    try {
+      setSavingId(sub.id);
+      const draft = getDraft(sub);
+      const trimmedScore = draft.score.trim();
+      const scoreVal = trimmedScore === '' ? null : Number(trimmedScore);
+
+      if (scoreVal !== null && (isNaN(scoreVal) || scoreVal < 0 || scoreVal > 100)) {
+        setFeedbackMsg({ text: 'Score must be a number between 0 and 100.', isError: true });
+        return;
+      }
+
+      const res = await fetch('/api/admin/evaluations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: sub.competition_type,
+          target_id: sub.id,
+          action: 'update_evaluation',
+          score: scoreVal,
+          note_text: draft.note.trim() || undefined,
+        }),
+      });
+
+      const json = await res.json();
+      if (json.success && json.evaluation) {
+        setSubmissions((prev) =>
+          prev.map((s) => (s.id === sub.id ? { ...s, evaluation: json.evaluation } : s))
+        );
+        // Reset note draft, update score draft with formatted number
+        setDrafts((prev) => ({
+          ...prev,
+          [sub.id]: {
+            score:
+              json.evaluation.score !== null && json.evaluation.score !== undefined
+                ? String(json.evaluation.score)
+                : '',
+            note: '',
+          },
+        }));
+        setFeedbackMsg({
+          text: `Saved evaluation for ${sub.fullName || sub.email}.`,
+          isError: false,
+        });
+      } else {
+        setFeedbackMsg({
+          text: json.error || 'Failed to save evaluation.',
+          isError: true,
+        });
+      }
+    } catch (err) {
+      console.error('Error saving inline evaluation:', err);
+      setFeedbackMsg({ text: 'Network error saving evaluation.', isError: true });
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const copyUrl = (id: string, url: string) => {
+    navigator.clipboard?.writeText(url).then(() => {
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    }).catch(() => {});
   };
 
   const inTrack = useMemo(
@@ -640,6 +725,8 @@ export function AdminCompetitionsView() {
           {filteredSubmissions.map((sub, idx) => {
             const isExpanded = expandedIds.has(sub.id);
             const busy = actionInProgressId === sub.id;
+            const isSaving = savingId === sub.id;
+            const draft = getDraft(sub);
             return (
               <div
                 key={sub.id}
@@ -648,7 +735,16 @@ export function AdminCompetitionsView() {
                 {/* Entry Header Strip */}
                 <div
                   onClick={() => toggleExpand(sub.id)}
-                  className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/70 dark:hover:bg-[#1C0A0D]/70 transition-colors"
+                  tabIndex={0}
+                  role="button"
+                  aria-expanded={isExpanded}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      toggleExpand(sub.id);
+                    }
+                  }}
+                  className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/70 dark:hover:bg-[#1C0A0D]/70 transition-colors focus:outline-none focus:ring-2 focus:ring-burgundy/40"
                 >
                   <div className="space-y-1 min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
@@ -807,45 +903,216 @@ export function AdminCompetitionsView() {
                   </div>
                 </div>
 
-                {/* Expanded Entry Details */}
+                {/* Expanded Entry Details & Inline Evaluation */}
                 {isExpanded && (
-                  <div className="border-t border-slate-100 dark:border-[#3D1418] bg-slate-50/50 dark:bg-[#1C0A0D]/50 p-4 sm:p-5 grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
-                    <dl className="space-y-2">
-                      <div>
-                        <dt className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Submission URL</dt>
-                        <dd className="font-mono break-all text-slate-700 dark:text-slate-300">{sub.submission_url}</dd>
+                  <div className="border-t border-slate-100 dark:border-[#3D1418] bg-slate-50/60 dark:bg-[#180709]/60 p-4 sm:p-5 grid grid-cols-1 lg:grid-cols-2 gap-5 text-xs">
+                    {/* Left Panel: Inline Scoring, Decision & Notes */}
+                    <div className="p-4 rounded-xl border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] space-y-4 shadow-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">
+                          Inline Evaluation & Scoring
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => openEvaluationDesk(sub)}
+                          className="text-xs text-burgundy dark:text-[#E89BA5] hover:underline flex items-center gap-1 font-medium cursor-pointer"
+                          title="Open 4-rubric criterion sliders"
+                        >
+                          <Sliders className="w-3 h-3" />
+                          <span>Detailed Rubric Desk</span>
+                        </button>
                       </div>
-                      {sub.notes && sub.notes !== 'file_upload' && (
-                        <div>
-                          <dt className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Participant notes</dt>
-                          <dd className="text-slate-700 dark:text-slate-300 whitespace-pre-line">{sub.notes}</dd>
+
+                      {/* Score Input and Quick Toggles */}
+                      <div className="flex flex-wrap items-end gap-3">
+                        <label className="space-y-1">
+                          <span className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                            Score (0–100)
+                          </span>
+                          <input
+                            type="number"
+                            min={0}
+                            max={100}
+                            step="1"
+                            placeholder="e.g. 85"
+                            value={draft.score}
+                            onChange={(e) =>
+                              setDrafts((prev) => ({
+                                ...prev,
+                                [sub.id]: {
+                                  ...draft,
+                                  score: e.target.value,
+                                },
+                              }))
+                            }
+                            className="w-28 px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#100405] text-slate-900 dark:text-[#FAF6F3] focus:outline-none focus:ring-2 focus:ring-burgundy/40 font-mono font-bold"
+                          />
+                        </label>
+
+                        {/* Quick Decision Toggles */}
+                        <div className="flex items-center gap-2 pb-0.5">
+                          <button
+                            type="button"
+                            onClick={() => handleQuickToggleNextRound(sub)}
+                            disabled={busy || isSaving}
+                            className={`px-3 py-1.5 text-xs rounded-lg font-semibold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer disabled:opacity-50 ${
+                              sub.evaluation?.is_next_round
+                                ? 'bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-500'
+                                : 'bg-white dark:bg-[#1C0A0D] hover:bg-slate-100 dark:hover:bg-[#250D11] text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-[#3D1418]'
+                            }`}
+                          >
+                            <CheckCircle2 className={`w-3.5 h-3.5 ${sub.evaluation?.is_next_round ? 'text-white' : 'text-slate-400'}`} />
+                            <span>{sub.evaluation?.is_next_round ? 'Shortlisted' : 'Shortlist'}</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleQuickToggleReject(sub)}
+                            disabled={busy || isSaving}
+                            className={`px-3 py-1.5 text-xs rounded-lg font-semibold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer disabled:opacity-50 ${
+                              sub.evaluation?.status === 'rejected'
+                                ? 'bg-rose-600 hover:bg-rose-700 text-white border border-rose-500'
+                                : 'bg-white dark:bg-[#1C0A0D] hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/40 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-[#3D1418]'
+                            }`}
+                          >
+                            <XCircle className={`w-3.5 h-3.5 ${sub.evaluation?.status === 'rejected' ? 'text-white' : 'text-slate-400'}`} />
+                            <span>{sub.evaluation?.status === 'rejected' ? 'Rejected' : 'Reject'}</span>
+                          </button>
                         </div>
-                      )}
-                      <div>
-                        <dt className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Submission ID</dt>
-                        <dd className="font-mono text-slate-500 dark:text-slate-400">{sub.id}</dd>
                       </div>
-                    </dl>
-                    <div className="space-y-2">
-                      <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                        Inspection log ({sub.evaluation?.downloads?.length || 0})
-                      </p>
-                      {sub.evaluation?.downloads && sub.evaluation.downloads.length > 0 ? (
-                        <ul className="space-y-1 text-slate-700 dark:text-slate-300">
-                          {sub.evaluation.downloads.map((d, i) => (
-                            <li key={`${d.evaluator_email}-${d.downloaded_at}-${i}`}>
-                              {d.evaluator_name} · {new Date(d.downloaded_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="text-slate-400 italic">Not inspected yet.</p>
-                      )}
-                      {sub.evaluation?.last_evaluated_by_name && (
-                        <p className="text-slate-500 dark:text-slate-400">
-                          Last evaluated by {sub.evaluation.last_evaluated_by_name}
-                        </p>
-                      )}
+
+                      {/* Notes Textarea */}
+                      <label className="block space-y-1">
+                        <span className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                          Evaluation Notes & Feedback
+                        </span>
+                        <textarea
+                          rows={3}
+                          value={draft.note}
+                          onChange={(e) =>
+                            setDrafts((prev) => ({
+                              ...prev,
+                              [sub.id]: {
+                                ...draft,
+                                note: e.target.value,
+                              },
+                            }))
+                          }
+                          placeholder="Add evaluation observations, strengths, flaws, or reasons for decision..."
+                          className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#100405] text-slate-900 dark:text-[#FAF6F3] focus:outline-none focus:ring-2 focus:ring-burgundy/40 placeholder:text-slate-400"
+                        />
+                      </label>
+
+                      {/* Save Button Row */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-[#250D11]">
+                        <button
+                          type="button"
+                          disabled={isSaving || busy}
+                          onClick={() => handleSaveInline(sub)}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-burgundy hover:bg-burgundy-deep text-white shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                          {isSaving ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              <span>Saving...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Save className="w-3.5 h-3.5" />
+                              <span>Save Score & Note</span>
+                            </>
+                          )}
+                        </button>
+                        <span className="text-[11px] text-slate-400">
+                          {sub.evaluation?.last_evaluated_by_name ? `Last updated by ${sub.evaluation.last_evaluated_by_name}` : 'Press Enter or click Save'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Right Panel: Recorded Notes & Submission Details */}
+                    <div className="space-y-4">
+                      {/* Recorded Notes History */}
+                      <div className="p-4 rounded-xl border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] space-y-2 shadow-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">
+                            Recorded Notes ({sub.evaluation?.comments?.length || 0})
+                          </span>
+                        </div>
+                        {sub.evaluation?.comments && sub.evaluation.comments.length > 0 ? (
+                          <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                            {sub.evaluation.comments.map((c) => (
+                              <div
+                                key={c.id}
+                                className="p-2.5 rounded-lg border border-slate-100 dark:border-[#2E0F14] bg-slate-50 dark:bg-[#180709] text-xs space-y-1"
+                              >
+                                <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
+                                  <span className="font-semibold text-slate-700 dark:text-slate-200">{c.evaluator_name}</span>
+                                  <span>
+                                    {new Date(c.created_at).toLocaleString('en-IN', {
+                                      timeZone: 'Asia/Kolkata',
+                                      month: 'short',
+                                      day: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit',
+                                    })} IST
+                                  </span>
+                                </div>
+                                <p className="text-slate-800 dark:text-slate-200 whitespace-pre-wrap">{c.text}</p>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-slate-400 dark:text-slate-500 italic p-3 rounded-lg border border-dashed border-slate-200 dark:border-[#3D1418] bg-slate-50/50 dark:bg-[#180709]/50">
+                            No notes recorded yet. Type a note on the left and click &ldquo;Save Score & Note&rdquo;.
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Submission Details & Inspection Log */}
+                      <div className="p-4 rounded-xl border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] space-y-2.5 shadow-xs">
+                        <div>
+                          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block mb-1">
+                            Submission URL
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <a
+                              href={sub.submission_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-mono text-xs text-burgundy dark:text-[#E89BA5] hover:underline break-all inline-flex items-center gap-1 flex-1"
+                            >
+                              <span className="truncate">{sub.submission_url}</span>
+                              <ExternalLink className="w-3 h-3 shrink-0" />
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => copyUrl(sub.id, sub.submission_url)}
+                              className="p-1 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer shrink-0"
+                              title="Copy URL"
+                            >
+                              {copiedId === sub.id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                            </button>
+                          </div>
+                        </div>
+
+                        {sub.notes && sub.notes !== 'file_upload' && (
+                          <div className="pt-2 border-t border-slate-100 dark:border-[#250D11]">
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block mb-0.5">
+                              Participant Notes
+                            </span>
+                            <p className="text-slate-700 dark:text-slate-300 whitespace-pre-line">{sub.notes}</p>
+                          </div>
+                        )}
+
+                        <div className="pt-2 border-t border-slate-100 dark:border-[#250D11] flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+                          <span>
+                            Inspections: {sub.evaluation?.downloads?.length ? `${sub.evaluation.downloads.length} reviewer(s)` : 'None yet'}
+                          </span>
+                          <span className="font-mono text-[10px]">
+                            ID: {sub.id.slice(0, 8)}...
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}

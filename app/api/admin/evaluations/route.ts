@@ -180,6 +180,9 @@ export async function POST(request: NextRequest) {
         if (status === 'rejected') {
           recordToSave.is_next_round = false;
         }
+      } else if (recordToSave.status === 'pending') {
+        // If not explicitly set and currently pending, advance to under_review upon evaluation
+        recordToSave.status = 'under_review';
       }
       if (score !== undefined) recordToSave.score = score !== null ? Number(score) : null;
       if (rubric_scores !== undefined) recordToSave.rubric_scores = rubric_scores as EvaluationRubric;
@@ -188,6 +191,25 @@ export async function POST(request: NextRequest) {
         if (recordToSave.is_next_round && recordToSave.status === 'rejected') {
           recordToSave.status = 'shortlisted';
         }
+      }
+      const rawNote = String(body.note_text || body.comment_text || '').trim();
+      if (rawNote) {
+        const existingComments: EvaluationComment[] = Array.isArray(recordToSave.comments)
+          ? recordToSave.comments
+          : [];
+
+        const newComment: EvaluationComment = {
+          id: crypto.randomUUID(),
+          evaluator_email: adminEmail,
+          evaluator_name: adminName,
+          text: rawNote,
+          created_at: now,
+        };
+
+        recordToSave.comments = [...existingComments, newComment];
+      }
+      if (body.participant_feedback !== undefined) {
+        recordToSave.participant_feedback = body.participant_feedback;
       }
     } else if (action === 'add_comment') {
       if (!comment_text || !comment_text.trim()) {
