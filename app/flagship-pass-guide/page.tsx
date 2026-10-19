@@ -2,7 +2,7 @@ import React from 'react';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, CreditCard, Receipt, Users } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, CreditCard, Eye, Lock, Receipt, Users } from 'lucide-react';
 import { Footer } from '@/components/shared/Footer';
 import {
   CERTIFICATE_FEE_INR,
@@ -10,6 +10,11 @@ import {
   FLAGSHIP_PASS_FEE_INR,
   PASS_FEE_INR,
 } from '@/lib/payments';
+import { getServerSession } from '@/lib/auth';
+import { getFlagshipPaymentWindow } from '@/lib/hackathon-pass';
+
+// Participants see the guide once the Flagship Pass payment link is published; admins can preview it before then.
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Flagship Pass Payment Guide',
@@ -52,10 +57,45 @@ function Screenshot({ src, alt, width, height }: { src: string; alt: string; wid
   );
 }
 
-export default function FlagshipPassGuidePage() {
+function NotOpenYet() {
+  return (
+    <div className="w-full min-h-screen flex flex-col bg-[#F7F2ED] dark:bg-[#120506] text-[#201617] dark:text-[#FFF4F1]">
+      <main className="flex-1 w-full max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-36 pb-20 space-y-4">
+        <Lock className="w-6 h-6 text-[#7D111C] dark:text-[#F07A86]" />
+        <h1 className="text-2xl sm:text-3xl font-serif font-bold">Flagship Pass payment guide</h1>
+        <p className="text-[15px] leading-relaxed text-[#3D3334] dark:text-[#E2D5D3]">
+          This guide opens when the Flagship Pass payment link is published. Your Flagship Pass card on the dashboard will
+          link here at that time.
+        </p>
+        <Link
+          href="/learning#campus-pass"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-[#7D111C] dark:text-[#F07A86] hover:underline"
+        >
+          <ArrowLeft className="w-4 h-4" /> Back to your dashboard
+        </Link>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+export default async function FlagshipPassGuidePage() {
+  const [session, paymentWindow] = await Promise.all([getServerSession(), getFlagshipPaymentWindow()]);
+  const published = Boolean(paymentWindow.gatewayUrl);
+  if (!published && !session?.isAdmin) return <NotOpenYet />;
+
   return (
     <div className="w-full min-h-screen flex flex-col bg-[#F7F2ED] dark:bg-[#120506] text-[#201617] dark:text-[#FFF4F1]">
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-36 pb-20">
+        {!published && (
+          <div className="mb-6 flex gap-3 p-4 rounded-xl border border-sky-200 dark:border-sky-900/50 bg-sky-50 dark:bg-sky-950/20 text-sky-900 dark:text-sky-200/90 text-sm">
+            <Eye className="w-4 h-4 mt-0.5 flex-none" />
+            <p>
+              <strong>Admin preview.</strong> Participants see a &ldquo;not open yet&rdquo; notice here until the Flagship
+              Pass payment link is published from the Hackathon admin view. This banner is not shown to them.
+            </p>
+          </div>
+        )}
         <div className="mb-8">
           <Link
             href="/learning#campus-pass"
