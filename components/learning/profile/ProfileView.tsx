@@ -24,6 +24,7 @@ import { usePassStatus, type PassStatusResponse } from '@/hooks/use-pass-status'
 import { useProfileOverview, type ProfileOverview } from '@/hooks/use-profile-overview';
 import { phase2Headline } from '@/components/learning/Phase2StatusCard';
 import { markNoticesSeen, readSeenNoticeIds } from '@/lib/notices';
+import type { AccommodationStatus } from '@/lib/accommodation';
 import { deriveActionItems, type ActionItem, type ProfileTab } from './action-items';
 import {
   AccountSection,
@@ -33,7 +34,7 @@ import {
   NoticesSection,
   PaymentsSection,
 } from './ProfileSections';
-import { AccommodationCard } from './AccommodationCard';
+import { AccommodationCard, OPEN_ACCOMMODATION_EVENT, useAccommodation } from './AccommodationCard';
 import { useCertificateName } from './CertificateNameCard';
 import {
   RequestsSection,
@@ -110,6 +111,24 @@ function phase2Tone(stage: string): Tone {
 }
 
 /* ───────────────────────────── Overview ───────────────────────────── */
+
+function accommodationActions(acc: AccommodationStatus | undefined): ActionItem[] {
+  if (!acc?.eligible || acc.closed) return [];
+  const open = acc.people.filter((p) => !p.request);
+  if (open.length === 0) return [];
+  const onlyYou = open.length === 1 && open[0].isYou;
+  return [
+    {
+      id: 'accommodation',
+      kind: 'action',
+      title: onlyYou ? 'Tell us if you need a place to stay' : `Answer accommodation for ${open.length} ${open.length === 1 ? 'person' : 'people'}`,
+      detail: onlyYou
+        ? 'Rooms for external participants are booked from these answers.'
+        : `Still to answer: ${open.map((p) => (p.isYou ? 'you' : p.name)).join(', ')}.`,
+      cta: { label: 'Answer', event: OPEN_ACCOMMODATION_EVENT },
+    },
+  ];
+}
 
 function ActionList({ items, onTab }: { items: ActionItem[]; onTab: (t: ProfileTab) => void }) {
   const [now, setNow] = useState(() => Date.now());
@@ -364,6 +383,7 @@ export function ProfileView() {
   const { data: status, mutate: mutateStatus } = usePassStatus();
   const { data: requestsData } = useParticipantRequests();
   const { data: certName } = useCertificateName();
+  const { data: accommodation } = useAccommodation();
   const [seen, setSeen] = useState<Set<string>>(new Set());
   const [seenDecisions, setSeenDecisions] = useState<Set<string>>(new Set());
   const newForm = searchParams?.get('new');
@@ -421,6 +441,7 @@ export function ProfileView() {
             },
           ]
         : []),
+      ...accommodationActions(accommodation),
       ...unseenDecisions.map((r) => ({
         id: `decision-${r.id}`,
         kind: 'action' as const,
@@ -434,7 +455,7 @@ export function ProfileView() {
         cta: { label: 'View reply', tab: 'requests' as const },
       })),
     ],
-    [overview, status, unseenDecisions, certName]
+    [overview, status, unseenDecisions, certName, accommodation]
   );
   const unread = overview?.notices.filter((n) => !seen.has(n.id)).length ?? 0;
 
