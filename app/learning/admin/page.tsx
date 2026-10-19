@@ -41,9 +41,75 @@ import {
 } from 'lucide-react';
 import { extractParticipantsFromCSV, ParsedParticipant } from '@/lib/csv';
 
+type AdminTab =
+  | 'analytics'
+  | 'phase2'
+  | 'hackathon'
+  | 'competitions'
+  | 'whitelist'
+  | 'overrides'
+  | 'sessions'
+  | 'quizzes'
+  | 'coding'
+  | 'payments'
+  | 'notices'
+  | 'accommodation';
+
+const NAV_GROUPS: { label: string; items: { id: AdminTab; label: string; icon: React.ElementType }[] }[] = [
+  {
+    label: 'Hackathon',
+    items: [
+      { id: 'hackathon', label: 'Teams & Participants', icon: Trophy },
+      { id: 'phase2', label: 'Phase 2 Results', icon: ListChecks },
+    ],
+  },
+  {
+    label: 'Participants',
+    items: [
+      { id: 'whitelist', label: 'Access & Whitelist', icon: Users },
+      { id: 'payments', label: 'Payments', icon: Ticket },
+      { id: 'accommodation', label: 'Accommodation', icon: BedDouble },
+      { id: 'notices', label: 'Notices', icon: Bell },
+    ],
+  },
+  {
+    label: 'Learning',
+    items: [
+      { id: 'competitions', label: 'Daily Competitions', icon: Award },
+      { id: 'coding', label: 'Coding Challenge', icon: Terminal },
+      { id: 'quizzes', label: 'Quizzes & Locking', icon: ListChecks },
+      { id: 'sessions', label: 'Session Videos', icon: Video },
+    ],
+  },
+  {
+    label: 'System',
+    items: [
+      { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+      { id: 'overrides', label: 'Release Overrides', icon: SlidersHorizontal },
+    ],
+  },
+];
+
+const ALL_TABS: AdminTab[] = NAV_GROUPS.flatMap((g) => g.items.map((i) => i.id));
+
 export default function AdminConsolePage() {
   const [session, setSession] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'analytics' | 'phase2' | 'hackathon' | 'competitions' | 'whitelist' | 'overrides' | 'sessions' | 'quizzes' | 'coding' | 'payments' | 'notices' | 'accommodation'>('hackathon');
+  const [activeTab, setActiveTab] = useState<AdminTab>('hackathon');
+
+  // Keep the selected section in ?tab= so a refresh or shared link reopens it.
+  useEffect(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get('tab');
+    if (fromUrl && ALL_TABS.includes(fromUrl as AdminTab)) {
+      setActiveTab(fromUrl as AdminTab);
+    }
+  }, []);
+
+  function selectTab(tab: AdminTab) {
+    setActiveTab(tab);
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', tab);
+    window.history.replaceState(null, '', url);
+  }
 
   const [emails, setEmails] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -339,6 +405,12 @@ export default function AdminConsolePage() {
     }
   }
 
+  const tabCounts: Partial<Record<AdminTab, number>> = {
+    hackathon: stats.teamsFormed || 0,
+    competitions: stats.competitionSubmissions || 0,
+    whitelist: emails.length,
+  };
+
   return (
     <AuthGate onSessionChange={setSession}>
       <div className="min-h-screen bg-slate-50/60 dark:bg-[#100405] pb-16 font-sans">
@@ -360,7 +432,7 @@ export default function AdminConsolePage() {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-6">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-6">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
@@ -374,7 +446,7 @@ export default function AdminConsolePage() {
             </div>
 
             {/* Quick stats badge */}
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] px-3 py-1.5 rounded-lg shadow-2xs">
                 Whitelisted: <strong className="text-slate-900 dark:text-[#FAF6F3]">{stats.whitelistedUsers || emails.length || 0}</strong>
               </span>
@@ -387,164 +459,71 @@ export default function AdminConsolePage() {
             </div>
           </div>
 
-          {/* Navigation Tabs */}
-          <div className="flex border-b border-slate-200 dark:border-[#3D1418] gap-2 overflow-x-auto no-scrollbar pb-px">
-            <button
-              type="button"
-              onClick={() => setActiveTab('analytics')}
-              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
-                activeTab === 'analytics'
-                  ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
-                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
-              }`}
+          <div className="lg:grid lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-8 lg:items-start">
+          {/* Navigation: native select on small screens, grouped sidebar on desktop */}
+          <div className="lg:hidden mb-6">
+            <label htmlFor="admin-section" className="sr-only">Section</label>
+            <select
+              id="admin-section"
+              value={activeTab}
+              onChange={(e) => selectTab(e.target.value as AdminTab)}
+              className="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] text-sm font-semibold text-slate-900 dark:text-[#FAF6F3]"
             >
-              <BarChart3 className="w-4 h-4" />
-              <span>Vercel Analytics & Telemetry</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('phase2')}
-              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
-                activeTab === 'phase2'
-                  ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
-                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
-              }`}
-            >
-              <ListChecks className="w-4 h-4" />
-              <span>Phase 2 Results</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('hackathon')}
-              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
-                activeTab === 'hackathon'
-                  ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
-                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
-              }`}
-            >
-              <Trophy className="w-4 h-4 text-amber-500" />
-              <span>Hackathon Teams & Participants ({stats.teamsFormed || 0})</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('competitions')}
-              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
-                activeTab === 'competitions'
-                  ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
-                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
-              }`}
-            >
-              <Award className="w-4 h-4 text-rose-500" />
-              <span>Daily Competitions ({stats.competitionSubmissions || 0})</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('whitelist')}
-              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
-                activeTab === 'whitelist'
-                  ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
-                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
-              }`}
-            >
-              <Users className="w-4 h-4" />
-              <span>Access Control & Whitelist ({emails.length})</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('sessions')}
-              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
-                activeTab === 'sessions'
-                  ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
-                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
-              }`}
-            >
-              <Video className="w-4 h-4" />
-              <span>Session Videos & Live Links</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('quizzes')}
-              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
-                activeTab === 'quizzes'
-                  ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
-                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
-              }`}
-            >
-              <Award className="w-4 h-4" />
-              <span>Concept Quizzes & Locking</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('coding')}
-              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
-                activeTab === 'coding'
-                  ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
-                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
-              }`}
-            >
-              <Terminal className="w-4 h-4" />
-              <span>Python Coding Challenge in Qiskit</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('payments')}
-              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
-                activeTab === 'payments'
-                  ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
-                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
-              }`}
-            >
-              <Ticket className="w-4 h-4" />
-              <span>Payments: Pass &amp; Certificate</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('notices')}
-              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
-                activeTab === 'notices'
-                  ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
-                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
-              }`}
-            >
-              <Bell className="w-4 h-4" />
-              <span>Participant Notices</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('accommodation')}
-              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
-                activeTab === 'accommodation'
-                  ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
-                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
-              }`}
-            >
-              <BedDouble className="w-4 h-4" />
-              <span>Accommodation</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('overrides')}
-              className={`pb-3 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
-                activeTab === 'overrides'
-                  ? 'border-burgundy text-burgundy dark:border-[#E89BA5] dark:text-[#E89BA5]'
-                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-[#FAF6F3]'
-              }`}
-            >
-              <SlidersHorizontal className="w-4 h-4" />
-              <span>System & Release Overrides</span>
-            </button>
+              {NAV_GROUPS.map((group) => (
+                <optgroup key={group.label} label={group.label}>
+                  {group.items.map((item) => {
+                    const count = tabCounts[item.id];
+                    return (
+                      <option key={item.id} value={item.id}>
+                        {item.label}{count !== undefined ? ` (${count})` : ''}
+                      </option>
+                    );
+                  })}
+                </optgroup>
+              ))}
+            </select>
           </div>
+
+          <nav aria-label="Admin sections" className="hidden lg:block sticky top-20 space-y-5">
+            {NAV_GROUPS.map((group) => (
+              <div key={group.label}>
+                <p className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  {group.label}
+                </p>
+                <ul className="space-y-0.5">
+                  {group.items.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = activeTab === item.id;
+                    const count = tabCounts[item.id];
+                    return (
+                      <li key={item.id}>
+                        <button
+                          type="button"
+                          onClick={() => selectTab(item.id)}
+                          aria-current={isActive ? 'page' : undefined}
+                          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-left transition-colors cursor-pointer ${
+                            isActive
+                              ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5]'
+                              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1C0A0D] hover:text-slate-900 dark:hover:text-[#FAF6F3]'
+                          }`}
+                        >
+                          <Icon className="w-4 h-4 shrink-0" />
+                          <span className="flex-1 truncate">{item.label}</span>
+                          {count !== undefined && (
+                            <span className="text-[10px] font-bold tabular-nums text-slate-400 dark:text-slate-500">
+                              {count}
+                            </span>
+                          )}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+          </nav>
+
+          <div className="min-w-0 space-y-6">
 
           {/* TAB: ₹99 PAYMENTS REVIEW (OFFLINE PASS + CERTIFICATE) */}
           {activeTab === 'payments' && <AdminPaymentsManager />}
@@ -1130,6 +1109,8 @@ export default function AdminConsolePage() {
           )}
           {/* TAB 4: SESSION VIDEOS & LIVE MEDIA */}
           {activeTab === 'sessions' && <AdminSessionsManager />}
+          </div>
+          </div>
         </div>
       </div>
     </AuthGate>
