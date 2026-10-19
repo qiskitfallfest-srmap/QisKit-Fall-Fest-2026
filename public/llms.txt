@@ -2,7 +2,7 @@
 
 > Official Digital Summit Platform & AI Knowledge Manifest for Qiskit Fall Fest 2026 at SRM University-AP (Amaravati), organized in partnership with IBM Quantum and Aanutattva - The Singularity Lab under the global milestone theme "A Decade of Quantum on Cloud" (celebrating 10 years of cloud quantum computing).
 
-The Qiskit Fall Fest 2026 at SRM University-AP is an international quantum computing festival featuring a 59-event technical portfolio, an intensive 10-session masterclass series, a 5-track hackathon centered on Algorithm-Architecture Co-Design, a hardware technology expo, keynotes, and a 24-26 hour onsite hackathon.
+The Qiskit Fall Fest 2026 at SRM University-AP is an international quantum computing festival featuring a 59-event technical portfolio, an intensive 10-session masterclass series, a 5-track hackathon centered on Algorithm-Architecture Co-Design, a hardware technology expo, keynotes, and a 24-hour onsite hackathon (28 Oct 6:00 PM to 29 Oct 6:00 PM IST, Auditorium X-Lab).
 
 Official Website: https://www.qffsrmap2026.com/
 Campus / Fallback Production Mirror: https://qis-kit-fall-fest-2026.vercel.app/
@@ -53,7 +53,7 @@ Registration Platform: Official Platform (https://www.qffsrmap2026.com/learning)
 ## Total Event Portfolio (59 Active Events)
 
 - [Portfolio Architecture Summary](https://www.qffsrmap2026.com/docs/event-portfolio-59.md#summary): Breakdown of 38 offline physical campus events and 21 online virtual events.
-- [Offline Campus Events (38)](https://www.qffsrmap2026.com/docs/event-portfolio-59.md#offline): Flagship 24-26h Onsite Hackathon Phase 2 (27-28 Oct), QCTF 8-hour competition (28 Oct), Hardware Quantum Tech Expo (29 Oct), Keynote Speeches (30 Oct), Qescapes, 6 Offline Challenges, 3 Workshops, and 24 Classroom Games.
+- [Offline Campus Events (38)](https://www.qffsrmap2026.com/docs/event-portfolio-59.md#offline): Flagship 24-Hour Onsite Hackathon Phase 2 (28 Oct 6:00 PM to 29 Oct 6:00 PM, Auditorium X-Lab), QCTF 8-hour competition (28 Oct), Hardware Quantum Tech Expo (29 Oct), Keynote Speeches (30 Oct), Qescapes, 6 Offline Challenges, 3 Workshops, and 24 Classroom Games.
 - [Online Virtual Events (21)](https://www.qffsrmap2026.com/docs/event-portfolio-59.md#online): 10-Session Masterclass Series (5-9 Oct), Hackathon Phase 1 Sprint (5-13 Oct), Python Coding Challenge, ML Competition, Essay Competition, Digital Posters, Tech Reels, Quantum Code Golf, Quantum Entropy, Quantum Noise Forensics, and 10 Online Games.
 
 ## Companion Repositories & Planning

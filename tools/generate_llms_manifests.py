@@ -40,7 +40,7 @@ def build_llms_txt() -> str:
 
 > Official Digital Summit Platform & AI Knowledge Manifest for Qiskit Fall Fest 2026 at SRM University-AP (Amaravati), organized in partnership with IBM Quantum and Aanutattva - The Singularity Lab under the global milestone theme "A Decade of Quantum on Cloud" (celebrating 10 years of cloud quantum computing).
 
-The Qiskit Fall Fest 2026 at SRM University-AP is an international quantum computing festival featuring a 59-event technical portfolio, an intensive 10-session masterclass series, a 5-track hackathon centered on Algorithm-Architecture Co-Design, a hardware technology expo, keynotes, and a 24-26 hour onsite hackathon.
+The Qiskit Fall Fest 2026 at SRM University-AP is an international quantum computing festival featuring a 59-event technical portfolio, an intensive 10-session masterclass series, a 5-track hackathon centered on Algorithm-Architecture Co-Design, a hardware technology expo, keynotes, and a 24-hour onsite hackathon (28 Oct 6:00 PM to 29 Oct 6:00 PM IST, Auditorium X-Lab).
 
 Official Website: https://www.qffsrmap2026.com/
 Campus / Fallback Production Mirror: https://qis-kit-fall-fest-2026.vercel.app/
@@ -91,7 +91,7 @@ Registration Platform: Official Platform (https://www.qffsrmap2026.com/learning)
 ## Total Event Portfolio (59 Active Events)
 
 - [Portfolio Architecture Summary](https://www.qffsrmap2026.com/docs/event-portfolio-59.md#summary): Breakdown of 38 offline physical campus events and 21 online virtual events.
-- [Offline Campus Events (38)](https://www.qffsrmap2026.com/docs/event-portfolio-59.md#offline): Flagship 24-26h Onsite Hackathon Phase 2 (27-28 Oct), QCTF 8-hour competition (28 Oct), Hardware Quantum Tech Expo (29 Oct), Keynote Speeches (30 Oct), Qescapes, 6 Offline Challenges, 3 Workshops, and 24 Classroom Games.
+- [Offline Campus Events (38)](https://www.qffsrmap2026.com/docs/event-portfolio-59.md#offline): Flagship 24-Hour Onsite Hackathon Phase 2 (28 Oct 6:00 PM to 29 Oct 6:00 PM, Auditorium X-Lab), QCTF 8-hour competition (28 Oct), Hardware Quantum Tech Expo (29 Oct), Keynote Speeches (30 Oct), Qescapes, 6 Offline Challenges, 3 Workshops, and 24 Classroom Games.
 - [Online Virtual Events (21)](https://www.qffsrmap2026.com/docs/event-portfolio-59.md#online): 10-Session Masterclass Series (5-9 Oct), Hackathon Phase 1 Sprint (5-13 Oct), Python Coding Challenge, ML Competition, Essay Competition, Digital Posters, Tech Reels, Quantum Code Golf, Quantum Entropy, Quantum Noise Forensics, and 10 Online Games.
 
 ## Companion Repositories & Planning
@@ -240,7 +240,7 @@ def build_hackathon_framework_markdown() -> str:
 **Theme:** Algorithm-Architecture Co-Design  
 **Phase 1 Dates:** 5 October 2026 to 13 October 2026 (Submissions close 13 October, 11:59 PM IST)  
 **Phase 1 Finalist Announcement:** 17 October 2026 (~200 participants / top 10-12 teams per track)  
-**Phase 2 Onsite Finals:** 27 October 2026 to 28 October 2026 (24-26 Hours in SRM-AP University Auditorium)  
+**Phase 2 Onsite Finals:** 28 October 2026, 6:00 PM to 29 October 2026, 6:00 PM IST (24 hours in Auditorium X-Lab, SRM University-AP)  
 **Team Composition:** 2 to 4 members per team.
 
 ---
@@ -355,7 +355,7 @@ def build_event_portfolio_markdown() -> str:
 ```
 TOTAL ACTIVE PORTFOLIO: 59 EVENTS
 ├── OFFLINE CAMPUS PHASE (38 Events | 26-30 Oct 2026)
-│   ├── Flagship 24-26h Onsite Hackathon Phase 2 (Auditorium, 27-28 Oct)
+│   ├── Flagship 24-Hour Onsite Hackathon Phase 2 (Auditorium X-Lab, 28 Oct 6:00 PM to 29 Oct 6:00 PM)
 │   ├── QCTF: Quantum Capture the Flag (Auditorium, 8 Hours, 28 Oct)
 │   ├── Hardware Quantum Tech Expo (Quantum Lab / Atrium, 29 Oct)
 │   ├── Distinguished Keynote Lectures (Auditorium, 30 Oct)
@@ -435,7 +435,7 @@ TOTAL ACTIVE PORTFOLIO: 59 EVENTS
 | **57** | Low-Level Control & Pulse Engineering | Online | Webex | 8 Oct 2026 | Masterclass Module: Qiskit Pulse microwave drive scheduling, DRAG correction, and qubit frequency tuning. |
 | **58** | Quantum Resource Estimation | Online | Webex | 8 Oct 2026 | Masterclass Module: Fault-tolerant overhead calculation, T-gate counts, and physical qubit footprints. |
 | **59** | Quantum Algorithms Beyond NISQ | Online | Webex | 9 Oct 2026 | Masterclass Module: High-depth algorithms, fault-tolerant Shor's algorithm, and post-NISQ applications. |
-| **60** | Capstone: Hackathon Phase 2 Onsite | Offline | Auditorium | 27-28 Oct 2026 | Flagship 24-26 hour onsite hackathon for qualified Phase 1 finalists in the SRM-AP University Auditorium. |
+| **60** | Capstone: Hackathon Phase 2 Onsite | Offline | Auditorium X-Lab | 28 Oct 6:00 PM to 29 Oct 6:00 PM 2026 | Flagship 24-hour onsite hackathon for shortlisted Phase 1 teams in Auditorium X-Lab, SRM University-AP. |
 """
 
 def build_faq_markdown() -> str:
@@ -451,7 +451,7 @@ def build_faq_markdown() -> str:
 ## 1. General & Registration
 
 ### What is Qiskit Fall Fest 2026 at SRM University-AP?
-Qiskit Fall Fest is a global celebration of quantum computing sponsored by IBM Quantum. SRM University-AP has been recognized as a premier **Partner Plus Host**, organizing a two-phase technical festival commemorating "A Decade of Quantum on Cloud" with 59 active events, an intensive 10-session masterclass, and an onsite 24-26 hour hackathon.
+Qiskit Fall Fest is a global celebration of quantum computing sponsored by IBM Quantum. SRM University-AP has been recognized as a premier **Partner Plus Host**, organizing a two-phase technical festival commemorating "A Decade of Quantum on Cloud" with 59 active events, an intensive 10-session masterclass, and an onsite 24-hour hackathon.
 
 ### Who is eligible to participate?
 Undergraduate and postgraduate students, researchers, PhD scholars, and developers across computer science, electrical engineering, physics, mathematics, and chemistry. Both beginners and experienced developers are welcome.
@@ -502,7 +502,7 @@ Submissions are evaluated on a **100-point rubric**:
 Phase 1 finalists (~200 participants / top 10-12 teams per track) will be announced on the night of **17 October 2026**.
 
 ### What is Phase 2?
-Phase 2 is a **24-26 hour onsite hackathon** conducted in the University Auditorium at SRM University-AP on **27-28 October 2026**, where shortlisted teams continue in person with the same track and problem statement they chose in Phase 1. The problem statements are being refined together with partner companies and industry collaborators, and teams receive the updated version from the organizers.
+Phase 2 is a **24-hour onsite hackathon** in **Auditorium X-Lab** at SRM University-AP, from **28 October 2026, 6:00 PM to 29 October 2026, 6:00 PM IST**, where shortlisted teams continue in person with the same track and problem statement they chose in Phase 1. The problem statements are being refined together with partner companies and industry collaborators, and teams receive the updated version from the organizers.
 
 ---
 
@@ -512,7 +512,7 @@ Phase 2 is a **24-26 hour onsite hackathon** conducted in the University Auditor
 SRM University-AP Campus, Neerukonda, Mangalagiri Mandal, Guntur District, Mangalagiri, Andhra Pradesh 522502, India.
 
 ### What are the key campus venues?
-- **University Auditorium:** Keynote lectures, Opening/Closing ceremonies, 24-26h Hackathon, QCTF, and major challenges.
+- **University Auditorium:** Keynote lectures, Opening/Closing ceremonies, 24-hour Hackathon Phase 2 (X-Lab), QCTF, and major challenges.
 - **Quantum Computing Lab / Complex:** Hardware Quantum Tech Expo and hands-on laboratory tracks.
 - **Seminar Halls 1 & 2:** Specialized technical talks, paper presentations, and conclave debates.
 - **Classrooms (V, CV, SR Venues):** Classroom games, puzzle competitions, and Qescapes escape room.

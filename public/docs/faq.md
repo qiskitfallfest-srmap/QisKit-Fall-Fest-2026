@@ -10,7 +10,7 @@
 ## 1. General & Registration
 
 ### What is Qiskit Fall Fest 2026 at SRM University-AP?
-Qiskit Fall Fest is a global celebration of quantum computing sponsored by IBM Quantum. SRM University-AP has been recognized as a premier **Partner Plus Host**, organizing a two-phase technical festival commemorating "A Decade of Quantum on Cloud" with 59 active events, an intensive 10-session masterclass, and an onsite 24-26 hour hackathon.
+Qiskit Fall Fest is a global celebration of quantum computing sponsored by IBM Quantum. SRM University-AP has been recognized as a premier **Partner Plus Host**, organizing a two-phase technical festival commemorating "A Decade of Quantum on Cloud" with 59 active events, an intensive 10-session masterclass, and an onsite 24-hour hackathon.
 
 ### Who is eligible to participate?
 Undergraduate and postgraduate students, researchers, PhD scholars, and developers across computer science, electrical engineering, physics, mathematics, and chemistry. Both beginners and experienced developers are welcome.
@@ -61,7 +61,7 @@ Submissions are evaluated on a **100-point rubric**:
 Phase 1 finalists (~200 participants / top 10-12 teams per track) will be announced on the night of **17 October 2026**.
 
 ### What is Phase 2?
-Phase 2 is a **24-26 hour onsite hackathon** conducted in the University Auditorium at SRM University-AP on **27-28 October 2026**, where shortlisted teams continue in person with the same track and problem statement they chose in Phase 1. The problem statements are being refined together with partner companies and industry collaborators, and teams receive the updated version from the organizers.
+Phase 2 is a **24-hour onsite hackathon** in **Auditorium X-Lab** at SRM University-AP, from **28 October 2026, 6:00 PM to 29 October 2026, 6:00 PM IST**, where shortlisted teams continue in person with the same track and problem statement they chose in Phase 1. The problem statements are being refined together with partner companies and industry collaborators, and teams receive the updated version from the organizers.
 
 ---
 
@@ -71,7 +71,7 @@ Phase 2 is a **24-26 hour onsite hackathon** conducted in the University Auditor
 SRM University-AP Campus, Neerukonda, Mangalagiri Mandal, Guntur District, Mangalagiri, Andhra Pradesh 522502, India.
 
 ### What are the key campus venues?
-- **University Auditorium:** Keynote lectures, Opening/Closing ceremonies, 24-26h Hackathon, QCTF, and major challenges.
+- **University Auditorium:** Keynote lectures, Opening/Closing ceremonies, 24-hour Hackathon Phase 2 (X-Lab), QCTF, and major challenges.
 - **Quantum Computing Lab / Complex:** Hardware Quantum Tech Expo and hands-on laboratory tracks.
 - **Seminar Halls 1 & 2:** Specialized technical talks, paper presentations, and conclave debates.
 - **Classrooms (V, CV, SR Venues):** Classroom games, puzzle competitions, and Qescapes escape room.

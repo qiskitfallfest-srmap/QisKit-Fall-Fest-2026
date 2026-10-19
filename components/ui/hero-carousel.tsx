@@ -140,8 +140,8 @@ function parseEventDetails(item?: HeroCarouselItem) {
     venue = 'Online / Virtual Quantum Portal';
     time = 'Launch: 10 Oct 5:00 PM · Close: 17 Oct 11:59 PM';
   } else if (item.id === 'build-05-hackathon-phase-2-flagship') {
-    venue = 'Lab Blocks A & B, SRM University-AP';
-    time = '7:30 PM – 7:30 AM IST (24-Hour Overnight)';
+    venue = 'Auditorium X-Lab, SRM University-AP';
+    time = '28 Oct 6:00 PM – 29 Oct 6:00 PM IST (24 hours)';
   }
 
   // 3. HOSTED BY / ORGANIZER

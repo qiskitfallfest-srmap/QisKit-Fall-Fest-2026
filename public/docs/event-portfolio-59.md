@@ -13,7 +13,7 @@
 ```
 TOTAL ACTIVE PORTFOLIO: 59 EVENTS
 ├── OFFLINE CAMPUS PHASE (38 Events | 26-30 Oct 2026)
-│   ├── Flagship 24-26h Onsite Hackathon Phase 2 (Auditorium, 27-28 Oct)
+│   ├── Flagship 24-Hour Onsite Hackathon Phase 2 (Auditorium X-Lab, 28 Oct 6:00 PM to 29 Oct 6:00 PM)
 │   ├── QCTF: Quantum Capture the Flag (Auditorium, 8 Hours, 28 Oct)
 │   ├── Hardware Quantum Tech Expo (Quantum Lab / Atrium, 29 Oct)
 │   ├── Distinguished Keynote Lectures (Auditorium, 30 Oct)
@@ -93,4 +93,4 @@ TOTAL ACTIVE PORTFOLIO: 59 EVENTS
 | **57** | Low-Level Control & Pulse Engineering | Online | Webex | 8 Oct 2026 | Masterclass Module: Qiskit Pulse microwave drive scheduling, DRAG correction, and qubit frequency tuning. |
 | **58** | Quantum Resource Estimation | Online | Webex | 8 Oct 2026 | Masterclass Module: Fault-tolerant overhead calculation, T-gate counts, and physical qubit footprints. |
 | **59** | Quantum Algorithms Beyond NISQ | Online | Webex | 9 Oct 2026 | Masterclass Module: High-depth algorithms, fault-tolerant Shor's algorithm, and post-NISQ applications. |
-| **60** | Capstone: Hackathon Phase 2 Onsite | Offline | Auditorium | 27-28 Oct 2026 | Flagship 24-26 hour onsite hackathon for qualified Phase 1 finalists in the SRM-AP University Auditorium. |
+| **60** | Capstone: Hackathon Phase 2 Onsite | Offline | Auditorium X-Lab | 28 Oct 6:00 PM to 29 Oct 6:00 PM 2026 | Flagship 24-hour onsite hackathon for shortlisted Phase 1 teams in Auditorium X-Lab, SRM University-AP. |

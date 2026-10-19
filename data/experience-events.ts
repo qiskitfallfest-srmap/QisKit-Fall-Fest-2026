@@ -309,14 +309,14 @@ export const BUILD_ITEMS: ExperienceHeroItem[] = [
     id: 'build-05-hackathon-phase-2-flagship',
     title: 'Hackathon Phase 2 —\n24-Hour Flagship Challenge',
     description:
-      'A 24-hour overnight quantum-computing build challenge involving intense team development, mentor checkpoints, hardware execution, and final submission.',
+      'A 24-hour quantum-computing build challenge from 28 October, 6:00 PM to 29 October, 6:00 PM, with team development, mentor checkpoints, hardware execution, and final submission.',
     image: '/images/events/world-class-workshops-light.webp',
     accent: '#6C151E',
     category: 'build',
-    credit: 'OVERNIGHT BUILD CHALLENGE',
-    meta: ['24-HR OVERNIGHT SPRINT', '28th–29th Oct 2026', 'Lab Blocks A & B · 7:30 PM – 7:30 AM'],
+    credit: '24-HOUR BUILD CHALLENGE',
+    meta: ['24-HOUR SPRINT', '28th–29th Oct 2026', 'Auditorium X-Lab · 6:00 PM – 6:00 PM'],
     registrationUrl: 'https://qiskit.org/fallfest',
-    registrationLabel: 'Enter Overnight Hackathon',
+    registrationLabel: 'Enter Hackathon Phase 2',
   },
   {
     id: 'build-06-hackathon-phase-2-jury',

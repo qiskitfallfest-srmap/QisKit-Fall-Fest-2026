@@ -4,7 +4,7 @@
 **Theme:** Algorithm-Architecture Co-Design  
 **Phase 1 Dates:** 5 October 2026 to 13 October 2026 (Submissions close 13 October, 11:59 PM IST)  
 **Phase 1 Finalist Announcement:** 17 October 2026 (~200 participants / top 10-12 teams per track)  
-**Phase 2 Onsite Finals:** 27 October 2026 to 28 October 2026 (24-26 Hours in SRM-AP University Auditorium)  
+**Phase 2 Onsite Finals:** 28 October 2026, 6:00 PM to 29 October 2026, 6:00 PM IST (24 hours in Auditorium X-Lab, SRM University-AP)  
 **Team Composition:** 2 to 4 members per team.
 
 ---
