@@ -259,7 +259,7 @@ function LeadResponse({ team, onDone }: { team: PassStatusHackathon; onDone: () 
       <div className="rounded-lg border border-slate-200 dark:border-[#3D1418] bg-slate-50 dark:bg-[#1C0A0D] p-3.5 space-y-2 text-xs text-slate-700 dark:text-slate-300">
         <p className="font-semibold text-slate-900 dark:text-[#FAF6F3]">Confirming your team&apos;s Phase 2 finalist desk</p>
         <ul className="list-disc pl-4 space-y-1">
-          <li>Your team will attend and build on-campus during the 24-hour sprint on 27–28 October at SRM University-AP.</li>
+          <li>Your team will attend and build on-campus during the 24-hour sprint on 28–29 October at SRM University-AP.</li>
           <li>
             Every member completes their Flagship Pass (₹{FLAGSHIP_PASS_FEE_INR}) {windowText}. You, as team lead, pay last to lock in the desk.
           </li>
@@ -373,7 +373,7 @@ export function Phase2StatusCard({ team, className }: { team: PassStatusHackatho
               <strong>Exceptional work!</strong> Out of {PHASE1_SUBMISSION_COUNT} competing teams across India, the jury has selected your team as one of the top {PHASE2_DESK_QUOTA.total} Phase 2 finalists.{' '}
             </>
           )}
-          You are invited to build on campus at SRM University-AP during the flagship 24-hour hackathon sprint on 27–28 October 2026.{' '}
+          You are invited to build on campus at SRM University-AP during the flagship 24-hour hackathon sprint on 28–29 October 2026.{' '}
           {team.isLead
             ? 'As team lead, please accept the invitation below to secure your team’s auditorium desk before the countdown expires.'
             : 'Your team lead will accept the invitation on behalf of the team to secure your auditorium desk before the countdown expires. Nobody pays until the team accepts.'}
@@ -416,7 +416,7 @@ export function Phase2StatusCard({ team, className }: { team: PassStatusHackatho
     case 'confirmed':
       tone = 'celebrate';
       title = 'You are in: your Phase 2 desk is confirmed';
-      body = 'Congratulations to the whole team. All payments are in; receipts are verified by the organizing team and your passes update once verified. See you on campus on 27 October.';
+      body = 'Congratulations to the whole team. All payments are in; receipts are verified by the organizing team and your passes update once verified. See you on campus on 28 October.';
       extra = <PaymentChecklist phase2={phase2} isLead={team.isLead} />;
       break;
 

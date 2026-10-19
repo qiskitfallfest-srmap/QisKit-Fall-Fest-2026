@@ -61,7 +61,7 @@ Submissions are evaluated on a **100-point rubric**:
 Phase 1 finalists (~200 participants / top 10-12 teams per track) will be announced on the night of **17 October 2026**.
 
 ### What is Phase 2?
-Phase 2 is a **24-26 hour onsite hackathon** conducted in the University Auditorium at SRM University-AP on **27-28 October 2026**, where qualified finalists tackle an advanced scaling challenge in person.
+Phase 2 is a **24-26 hour onsite hackathon** conducted in the University Auditorium at SRM University-AP on **27-28 October 2026**, where shortlisted teams continue in person with the same track and problem statement they chose in Phase 1. The problem statements are being refined together with partner companies and industry collaborators, and teams receive the updated version from the organizers.
 
 ---
 

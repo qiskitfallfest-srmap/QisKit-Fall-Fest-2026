@@ -829,7 +829,7 @@ export const offlineSchedule: Day[] = [
         initials: "HP",
         duration: "24 hrs",
         timezone: "IST",
-        learn: ["Build full-stack quantum applications, algorithms, and simulations over 24 continuous hours"],
+        learn: ["Continue your Phase 1 track and problem statement, using the updated version refined with partner companies and industry collaborators, over 24 continuous hours"],
       },
     ],
   },

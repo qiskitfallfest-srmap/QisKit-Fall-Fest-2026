@@ -36,7 +36,7 @@ This document serves as the master specification containing every track, all 20 
 | **Phase 1** | Online Sprint | Online | Platform / GitHub | 5 Oct – 13 Oct 2026 | Submissions close 13 Oct, 11:59 PM IST |
 | **Jury** | Finalist Selection | Hybrid | Technical Committee | 14 Oct – 16 Oct 2026 | Comprehensive code & rubric audit |
 | **Notice** | Finalist Announcement | Online | Web Portal | 17 Oct 2026 | Top 10–12 teams per track qualified |
-| **Phase 2** | Onsite Hackathon | In-Person | SRM-AP University Auditorium | 27 Oct – 28 Oct 2026 | 24–26 Hour Overnight Capstone Challenge |
+| **Phase 2** | Onsite Hackathon | In-Person | SRM-AP University Auditorium | 27 Oct – 28 Oct 2026 | Continuation of each team's Phase 1 track and problem statement (updated version refined with industry partners) |
 | **Finals** | Pitch & Demonstrations| In-Person | Main Stage Auditorium | 28 Oct 2026 (Evening) | Jury presentations & award distribution |
 
 ### Team Composition Rules

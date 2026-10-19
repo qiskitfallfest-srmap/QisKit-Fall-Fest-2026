@@ -368,11 +368,11 @@ export const TECHNICAL_FAQS: FAQItem[] = [
     number: 5,
     question: 'What is the Phase 1 timeline and submission deadline?',
     answer:
-      'The qualification stage began on 8 October 2026. Phase 1 submissions close on 17 October 2026 at 11:59 PM IST. Shortlisted teams for Phase 2 are announced by 18 October 2026 and shown on the Flagship Pass card on the learning portal. Phase 2 runs on campus at SRM University-AP during 26–30 October 2026.\n\nEarlier materials listed a 13 October deadline; that date was superseded by the 17 October deadline.',
+      'The qualification stage began on 8 October 2026. Phase 1 submissions close on 17 October 2026 at 11:59 PM IST. Shortlisted teams for Phase 2 are announced by 18 October 2026 and shown on the Flagship Pass card on the learning portal. Phase 2 runs on campus at SRM University-AP during 26–30 October 2026.\n\nPhase 2 keeps the track and problem statement your team chose in Phase 1; you do not choose a new one. The problem statements are being refined together with partner companies and industry collaborators, and shortlisted teams receive the updated version from the organizers.\n\nEarlier materials listed a 13 October deadline; that date was superseded by the 17 October deadline.',
     category: 'General Rules & Phase 1',
     section: 'technical',
     isTopQuestion: true,
-    tags: ['Timeline', 'Deadline', 'Oct 17', 'Results', 'Finalists'],
+    tags: ['Timeline', 'Deadline', 'Oct 17', 'Results', 'Finalists', 'Phase 2 Problem Statement'],
   },
   {
     id: 'tech-06',
