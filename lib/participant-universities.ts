@@ -31,7 +31,7 @@ export async function getParticipantUniversitiesMap(): Promise<Record<string, st
  * Defaults to 'SRM University-AP' if domain is @srmap.edu.in or if not specified.
  */
 export async function getParticipantUniversity(email: string): Promise<string> {
-  if (!email) return 'SRM University-AP';
+  if (!email) return 'SRM University AP';
   const cleanEmail = email.trim().toLowerCase();
   
   const map = await getParticipantUniversitiesMap();
@@ -40,10 +40,10 @@ export async function getParticipantUniversity(email: string): Promise<string> {
   }
 
   if (cleanEmail.endsWith('@srmap.edu.in')) {
-    return 'SRM University-AP';
+    return 'SRM University AP';
   }
 
-  return 'SRM University-AP';
+  return 'SRM University AP';
 }
 
 /**

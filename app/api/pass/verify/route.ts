@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
       id: pass.id,
       userName: pass.user_name,
       passTier: pass.pass_tier,
-      institution: pass.institution || 'SRM University-AP',
+      institution: pass.institution || 'SRM University AP',
       status: pass.status,
       amountInr: pass.amount_inr,
       checkedIn: Boolean(pass.checked_in),

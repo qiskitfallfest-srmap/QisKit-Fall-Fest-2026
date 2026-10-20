@@ -57,7 +57,7 @@ export async function GET() {
       user: {
         email: normalizedEmail,
         fullName: session.fullName || normalizedEmail.split('@')[0],
-        institution: reg?.institution || 'SRM University-AP',
+        institution: reg?.institution || 'SRM University AP',
         phone: reg?.phone || null,
       },
       isHackathonParticipant,

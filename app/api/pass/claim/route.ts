@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
       receipt_url: trimmedReceipt,
       amount_inr: isFlagship ? FLAGSHIP_PASS_FEE_INR : PASS_FEE_INR,
       status: 'claimed_provisional',
-      institution: reg?.institution || 'SRM University-AP',
+      institution: reg?.institution || 'SRM University AP',
       contact_phone: reg?.phone || null,
       updated_at: new Date().toISOString(),
     };

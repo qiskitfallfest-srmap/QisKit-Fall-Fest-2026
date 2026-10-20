@@ -926,6 +926,15 @@ export function AccountSection({
         }
       })
       .catch(() => {});
+
+    const handleTriggerEdit = () => {
+      setEditingInst(true);
+      setTimeout(() => {
+        document.getElementById('profile-institution')?.focus();
+      }, 50);
+    };
+    window.addEventListener('qff_edit_institution', handleTriggerEdit);
+    return () => window.removeEventListener('qff_edit_institution', handleTriggerEdit);
   }, []);
 
   async function save(e: React.FormEvent) {
@@ -977,6 +986,11 @@ export function AccountSection({
       });
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.error || 'Could not update institution.');
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('qff_inst_confirmed_' + p.email.toLowerCase(), trimmed);
+        } catch {}
+      }
       if (onProfileUpdated) onProfileUpdated({ institution: trimmed });
       setInstitutionsList((prev) => (prev.includes(trimmed) ? prev : [...prev, trimmed].sort()));
       setEditingInst(false);

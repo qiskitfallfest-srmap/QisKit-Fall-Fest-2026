@@ -10,12 +10,15 @@ import {
   ArrowRight,
   Bell,
   BookOpen,
+  Check,
   CheckCircle2,
   Clock,
+  GraduationCap,
   Hourglass,
   LayoutGrid,
   MessageSquare,
   Loader2,
+  Pencil,
   RefreshCw,
   Trophy,
   UserRound,
@@ -272,6 +275,92 @@ function SummaryTile({
   );
 }
 
+function InstitutionConfirmBanner({
+  email,
+  institution,
+  onEdit,
+}: {
+  email: string;
+  institution: string | null;
+  onEdit: () => void;
+}) {
+  const [confirmed, setConfirmed] = useState(true);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    try {
+      const stored = localStorage.getItem('qff_inst_confirmed_' + email.toLowerCase());
+      const normalizedCurrent = (institution || '').trim();
+      if (stored && stored.toLowerCase() === (normalizedCurrent ? normalizedCurrent.toLowerCase() : 'confirmed')) {
+        setConfirmed(true);
+      } else {
+        setConfirmed(false);
+      }
+    } catch {
+      setConfirmed(false);
+    }
+  }, [email, institution]);
+
+  if (!mounted || confirmed) return null;
+
+  const handleConfirm = () => {
+    try {
+      localStorage.setItem('qff_inst_confirmed_' + email.toLowerCase(), (institution || '').trim() || 'confirmed');
+    } catch {}
+    setConfirmed(true);
+  };
+
+  const handleEdit = () => {
+    onEdit();
+    window.dispatchEvent(new CustomEvent('qff_edit_institution'));
+  };
+
+  return (
+    <div className="rounded-xl border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] p-4 sm:p-5 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-start gap-3 min-w-0">
+          <div className="p-2 rounded-lg bg-burgundy/5 dark:bg-burgundy/15 text-burgundy dark:text-[#E89BA5] shrink-0 mt-0.5">
+            <GraduationCap className="h-5 w-5" />
+          </div>
+          <div className="space-y-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-[#FAF6F3]">
+                Confirm your institution details
+              </h3>
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 dark:bg-[#200B0E] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-[#3D1418]">
+                {institution || 'Not provided'}
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+              This name will be printed on your event check-in pass badge, team roster, and verified certificates.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+          <button
+            type="button"
+            onClick={handleConfirm}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors cursor-pointer"
+          >
+            <Check className="h-3.5 w-3.5" />
+            Looks correct
+          </button>
+          <button
+            type="button"
+            onClick={handleEdit}
+            className={clsx(buttonStyles.primary, '!py-1.5 !px-3')}
+          >
+            <Pencil className="h-3.5 w-3.5" />
+            Change
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function OverviewSection({
   overview,
   status,
@@ -327,6 +416,11 @@ function OverviewSection({
   return (
     <div className="space-y-6">
       <YourAwardCallout onOpen={() => onTab('results')} />
+      <InstitutionConfirmBanner
+        email={overview.profile.email}
+        institution={overview.profile.institution}
+        onEdit={() => onTab('account')}
+      />
       <ActionList items={actions} onTab={onTab} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

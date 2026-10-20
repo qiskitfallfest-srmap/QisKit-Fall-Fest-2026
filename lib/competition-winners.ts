@@ -23,9 +23,9 @@ const SRM_AP_INSTITUTION = /\bsrm\s*(university)?[\s-]*a\.?p\b|\bsrmap\b/i;
 
 function displayInstitution(email: string, institution: string | null | undefined): string | null {
   const value = institution?.trim();
-  if (value && SRM_AP_INSTITUTION.test(value)) return 'SRM University-AP';
+  if (value && SRM_AP_INSTITUTION.test(value)) return 'SRM University AP';
   if (value) return value;
-  return email.endsWith('@srmap.edu.in') ? 'SRM University-AP' : null;
+  return email.endsWith('@srmap.edu.in') ? 'SRM University AP' : null;
 }
 
 /** Uploaded documents keep their file name as the title ("essay (1).pdf"); that is not a title worth printing. */

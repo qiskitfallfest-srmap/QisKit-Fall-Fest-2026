@@ -56,7 +56,31 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json({ error: 'Institution cannot exceed 120 characters.' }, { status: 400 });
       }
       // If user passed empty string, treat as null
-      if (cleanInstitution.length === 0) cleanInstitution = undefined;
+      if (cleanInstitution.length === 0) {
+        cleanInstitution = undefined;
+      } else {
+        const lower = cleanInstitution.toLowerCase();
+        if (
+          lower.includes('srm') &&
+          (lower.includes('ap') ||
+            lower.includes('amaravat') ||
+            lower.includes('amravat') ||
+            lower.includes('andra') ||
+            lower.includes('andhra') ||
+            lower === 'srm university' ||
+            lower === 'srm' ||
+            lower === 'srmap' ||
+            lower === 'srmuap') &&
+          !lower.includes('delhi') &&
+          !lower.includes('sonepat') &&
+          !lower.includes('sonipat') &&
+          !lower.includes('haryana') &&
+          !lower.includes('ktr') &&
+          !lower.includes('ramapuram')
+        ) {
+          cleanInstitution = 'SRM University AP';
+        }
+      }
     }
 
     if (typeof rawPhone === 'string') {
@@ -113,7 +137,7 @@ export async function PATCH(request: NextRequest) {
       await supabaseAdmin.from('registrations').insert({
         email,
         name: effectiveName,
-        institution: cleanInstitution || 'SRM University-AP',
+        institution: cleanInstitution || 'SRM University AP',
         phone: cleanPhone || null,
         role: 'Undergraduate Student',
         created_at: new Date().toISOString(),

@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 export const dynamic = 'force-dynamic';
 
 const KNOWN_SEED_INSTITUTIONS = [
-  'SRM University-AP',
+  'SRM University AP',
   'Andhra Loyola College (ALC), Vijayawada',
   'Andhra Loyola Institute of Engineering & Technology (ALIET), Vijayawada',
   'BITS Pilani (Hyderabad Campus)',
@@ -32,6 +32,32 @@ const KNOWN_SEED_INSTITUTIONS = [
   'VIT University, Vellore',
 ];
 
+function canonicalizeInst(name: string): string {
+  const trimmed = name.trim().replace(/\s+/g, ' ');
+  const lower = trimmed.toLowerCase();
+  if (
+    lower.includes('srm') &&
+    (lower.includes('ap') ||
+      lower.includes('amaravat') ||
+      lower.includes('amravat') ||
+      lower.includes('andra') ||
+      lower.includes('andhra') ||
+      lower === 'srm university' ||
+      lower === 'srm' ||
+      lower === 'srmap' ||
+      lower === 'srmuap') &&
+    !lower.includes('delhi') &&
+    !lower.includes('sonepat') &&
+    !lower.includes('sonipat') &&
+    !lower.includes('haryana') &&
+    !lower.includes('ktr') &&
+    !lower.includes('ramapuram')
+  ) {
+    return 'SRM University AP';
+  }
+  return trimmed;
+}
+
 export async function GET() {
   try {
     const { data: rows, error } = await supabaseAdmin
@@ -43,21 +69,23 @@ export async function GET() {
     const institutionSet = new Set<string>();
 
     for (const item of KNOWN_SEED_INSTITUTIONS) {
-      institutionSet.add(item);
+      institutionSet.add(canonicalizeInst(item));
     }
 
     if (!error && rows) {
       for (const r of rows) {
-        const inst = String(r.institution || '').trim();
+        const raw = String(r.institution || '').trim();
         if (
-          inst &&
-          inst.length > 2 &&
-          !inst.toLowerCase().includes('college / university') &&
-          !inst.toLowerCase().includes('college/university') &&
-          inst.toLowerCase() !== 'n/a' &&
-          inst.toLowerCase() !== 'none'
+          raw &&
+          raw.length > 2 &&
+          !raw.toLowerCase().includes('college / university') &&
+          !raw.toLowerCase().includes('college/university') &&
+          !raw.includes('@') &&
+          raw.toLowerCase() !== 'n/a' &&
+          raw.toLowerCase() !== 'none' &&
+          raw.toLowerCase() !== 'university'
         ) {
-          institutionSet.add(inst);
+          institutionSet.add(canonicalizeInst(raw));
         }
       }
     }
