@@ -113,7 +113,7 @@ export interface YourCompetitionEntry {
   entryUrl: string | null;
   submittedAt: string | null;
   /**
-   * pending: winners of this competition are not announced yet.
+   * pending: not announced yet (before the ceremony reveal, or no winners released).
    * not_selected: announced, and this entry is not among the winners (explicitly or by default).
    */
   status: CompetitionOutcome | 'pending';
@@ -126,6 +126,8 @@ export interface CompetitionWinnersResponse {
   success: boolean;
   boards: CompetitionWinnersBoard[];
   yourEntries: YourCompetitionEntry[];
+  /** When results become visible to participants (Valedictory Ceremony) */
+  revealAt: string;
   /** True when the boards include unreleased placements (admins only). */
   preview: boolean;
 }

@@ -325,13 +325,30 @@ const ENTRY_STATUS: Record<YourCompetitionEntry['status'], { label: string; tone
   pending: { label: 'Not announced', tone: 'warning', message: 'Results for this competition are not announced yet.' },
 };
 
-function YourResults({ entries, onShowCard }: { entries: YourCompetitionEntry[]; onShowCard: (key: string) => void }) {
+/** "30 October 2026" for the ceremony line */
+function ceremonyDate(iso: string | undefined): string {
+  if (!iso) return 'the Valedictory Ceremony';
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata' });
+}
+
+function YourResults({
+  entries,
+  revealAt,
+  onShowCard,
+}: {
+  entries: YourCompetitionEntry[];
+  revealAt?: string;
+  onShowCard: (key: string) => void;
+}) {
   if (entries.length === 0) return null;
   return (
     <Card title="Your results" description="Every competition you entered and the jury's decision.">
       <ul className="divide-y divide-slate-100 dark:divide-[#250D11] -my-2">
         {entries.map((e) => {
-          const meta = ENTRY_STATUS[e.status];
+          const meta =
+            e.status === 'pending'
+              ? { ...ENTRY_STATUS.pending, message: `Results will be announced at the Valedictory Ceremony on ${ceremonyDate(revealAt)}.` }
+              : ENTRY_STATUS[e.status];
           return (
             <li key={e.type} className="py-3 space-y-1.5">
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -387,11 +404,16 @@ export function ResultsSection({ isAdmin }: { isAdmin: boolean }) {
 
   if (boards.length === 0) {
     return (
-      <Card>
-        <EmptyState icon={Trophy} title="Results are not announced yet">
-          Winners of the Tech Reels, Digital Poster and Essay competitions will appear here once they are announced.
-        </EmptyState>
-      </Card>
+      <div className="space-y-5">
+        <Card>
+          <EmptyState icon={Trophy} title="Results will be announced at the Valedictory Ceremony">
+            Winners of the Tech Reels, Digital Poster and Essay competitions will be announced at the Valedictory Ceremony on{' '}
+            {ceremonyDate(data?.revealAt)} at SRM University-AP. Results, award cards and the public results page open here
+            after the announcement.
+          </EmptyState>
+        </Card>
+        <YourResults entries={data?.yourEntries || []} revealAt={data?.revealAt} onShowCard={() => {}} />
+      </div>
     );
   }
 
@@ -428,6 +450,7 @@ export function ResultsSection({ isAdmin }: { isAdmin: boolean }) {
 
       <YourResults
         entries={data?.yourEntries || []}
+        revealAt={data?.revealAt}
         onShowCard={(key) => {
           setSelectedKey(key);
           document.getElementById('award-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });

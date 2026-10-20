@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, Trophy } from 'lucide-react';
 import { loadWinnerBoards } from '@/lib/competition-winners';
+import { getResultsRevealAt } from '@/lib/competition-reveal';
 import { WinnersBoard } from '@/components/learning/profile/ResultsSection';
 import { awardSerif } from '@/components/learning/profile/award-font';
 
@@ -15,7 +16,14 @@ export const metadata: Metadata = {
 
 /** Public list of announced winners. Unreleased placements never appear here. */
 export default async function ResultsPage() {
-  const boards = (await loadWinnerBoards()).filter((b) => b.winners.length > 0);
+  const [allBoards, revealAt] = await Promise.all([loadWinnerBoards(), getResultsRevealAt()]);
+  const boards = allBoards.filter((b) => b.winners.length > 0);
+  const ceremony = new Date(revealAt).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'Asia/Kolkata',
+  });
 
   return (
     <div className="min-h-screen bg-[#FAF7F4] dark:bg-[#100405] py-10 sm:py-14 px-4 sm:px-6">
@@ -36,8 +44,12 @@ export default async function ResultsPage() {
         {boards.length === 0 ? (
           <div className="rounded-xl border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] px-6 py-12 text-center">
             <Trophy className="mx-auto h-8 w-8 text-[#B08D57]" />
-            <p className="mt-3 text-sm font-semibold text-slate-900 dark:text-[#FAF6F3]">Results are not announced yet</p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Winners will be listed here once they are announced.</p>
+            <p className="mt-3 text-sm font-semibold text-slate-900 dark:text-[#FAF6F3]">
+              Results will be announced at the Valedictory Ceremony
+            </p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              Winners will be announced on {ceremony} at SRM University-AP and listed here after the ceremony.
+            </p>
           </div>
         ) : (
           boards.map((board) => <WinnersBoard key={board.type} board={board} />)

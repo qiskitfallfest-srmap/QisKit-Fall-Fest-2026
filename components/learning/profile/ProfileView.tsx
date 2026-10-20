@@ -402,8 +402,8 @@ export function ProfileView() {
   const { data: certName } = useCertificateName();
   const { data: accommodation } = useAccommodation();
   const { data: winners } = useCompetitionWinners();
-  // The Results tab appears once there is something announced (or, for admins, something to preview)
-  const hasResults = boardsWithWinners(winners).length > 0;
+  // Entrants also keep the tab before the announcement, so they see when results come out
+  const hasResults = boardsWithWinners(winners).length > 0 || (winners?.yourEntries?.length ?? 0) > 0;
   const [seen, setSeen] = useState<Set<string>>(new Set());
   const [seenDecisions, setSeenDecisions] = useState<Set<string>>(new Set());
   const newForm = searchParams?.get('new');

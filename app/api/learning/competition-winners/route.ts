@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
 import { loadWinnerBoards, loadYourEntries } from '@/lib/competition-winners';
+import { getResultsRevealAt } from '@/lib/competition-reveal';
 import type { CompetitionWinnersResponse } from '@/lib/competition-results';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * Winners of the daily competitions, for every signed-in participant.
- * A placement is listed once its result is released; admins also see
- * unreleased placements (released: false) so the board can be checked
- * before the announcement.
+ * A placement is listed once its result is released and the ceremony reveal
+ * time has passed; admins also see the rest (released: false) as a preview.
  */
 export async function GET() {
   const session = await getServerSession();
@@ -25,6 +25,7 @@ export async function GET() {
       success: true,
       boards,
       yourEntries: await loadYourEntries(session.email, publicBoards),
+      revealAt: await getResultsRevealAt(),
       preview: boards.some((b) => b.winners.some((w) => !w.released)),
     };
     return NextResponse.json(body, { headers: { 'Cache-Control': 'private, no-store' } });

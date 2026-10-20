@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { invalidateCache } from '@/lib/redis';
+import { getResultsReveal, setResultsRevealAt } from '@/lib/competition-reveal';
 import {
   COMPETITION_TYPES,
   OUTCOME_BY_STATUS,
@@ -38,6 +39,9 @@ export interface AdminCompetitionResultRow {
 
 export interface AdminCompetitionResultsData {
   rows: AdminCompetitionResultRow[];
+  /** Released results are visible to participants from this time (Valedictory Ceremony) */
+  revealAt: string;
+  revealed: boolean;
   summary: Record<
     CompetitionType,
     { total: number; undecided: number; ready: number; released: number; winners: number; finalists: number }
@@ -138,7 +142,7 @@ async function loadData(): Promise<AdminCompetitionResultsData> {
     })
   ) as AdminCompetitionResultsData['summary'];
 
-  return { rows, summary };
+  return { rows, summary, ...(await getResultsReveal()) };
 }
 
 export async function GET() {
@@ -162,6 +166,15 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const action: string = body?.action;
+
+    // Reveal time is global, not per entry
+    if (action === 'set_reveal' || action === 'reveal_now') {
+      const iso = action === 'reveal_now' ? new Date().toISOString() : String(body?.revealAt || '');
+      if (Number.isNaN(Date.parse(iso))) return NextResponse.json({ error: 'Invalid date and time.' }, { status: 400 });
+      await setResultsRevealAt(iso, session.email);
+      return NextResponse.json({ success: true, results: [], data: await loadData() });
+    }
+
     const ids: string[] = Array.isArray(body?.ids) ? body.ids.map(String) : body?.id ? [String(body.id)] : [];
     if (!ids.length) return NextResponse.json({ error: 'id or ids is required.' }, { status: 400 });
 

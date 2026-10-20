@@ -100,6 +100,93 @@ interface Draft {
   feedback: string;
 }
 
+/** "2026-10-30T14:00" in IST for a datetime-local input */
+function toIstInput(iso: string): string {
+  const d = new Date(Date.parse(iso) + 330 * 60_000);
+  return d.toISOString().slice(0, 16);
+}
+
+function formatIstLong(iso: string): string {
+  return new Date(iso).toLocaleString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+/** When released results become visible to participants (Valedictory Ceremony). */
+function RevealPanel({
+  revealAt,
+  revealed,
+  busy,
+  onSave,
+  onRevealNow,
+}: {
+  revealAt: string;
+  revealed: boolean;
+  busy: boolean;
+  onSave: (iso: string) => void;
+  onRevealNow: () => void;
+}) {
+  const [value, setValue] = useState(() => toIstInput(revealAt));
+  useEffect(() => setValue(toIstInput(revealAt)), [revealAt]);
+  return (
+    <div
+      className={clsx(
+        'rounded-xl border p-4 space-y-3',
+        revealed
+          ? 'border-emerald-200 bg-emerald-50/60 dark:border-emerald-900/60 dark:bg-emerald-950/20'
+          : 'border-amber-200 bg-amber-50/60 dark:border-amber-900/60 dark:bg-amber-950/20'
+      )}
+    >
+      <div>
+        <p className="text-sm font-semibold text-slate-900 dark:text-[#FAF6F3]">
+          {revealed ? 'Results are visible to participants' : `Results are hidden until ${formatIstLong(revealAt)} IST`}
+        </p>
+        <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+          {revealed
+            ? `Visible since ${formatIstLong(revealAt)} IST: released results show on profiles, the dashboard, /results and the award pages.`
+            : 'Winners are announced at the Valedictory Ceremony. Released results stay saved; profiles, the dashboard, /results and the award pages show them from this time on. Admins can preview them on their profile.'}
+        </p>
+      </div>
+      <div className="flex flex-wrap items-end gap-2">
+        <label className="text-xs text-slate-600 dark:text-slate-300 space-y-1">
+          <span className="block">Visible from (IST)</span>
+          <input
+            type="datetime-local"
+            className={inputCls}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+          />
+        </label>
+        <button
+          type="button"
+          className={btnSecondary}
+          disabled={busy || !value || value === toIstInput(revealAt)}
+          onClick={() => onSave(`${value}:00+05:30`)}
+        >
+          Save time
+        </button>
+        {!revealed && (
+          <button
+            type="button"
+            className={btnPrimary}
+            disabled={busy}
+            onClick={() => {
+              if (window.confirm('Show all released competition results to participants and on the public pages now?')) onRevealNow();
+            }}
+          >
+            Publish now
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function AdminCompetitionResultsView() {
   const [data, setData] = useState<AdminCompetitionResultsData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -245,15 +332,30 @@ export function AdminCompetitionResultsView() {
         <div>
           <h2 className="font-serif text-xl font-semibold text-slate-900 dark:text-[#FAF6F3]">Competition Results</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Decide and release results entry by entry. Participants see nothing until a result is released; after that,
-            changes to the decision, score or comment show up for them immediately. A released winner with a placement
-            appears on the Results tab of every participant&apos;s profile; admins see unreleased placements there as a preview.
+            Decide and release results entry by entry. Participants see a released result from the reveal time below
+            (Valedictory Ceremony); after that, changes to the decision, score or comment show up for them immediately. A
+            released winner with a placement appears on the Results tab of every profile and on /results; admins see
+            everything there as a preview before the reveal.
           </p>
         </div>
         <button type="button" className={btnSecondary} onClick={() => { setLoading(true); load(); }} disabled={busy}>
           <RotateCw className={clsx('w-3.5 h-3.5', busy && 'animate-spin')} /> Refresh
         </button>
       </div>
+
+      {data && (
+        <RevealPanel
+          revealAt={data.revealAt}
+          revealed={data.revealed}
+          busy={busy}
+          onSave={async (iso) => {
+            if (await act({ action: 'set_reveal', revealAt: iso }, '')) setNotice('Reveal time saved.');
+          }}
+          onRevealNow={async () => {
+            if (await act({ action: 'reveal_now' }, '')) setNotice('Results are now visible to participants.');
+          }}
+        />
+      )}
 
       {/* Counters per competition */}
       <dl className="grid grid-cols-1 sm:grid-cols-3 gap-px rounded-xl overflow-hidden border border-slate-200 dark:border-[#3D1418] bg-slate-200 dark:bg-[#3D1418]">

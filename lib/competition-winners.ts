@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { getParticipantUniversitiesMap } from '@/lib/participant-universities';
+import { getResultsReveal } from '@/lib/competition-reveal';
 import { DAILY_COMPETITIONS } from '@/data/learning/competitions';
 import { createHash } from 'crypto';
 import {
@@ -72,7 +73,7 @@ export async function loadAwardEntrySource(
     .eq('status', 'winner')
     .eq('award_rank', rank)
     .maybeSingle();
-  if (!ev || (!includeUnreleased && !ev.result_released_at)) return null;
+  if (!ev || (!includeUnreleased && !(ev.result_released_at && (await getResultsReveal()).revealed))) return null;
   const { data: sub } = await supabaseAdmin
     .from('competition_submissions')
     .select('submission_url')
@@ -102,7 +103,10 @@ export async function loadWinnerBoards({
     if (String(error.message || '').includes('award_rank')) return [];
     throw error;
   }
-  const evals = (rankedEvals || []).filter((ev: any) => includeUnreleased || ev.result_released_at);
+  // A released placement is public only from the ceremony reveal time on
+  const { revealed } = await getResultsReveal();
+  const isPublic = (ev: any) => !!ev.result_released_at && revealed;
+  const evals = (rankedEvals || []).filter((ev: any) => includeUnreleased || isPublic(ev));
 
   const ids = evals.map((ev: any) => String(ev.target_id));
   const { data: subs, error: subsErr } = ids.length
@@ -157,8 +161,8 @@ export async function loadWinnerBoards({
             entryUrl: publicEntryUrl(awardId(type, rank), sub.submission_url),
             prizeInr: prizePool?.[rank - 1] ?? null,
             isYou: viewer !== null && email === viewer,
-            released: !!ev.result_released_at,
-            releasedAt: ev.result_released_at || null,
+            released: isPublic(ev),
+            releasedAt: isPublic(ev) ? ev.result_released_at : null,
           },
         ];
       })
@@ -173,6 +177,7 @@ export async function loadWinnerBoards({
  * announced (on the given boards), the entry reads as not among the winners.
  */
 export async function loadYourEntries(email: string, boards: CompetitionWinnersBoard[]): Promise<YourCompetitionEntry[]> {
+  const { revealed } = await getResultsReveal();
   const { data: subs, error } = await supabaseAdmin
     .from('competition_submissions')
     .select('id, competition_type, submission_url, submission_title, submitted_at')
@@ -194,7 +199,7 @@ export async function loadYourEntries(email: string, boards: CompetitionWinnersB
     const board = boards.find((b) => b.type === type);
     const announced = !!board?.winners.length;
     const ev: any = evalById.get(String(sub.id));
-    const released = !!ev?.result_released_at;
+    const released = !!ev?.result_released_at && revealed;
     const outcome = released ? OUTCOME_BY_STATUS[ev.status || ''] : undefined;
     const rank = outcome === 'winner' && isAwardRank(Number(ev.award_rank)) ? (Number(ev.award_rank) as AwardRank) : null;
     return [

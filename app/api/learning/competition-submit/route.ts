@@ -10,6 +10,7 @@ import {
   invalidateCompetitionSubmissionsCache,
 } from '@/lib/redis';
 import { COMPETITION_TYPES, toCompetitionResult } from '@/lib/competition-results';
+import { getResultsReveal } from '@/lib/competition-reveal';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -48,7 +49,8 @@ export async function GET() {
       .filter(Boolean)
       .map(String);
     const results: Record<string, ReturnType<typeof toCompetitionResult>> = {};
-    if (submissionIds.length) {
+    // Jury results are announced at the Valedictory Ceremony; nothing shows before the reveal time
+    if (submissionIds.length && (await getResultsReveal()).revealed) {
       const { data: evals } = await supabaseAdmin
         .from('submission_evaluations')
         .select('target_id, status, score, max_score, participant_feedback, result_released_at')
