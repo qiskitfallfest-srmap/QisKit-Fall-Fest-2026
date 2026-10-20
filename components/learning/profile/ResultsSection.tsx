@@ -4,12 +4,28 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import useSWR from 'swr';
 import clsx from 'clsx';
 import Link from 'next/link';
-import { ArrowRight, Check, Copy, Download, ExternalLink, Loader2, Medal, Share2, ShieldCheck, Trophy } from 'lucide-react';
+import {
+  ArrowRight,
+  Check,
+  CirclePlay,
+  Copy,
+  Download,
+  ExternalLink,
+  FileText,
+  ImageIcon,
+  Loader2,
+  Medal,
+  Share2,
+  ShieldCheck,
+  Trophy,
+  type LucideIcon,
+} from 'lucide-react';
 import {
   AWARD_RANK_LABEL,
   awardUrl,
   formatInr,
   type AwardRank,
+  type CompetitionType,
   type CompetitionWinner,
   type CompetitionWinnersBoard,
   type CompetitionWinnersResponse,
@@ -47,6 +63,13 @@ function yourPlacements(boards: CompetitionWinnersBoard[]): Placement[] {
 }
 
 const ORDINAL: Record<AwardRank, string> = { 1: '1st', 2: '2nd', 3: '3rd' };
+
+/** Action label for a winning entry link: the verb says it opens, the noun says what it opens. */
+const ENTRY_ACTION: Record<CompetitionType, { label: string; verb: string; noun: string; Icon: LucideIcon }> = {
+  reels: { label: 'Watch Reel', verb: 'Watch', noun: 'reel', Icon: CirclePlay },
+  poster: { label: 'View Poster', verb: 'View', noun: 'poster', Icon: ImageIcon },
+  essay: { label: 'Read Essay', verb: 'Read', noun: 'essay', Icon: FileText },
+};
 
 /* ───────────────────────────── Share actions ───────────────────────────── */
 
@@ -211,6 +234,7 @@ export function WinnersBoard({
           const key = `${board.type}-${w.rank}`;
           const showCardButton = !!onSelect && (w.isYou || canPreview);
           const [light, mid, dark] = MEDAL_METAL[w.rank];
+          const entryAction = ENTRY_ACTION[board.type];
           return (
             <li
               key={key}
@@ -251,11 +275,12 @@ export function WinnersBoard({
                     href={w.entryUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={buttonStyles.ghost}
-                    aria-label={`View entry by ${w.name}`}
+                    className={clsx(buttonStyles.secondary, 'whitespace-nowrap')}
+                    aria-label={`${entryAction.verb} ${w.name}'s ${entryAction.noun} (opens in new tab)`}
                   >
-                    Entry
-                    <ExternalLink className="h-3.5 w-3.5" />
+                    <entryAction.Icon className="h-4 w-4" aria-hidden="true" />
+                    {entryAction.label}
+                    <ExternalLink className="h-3 w-3 opacity-60" aria-hidden="true" />
                   </a>
                 )}
                 {showCardButton && (
@@ -268,9 +293,13 @@ export function WinnersBoard({
                   </button>
                 )}
                 {!onSelect && w.released && (
-                  <Link href={`/awards/${w.awardId}`} className={buttonStyles.ghost}>
+                  <Link
+                    href={`/awards/${w.awardId}`}
+                    className={buttonStyles.ghost}
+                    aria-label={`Verify ${w.name}'s ${AWARD_RANK_LABEL[w.rank]} award`}
+                  >
                     Verify
-                    <ShieldCheck className="h-3.5 w-3.5" />
+                    <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
                   </Link>
                 )}
               </div>
