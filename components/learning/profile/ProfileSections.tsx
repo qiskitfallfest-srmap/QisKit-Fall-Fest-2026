@@ -887,13 +887,46 @@ export function ActivitySection({ overview }: { overview: ProfileOverview }) {
 
 /* ───────────────────────────── Account ───────────────────────────── */
 
-export function AccountSection({ overview, onNameSaved }: { overview: ProfileOverview; onNameSaved: (name: string) => void }) {
+export function AccountSection({
+  overview,
+  onNameSaved,
+  onProfileUpdated,
+}: {
+  overview: ProfileOverview;
+  onNameSaved?: (name: string) => void;
+  onProfileUpdated?: (updated: { fullName?: string; institution?: string; phone?: string }) => void;
+}) {
   const p = overview.profile;
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(p.fullName);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
+
+  const [editingInst, setEditingInst] = useState(false);
+  const [institution, setInstitution] = useState(p.institution || '');
+  const [busyInst, setBusyInst] = useState(false);
+  const [errorInst, setErrorInst] = useState('');
+  const [savedInst, setSavedInst] = useState(false);
+
+  const [editingPhone, setEditingPhone] = useState(false);
+  const [phone, setPhone] = useState(p.phone || '');
+  const [busyPhone, setBusyPhone] = useState(false);
+  const [errorPhone, setErrorPhone] = useState('');
+  const [savedPhone, setSavedPhone] = useState(false);
+
+  const [institutionsList, setInstitutionsList] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch('/api/institutions')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data?.institutions)) {
+          setInstitutionsList(data.institutions);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -915,7 +948,8 @@ export function AccountSection({ overview, onNameSaved }: { overview: ProfileOve
       const { invalidateClientSessionCache } = await import('@/lib/session-client');
       invalidateClientSessionCache();
       window.dispatchEvent(new CustomEvent('qff_auth_change', { detail: json.session }));
-      onNameSaved(trimmed);
+      if (onNameSaved) onNameSaved(trimmed);
+      if (onProfileUpdated) onProfileUpdated({ fullName: trimmed });
       setEditing(false);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
@@ -923,6 +957,63 @@ export function AccountSection({ overview, onNameSaved }: { overview: ProfileOve
       setError(err?.message || 'Could not update your name.');
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function saveInstitution(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = institution.trim().replace(/\s+/g, ' ');
+    if (trimmed.length < 2) {
+      setErrorInst('Institution must be at least 2 characters.');
+      return;
+    }
+    setBusyInst(true);
+    setErrorInst('');
+    try {
+      const res = await fetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ institution: trimmed }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || 'Could not update institution.');
+      if (onProfileUpdated) onProfileUpdated({ institution: trimmed });
+      setInstitutionsList((prev) => (prev.includes(trimmed) ? prev : [...prev, trimmed].sort()));
+      setEditingInst(false);
+      setSavedInst(true);
+      setTimeout(() => setSavedInst(false), 3000);
+    } catch (err: any) {
+      setErrorInst(err?.message || 'Could not update institution.');
+    } finally {
+      setBusyInst(false);
+    }
+  }
+
+  async function savePhone(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = phone.trim().replace(/\s+/g, ' ');
+    if (trimmed.length > 25) {
+      setErrorPhone('Phone number cannot exceed 25 characters.');
+      return;
+    }
+    setBusyPhone(true);
+    setErrorPhone('');
+    try {
+      const res = await fetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: trimmed }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || 'Could not update phone number.');
+      if (onProfileUpdated) onProfileUpdated({ phone: trimmed });
+      setEditingPhone(false);
+      setSavedPhone(true);
+      setTimeout(() => setSavedPhone(false), 3000);
+    } catch (err: any) {
+      setErrorPhone(err?.message || 'Could not update phone number.');
+    } finally {
+      setBusyPhone(false);
     }
   }
 
@@ -939,7 +1030,7 @@ export function AccountSection({ overview, onNameSaved }: { overview: ProfileOve
 
   return (
     <div className="space-y-4">
-      <Card title="Account details" description="Your name appears on your pass, team roster and certificate.">
+      <Card title="Account details" description="Your name, institution, and contact phone appear on your pass, team roster, and certificates.">
         <dl className="divide-y divide-slate-100 dark:divide-[#250D11] -my-2">
           <DetailRow label="Full name">
             {editing ? (
@@ -994,17 +1085,116 @@ export function AccountSection({ overview, onNameSaved }: { overview: ProfileOve
             <span className="break-all">{p.email}</span>
             <span className="block text-xs text-slate-500 dark:text-slate-400">Linked to your Google sign-in. It cannot be changed.</span>
           </DetailRow>
-          <DetailRow label="Institution">{p.institution || <span className="text-slate-400">Not provided</span>}</DetailRow>
+          <DetailRow label="Institution">
+            {editingInst ? (
+              <form onSubmit={saveInstitution} className="flex flex-col sm:flex-row gap-2 w-full">
+                <label htmlFor="profile-institution" className="sr-only">
+                  Institution
+                </label>
+                <input
+                  id="profile-institution"
+                  list="profile-institutions-datalist"
+                  value={institution}
+                  onChange={(e) => setInstitution(e.target.value)}
+                  maxLength={120}
+                  autoFocus
+                  placeholder="Type or select college / university"
+                  className="flex-1 min-w-0 rounded-lg border border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#1C0A0D] px-3 py-2 text-sm text-slate-900 dark:text-[#FAF6F3] focus:outline-none focus:ring-2 focus:ring-burgundy/40"
+                />
+                <datalist id="profile-institutions-datalist">
+                  {institutionsList.map((inst) => (
+                    <option key={inst} value={inst} />
+                  ))}
+                </datalist>
+                <div className="flex gap-2">
+                  <button type="submit" disabled={busyInst} className={buttonStyles.primary}>
+                    {busyInst && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busyInst}
+                    onClick={() => {
+                      setEditingInst(false);
+                      setInstitution(p.institution || '');
+                      setErrorInst('');
+                    }}
+                    className={buttonStyles.secondary}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span className="font-medium">{p.institution || <span className="text-slate-400 font-normal">Not provided</span>}</span>
+                <button
+                  type="button"
+                  onClick={() => setEditingInst(true)}
+                  className="text-xs font-semibold text-burgundy dark:text-[#E89BA5] hover:underline cursor-pointer"
+                >
+                  Edit
+                </button>
+                {savedInst && <span className="text-xs text-emerald-700 dark:text-emerald-300">Saved</span>}
+              </span>
+            )}
+            {errorInst && <p className="mt-1.5 text-xs text-rose-600 dark:text-rose-300">{errorInst}</p>}
+          </DetailRow>
           {p.yearOfStudy && <DetailRow label="Year of study">{p.yearOfStudy}</DetailRow>}
-          <DetailRow label="Phone">{p.phone || <span className="text-slate-400">Not provided</span>}</DetailRow>
+          <DetailRow label="Phone">
+            {editingPhone ? (
+              <form onSubmit={savePhone} className="flex flex-col sm:flex-row gap-2 w-full">
+                <label htmlFor="profile-phone" className="sr-only">
+                  Phone number
+                </label>
+                <input
+                  id="profile-phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  maxLength={25}
+                  autoFocus
+                  placeholder="+91..."
+                  className="flex-1 min-w-0 rounded-lg border border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#1C0A0D] px-3 py-2 text-sm font-mono text-slate-900 dark:text-[#FAF6F3] focus:outline-none focus:ring-2 focus:ring-burgundy/40"
+                />
+                <div className="flex gap-2">
+                  <button type="submit" disabled={busyPhone} className={buttonStyles.primary}>
+                    {busyPhone && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busyPhone}
+                    onClick={() => {
+                      setEditingPhone(false);
+                      setPhone(p.phone || '');
+                      setErrorPhone('');
+                    }}
+                    className={buttonStyles.secondary}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span className="font-mono">{p.phone || <span className="text-slate-400 font-sans">Not provided</span>}</span>
+                <button
+                  type="button"
+                  onClick={() => setEditingPhone(true)}
+                  className="text-xs font-semibold text-burgundy dark:text-[#E89BA5] hover:underline cursor-pointer"
+                >
+                  Edit
+                </button>
+                {savedPhone && <span className="text-xs text-emerald-700 dark:text-emerald-300">Saved</span>}
+              </span>
+            )}
+            {errorPhone && <p className="mt-1.5 text-xs text-rose-600 dark:text-rose-300">{errorPhone}</p>}
+          </DetailRow>
           {p.registeredAt && <DetailRow label="Registered on">{formatIst(p.registeredAt, false)}</DetailRow>}
         </dl>
         <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-          To correct your institution or phone, write to{' '}
-          <a href={`mailto:${CONTACT_EMAIL}`} className="underline">
-            {CONTACT_EMAIL}
-          </a>{' '}
-          from your sign-in email.
+          Your name, institution, and phone update across your festival pass badge, team roster, and certificates automatically.
         </p>
       </Card>
 

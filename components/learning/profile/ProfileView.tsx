@@ -578,6 +578,11 @@ export function ProfileView() {
               // Award cards and the winners board print the profile name
               mutateKey(COMPETITION_WINNERS_KEY);
             }}
+            onProfileUpdated={(updated) => {
+              mutate({ ...overview, profile: { ...overview.profile, ...updated } }, { revalidate: true });
+              mutateStatus();
+              mutateKey(COMPETITION_WINNERS_KEY);
+            }}
           />
         )}
       </div>
