@@ -100,6 +100,12 @@ export async function PATCH(request: NextRequest) {
           .from('allowed_emails')
           .update({ full_name: cleanFullName })
           .ilike('email', email),
+        // Separate update so sign-in keeps this name over the Google display name (lib/auth-name.ts).
+        // A missing column (migration 20261021230000 not applied) cannot block the name change above.
+        supabaseAdmin
+          .from('allowed_emails')
+          .update({ full_name_set_at: new Date().toISOString() })
+          .ilike('email', email),
         supabaseAdmin
           .from('team_members')
           .update({ full_name: cleanFullName })

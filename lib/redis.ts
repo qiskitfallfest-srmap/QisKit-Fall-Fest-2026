@@ -94,18 +94,19 @@ export async function invalidateCache(keys: string | string[]): Promise<void> {
  */
 export async function isEmailWhitelisted(
   email: string
-): Promise<{ whitelisted: boolean; role?: string; fullName?: string }> {
+): Promise<{ whitelisted: boolean; role?: string; fullName?: string; nameSetByUser?: boolean }> {
   const normalizedEmail = email.trim().toLowerCase();
   const cacheKey = `whitelist:${normalizedEmail}`;
 
   const result = await cacheAside(
     cacheKey,
     CACHE_TTL.WHITELIST,
-    async (): Promise<{ whitelisted: boolean; role?: string; fullName?: string }> => {
+    async (): Promise<{ whitelisted: boolean; role?: string; fullName?: string; nameSetByUser?: boolean }> => {
       try {
         const { data, error } = await supabaseAdmin
           .from('allowed_emails')
-          .select('email, role, full_name, is_active')
+          // '*' so a missing full_name_set_at column (migration 20261021230000 not applied) cannot fail sign-in
+          .select('*')
           .ilike('email', normalizedEmail)
           .eq('is_active', true)
           .maybeSingle();
@@ -122,6 +123,7 @@ export async function isEmailWhitelisted(
           whitelisted: true,
           role: data.role,
           fullName: data.full_name || '',
+          nameSetByUser: Boolean((data as any).full_name_set_at),
         };
       } catch (err) {
         await logError('whitelist.lookup_failed', err, { email: normalizedEmail });

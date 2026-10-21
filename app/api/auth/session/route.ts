@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isEmailWhitelisted } from '@/lib/redis';
 import { SUPER_ADMIN_EMAILS } from '@/lib/auth';
+import { resolveDisplayName } from '@/lib/auth-name';
 import { logError, logInfo, logWarn } from '@/lib/logger';
 import {
   SESSION_COOKIE_NAME,
@@ -41,16 +42,7 @@ export async function GET(request: NextRequest) {
     }
 
     const role = isSuperAdmin ? 'admin' : whitelist.role || 'participant';
-
-    const isCleanWhitelistName =
-      Boolean(whitelist.fullName) &&
-      !whitelist.fullName!.includes('|') &&
-      !/^\d{5,}-/.test(whitelist.fullName!);
-
-    const resolvedFullName =
-      (parsed.fullName && !parsed.fullName.includes('|'))
-        ? parsed.fullName
-        : (isCleanWhitelistName ? whitelist.fullName! : (parsed.fullName || whitelist.fullName || email.split('@')[0]));
+    const resolvedFullName = resolveDisplayName(parsed.fullName, whitelist, email);
 
     return NextResponse.json({
       authenticated: true,
@@ -101,15 +93,8 @@ export async function POST(request: NextRequest) {
     }
 
     const role = isSuperAdmin ? 'admin' : whitelist.role || 'participant';
-    const isCleanWhitelistName =
-      Boolean(whitelist.fullName) &&
-      !whitelist.fullName!.includes('|') &&
-      !/^\d{5,}-/.test(whitelist.fullName!);
-
-    const resolvedFullName =
-      (fullName && !fullName.includes('|'))
-        ? fullName
-        : (isCleanWhitelistName ? whitelist.fullName! : (fullName || whitelist.fullName || email.split('@')[0]));
+    // A name saved on the profile wins over the Google display name, so corrections survive sign-in
+    const resolvedFullName = resolveDisplayName(fullName, whitelist, email);
 
     const sessionData = {
       email,

@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { isEmailWhitelisted } from './redis';
+import { resolveDisplayName } from './auth-name';
 import { SESSION_COOKIE_NAME, verifySessionCookie } from './session-cookie';
 
 export const SUPER_ADMIN_EMAILS = [
@@ -44,15 +45,7 @@ export async function getServerSession(): Promise<AuthSession | null> {
       ? 'admin'
       : (whitelist.role as AuthSession['role']) || 'participant';
 
-    const isCleanWhitelistName =
-      Boolean(whitelist.fullName) &&
-      !whitelist.fullName!.includes('|') &&
-      !/^\d{5,}-/.test(whitelist.fullName!);
-
-    const resolvedFullName =
-      (parsed.fullName && !parsed.fullName.includes('|'))
-        ? parsed.fullName
-        : (isCleanWhitelistName ? whitelist.fullName! : (parsed.fullName || whitelist.fullName || email.split('@')[0]));
+    const resolvedFullName = resolveDisplayName(parsed.fullName, whitelist, email);
 
     return {
       email,
