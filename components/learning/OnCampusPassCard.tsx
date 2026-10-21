@@ -39,7 +39,7 @@ import {
 import { usePassStatus } from '@/hooks/use-pass-status';
 import { handleGoogleSignInDirect } from '@/components/learning/AuthGate';
 import { supabase } from '@/lib/supabase';
-import { isSrmApParticipant } from '@/lib/participant-track';
+import { isSrmApEmail } from '@/lib/participant-track';
 
 function formatIst(iso: string) {
   return new Date(iso).toLocaleString('en-IN', {
@@ -783,6 +783,9 @@ export function OnCampusPassCard() {
   if (pass && !showClaimForm) {
     const isVerified = pass.status === 'verified';
     const isRejected = pass.status === 'rejected';
+    // SRM AP students with a rejected General Pass claim take the free pass instead of resubmitting
+    const canClaimFree =
+      isRejected && isSrmApEmail(data?.user?.email) && hackathon?.outcome !== 'shortlisted';
 
     const tone = isVerified
       ? {
@@ -831,7 +834,11 @@ export function OnCampusPassCard() {
               <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-900 dark:text-rose-200 space-y-1">
                 <p className="font-semibold">The organizing team could not match your receipt to a payment.</p>
                 {pass.admin_notes && <p>Reason: {pass.admin_notes}</p>}
-                <p>Check the Transaction ID and upload the correct receipt.</p>
+                <p>
+                  {canClaimFree
+                    ? 'The General Pass is now free for SRM University-AP students. Claim your free pass below.'
+                    : 'Check the Transaction ID and upload the correct receipt.'}
+                </p>
               </div>
             ) : isVerified ? (
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -879,7 +886,17 @@ export function OnCampusPassCard() {
             </dl>
 
             <div className="flex flex-wrap items-center gap-2.5">
-              {isRejected ? (
+              {canClaimFree ? (
+                <button
+                  type="button"
+                  onClick={handleClaimFreePass}
+                  disabled={isSubmitting}
+                  className="px-4 py-2.5 bg-burgundy hover:bg-burgundy-deep text-white text-xs font-semibold rounded-xl transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-60"
+                >
+                  {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                  <span>Claim Free Campus Pass</span>
+                </button>
+              ) : isRejected ? (
                 <button
                   type="button"
                   onClick={() => setIsResubmitting(true)}
@@ -909,6 +926,9 @@ export function OnCampusPassCard() {
                 </button>
               )}
             </div>
+            {canClaimFree && errorMessage && (
+              <p className="text-xs text-rose-700 dark:text-rose-300">{errorMessage}</p>
+            )}
           </div>
 
           {/* QR stub, separated by a perforated edge */}
@@ -939,7 +959,7 @@ export function OnCampusPassCard() {
   }
 
   // Claim flow: ticket stub (left) + three-step checkout (right)
-  const isSrmAp = isSrmApParticipant(data?.user?.email, data?.user?.institution);
+  const isSrmAp = isSrmApEmail(data?.user?.email);
   const flagshipMode = hackathon?.outcome === 'shortlisted' || pass?.pass_tier === 'flagship_offline';
   const fee = flagshipMode ? FLAGSHIP_PASS_FEE_INR : PASS_FEE_INR;
   const gatewayUrl = flagshipMode && flagship?.gatewayUrl ? flagship.gatewayUrl : EASEBUZZ_GATEWAY_URL;
@@ -1178,6 +1198,13 @@ export function OnCampusPassCard() {
             </button>
           )}
         </div>
+
+        {!flagshipMode && !isResubmitting && (
+          <p className="mb-4 p-3 rounded-xl bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+            SRM University-AP student? The General Pass is free. Sign in with your @srmap.edu.in account to claim
+            it, or show your SRM AP student ID card at the registration desk. Do not pay ₹{PASS_FEE_INR}.
+          </p>
+        )}
 
         {flagshipMode && flagshipStatus === 'open' && flagship?.deadlineIso && (
           <div className="mb-5">

@@ -16,7 +16,7 @@ import {
   RESULTS_EXPECTED_LABEL,
 } from '@/lib/hackathon-pass';
 import { confirmOfferIfComplete } from '@/lib/phase2-waiting-room';
-import { isSrmApParticipant } from '@/lib/participant-track';
+import { isSrmApEmail } from '@/lib/participant-track';
 import crypto from 'crypto';
 
 export const dynamic = 'force-dynamic';
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     const [{ data: existingClaims }, { data: regRows }] = await Promise.all([
       supabaseAdmin
         .from('festival_pass_claims')
-        .select('id, status, qr_code_token')
+        .select('id, status, qr_code_token, transaction_reference, amount_inr')
         .eq('user_email', normalizedEmail)
         .order('created_at', { ascending: false })
         .limit(1),
@@ -73,7 +73,8 @@ export async function POST(request: NextRequest) {
 
     const existingClaim = existingClaims?.[0];
     const reg = regRows?.[0];
-    const isSrmAp = isSrmApParticipant(normalizedEmail, reg?.institution);
+    // Free pass by campus email only: the institution field is self-reported
+    const isSrmAp = isSrmApEmail(normalizedEmail);
 
     // 3. Parse request body
     const body = await request.json();
@@ -108,6 +109,17 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // A pending paid claim keeps its Easebuzz record: it is verified as is and refunded later
+      if (existingClaim?.status === 'claimed_provisional') {
+        return NextResponse.json(
+          {
+            error:
+              'You already submitted a ₹99 payment. Your pass stays valid once verified, and the payment will be refunded to your original payment method.',
+          },
+          { status: 409 }
+        );
+      }
+
       const freeTxn = `SRMAP-FREE-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
       const claimFields = {
         user_email: normalizedEmail,
@@ -118,9 +130,12 @@ export async function POST(request: NextRequest) {
         receipt_url: 'institutional://srmap.edu.in',
         amount_inr: 0,
         status: 'verified',
-        institution: reg?.institution || 'SRM University AP',
+        institution: 'SRM University AP',
         contact_phone: reg?.phone || null,
-        admin_notes: 'SRM University-AP complimentary student pass',
+        // A rejected claim is replaced; keep its old reference for the payment records
+        admin_notes: existingClaim?.transaction_reference
+          ? `SRM University-AP complimentary student pass (replaced rejected claim ${existingClaim.transaction_reference}, ₹${existingClaim.amount_inr})`
+          : 'SRM University-AP complimentary student pass',
         updated_at: new Date().toISOString(),
       };
 

@@ -3,8 +3,14 @@
 Mailing & Export Utility for SRM University-AP Complimentary On-Campus Pass
 Qiskit Fall Fest 2026 (SRM University-AP)
 
-Target: All SRM University-AP students (allowed_emails and registrations)
-Excludes: Faculty, official festival accounts, and protected organizers.
+Target: Every @srmap.edu.in account in allowed_emails and registrations. Students who
+signed up with another email are not mailed: they show their SRM AP ID card at the gate.
+Excludes: faculty and festival accounts, anyone who already holds a pass claim
+(verified or pending; payers get a separate refund email), and members of hackathon
+teams with a Phase 2 offer or a waiting-room result (they cannot take the General Pass).
+Rejected claims are mailed, since those students can now claim the free pass.
+
+Every successful send is appended to SENT_LOG; a rerun skips those addresses.
 
 Usage:
   python tools/mail_srmap_free_pass_announcement.py --dry-run
@@ -16,15 +22,30 @@ import os
 import sys
 import argparse
 import csv
+import re
 import smtplib
 import time
 import json
-import re
 import urllib.request
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 # Configuration
+def load_env_file():
+    for fname in [".env.local", ".env"]:
+        if os.path.exists(fname):
+            with open(fname, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#") and "=" in line:
+                        k, v = line.split("=", 1)
+                        k = k.strip()
+                        v = v.strip().strip('"').strip("'")
+                        if k not in os.environ:
+                            os.environ[k] = v
+
+load_env_file()
+
 SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT = int(os.environ.get("SMTP_PORT", 587))
 SMTP_USER = os.environ.get("SMTP_USER", "qiskitfallfest@srmap.edu.in")
@@ -39,6 +60,13 @@ SUPABASE_URL = os.environ.get("NEXT_PUBLIC_SUPABASE_URL", "https://jpciyrodeppqp
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get(
     "NEXT_PUBLIC_SUPABASE_ANON_KEY", "sb_publishable_wjeOXSiT7E63DsDqTaL1cw_JBMTC3kj"
 )
+
+SENT_LOG = os.path.join(".tmp", "srmap_free_pass_sent.csv")
+
+# Same lists as lib/phase2-waiting-room.ts
+PHASE2_OFFERS_TABLE = "hackathon_phase2_offers"
+ACTIVE_OFFER_STATUSES = {"invited", "accepted", "confirmed"}
+WAITLIST_EVAL_STATUSES = {"under_review", "needs_discussion"}
 
 PROTECTED_EMAILS = {
     "sazzadali.b@srmap.edu.in",
@@ -112,10 +140,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <a href="{portal_url}" class="cta-button">Claim Your Free Campus Pass</a>
       </center>
 
-      <p style="font-size: 12px; color: #64748b; margin-top: 20px;">
-        <em>Note for students who previously paid:</em> If you already submitted a &#8377;99 payment on Easebuzz, our finance desk is processing your full refund to the original payment source. Your pass remains active and verified.
-      </p>
-
       <p style="font-size: 12px; color: #64748b;">
         <em>Hackathon Phase 2 Finalists:</em> Shortlisted hackathon sprint teams require the &#8377;499 Flagship Pass (which includes dedicated hardware setup, sprint venue, and 5-day catered meals).
       </p>
@@ -157,13 +181,56 @@ def clean_name(name):
         return "Student"
     name = str(name).strip()
     # Strip roll number pipes e.g. "Lasya | AP251100..."
+    name = re.sub(r"\s*\(lead\)\s*$", "", name, flags=re.IGNORECASE)
     if "|" in name:
         name = name.split("|")[0].strip()
     return name or "Student"
 
+def get_excluded_emails():
+    """Pass holders (except rejected) and members of teams still on the Phase 2 track."""
+    excluded = set()
+    for row in supabase_get("festival_pass_claims?select=user_email,status"):
+        if row.get("status") != "rejected":
+            excluded.add((row.get("user_email") or "").strip().lower())
+
+    blocked_teams = {
+        str(r["team_id"])
+        for r in supabase_get(f"{PHASE2_OFFERS_TABLE}?select=team_id,status")
+        if r.get("status") in ACTIVE_OFFER_STATUSES
+    }
+    blocked_teams |= {
+        str(r["target_id"])
+        for r in supabase_get("submission_evaluations?select=target_id,status&category=eq.hackathon")
+        if r.get("status") in WAITLIST_EVAL_STATUSES
+    }
+
+    for team in supabase_get("hackathon_teams?select=id,lead_email"):
+        if str(team["id"]) in blocked_teams:
+            excluded.add((team.get("lead_email") or "").strip().lower())
+    for member in supabase_get("team_members?select=team_id,email&status=eq.accepted"):
+        if str(member["team_id"]) in blocked_teams:
+            excluded.add((member.get("email") or "").strip().lower())
+    return excluded
+
+def load_sent_log():
+    if not os.path.exists(SENT_LOG):
+        return set()
+    with open(SENT_LOG, newline="", encoding="utf-8") as f:
+        return {row["Email"].strip().lower() for row in csv.DictReader(f) if row.get("Email")}
+
+def append_sent_log(email):
+    is_new = not os.path.exists(SENT_LOG)
+    os.makedirs(os.path.dirname(SENT_LOG), exist_ok=True)
+    with open(SENT_LOG, "a", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        if is_new:
+            writer.writerow(["Email", "Sent At"])
+        writer.writerow([email, time.strftime("%Y-%m-%d %H:%M:%S")])
+
 def get_srmap_recipients():
     allowed = supabase_get("allowed_emails?select=email,full_name")
-    regs = supabase_get("registrations?select=email,name,institution")
+    regs = supabase_get("registrations?select=email,name")
+    excluded = get_excluded_emails()
 
     recipients = {}
 
@@ -171,18 +238,16 @@ def get_srmap_recipients():
         email = (row.get("email") or "").strip().lower()
         if not email or not email.endswith("@srmap.edu.in"):
             continue
-        if email in PROTECTED_EMAILS:
+        if email in PROTECTED_EMAILS or email in excluded:
             continue
         name = clean_name(row.get("full_name"))
         recipients[email] = name
 
     for row in regs:
         email = (row.get("email") or "").strip().lower()
-        inst = (row.get("institution") or "").strip()
-        is_srm = email.endswith("@srmap.edu.in") or re.search(r"\bsrm\s*(university)?[\s-]*a\.?p\b|\bsrmap\b", inst, re.IGNORECASE)
-        if not is_srm:
+        if not email.endswith("@srmap.edu.in"):
             continue
-        if email in PROTECTED_EMAILS:
+        if email in PROTECTED_EMAILS or email in excluded:
             continue
         if email not in recipients:
             recipients[email] = clean_name(row.get("name"))
@@ -199,7 +264,11 @@ def main():
     args = parser.parse_args()
 
     recipients = get_srmap_recipients()
+    already_sent = load_sent_log()
     print(f"Total SRM-AP Recipients Qualified: {len(recipients)}")
+    if already_sent:
+        recipients = {em: nm for em, nm in recipients.items() if em not in already_sent}
+        print(f"Skipping {len(already_sent)} already in {SENT_LOG}; {len(recipients)} left to send.")
 
     if args.export_csv:
         os.makedirs(os.path.dirname(os.path.abspath(args.export_csv)), exist_ok=True)
@@ -245,6 +314,7 @@ def main():
             msg.attach(MIMEText(html, "html"))
 
             server.send_message(msg)
+            append_sent_log(em)
             sent += 1
             print(f"[{sent}/{len(recipients)}] Sent: {em}")
 
