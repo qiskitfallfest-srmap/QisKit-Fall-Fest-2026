@@ -79,8 +79,12 @@ export async function getTeamFlagshipPaymentWindow(phase2: Phase2TeamStatus): Pr
     deadlineIso: phase2.payBy,
     gatewayUrl: global.gatewayUrl,
   };
-  if (phase2.stage === 'confirmed') return { ...base, status: 'closed' };
-  if (phase2.stage !== 'accepted' || !phase2.payBy) return { ...base, status: 'not_open' };
+  // If the team is confirmed AND every member has already submitted their pass, payment is closed.
+  // Otherwise (e.g. a newly added member needs to pay), keep the window open until payBy.
+  if (phase2.stage === 'confirmed' && (!phase2.payment || (phase2.payment.allOthersPaid && phase2.payment.leadPaid))) {
+    return { ...base, status: 'closed' };
+  }
+  if ((phase2.stage !== 'accepted' && phase2.stage !== 'confirmed') || !phase2.payBy) return { ...base, status: 'not_open' };
   if (Date.now() >= Date.parse(phase2.payBy)) return { ...base, status: 'closed' };
   return { ...base, status: global.gatewayUrl ? 'open' : 'not_open' };
 }
