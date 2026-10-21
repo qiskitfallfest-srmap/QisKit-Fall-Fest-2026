@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { PHASE2_OFFERS_TABLE } from '@/lib/phase2-waiting-room';
+import { trackForLeadEmail } from '@/lib/phase2-waiting-room';
+import { getShortlistRoster, type FollowUp } from '@/lib/shortlist-server';
+import { contactFields, contactStatuses } from '@/lib/contact-server';
+import { getParticipantUniversitiesMap } from '@/lib/participant-universities';
+import { currentInstitutionDetails } from '@/lib/accommodation-server';
 import { invalidatePlatformConfigCache } from '@/lib/redis';
 import { ACCOMMODATION_CONFIG_KEY, ACCOMMODATION_TABLE } from '@/lib/accommodation';
 
@@ -12,9 +16,18 @@ async function requireAdmin() {
   return session?.isAdmin ? session : null;
 }
 
+async function countRegistrations(filter?: (q: any) => any): Promise<number | null> {
+  let q = supabaseAdmin.from('registrations').select('id', { count: 'exact', head: true });
+  if (filter) q = filter(q);
+  const { count, error } = await q;
+  return error ? null : count ?? 0;
+}
+
 /**
- * GET: every request, team names, the open/closed setting, and the external Phase 2
- * members who have not answered yet (so organizers can chase them before booking).
+ * GET: every request tagged with its group (Phase 2 shortlisted, General Pass, or neither),
+ * the institution as it stands now (and whether the participant confirmed it), the
+ * open/closed setting, the external participants in either group who have not answered
+ * (with phone for WhatsApp follow-up), and institution confirmation counts.
  */
 export async function GET() {
   if (!(await requireAdmin())) {
@@ -22,14 +35,10 @@ export async function GET() {
   }
 
   try {
-    const [rowsRes, configRes, offersRes] = await Promise.all([
+    const [rowsRes, configRes, universities] = await Promise.all([
       supabaseAdmin.from(ACCOMMODATION_TABLE).select('*').order('created_at', { ascending: true }),
       supabaseAdmin.from('platform_config').select('value').eq('key', ACCOMMODATION_CONFIG_KEY).limit(1),
-      supabaseAdmin
-        .from(PHASE2_OFFERS_TABLE)
-        .select('team_id')
-        .eq('track', 'external')
-        .in('status', ['invited', 'accepted', 'confirmed']),
+      getParticipantUniversitiesMap(),
     ]);
     if (rowsRes.error) {
       if (rowsRes.error.code === '42P01' || rowsRes.error.code === 'PGRST205') {
@@ -39,42 +48,91 @@ export async function GET() {
     }
 
     const rows = rowsRes.data || [];
-    const phase2TeamIds = (offersRes.data || []).map((o: any) => String(o.team_id));
-    const teamIds = Array.from(new Set([...phase2TeamIds, ...rows.map((r: any) => r.team_id).filter(Boolean)]));
+    const { offerByTeam, teamNames, members: shortlisted, generalPass } = await getShortlistRoster(rows.map((r: any) => r.team_id));
 
-    const [teamsRes, membersRes] = await Promise.all([
-      teamIds.length
-        ? supabaseAdmin.from('hackathon_teams').select('id, name, lead_email, lead_name').in('id', teamIds)
-        : Promise.resolve({ data: [] as any[] }),
-      phase2TeamIds.length
-        ? supabaseAdmin.from('team_members').select('team_id, email, full_name').in('team_id', phase2TeamIds).eq('status', 'accepted')
-        : Promise.resolve({ data: [] as any[] }),
+    const details = await currentInstitutionDetails(
+      [...rows.map((r: any) => String(r.email)), ...Array.from(shortlisted.keys()), ...Array.from(generalPass.keys())],
+      universities
+    );
+    const detail = (email: string) => details.get(email.trim().toLowerCase());
+    const contacts = await contactStatuses(Array.from(details.keys()));
+    const contact = (email: string) => contacts.get(email.trim().toLowerCase());
+
+    const answered = new Set(rows.map((r: any) => String(r.email).trim().toLowerCase()));
+    // Phase 2 is per team track; SRM AP students on any team do not need a stay
+    const unanswered: (FollowUp & { institutionConfirmed: boolean })[] = Array.from(shortlisted.values())
+      .filter((p) => !answered.has(p.email) && trackForLeadEmail(p.email, detail(p.email)?.institution) === 'external')
+      .map((p) => {
+        const d = detail(p.email);
+        return {
+          ...p,
+          group: 'shortlisted' as const,
+          teamName: teamNames[p.teamId] || '',
+          offerStatus: offerByTeam.get(p.teamId)?.status || null,
+          institution: d?.institution || null,
+          institutionConfirmed: Boolean(d?.confirmed),
+          ...contactFields(contact(p.email), d?.phone),
+        };
+      });
+    for (const g of generalPass.values()) {
+      const d = detail(g.email);
+      const institution = d?.institution || g.institution;
+      if (answered.has(g.email) || trackForLeadEmail(g.email, institution) !== 'external') continue;
+      unanswered.push({
+        email: g.email,
+        name: g.name,
+        teamId: '',
+        role: 'General Pass',
+        group: 'general_pass',
+        teamName: '',
+        offerStatus: null,
+        institution,
+        institutionConfirmed: Boolean(d?.confirmed),
+        ...contactFields(contact(g.email), d?.phone || g.phone),
+      });
+    }
+
+    const shortlistedExternal = Array.from(shortlisted.values()).filter(
+      (p) => trackForLeadEmail(p.email, detail(p.email)?.institution) === 'external'
+    );
+    const [totalRegs, confirmedRegs, editedRegs] = await Promise.all([
+      countRegistrations(),
+      countRegistrations((q) => q.not('institution_confirmed_at', 'is', null)),
+      countRegistrations((q) => q.eq('institution_confirm_source', 'edited')),
     ]);
-
-    const teamNames: Record<string, string> = {};
-    for (const t of teamsRes.data || []) teamNames[String(t.id)] = t.name;
-
-    const answered = new Set(rows.map((r: any) => String(r.email).toLowerCase()));
-    const expected = new Map<string, { email: string; name: string; teamId: string }>();
-    for (const t of teamsRes.data || []) {
-      if (!phase2TeamIds.includes(String(t.id))) continue;
-      const lead = String(t.lead_email).toLowerCase();
-      expected.set(lead, { email: lead, name: t.lead_name || lead, teamId: String(t.id) });
-    }
-    for (const m of membersRes.data || []) {
-      const e = String(m.email).toLowerCase();
-      if (!expected.has(e)) expected.set(e, { email: e, name: m.full_name || e, teamId: String(m.team_id) });
-    }
-    // Phase 2 is per team track; SRM AP students on an external team do not need a stay
-    const unanswered = Array.from(expected.values())
-      .filter((p) => !answered.has(p.email) && !p.email.endsWith('@srmap.edu.in'))
-      .map((p) => ({ ...p, teamName: teamNames[p.teamId] || '' }));
 
     return NextResponse.json({
       success: true,
       config: configRes.data?.[0]?.value || { closed: false, note: '' },
-      requests: rows.map((r: any) => ({ ...r, team_name: r.team_id ? teamNames[String(r.team_id)] || null : null })),
+      requests: rows.map((r: any) => {
+        const email = String(r.email).trim().toLowerCase();
+        const member = shortlisted.get(email);
+        const d = detail(email);
+        const c = contactFields(contact(email), r.phone || d?.phone);
+        return {
+          ...r,
+          group: member ? 'shortlisted' : generalPass.has(email) ? 'general_pass' : null,
+          team_name: member ? teamNames[member.teamId] || null : r.team_id ? teamNames[String(r.team_id)] || null : null,
+          shortlisted: Boolean(member),
+          offer_status: member ? offerByTeam.get(member.teamId)?.status || null : null,
+          current_institution: d?.institution || r.institution || null,
+          institution_confirmed: Boolean(d?.confirmed),
+          institution_confirm_source: d?.confirmSource || null,
+          contact_phone: c.phone,
+          phone_confirmed: c.phoneConfirmed,
+          emergency_name: c.emergencyName,
+          emergency_phone: c.emergencyPhone,
+        };
+      }),
       unanswered,
+      institutionConfirmation: {
+        // null when migration 20261021120000 has not been applied
+        registrations: totalRegs,
+        confirmed: confirmedRegs,
+        edited: editedRegs,
+        shortlistedExternal: shortlistedExternal.length,
+        shortlistedExternalConfirmed: shortlistedExternal.filter((p) => detail(p.email)?.confirmed).length,
+      },
     });
   } catch (err: any) {
     console.error('[Admin Accommodation GET Error]:', err);

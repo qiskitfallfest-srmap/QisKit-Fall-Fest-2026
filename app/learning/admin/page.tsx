@@ -14,6 +14,7 @@ import { AdminPaymentsManager } from '@/components/learning/AdminPaymentsManager
 import { AdminPhase2View } from '@/components/learning/AdminPhase2View';
 import { AdminNoticesManager } from '@/components/learning/AdminNoticesManager';
 import { AdminAccommodationView } from '@/components/learning/AdminAccommodationView';
+import { AdminTransportView } from '@/components/learning/AdminTransportView';
 import { AdminRequestsView } from '@/components/learning/AdminRequestsView';
 import { AdminWhitelistManager } from '@/components/learning/AdminWhitelistManager';
 import { AdminOverridesPanel } from '@/components/learning/AdminOverridesPanel';
@@ -34,6 +35,7 @@ import {
   Bell,
   Inbox,
   BedDouble,
+  Bus,
 } from 'lucide-react';
 
 type AdminTab =
@@ -50,6 +52,7 @@ type AdminTab =
   | 'payments'
   | 'notices'
   | 'accommodation'
+  | 'transport'
   | 'requests';
 
 const NAV_GROUPS: { label: string; items: { id: AdminTab; label: string; icon: React.ElementType }[] }[] = [
@@ -67,6 +70,7 @@ const NAV_GROUPS: { label: string; items: { id: AdminTab; label: string; icon: R
       { id: 'requests', label: 'Requests & Questions', icon: Inbox },
       { id: 'payments', label: 'Payments', icon: Ticket },
       { id: 'accommodation', label: 'Accommodation', icon: BedDouble },
+      { id: 'transport', label: 'Bus Travel', icon: Bus },
       { id: 'notices', label: 'Notices', icon: Bell },
     ],
   },
@@ -173,6 +177,7 @@ export default function AdminConsolePage() {
     whitelist: <AdminWhitelistManager onChange={fetchConfig} onCountChange={setWhitelistCount} />,
     payments: <AdminPaymentsManager />,
     accommodation: <AdminAccommodationView />,
+    transport: <AdminTransportView />,
     notices: <AdminNoticesManager />,
     requests: <AdminRequestsView />,
     competitions: <AdminCompetitionsView />,

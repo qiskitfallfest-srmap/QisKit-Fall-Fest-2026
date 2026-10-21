@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
+import { contactStatus } from '@/lib/contact-server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { checkCertificateEligibility } from '@/lib/certificate';
 import { getOfferForTeam } from '@/lib/phase2-waiting-room';
@@ -28,7 +29,7 @@ export async function GET() {
   const email = session.email.trim().toLowerCase();
 
   try {
-    const [regRes, leadRes, memberRes, invitesRes, progressRes, compRes, codingRes, certificate, certPayRes, noticesRes] =
+    const [regRes, leadRes, memberRes, invitesRes, progressRes, compRes, codingRes, certificate, certPayRes, noticesRes, confirmRes, contact] =
       await Promise.all([
         supabaseAdmin
           .from('registrations')
@@ -63,6 +64,14 @@ export async function GET() {
           .order('created_at', { ascending: false })
           .limit(1),
         supabaseAdmin.from('platform_config').select('value').eq('key', PARTICIPANT_NOTICES_KEY).limit(1),
+        // Own query: errors (column missing before migration 20261021120000) only hide the banner state
+        supabaseAdmin
+          .from('registrations')
+          .select('institution_confirmed_at, institution_confirmed_value')
+          .ilike('email', email)
+          .order('created_at', { ascending: true })
+          .limit(1),
+        contactStatus(email),
       ]);
 
     // Team: lead row first, then accepted membership (same precedence as getHackathonPassContext)
@@ -190,6 +199,9 @@ export async function GET() {
           phone: reg?.phone || null,
           yearOfStudy: reg?.year_of_study || null,
           registeredAt: reg?.created_at || null,
+          institutionConfirmedAt: confirmRes.error ? null : confirmRes.data?.[0]?.institution_confirmed_at || null,
+          contact,
+          institutionConfirmedValue: confirmRes.error ? null : confirmRes.data?.[0]?.institution_confirmed_value || null,
           isAdmin: session.isAdmin,
         },
         team,

@@ -27,6 +27,8 @@ import {
 } from 'lucide-react';
 import { Phase2StatusCard } from '@/components/learning/Phase2StatusCard';
 import { CertificateNameCard } from './CertificateNameCard';
+import { ContactConfirmCard } from './ContactConfirmCard';
+import { CERTIFICATE_NAME_CARD_ID } from './ArrivalChecklist';
 import { TeamChangeForm, useParticipantRequests } from './RequestsSection';
 import { mutate } from 'swr';
 import {
@@ -894,7 +896,7 @@ export function AccountSection({
 }: {
   overview: ProfileOverview;
   onNameSaved?: (name: string) => void;
-  onProfileUpdated?: (updated: { fullName?: string; institution?: string; phone?: string }) => void;
+  onProfileUpdated?: (updated: { fullName?: string; institution?: string; phone?: string; institutionConfirmedAt?: string | null; institutionConfirmedValue?: string | null }) => void;
 }) {
   const p = overview.profile;
   const [editing, setEditing] = useState(false);
@@ -986,12 +988,15 @@ export function AccountSection({
       });
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.error || 'Could not update institution.');
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem('qff_inst_confirmed_' + p.email.toLowerCase(), trimmed);
-        } catch {}
+      // The server normalizes SRM AP spellings and records the edit as the confirmation
+      const saved = json.profile?.institution || trimmed;
+      if (onProfileUpdated) {
+        onProfileUpdated({
+          institution: saved,
+          institutionConfirmedAt: json.profile?.institutionConfirmedAt ?? null,
+          institutionConfirmedValue: saved,
+        });
       }
-      if (onProfileUpdated) onProfileUpdated({ institution: trimmed });
       setInstitutionsList((prev) => (prev.includes(trimmed) ? prev : [...prev, trimmed].sort()));
       setEditingInst(false);
       setSavedInst(true);
@@ -1212,7 +1217,9 @@ export function AccountSection({
         </p>
       </Card>
 
-      <CertificateNameCard eligible={overview.certificate.eligible} />
+      <ContactConfirmCard contact={p.contact} alwaysShow />
+
+      <CertificateNameCard eligible={overview.certificate.eligible} id={CERTIFICATE_NAME_CARD_ID} />
 
       <Card title="Help">
         <div className="flex flex-col sm:flex-row gap-2">

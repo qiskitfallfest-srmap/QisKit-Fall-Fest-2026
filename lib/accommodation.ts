@@ -72,6 +72,8 @@ export interface AccommodationPerson {
 
 export interface AccommodationStatus {
   success: boolean;
+  /** The user confirmed their mobile and emergency contact; answering is locked until then */
+  contactConfirmed: boolean;
   /** False for SRM AP participants: they do not see the form */
   eligible: boolean;
   closed: boolean;

@@ -15,6 +15,7 @@ import {
   type AccommodationStatus,
   type Gender,
 } from '@/lib/accommodation';
+import { OPEN_CONTACT_EVENT } from '@/lib/phone';
 import { Card, StatusPill, buttonStyles, type Tone } from './profile-ui';
 
 export const ACCOMMODATION_KEY = '/api/accommodation';
@@ -355,7 +356,7 @@ export function AccommodationCard({ mayBeExternal }: { mayBeExternal: boolean })
     function open() {
       const first = data?.people.find((p) => !p.request);
       document.getElementById('accommodation')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      if (first && !data?.closed) setEditing(first.email);
+      if (first && !data?.closed && data?.contactConfirmed) setEditing(first.email);
     }
     window.addEventListener(OPEN_ACCOMMODATION_EVENT, open);
     return () => window.removeEventListener(OPEN_ACCOMMODATION_EVENT, open);
@@ -415,6 +416,14 @@ export function AccommodationCard({ mayBeExternal }: { mayBeExternal: boolean })
       <p aria-live="polite" className="sr-only">
         {announcement}
       </p>
+      {!data.contactConfirmed && (
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30 px-3 py-2">
+          <p className="text-sm text-amber-900 dark:text-amber-200">Confirm your mobile number and emergency contact to answer this.</p>
+          <button type="button" onClick={() => window.dispatchEvent(new CustomEvent(OPEN_CONTACT_EVENT))} className={buttonStyles.secondary}>
+            Confirm now
+          </button>
+        </div>
+      )}
       {data.note && <p className="mb-3 text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line">{data.note}</p>}
       <ul className="divide-y divide-slate-100 dark:divide-[#250D11] -my-2">
         {data.people.map((p) => {
@@ -455,7 +464,7 @@ export function AccommodationCard({ mayBeExternal }: { mayBeExternal: boolean })
                 </div>
                 <div className="flex items-center gap-2 pl-6 sm:pl-0">
                   <StatusPill tone={s.tone}>{s.label}</StatusPill>
-                  {!locked && !isEditing && (
+                  {!locked && data.contactConfirmed && !isEditing && (
                     <button
                       type="button"
                       ref={(el) => {

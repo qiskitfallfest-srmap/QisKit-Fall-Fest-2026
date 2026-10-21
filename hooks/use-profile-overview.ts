@@ -48,6 +48,17 @@ export interface ProfileOverview {
     phone: string | null;
     yearOfStudy: string | null;
     registeredAt: string | null;
+    /** Set once the participant answers the institution banner (confirm or edit) */
+    institutionConfirmedAt?: string | null;
+    institutionConfirmedValue?: string | null;
+    /** Confirmed mobile and emergency contact; bus travel and accommodation wait on it */
+    contact?: {
+      phone: string | null;
+      confirmed: boolean;
+      emergencyName: string | null;
+      emergencyPhone: string | null;
+      tracked: boolean;
+    };
     isAdmin: boolean;
   };
   team: ProfileTeam | null;

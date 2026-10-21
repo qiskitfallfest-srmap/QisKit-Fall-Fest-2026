@@ -11,20 +11,51 @@ import {
   type AccommodationRequest,
   type Gender,
 } from '@/lib/accommodation';
+import { OFFER_LABEL, downloadCsv, whatsappLink } from './admin-csv';
 
-type Row = AccommodationRequest & { team_name: string | null };
-type Filter = 'needs' | 'allocated' | 'not_needed' | 'all';
+type Row = AccommodationRequest & {
+  team_name: string | null;
+  /** On a team with an invited, accepted or confirmed Phase 2 offer */
+  shortlisted: boolean;
+  /** 'general_pass': not shortlisted but holds a General Pass; null: neither */
+  group: 'shortlisted' | 'general_pass' | null;
+  offer_status: string | null;
+  current_institution: string | null;
+  institution_confirmed: boolean;
+  institution_confirm_source: 'confirmed' | 'edited' | null;
+  contact_phone: string | null;
+  phone_confirmed: boolean;
+  emergency_name: string | null;
+  emergency_phone: string | null;
+};
+type Unanswered = {
+  email: string;
+  name: string;
+  role: 'Lead' | 'Member' | 'General Pass';
+  teamName: string;
+  offerStatus: string | null;
+  institution: string | null;
+  institutionConfirmed: boolean;
+  phone: string | null;
+  phoneConfirmed: boolean;
+  emergencyName: string | null;
+  emergencyPhone: string | null;
+};
+type InstitutionConfirmation = {
+  registrations: number | null;
+  confirmed: number | null;
+  edited: number | null;
+  shortlistedExternal: number;
+  shortlistedExternalConfirmed: number;
+};
+type Filter = 'needs' | 'general_pass' | 'allocated' | 'not_needed' | 'not_eligible' | 'all';
 
 const GENDERS: Gender[] = ['male', 'female', 'other'];
 
-function csvCell(v: unknown) {
-  const s = v == null ? '' : String(v);
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-}
-
 export function AdminAccommodationView() {
   const [rows, setRows] = useState<Row[]>([]);
-  const [unanswered, setUnanswered] = useState<{ email: string; name: string; teamName: string }[]>([]);
+  const [unanswered, setUnanswered] = useState<Unanswered[]>([]);
+  const [confirmation, setConfirmation] = useState<InstitutionConfirmation | null>(null);
   const [closed, setClosed] = useState(false);
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(true);
@@ -44,6 +75,7 @@ export function AdminAccommodationView() {
       if (!res.ok || !json.success) throw new Error(json.error || 'Failed to load.');
       setRows(json.requests);
       setUnanswered(json.unanswered);
+      setConfirmation(json.institutionConfirmation || null);
       setClosed(Boolean(json.config?.closed));
       setNote(json.config?.note || '');
     } catch (err: any) {
@@ -57,7 +89,11 @@ export function AdminAccommodationView() {
     load();
   }, [load]);
 
-  const staying = rows.filter((r) => r.needs_accommodation && r.status !== 'cancelled');
+  // Bed counts are for shortlisted teams; General Pass holders are counted separately for the organizers to decide
+  const wantsStay = (r: Row) => r.needs_accommodation && r.status !== 'cancelled';
+  const staying = rows.filter((r) => r.group === 'shortlisted' && wantsStay(r));
+  const passStaying = rows.filter((r) => r.group === 'general_pass' && wantsStay(r));
+  const notEligible = rows.filter((r) => !r.group);
 
   const byGender = useMemo(() => {
     const out: Record<Gender, number> = { male: 0, female: 0, other: 0 };
@@ -72,18 +108,21 @@ export function AdminAccommodationView() {
         for (const r of staying) {
           if (r.gender && stayNights(r.check_in, r.check_out).includes(night)) counts[r.gender] += 1;
         }
-        return { night, counts, total: counts.male + counts.female + counts.other };
+        const pass = passStaying.filter((r) => stayNights(r.check_in, r.check_out).includes(night)).length;
+        return { night, counts, total: counts.male + counts.female + counts.other, pass };
       }),
-    [staying]
+    [staying, passStaying]
   );
 
   const visible = rows.filter((r) => {
-    if (filter === 'needs' && !(r.needs_accommodation && r.status !== 'cancelled')) return false;
+    if (filter === 'needs' && !(r.group === 'shortlisted' && wantsStay(r))) return false;
+    if (filter === 'general_pass' && r.group !== 'general_pass') return false;
+    if (filter === 'not_eligible' && r.group) return false;
     if (filter === 'allocated' && r.status !== 'allocated') return false;
     if (filter === 'not_needed' && r.needs_accommodation) return false;
     if (!query.trim()) return true;
     const q = query.trim().toLowerCase();
-    return [r.full_name, r.email, r.team_name, r.institution].some((v) => v?.toLowerCase().includes(q));
+    return [r.full_name, r.email, r.team_name, r.current_institution].some((v) => v?.toLowerCase().includes(q));
   });
 
   async function saveConfig() {
@@ -116,35 +155,58 @@ export function AdminAccommodationView() {
   }
 
   function exportCsv() {
-    const header = ['Name', 'Email', 'Team', 'Institution', 'Gender', 'Needs stay', 'Check-in', 'Check-out', 'Nights', 'Phone', 'Notes', 'Status', 'Allocation', 'Submitted by', 'Updated'];
-    const lines = rows.map((r) =>
+    downloadCsv(
+      'accommodation-requests',
       [
+        'Name', 'Email', 'Phone', 'Phone confirmed', 'Emergency contact', 'Emergency phone', 'Group', 'Phase 2 offer', 'Team', 'Institution', 'Institution confirmed',
+        'Gender', 'Needs stay', 'Arrival (check-in)', 'Departure (check-out)', 'Nights', 'Notes', 'Status',
+        'Allocation', 'Submitted by', 'Updated',
+      ],
+      rows.map((r) => [
         r.full_name,
         r.email,
+        r.contact_phone,
+        r.phone_confirmed ? 'Yes' : 'No',
+        r.emergency_name,
+        r.emergency_phone,
+        r.group === 'shortlisted' ? 'Shortlisted' : r.group === 'general_pass' ? 'General Pass' : 'Not eligible',
+        r.offer_status ? OFFER_LABEL[r.offer_status] || r.offer_status : '',
         r.team_name,
-        r.institution,
+        r.current_institution,
+        r.institution_confirmed ? (r.institution_confirm_source === 'edited' ? 'Yes (corrected)' : 'Yes') : 'No',
         r.gender ? GENDER_LABEL[r.gender] : '',
         r.needs_accommodation ? 'Yes' : 'No',
         r.check_in,
         r.check_out,
         stayNights(r.check_in, r.check_out).length || '',
-        r.phone,
         r.notes,
         r.status,
         r.allocation_notes,
         r.submitted_by,
         r.updated_at,
-      ]
-        .map(csvCell)
-        .join(',')
+      ])
     );
-    const blob = new Blob([[header.join(','), ...lines].join('\n')], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `accommodation-requests-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+  }
+
+  function exportUnansweredCsv() {
+    downloadCsv(
+      'accommodation-not-answered',
+      ['Name', 'Email', 'Phone', 'Phone confirmed', 'Emergency contact', 'Emergency phone', 'WhatsApp link', 'Role', 'Team', 'Phase 2 offer', 'Institution', 'Institution confirmed'],
+      unanswered.map((u) => [
+        u.name,
+        u.email,
+        u.phone,
+        u.phoneConfirmed ? 'Yes' : 'No',
+        u.emergencyName,
+        u.emergencyPhone,
+        whatsappLink(u.phone),
+        u.role,
+        u.teamName,
+        u.offerStatus ? OFFER_LABEL[u.offerStatus] || u.offerStatus : '',
+        u.institution,
+        u.institutionConfirmed ? 'Yes' : 'No',
+      ])
+    );
   }
 
   if (loading) {
@@ -183,14 +245,16 @@ export function AdminAccommodationView() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
         {[
-          { label: 'Need a stay', value: staying.length },
+          { label: 'Need a stay (shortlisted)', value: staying.length },
           { label: GENDER_LABEL.male, value: byGender.male },
           { label: GENDER_LABEL.female, value: byGender.female },
           { label: 'Other', value: byGender.other },
-          { label: 'No stay needed', value: rows.filter((r) => !r.needs_accommodation).length },
-          { label: 'Phase 2 not answered', value: unanswered.length },
+          { label: 'No stay needed', value: rows.filter((r) => r.group === 'shortlisted' && !r.needs_accommodation).length },
+          { label: 'General Pass want a stay', value: passStaying.length },
+          { label: 'Not answered', value: unanswered.length },
+          { label: 'Not eligible', value: notEligible.length },
         ].map((t) => (
           <div key={t.label} className={tile}>
             <p className="text-xs text-slate-500 dark:text-slate-400">{t.label}</p>
@@ -199,8 +263,34 @@ export function AdminAccommodationView() {
         ))}
       </div>
 
+      {confirmation && (
+        <div className={tile}>
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-[#FAF6F3]">Institution confirmations (profile banner)</h3>
+          {confirmation.confirmed == null ? (
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              Not recorded yet: apply migration 20261021120000_registrations_institution_confirmation.sql.
+            </p>
+          ) : (
+            <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-slate-700 dark:text-slate-300">
+              <p>
+                <span className="font-semibold tabular-nums text-slate-900 dark:text-[#FAF6F3]">{confirmation.confirmed}</span> of{' '}
+                <span className="tabular-nums">{confirmation.registrations}</span> registrations answered ({confirmation.edited}{' '}
+                corrected, {(confirmation.confirmed ?? 0) - (confirmation.edited ?? 0)} kept as shown)
+              </p>
+              <p>
+                Shortlisted external participants:{' '}
+                <span className="font-semibold tabular-nums text-slate-900 dark:text-[#FAF6F3]">
+                  {confirmation.shortlistedExternalConfirmed}
+                </span>{' '}
+                of <span className="tabular-nums">{confirmation.shortlistedExternal}</span> confirmed
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className={tile}>
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-[#FAF6F3] mb-3">Beds needed per night</h3>
+        <h3 className="text-sm font-semibold text-slate-900 dark:text-[#FAF6F3] mb-3">Beds needed per night (shortlisted)</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -209,7 +299,8 @@ export function AdminAccommodationView() {
                 <th className="py-2 pr-4 font-medium text-right">Male</th>
                 <th className="py-2 pr-4 font-medium text-right">Female</th>
                 <th className="py-2 pr-4 font-medium text-right">Other</th>
-                <th className="py-2 font-medium text-right">Total</th>
+                <th className="py-2 pr-4 font-medium text-right">Total</th>
+                <th className="py-2 font-medium text-right">General Pass (not booked)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-[#250D11] tabular-nums">
@@ -219,7 +310,8 @@ export function AdminAccommodationView() {
                   <td className="py-2 pr-4 text-right">{n.counts.male}</td>
                   <td className="py-2 pr-4 text-right">{n.counts.female}</td>
                   <td className="py-2 pr-4 text-right">{n.counts.other}</td>
-                  <td className="py-2 text-right font-semibold">{n.total}</td>
+                  <td className="py-2 pr-4 text-right font-semibold">{n.total}</td>
+                  <td className="py-2 text-right text-slate-500">{n.pass}</td>
                 </tr>
               ))}
             </tbody>
@@ -252,22 +344,54 @@ export function AdminAccommodationView() {
         <div className={clsx(tile, 'space-y-2')}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-semibold text-slate-900 dark:text-[#FAF6F3]">
-              External Phase 2 members who have not answered ({unanswered.length})
+              External participants who have not answered ({unanswered.length})
             </h3>
-            <button
-              type="button"
-              onClick={() => navigator.clipboard.writeText(unanswered.map((u) => u.email).join(', '))}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 dark:border-[#3D1418] px-3 py-1.5 text-xs font-semibold cursor-pointer"
-            >
-              <Copy className="h-3.5 w-3.5" />
-              Copy emails
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => navigator.clipboard.writeText(unanswered.map((u) => u.email).join(', '))}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 dark:border-[#3D1418] px-3 py-1.5 text-xs font-semibold cursor-pointer"
+              >
+                <Copy className="h-3.5 w-3.5" />
+                Copy emails
+              </button>
+              <button
+                type="button"
+                onClick={() => navigator.clipboard.writeText(unanswered.map((u) => u.phone).filter(Boolean).join(', '))}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 dark:border-[#3D1418] px-3 py-1.5 text-xs font-semibold cursor-pointer"
+              >
+                <Copy className="h-3.5 w-3.5" />
+                Copy phones
+              </button>
+              <button
+                type="button"
+                onClick={exportUnansweredCsv}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-burgundy text-white px-3 py-1.5 text-xs font-semibold cursor-pointer"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Export CSV
+              </button>
+            </div>
           </div>
+          {unanswered.some((u) => !u.phone) && (
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {unanswered.filter((u) => !u.phone).length} have no phone number on file; reach them by email.
+            </p>
+          )}
           <ul className="text-sm divide-y divide-slate-100 dark:divide-[#250D11] max-h-64 overflow-y-auto">
             {unanswered.map((u) => (
               <li key={u.email} className="py-1.5 flex flex-wrap justify-between gap-2">
-                <span>{u.name} <span className="text-xs text-slate-500">{u.email}</span></span>
-                <span className="text-xs text-slate-500">{u.teamName}</span>
+                <span>
+                  {u.name}{' '}
+                  <span className="text-xs text-slate-500">
+                    {u.email}
+                    {u.phone && ` · ${u.phone}${u.phoneConfirmed ? '' : ' (not confirmed)'}`}
+                  </span>
+                </span>
+                <span className="text-xs text-slate-500">
+                  {u.role === 'General Pass' ? 'General Pass' : u.teamName}
+                  {u.offerStatus && ` · ${OFFER_LABEL[u.offerStatus] || u.offerStatus}`}
+                </span>
               </li>
             ))}
           </ul>
@@ -281,6 +405,8 @@ export function AdminAccommodationView() {
               ['needs', 'Need a stay'],
               ['allocated', 'Allocated'],
               ['not_needed', 'No stay needed'],
+              ['general_pass', `General Pass (${rows.filter((r) => r.group === 'general_pass').length})`],
+              ['not_eligible', `Not eligible (${notEligible.length})`],
               ['all', 'All'],
             ] as [Filter, string][]
           ).map(([id, label]) => (
@@ -323,19 +449,50 @@ export function AdminAccommodationView() {
                       <p className="text-sm font-semibold text-slate-900 dark:text-[#FAF6F3]">
                         {r.full_name}
                         {r.gender && <span className="ml-2 text-xs font-normal text-slate-500">{GENDER_LABEL[r.gender]}</span>}
+                        {r.group === 'general_pass' ? (
+                          <span className="ml-2 rounded border border-sky-200 bg-sky-50 dark:border-sky-900 dark:bg-sky-950/30 px-1.5 py-0.5 text-[11px] font-medium text-sky-800 dark:text-sky-200">
+                            General Pass
+                          </span>
+                        ) : r.group === 'shortlisted' ? (
+                          r.offer_status && (
+                            <span className="ml-2 rounded border border-slate-200 dark:border-[#3D1418] px-1.5 py-0.5 text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                              Phase 2 {OFFER_LABEL[r.offer_status] || r.offer_status}
+                            </span>
+                          )
+                        ) : (
+                          <span className="ml-2 rounded border border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 px-1.5 py-0.5 text-[11px] font-medium text-amber-800 dark:text-amber-200">
+                            Not eligible
+                          </span>
+                        )}
                       </p>
                       <p className="text-xs text-slate-500 break-all">
                         {r.email}
                         {r.team_name && ` · ${r.team_name}`}
-                        {r.institution && ` · ${r.institution}`}
-                        {r.phone && ` · ${r.phone}`}
+                        {r.contact_phone && ` · ${r.contact_phone}${r.phone_confirmed ? '' : ' (not confirmed)'}`}
                       </p>
+                      {r.current_institution && (
+                        <p className="text-xs text-slate-600 dark:text-slate-300">
+                          {r.current_institution}
+                          <span className={clsx('ml-1.5', r.institution_confirmed ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-400')}>
+                            {r.institution_confirmed
+                              ? r.institution_confirm_source === 'edited'
+                                ? '(corrected by participant)'
+                                : '(confirmed by participant)'
+                              : '(not confirmed)'}
+                          </span>
+                        </p>
+                      )}
                       {r.needs_accommodation ? (
                         <p className="text-xs text-slate-700 dark:text-slate-300 mt-0.5">
                           {formatStayDate(r.check_in!)} to {formatStayDate(r.check_out!)} · {nights} night{nights === 1 ? '' : 's'}
                         </p>
                       ) : (
                         <p className="text-xs text-slate-500 mt-0.5">No stay needed</p>
+                      )}
+                      {r.emergency_phone && (
+                        <p className="text-xs text-slate-500">
+                          Emergency: {r.emergency_name} · {r.emergency_phone}
+                        </p>
                       )}
                       {r.notes && <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 whitespace-pre-line">Note: {r.notes}</p>}
                       {r.submitted_by !== r.email && <p className="text-[11px] text-slate-400 mt-0.5">Submitted by {r.submitted_by}</p>}

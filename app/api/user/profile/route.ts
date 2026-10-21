@@ -27,8 +27,10 @@ export async function PATCH(request: NextRequest) {
     const rawFullName = body?.fullName;
     const rawInstitution = body?.institution;
     const rawPhone = body?.phone;
+    // "Looks correct" on the profile banner: record the answer without changing the value
+    const confirmInstitution = body?.confirmInstitution === true;
 
-    if (rawFullName === undefined && rawInstitution === undefined && rawPhone === undefined) {
+    if (rawFullName === undefined && rawInstitution === undefined && rawPhone === undefined && !confirmInstitution) {
       return NextResponse.json({ error: 'At least one profile field must be provided to update.' }, { status: 400 });
     }
 
@@ -119,6 +121,8 @@ export async function PATCH(request: NextRequest) {
       .from('registrations')
       .select('id, institution, phone')
       .ilike('email', email)
+      // Same row /api/user/overview shows when an email has duplicates
+      .order('created_at', { ascending: true })
       .limit(1);
 
     const regUpdatePayload: Record<string, any> = {};
@@ -142,6 +146,29 @@ export async function PATCH(request: NextRequest) {
         role: 'Undergraduate Student',
         created_at: new Date().toISOString(),
       });
+    }
+
+    // 2b. Record the institution answer (admin accommodation view counts these).
+    // Separate update so a missing column (migration 20261021120000 not applied) cannot block the edit above.
+    let institutionConfirmedAt: string | null = null;
+    if (cleanInstitution !== undefined || confirmInstitution) {
+      const confirmedValue = cleanInstitution !== undefined ? cleanInstitution : existingRegs?.[0]?.institution || null;
+      institutionConfirmedAt = new Date().toISOString();
+      const { error: confirmErr } = await supabaseAdmin
+        .from('registrations')
+        .update({
+          institution_confirmed_at: institutionConfirmedAt,
+          institution_confirmed_value: confirmedValue,
+          institution_confirm_source: cleanInstitution !== undefined ? 'edited' : 'confirmed',
+        })
+        .ilike('email', email);
+      if (confirmErr) {
+        console.error('[User Profile] Could not record institution confirmation:', confirmErr);
+        if (confirmInstitution && cleanInstitution === undefined) {
+          return NextResponse.json({ error: 'Could not save your confirmation. Try again.' }, { status: 500 });
+        }
+        institutionConfirmedAt = null;
+      }
     }
 
     // 3. Cascade institution & phone to festival_pass_claims (so entry badges update immediately)
@@ -188,6 +215,7 @@ export async function PATCH(request: NextRequest) {
         fullName: cleanFullName || session.fullName,
         institution: cleanInstitution !== undefined ? cleanInstitution : existingRegs?.[0]?.institution,
         phone: cleanPhone !== undefined ? cleanPhone : existingRegs?.[0]?.phone,
+        ...(institutionConfirmedAt ? { institutionConfirmedAt } : {}),
       },
       session: updatedSession,
     });

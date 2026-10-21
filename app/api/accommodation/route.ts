@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { getParticipantUniversitiesMap } from '@/lib/participant-universities';
+import { currentInstitutions } from '@/lib/accommodation-server';
 import { trackForLeadEmail } from '@/lib/phase2-waiting-room';
+import { resolveEligiblePeople } from '@/lib/shortlist-server';
+import { contactStatus, requireConfirmedContact } from '@/lib/contact-server';
 import {
   ACCOMMODATION_CONFIG_KEY,
   ACCOMMODATION_DATES,
@@ -22,53 +25,18 @@ interface Candidate {
 
 /**
  * Who this user may submit accommodation for: themselves if external, plus the
- * external accepted members of the team they lead. SRM AP participants are excluded.
+ * external accepted members of the team they lead. Asked of Phase 2 shortlisted
+ * teams and of external General Pass holders (lib/shortlist-server.ts);
+ * SRM AP participants and everyone else see no form.
  */
 async function resolveContext(email: string, fullName: string) {
-  const [universities, regRes, leadRes] = await Promise.all([
-    getParticipantUniversitiesMap(),
-    supabaseAdmin.from('registrations').select('institution').ilike('email', email).limit(1),
-    supabaseAdmin.from('hackathon_teams').select('id, name').ilike('lead_email', email).limit(1),
-  ]);
+  const [universities, team] = await Promise.all([getParticipantUniversitiesMap(), resolveEligiblePeople(email, fullName)]);
+  const institutions = await currentInstitutions(team.people.map((p) => p.email), universities);
+  const candidates: Candidate[] = team.people
+    .map((p) => ({ ...p, institution: institutions.get(p.email) || null }))
+    .filter((p) => trackForLeadEmail(p.email, p.institution) === 'external');
 
-  const selfInstitution = universities[email] || regRes.data?.[0]?.institution || null;
-  const lead = leadRes.data?.[0] || null;
-
-  let teamId: string | null = lead ? String(lead.id) : null;
-  let teamName: string | null = lead?.name || null;
-  const candidates: Candidate[] = [];
-
-  if (trackForLeadEmail(email, selfInstitution) === 'external') {
-    candidates.push({ email, name: fullName, isLead: Boolean(lead), institution: selfInstitution });
-  }
-
-  if (lead) {
-    const { data: members } = await supabaseAdmin
-      .from('team_members')
-      .select('email, full_name')
-      .eq('team_id', lead.id)
-      .eq('status', 'accepted');
-    for (const m of members || []) {
-      const memberEmail = String(m.email).trim().toLowerCase();
-      if (memberEmail === email) continue;
-      const institution = universities[memberEmail] || null;
-      if (trackForLeadEmail(memberEmail, institution) === 'external') {
-        candidates.push({ email: memberEmail, name: m.full_name || memberEmail.split('@')[0], isLead: false, institution });
-      }
-    }
-  } else {
-    // Members are linked to their team so organizers can group rooms by team
-    const { data: membership } = await supabaseAdmin
-      .from('team_members')
-      .select('team_id, hackathon_teams(name)')
-      .ilike('email', email)
-      .eq('status', 'accepted')
-      .limit(1);
-    teamId = membership?.[0]?.team_id ? String(membership[0].team_id) : null;
-    teamName = (membership?.[0] as any)?.hackathon_teams?.name || null;
-  }
-
-  return { isLead: Boolean(lead), teamId, teamName, candidates };
+  return { isLead: team.isLead, teamId: team.teamId, teamName: team.teamName, candidates };
 }
 
 function isMissingTable(error: any) {
@@ -81,8 +49,16 @@ export async function GET() {
   const email = session.email.trim().toLowerCase();
 
   try {
-    const ctx = await resolveContext(email, session.fullName || email.split('@')[0]);
-    const base = { success: true, isLead: ctx.isLead, teamName: ctx.teamName };
+    const [ctx, contact] = await Promise.all([
+      resolveContext(email, session.fullName || email.split('@')[0]),
+      contactStatus(email),
+    ]);
+    const base = {
+      success: true,
+      isLead: ctx.isLead,
+      teamName: ctx.teamName,
+      contactConfirmed: !contact.tracked || (contact.confirmed && Boolean(contact.emergencyPhone)),
+    };
 
     if (ctx.candidates.length === 0) {
       return NextResponse.json({ ...base, eligible: false, closed: false, note: null, people: [] });
@@ -127,6 +103,10 @@ export async function POST(request: NextRequest) {
   const session = await getServerSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const email = session.email.trim().toLowerCase();
+
+  // No OTP: the submitter must have confirmed their own number and an emergency contact first
+  const contactBlock = await requireConfirmedContact(email);
+  if (contactBlock) return NextResponse.json({ error: contactBlock, code: 'contact_required' }, { status: 403 });
 
   try {
     const body = await request.json().catch(() => ({}));

@@ -26,10 +26,9 @@ import {
   Wallet,
 } from 'lucide-react';
 import { usePassStatus, type PassStatusResponse } from '@/hooks/use-pass-status';
-import { useProfileOverview, type ProfileOverview } from '@/hooks/use-profile-overview';
+import { PROFILE_OVERVIEW_KEY, useProfileOverview, type ProfileOverview } from '@/hooks/use-profile-overview';
 import { phase2Headline } from '@/components/learning/Phase2StatusCard';
 import { markNoticesSeen, readSeenNoticeIds } from '@/lib/notices';
-import type { AccommodationStatus } from '@/lib/accommodation';
 import { trackForLeadEmail } from '@/lib/participant-track';
 import { deriveActionItems, type ActionItem, type ProfileTab } from './action-items';
 import {
@@ -40,7 +39,10 @@ import {
   NoticesSection,
   PaymentsSection,
 } from './ProfileSections';
-import { AccommodationCard, OPEN_ACCOMMODATION_EVENT, useAccommodation } from './AccommodationCard';
+import { AccommodationCard, useAccommodation } from './AccommodationCard';
+import { TransportCard, useTransport } from './TransportCard';
+import { ContactConfirmCard } from './ContactConfirmCard';
+import { ArrivalChecklist, INSTITUTION_BANNER_ID } from './ArrivalChecklist';
 import { useCertificateName } from './CertificateNameCard';
 import {
   COMPETITION_WINNERS_KEY,
@@ -125,24 +127,6 @@ function phase2Tone(stage: string): Tone {
 }
 
 /* ───────────────────────────── Overview ───────────────────────────── */
-
-function accommodationActions(acc: AccommodationStatus | undefined): ActionItem[] {
-  if (!acc?.eligible || acc.closed) return [];
-  const open = acc.people.filter((p) => !p.request);
-  if (open.length === 0) return [];
-  const onlyYou = open.length === 1 && open[0].isYou;
-  return [
-    {
-      id: 'accommodation',
-      kind: 'action',
-      title: onlyYou ? 'Tell us if you need a place to stay' : `Answer accommodation for ${open.length} ${open.length === 1 ? 'person' : 'people'}`,
-      detail: onlyYou
-        ? 'Rooms for external participants are booked from these answers.'
-        : `Still to answer: ${open.map((p) => (p.isYou ? 'you' : p.name)).join(', ')}.`,
-      cta: { label: 'Answer', event: OPEN_ACCOMMODATION_EVENT },
-    },
-  ];
-}
 
 function ActionList({ items, onTab }: { items: ActionItem[]; onTab: (t: ProfileTab) => void }) {
   const [now, setNow] = useState(() => Date.now());
@@ -278,37 +262,70 @@ function SummaryTile({
 function InstitutionConfirmBanner({
   email,
   institution,
+  confirmedAt,
+  confirmedValue,
   onEdit,
 }: {
   email: string;
   institution: string | null;
+  confirmedAt: string | null;
+  confirmedValue: string | null;
   onEdit: () => void;
 }) {
-  const [confirmed, setConfirmed] = useState(true);
-  const [mounted, setMounted] = useState(false);
+  const current = (institution || '').trim();
+  const answeredOnServer = Boolean(confirmedAt) && (confirmedValue || '').trim().toLowerCase() === current.toLowerCase();
+  const [confirmed, setConfirmed] = useState(answeredOnServer);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const saveConfirmation = useCallback(async () => {
+    const res = await fetch('/api/user/profile', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ confirmInstitution: true }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok || !json.success) throw new Error(json.error || 'Could not save your confirmation.');
+    mutateKey(PROFILE_OVERVIEW_KEY);
+  }, []);
 
   useEffect(() => {
-    setMounted(true);
-    try {
-      const stored = localStorage.getItem('qff_inst_confirmed_' + email.toLowerCase());
-      const normalizedCurrent = (institution || '').trim();
-      if (stored && stored.toLowerCase() === (normalizedCurrent ? normalizedCurrent.toLowerCase() : 'confirmed')) {
-        setConfirmed(true);
-      } else {
-        setConfirmed(false);
-      }
-    } catch {
-      setConfirmed(false);
+    if (answeredOnServer) {
+      setConfirmed(true);
+      return;
     }
-  }, [email, institution]);
-
-  if (!mounted || confirmed) return null;
-
-  const handleConfirm = () => {
+    setConfirmed(false);
+    // Clicks made before confirmations were stored on the server live only in localStorage: send them once
+    const legacyKey = 'qff_inst_confirmed_' + email.toLowerCase();
+    let stored: string | null = null;
     try {
-      localStorage.setItem('qff_inst_confirmed_' + email.toLowerCase(), (institution || '').trim() || 'confirmed');
+      stored = localStorage.getItem(legacyKey);
     } catch {}
-    setConfirmed(true);
+    if (current && stored && stored.toLowerCase() === current.toLowerCase()) {
+      setConfirmed(true);
+      saveConfirmation()
+        .then(() => {
+          try {
+            localStorage.removeItem(legacyKey);
+          } catch {}
+        })
+        .catch(() => setConfirmed(false));
+    }
+  }, [answeredOnServer, current, email, saveConfirmation]);
+
+  if (confirmed) return null;
+
+  const handleConfirm = async () => {
+    setBusy(true);
+    setError('');
+    try {
+      await saveConfirmation();
+      setConfirmed(true);
+    } catch (err: any) {
+      setError(err?.message || 'Could not save your confirmation.');
+    } finally {
+      setBusy(false);
+    }
   };
 
   const handleEdit = () => {
@@ -317,7 +334,10 @@ function InstitutionConfirmBanner({
   };
 
   return (
-    <div className="rounded-xl border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] p-4 sm:p-5 shadow-xs">
+    <div
+      id={INSTITUTION_BANNER_ID}
+      className="rounded-xl border border-slate-200 dark:border-[#3D1418] bg-white dark:bg-[#150709] p-4 sm:p-5 shadow-xs"
+    >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-start gap-3 min-w-0">
           <div className="p-2 rounded-lg bg-burgundy/5 dark:bg-burgundy/15 text-burgundy dark:text-[#E89BA5] shrink-0 mt-0.5">
@@ -335,6 +355,7 @@ function InstitutionConfirmBanner({
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
               This name will be printed on your event check-in pass badge, team roster, and verified certificates.
             </p>
+            {error && <p className="text-xs text-rose-700 dark:text-rose-300">{error}</p>}
           </div>
         </div>
 
@@ -342,9 +363,10 @@ function InstitutionConfirmBanner({
           <button
             type="button"
             onClick={handleConfirm}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors cursor-pointer"
+            disabled={busy}
+            className="disabled:opacity-60 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors cursor-pointer"
           >
-            <Check className="h-3.5 w-3.5" />
+            {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
             Looks correct
           </button>
           <button
@@ -374,6 +396,9 @@ function OverviewSection({
   seen: Set<string>;
   onTab: (t: ProfileTab) => void;
 }) {
+  const { data: certName } = useCertificateName();
+  const { data: transport } = useTransport();
+  const { data: accommodation } = useAccommodation();
   const hackathon = status?.hackathon;
   const resultsOut = useResultsOut();
   const sessions = overview.activity.sessions;
@@ -416,11 +441,21 @@ function OverviewSection({
   return (
     <div className="space-y-6">
       <YourAwardCallout onOpen={() => onTab('results')} />
+      <ArrivalChecklist
+        overview={overview}
+        certName={certName}
+        transport={transport}
+        accommodation={accommodation}
+        onTab={onTab}
+      />
       <InstitutionConfirmBanner
         email={overview.profile.email}
         institution={overview.profile.institution}
+        confirmedAt={overview.profile.institutionConfirmedAt ?? null}
+        confirmedValue={overview.profile.institutionConfirmedValue ?? null}
         onEdit={() => onTab('account')}
       />
+      <ContactConfirmCard contact={overview.profile.contact} />
       <ActionList items={actions} onTab={onTab} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -452,6 +487,8 @@ function OverviewSection({
           onClick={() => onTab('notices')}
         />
       </div>
+
+      <TransportCard mayBeShortlisted={Boolean(hackathon?.phase2)} />
 
       <AccommodationCard
         mayBeExternal={
@@ -493,8 +530,6 @@ export function ProfileView() {
   const { data: overview, error, isLoading, mutate } = useProfileOverview();
   const { data: status, mutate: mutateStatus } = usePassStatus();
   const { data: requestsData } = useParticipantRequests();
-  const { data: certName } = useCertificateName();
-  const { data: accommodation } = useAccommodation();
   const { data: winners } = useCompetitionWinners();
   // Entrants also keep the tab before the announcement, so they see when results come out
   const hasResults = boardsWithWinners(winners).length > 0 || (winners?.yourEntries?.length ?? 0) > 0;
@@ -544,18 +579,6 @@ export function ProfileView() {
   const actions = useMemo<ActionItem[]>(
     () => [
       ...deriveActionItems(overview, status),
-      ...(overview?.certificate.eligible && certName && !certName.locked && !certName.confirmedAt
-        ? [
-            {
-              id: 'certificate-name',
-              kind: 'action' as const,
-              title: 'Confirm the name for your certificate',
-              detail: 'It is printed exactly as you confirm it and cannot be changed after the certificate is issued.',
-              cta: { label: 'Review name', tab: 'account' as const },
-            },
-          ]
-        : []),
-      ...accommodationActions(accommodation),
       ...unseenDecisions.map((r) => ({
         id: `decision-${r.id}`,
         kind: 'action' as const,
@@ -569,7 +592,7 @@ export function ProfileView() {
         cta: { label: 'View reply', tab: 'requests' as const },
       })),
     ],
-    [overview, status, unseenDecisions, certName, accommodation]
+    [overview, status, unseenDecisions]
   );
   const unread = overview?.notices.filter((n) => !seen.has(n.id)).length ?? 0;
 
