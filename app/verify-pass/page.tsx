@@ -229,7 +229,9 @@ function VerifyPassContent() {
                 </span>
               </div>
               <span className={`font-mono text-xs font-semibold px-2 py-0.5 rounded ${style.chip} text-white shrink-0`}>
-                ₹{passData.amountInr} {passData.passTier === 'flagship_offline' ? 'Flagship Pass' : 'General Pass'}
+                {Number(passData.amountInr) === 0
+                  ? 'Complimentary · Free SRM-AP Pass'
+                  : `₹${passData.amountInr} ${passData.passTier === 'flagship_offline' ? 'Flagship Pass' : 'General Pass'}`}
               </span>
             </div>
 
@@ -257,7 +259,11 @@ function VerifyPassContent() {
                     Pass Type
                   </span>
                   <p className="font-bold text-burgundy dark:text-[#E89BA5] mt-0.5">
-                    {passData.passTier === 'flagship_offline' ? 'Flagship Pass' : 'General Offline Pass'}
+                    {passData.passTier === 'flagship_offline'
+                      ? 'Flagship Pass'
+                      : Number(passData.amountInr) === 0
+                        ? 'General Pass (Free SRM-AP)'
+                        : 'General Offline Pass'}
                   </p>
                 </div>
                 <div>
@@ -279,7 +285,7 @@ function VerifyPassContent() {
                 {passData.transactionReference && (
                   <div>
                     <span className="font-mono text-[10px] text-slate-400 uppercase tracking-wider block">
-                      Easebuzz Txn Ref
+                      {Number(passData.amountInr) === 0 ? 'Pass Reference' : 'Easebuzz Txn Ref'}
                     </span>
                     <p className="font-mono font-semibold text-slate-800 dark:text-slate-200 mt-0.5 truncate">
                       {passData.transactionReference}
@@ -292,17 +298,24 @@ function VerifyPassContent() {
               {passData.receiptUrl && (
                 <div className="flex items-center justify-between text-xs bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] p-3 rounded-xl">
                   <span className="font-medium text-slate-600 dark:text-slate-400">
-                    Documentary Proof:
+                    Verification Method:
                   </span>
-                  <a
-                    href={passData.receiptUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-semibold text-burgundy dark:text-[#E89BA5] hover:underline inline-flex items-center gap-1"
-                  >
-                    <span>View Uploaded Easebuzz Receipt</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
+                  {passData.receiptUrl.startsWith('institutional://') ? (
+                    <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                      <ShieldCheck className="w-4 h-4" />
+                      SRM University-AP Student (Complimentary)
+                    </span>
+                  ) : (
+                    <a
+                      href={passData.receiptUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-burgundy dark:text-[#E89BA5] hover:underline inline-flex items-center gap-1"
+                    >
+                      <span>View Uploaded Easebuzz Receipt</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  )}
                 </div>
               )}
 

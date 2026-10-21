@@ -42,6 +42,7 @@ import {
 import { AccommodationCard, useAccommodation } from './AccommodationCard';
 import { TransportCard, useTransport } from './TransportCard';
 import { ContactConfirmCard } from './ContactConfirmCard';
+import { AppNotificationsCard } from './AppNotificationsCard';
 import { ArrivalChecklist, INSTITUTION_BANNER_ID } from './ArrivalChecklist';
 import { useCertificateName } from './CertificateNameCard';
 import {
@@ -456,6 +457,7 @@ function OverviewSection({
         onEdit={() => onTab('account')}
       />
       <ContactConfirmCard contact={overview.profile.contact} />
+      <AppNotificationsCard />
       <ActionList items={actions} onTab={onTab} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

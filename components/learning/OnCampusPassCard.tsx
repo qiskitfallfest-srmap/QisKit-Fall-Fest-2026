@@ -39,6 +39,7 @@ import {
 import { usePassStatus } from '@/hooks/use-pass-status';
 import { handleGoogleSignInDirect } from '@/components/learning/AuthGate';
 import { supabase } from '@/lib/supabase';
+import { isSrmApParticipant } from '@/lib/participant-track';
 
 function formatIst(iso: string) {
   return new Date(iso).toLocaleString('en-IN', {
@@ -338,12 +339,42 @@ export function OnCampusPassCard() {
     }
   }
 
+  async function handleClaimFreePass() {
+    setErrorMessage('');
+    setIsSubmitting(true);
+    setUploadStatus('Issuing complimentary pass...');
+
+    try {
+      const res = await fetch('/api/pass/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isInstitutionalFreePass: true,
+        }),
+      });
+
+      const resJson = await res.json();
+      if (!res.ok || !resJson.success) {
+        throw new Error(resJson.error || 'Failed to claim complimentary pass.');
+      }
+
+      await mutate((prev) => (prev ? { ...prev, pass: resJson.pass } : prev), { revalidate: false });
+    } catch (err: any) {
+      console.error('Error claiming free pass:', err);
+      setErrorMessage(err?.message || 'Failed to claim pass. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+      setUploadStatus('');
+    }
+  }
+
   // Downloadable badge PNG sized for phone screens
   function handleDownloadBadge() {
     if (!data?.pass || !qrDataUrl) return;
 
     const pass = data.pass;
     const isVerified = pass.status === 'verified';
+    const isFreePass = Number(pass.amount_inr) === 0;
     const canvas = document.createElement('canvas');
     canvas.width = 1200;
     canvas.height = 1800;
@@ -376,7 +407,13 @@ export function OnCampusPassCard() {
 
     ctx.fillStyle = isVerified ? '#047857' : '#B45309';
     ctx.font = 'bold 32px monospace';
-    ctx.fillText(isVerified ? 'VERIFIED ATTENDEE' : 'PAYMENT VERIFICATION PENDING', 140, 430);
+    ctx.fillText(
+      isVerified
+        ? (isFreePass ? 'VERIFIED ATTENDEE · SRM-AP' : 'VERIFIED ATTENDEE')
+        : 'PAYMENT VERIFICATION PENDING',
+      140,
+      430
+    );
 
     ctx.fillStyle = '#0F172A';
     ctx.font = 'bold 54px serif';
@@ -400,7 +437,13 @@ export function OnCampusPassCard() {
     ctx.fillStyle = '#6C151E';
     ctx.font = 'bold 36px sans-serif';
     const isFlagshipPass = pass.pass_tier === 'flagship_offline';
-    ctx.fillText(`${passTierLabel(pass.pass_tier).toUpperCase()} (₹${pass.amount_inr})`, 140, 740);
+    ctx.fillText(
+      isFreePass
+        ? 'GENERAL PASS · COMPLIMENTARY (SRM-AP)'
+        : `${passTierLabel(pass.pass_tier).toUpperCase()} (₹${pass.amount_inr})`,
+      140,
+      740
+    );
 
     ctx.fillStyle = '#334155';
     ctx.font = '26px sans-serif';
@@ -419,7 +462,11 @@ export function OnCampusPassCard() {
       ctx.fillStyle = '#0F172A';
       ctx.font = 'bold 26px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText(`Easebuzz Ref: ${pass.transaction_reference}`, 600, 1430);
+      ctx.fillText(
+        isFreePass ? `Pass Ref: ${pass.transaction_reference}` : `Easebuzz Ref: ${pass.transaction_reference}`,
+        600,
+        1430
+      );
 
       ctx.fillStyle = '#64748B';
       ctx.font = '22px sans-serif';
@@ -763,7 +810,9 @@ export function OnCampusPassCard() {
             {tone.label}
           </span>
           <span className="font-mono text-[11px] font-semibold opacity-90">
-            {passTierLabel(pass.pass_tier)} · ₹{pass.amount_inr}
+            {Number(pass.amount_inr) === 0
+              ? 'General Offline Pass · Free (SRM-AP)'
+              : `${passTierLabel(pass.pass_tier)} · ₹${pass.amount_inr}`}
           </span>
         </div>
 
@@ -786,7 +835,9 @@ export function OnCampusPassCard() {
               </div>
             ) : isVerified ? (
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                Payment confirmed. Show the QR code at the campus registration desk on arrival. Valid 26–30 October 2026.
+                {Number(pass.amount_inr) === 0
+                  ? 'SRM University-AP complimentary pass confirmed. Show the QR code at the campus registration desk on arrival. Valid 26–30 October 2026.'
+                  : 'Payment confirmed. Show the QR code at the campus registration desk on arrival. Valid 26–30 October 2026.'}
               </p>
             ) : (
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -796,23 +847,33 @@ export function OnCampusPassCard() {
 
             <dl className="grid grid-cols-2 gap-3 font-mono text-xs">
               <div className="min-w-0">
-                <dt className="text-[10px] text-slate-400 uppercase">Transaction ID</dt>
+                <dt className="text-[10px] text-slate-400 uppercase">
+                  {Number(pass.amount_inr) === 0 ? 'Pass Reference' : 'Transaction ID'}
+                </dt>
                 <dd className="font-semibold text-slate-800 dark:text-slate-200 truncate">
                   {pass.transaction_reference}
                 </dd>
               </div>
               <div className="min-w-0">
-                <dt className="text-[10px] text-slate-400 uppercase">Receipt</dt>
+                <dt className="text-[10px] text-slate-400 uppercase">
+                  {pass.receipt_url?.startsWith('institutional://') ? 'Verification' : 'Receipt'}
+                </dt>
                 <dd>
-                  <a
-                    href={pass.receipt_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-semibold text-burgundy dark:text-[#E89BA5] hover:underline inline-flex items-center gap-1"
-                  >
-                    View
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
+                  {pass.receipt_url?.startsWith('institutional://') ? (
+                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                      SRM-AP Student
+                    </span>
+                  ) : (
+                    <a
+                      href={pass.receipt_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-burgundy dark:text-[#E89BA5] hover:underline inline-flex items-center gap-1"
+                    >
+                      View
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
                 </dd>
               </div>
             </dl>
@@ -878,6 +939,7 @@ export function OnCampusPassCard() {
   }
 
   // Claim flow: ticket stub (left) + three-step checkout (right)
+  const isSrmAp = isSrmApParticipant(data?.user?.email, data?.user?.institution);
   const flagshipMode = hackathon?.outcome === 'shortlisted' || pass?.pass_tier === 'flagship_offline';
   const fee = flagshipMode ? FLAGSHIP_PASS_FEE_INR : PASS_FEE_INR;
   const gatewayUrl = flagshipMode && flagship?.gatewayUrl ? flagship.gatewayUrl : EASEBUZZ_GATEWAY_URL;
@@ -918,6 +980,45 @@ export function OnCampusPassCard() {
           <div className="flex items-baseline gap-1.5 border-t border-white/15 pt-4">
             <span className="font-serif text-4xl font-bold tabular-nums">₹{FLAGSHIP_PASS_FEE_INR}</span>
             <span className="font-mono text-[11px] text-slate-400">per person · all 5 days</span>
+          </div>
+          <span className={clsx(NOTCH, 'hidden lg:block -top-2.5 -right-2.5')} />
+          <span className={clsx(NOTCH, 'hidden lg:block -bottom-2.5 -right-2.5')} />
+        </div>
+      ) : isSrmAp ? (
+        <div className="relative bg-[#3B070D] text-white p-5 sm:p-6 flex flex-col justify-between gap-5">
+          <div className="space-y-3">
+            <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-emerald-300">
+              Host University Privilege · Admit One
+            </span>
+            <h2 className="font-serif text-xl sm:text-2xl font-bold leading-tight">
+              SRM-AP Campus Pass
+            </h2>
+            <div className="space-y-1.5 text-xs text-rose-100">
+              <p className="flex items-center gap-2">
+                <CalendarDays className="w-3.5 h-3.5 shrink-0" />
+                26–30 October 2026
+              </p>
+              <p className="flex items-center gap-2">
+                <MapPin className="w-3.5 h-3.5 shrink-0" />
+                SRM University-AP, Main Campus
+              </p>
+            </div>
+            <ul className="space-y-1 text-xs text-rose-50/90 pt-1">
+              {PASS_INCLUSIONS.map((item) => (
+                <li key={item} className="flex items-start gap-2">
+                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-300" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="text-[11px] text-rose-200/80 pt-2 border-t border-white/10 leading-snug">
+              Excludes Hackathon Phase 2, Startup Pitch, QCTF &amp; meals (Flagship Pass only).
+            </p>
+          </div>
+          <div className="flex items-baseline gap-2 border-t border-white/20 pt-4">
+            <span className="font-serif text-3xl sm:text-4xl font-bold text-white">FREE</span>
+            <span className="font-mono text-[11px] text-emerald-300 line-through">₹99</span>
+            <span className="font-mono text-[11px] text-rose-200">SRM-AP Students</span>
           </div>
           <span className={clsx(NOTCH, 'hidden lg:block -top-2.5 -right-2.5')} />
           <span className={clsx(NOTCH, 'hidden lg:block -bottom-2.5 -right-2.5')} />
@@ -963,6 +1064,79 @@ export function OnCampusPassCard() {
       )}
 
       {/* Checkout steps */}
+      {!flagshipMode && isSrmAp && !isResubmitting ? (
+        <div className="p-5 sm:p-6 border-t-2 lg:border-t-0 lg:border-l-2 border-dashed border-slate-200 dark:border-[#3D1418] flex flex-col justify-between gap-6">
+          <div className="space-y-4">
+            <div>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800 mb-2">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                SRM University-AP Host Student Privilege
+              </span>
+              <h3 className="font-serif text-xl sm:text-2xl font-bold text-slate-900 dark:text-[#FAF6F3]">
+                Claim Your Free On-Campus Pass
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                As an SRM-AP student, entry to keynote lectures, hands-on workshops, the Industry Tech Expo, Quantum Reference Center tour, debate, and open arcade games is 100% complimentary.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#1C0A0D] border border-slate-200 dark:border-[#3D1418] space-y-2 text-xs text-slate-700 dark:text-slate-300">
+              <p className="font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <Users className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
+                Attendee Details
+              </p>
+              <p className="font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                {data?.user?.fullName} &middot; {data?.user?.email}
+              </p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
+                Clicking below will issue your official verified badge with a personalized gate QR code. No payment or receipt upload required.
+              </p>
+            </div>
+
+            <div className="p-3.5 bg-amber-50/90 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40 rounded-xl text-xs text-amber-900 dark:text-amber-200/90 space-y-1">
+              <p className="font-semibold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                Scope &amp; Exclusions Notice
+              </p>
+              <p className="leading-relaxed">
+                The free General Pass includes all general festival events (exhibits, keynotes, workshops, games). It does <strong>not</strong> include entry to Hackathon Phase 2 sprint competition or 5-day special meals (reserved exclusively for ₹499 Flagship Pass holders).
+              </p>
+            </div>
+
+            {errorMessage && (
+              <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <button
+              type="button"
+              onClick={handleClaimFreePass}
+              disabled={isSubmitting}
+              className="w-full sm:w-auto px-6 py-3 bg-burgundy hover:bg-burgundy-deep text-white text-sm font-semibold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Issuing Campus Pass...</span>
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>Claim Free Campus Pass</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-2">
+              Valid on campus 26–30 October 2026. Show downloaded badge or phone QR code at desk.
+            </p>
+          </div>
+        </div>
+      ) : (
       <form
         onSubmit={handleClaimPass}
         className="p-5 sm:p-6 border-t-2 lg:border-t-0 lg:border-l-2 border-dashed border-slate-200 dark:border-[#3D1418]"
@@ -1194,6 +1368,7 @@ export function OnCampusPassCard() {
           </button>
         </div>
       </form>
+      )}
     </div>
   );
 }

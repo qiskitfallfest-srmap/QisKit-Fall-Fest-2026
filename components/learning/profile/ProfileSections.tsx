@@ -28,6 +28,7 @@ import {
 import { Phase2StatusCard } from '@/components/learning/Phase2StatusCard';
 import { CertificateNameCard } from './CertificateNameCard';
 import { ContactConfirmCard } from './ContactConfirmCard';
+import { AppNotificationsCard } from './AppNotificationsCard';
 import { CERTIFICATE_NAME_CARD_ID } from './ArrivalChecklist';
 import { TeamChangeForm, useParticipantRequests } from './RequestsSection';
 import { mutate } from 'swr';
@@ -1218,6 +1219,8 @@ export function AccountSection({
       </Card>
 
       <ContactConfirmCard contact={p.contact} alwaysShow />
+
+      <AppNotificationsCard alwaysShow />
 
       <CertificateNameCard eligible={overview.certificate.eligible} id={CERTIFICATE_NAME_CARD_ID} />
 

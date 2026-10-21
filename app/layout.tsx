@@ -14,6 +14,7 @@ import { OAuthRedirectHandler } from '@/components/shared/OAuthRedirectHandler';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { AnalyticsProvider } from '@/components/shared/AnalyticsProvider';
+import { ServiceWorkerRegistrar } from '@/components/shared/ServiceWorkerRegistrar';
 import './globals.css'; // Global styles
 
 export const viewport: Viewport = {
@@ -62,6 +63,11 @@ export const metadata: Metadata = {
     ],
   },
   manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    title: 'QFF SRMAP 2026',
+    statusBarStyle: 'default',
+  },
   openGraph: {
     title: `${SITE_CONFIG.brandName} | SRM University-AP`,
     description: SITE_CONFIG.description,
@@ -114,6 +120,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <SmoothScrollProvider>
             <AnalyticsProvider />
+            <ServiceWorkerRegistrar />
             <OAuthRedirectHandler />
             <LoadScreen />
             <Navbar />

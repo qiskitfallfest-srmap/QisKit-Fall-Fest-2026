@@ -515,7 +515,7 @@ export function AboutArticle() {
                   General Offline Pass
                 </p>
                 <p className="mt-2 font-serif text-3xl font-bold text-[#201617] dark:text-[#FFF4F1]">
-                  ₹99
+                  ₹99 <span className="text-sm font-sans font-semibold text-emerald-700 dark:text-emerald-400">(Free for SRM-AP Students)</span>
                 </p>
                 <p className="mt-4 text-[15px] leading-relaxed">
                   For eligible campus activities, exhibitions, keynote sessions, workshops, Quantum Reference Center tour,
@@ -545,11 +545,7 @@ export function AboutArticle() {
               <a href={REGISTRATION_URL} className="font-medium text-[#6C151E] underline decoration-[#6C151E]/30 underline-offset-4 hover:decoration-[#6C151E] dark:text-[#F07A86] dark:decoration-[#F07A86]/30">
                 learning platform
               </a>
-              : pay on the SRM-AP Easebuzz form, enter your Transaction ID, and upload the receipt to receive a
-              pass with a QR code for the registration desk. The ₹499 Flagship Pass is for hackathon teams
-              shortlisted for Phase 2 (results by 18 October 2026); those teams receive payment instructions by
-              email. Hackathon teams that are not shortlisted can take the General Offline Pass once results are
-              announced.
+              . For SRM University-AP students, admission is 100% complimentary: simply sign in with your student email to generate your gate pass and QR badge instantly with zero fee. External attendees pay ₹99 on the SRM-AP Easebuzz form and submit the transaction receipt. The ₹499 Flagship Pass is for hackathon teams shortlisted for Phase 2; those teams receive payment instructions by email.
             </P>
             <Note>
               Consult the official event instructions for final pass inclusions, activity restrictions, and

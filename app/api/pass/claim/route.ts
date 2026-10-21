@@ -16,6 +16,7 @@ import {
   RESULTS_EXPECTED_LABEL,
 } from '@/lib/hackathon-pass';
 import { confirmOfferIfComplete } from '@/lib/phase2-waiting-room';
+import { isSrmApParticipant } from '@/lib/participant-track';
 import crypto from 'crypto';
 
 export const dynamic = 'force-dynamic';
@@ -55,10 +56,106 @@ export async function POST(request: NextRequest) {
 
     const isFlagship = hackathon?.outcome === 'shortlisted';
 
-    // 2. Parse and validate body
-    const body = await request.json();
-    const { transactionReference, receiptUrl, bankReference } = body;
+    // 2. Fetch existing claim and registration metadata
+    const [{ data: existingClaims }, { data: regRows }] = await Promise.all([
+      supabaseAdmin
+        .from('festival_pass_claims')
+        .select('id, status, qr_code_token')
+        .eq('user_email', normalizedEmail)
+        .order('created_at', { ascending: false })
+        .limit(1),
+      supabaseAdmin
+        .from('registrations')
+        .select('institution, phone')
+        .ilike('email', normalizedEmail)
+        .limit(1),
+    ]);
 
+    const existingClaim = existingClaims?.[0];
+    const reg = regRows?.[0];
+    const isSrmAp = isSrmApParticipant(normalizedEmail, reg?.institution);
+
+    // 3. Parse request body
+    const body = await request.json();
+    const { transactionReference, receiptUrl, bankReference, isInstitutionalFreePass } = body;
+
+    // 4. Handle SRM-AP Institutional Complimentary Pass (100% Free)
+    if (isInstitutionalFreePass) {
+      if (isFlagship) {
+        return NextResponse.json(
+          {
+            error:
+              'Institutional complimentary passes apply only to the General Offline Pass. Hackathon Phase 2 finalists require the Flagship Pass.',
+          },
+          { status: 403 }
+        );
+      }
+
+      if (!isSrmAp) {
+        return NextResponse.json(
+          {
+            error:
+              'Institutional complimentary passes are reserved exclusively for SRM University-AP students. Please complete the General Pass payment on Easebuzz.',
+          },
+          { status: 403 }
+        );
+      }
+
+      if (existingClaim?.status === 'verified') {
+        return NextResponse.json(
+          { error: 'Your pass is already verified. No further action is needed.' },
+          { status: 409 }
+        );
+      }
+
+      const freeTxn = `SRMAP-FREE-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+      const claimFields = {
+        user_email: normalizedEmail,
+        user_name: session.fullName || normalizedEmail.split('@')[0],
+        pass_tier: 'general_offline',
+        transaction_reference: freeTxn,
+        bank_reference: null,
+        receipt_url: 'institutional://srmap.edu.in',
+        amount_inr: 0,
+        status: 'verified',
+        institution: reg?.institution || 'SRM University AP',
+        contact_phone: reg?.phone || null,
+        admin_notes: 'SRM University-AP complimentary student pass',
+        updated_at: new Date().toISOString(),
+      };
+
+      const { data: savedPass, error: saveError } = existingClaim
+        ? await supabaseAdmin
+            .from('festival_pass_claims')
+            .update(claimFields)
+            .eq('id', existingClaim.id)
+            .select('*')
+            .single()
+        : await supabaseAdmin
+            .from('festival_pass_claims')
+            .insert({
+              ...claimFields,
+              qr_code_token: `qff26_${crypto.randomBytes(16).toString('hex')}`,
+            })
+            .select('*')
+            .single();
+
+      if (saveError) {
+        console.error('[Free Pass Database Error]:', saveError);
+        return NextResponse.json(
+          { error: 'Failed to issue complimentary pass. Please try again.' },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Complimentary SRM-AP student pass issued. Show your QR badge at the registration desk.',
+        pass: savedPass,
+      });
+    }
+
+    // 5. Easebuzz Paid Pass Flow (General Pass for external attendees or Flagship Pass)
     const normalizedTxn = normalizeTxn(transactionReference);
     const trimmedReceipt = String(receiptUrl || '').trim();
     const trimmedBankRef = normalizeBankRef(bankReference);
@@ -77,7 +174,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Transaction ID must not belong to another attendee, or to a certificate purchase,
+    // 6. Transaction ID must not belong to another attendee, or to a certificate purchase,
     // except a Flagship Pass the attendee bought together with their own certificate (₹598)
     const [{ data: txnOwners }, { data: certTxnRows }] = await Promise.all([
       supabaseAdmin
@@ -116,16 +213,6 @@ export async function POST(request: NextRequest) {
         { status: 409 }
       );
     }
-
-    // 4. One claim per attendee: resubmission updates the existing row
-    const { data: existingClaims } = await supabaseAdmin
-      .from('festival_pass_claims')
-      .select('id, status, qr_code_token')
-      .eq('user_email', normalizedEmail)
-      .order('created_at', { ascending: false })
-      .limit(1);
-
-    const existingClaim = existingClaims?.[0];
 
     // New Flagship claims only inside the team's own payment window; correcting an existing claim stays allowed
     if (isFlagship && !existingClaim) {
@@ -166,14 +253,6 @@ export async function POST(request: NextRequest) {
         { status: 409 }
       );
     }
-
-    // 5. Institution & phone from registration, if available
-    const { data: regRows } = await supabaseAdmin
-      .from('registrations')
-      .select('institution, phone')
-      .ilike('email', normalizedEmail)
-      .limit(1);
-    const reg = regRows?.[0];
 
     const claimFields = {
       user_email: normalizedEmail,
