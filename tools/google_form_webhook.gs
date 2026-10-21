@@ -101,6 +101,14 @@ function onOpen() {
         .addItem('9. Start Certificate Campaign (5/5 Qualified Only - 220 students)', 'startQualifiedOnlyCertificateCampaign')
         .addItem('10. Start Certificate Campaign (All Recipients)', 'startCertificateEmailCampaign')
         .addSeparator()
+        .addItem('11. Setup "Hackathon_Finalists_Recipients" Sheet', 'setupHackathonFinalistsSheet')
+        .addItem('12. Send Test Finalist Email to sahgyan9@gmail.com', 'sendTestHackathonFinalistEmail')
+        .addItem('13. Start Hackathon Finalists Email Campaign', 'startHackathonFinalistsEmailCampaign')
+        .addSeparator()
+        .addItem('14. Setup "Payment_Reminder_Recipients" Sheet', 'setupPaymentReminderSheet')
+        .addItem('15. Send Test Payment Reminder to sahgyan9@gmail.com', 'sendTestPaymentReminderEmail')
+        .addItem('16. Start Hackathon Payment Reminder Campaign', 'startPaymentReminderEmailCampaign')
+        .addSeparator()
         .addItem('Sync All Unsynced Rows to Portal', 'syncAllUnsyncedRows')
         .addItem('Send Missing Welcome Emails', 'sendMissingWelcomeEmails')
         .addSeparator()
@@ -1579,6 +1587,665 @@ function sendCertificateAnnouncementEmail(recipientEmail, participantName, quizz
   });
 }
 
+// ============================================================================
+// HACKATHON PHASE 1 SHORTLISTED FINALISTS EMAIL CAMPAIGN
+// ============================================================================
+
+/**
+ * 11. Automatically creates and formats the 'Hackathon_Finalists_Recipients' tab.
+ */
+function setupHackathonFinalistsSheet() {
+  var ss = getTargetSpreadsheet();
+  if (!ss) {
+    try {
+      SpreadsheetApp.getUi().alert('Could not locate active Google Spreadsheet.');
+    } catch (e) {}
+    return;
+  }
+  
+  var sheet = ss.getSheetByName('Hackathon_Finalists_Recipients');
+  if (!sheet) {
+    sheet = ss.insertSheet('Hackathon_Finalists_Recipients');
+    sheet.appendRow([
+      'Email',
+      'Full Name',
+      'Role',
+      'Team Name',
+      'Category',
+      'Desk',
+      'Track',
+      'Institution',
+      'Score',
+      'Offer_Status',
+      'Finalist_Email_Status'
+    ]);
+    sheet.getRange(1, 1, 1, 11).setFontWeight('bold').setBackground('#7c1415').setFontColor('#ffffff');
+    sheet.setFrozenRows(1);
+    SpreadsheetApp.getUi().alert(
+      'Sheet "Hackathon_Finalists_Recipients" created successfully!\n\n' +
+      'Next Step: Open "C:\\Users\\sahgy\\Downloads\\hackathon_backend_65_teams_276_members.csv", copy the recipient data (Columns A to J), and paste it into this sheet. Then click:\n\n' +
+      'Qiskit Fall Fest 2026 -> 13. Start Hackathon Finalists Email Campaign'
+    );
+  } else {
+    SpreadsheetApp.getUi().alert('Sheet "Hackathon_Finalists_Recipients" already exists.');
+  }
+}
+
+/**
+ * 12. Dispatches a single test copy of the Hackathon Finalist email to sahgyan9@gmail.com.
+ */
+function sendTestHackathonFinalistEmail() {
+  var testEmail = 'sahgyan9@gmail.com';
+  try {
+    sendHackathonFinalistEmail(
+      testEmail,
+      'Gyan Kumar Sah (Test)',
+      'Team Leader',
+      'Qspark',
+      'External',
+      'Desk EXT-01',
+      'Quantum Optimization',
+      'University College of Engineering Narasaraopet - JNTUK',
+      '98.2',
+      'invited'
+    );
+    SpreadsheetApp.getUi().alert('Test Hackathon Finalist email successfully dispatched to ' + testEmail + '!\nPlease check your inbox.');
+  } catch (err) {
+    SpreadsheetApp.getUi().alert('Failed to send test email: ' + err.toString());
+  }
+}
+
+/**
+ * 13. Batched campaign dispatcher for all shortlisted hackathon finalists with safety quota check.
+ * Dynamically resolves columns from sheet headers (compatible with 10 or 12 column CSV imports).
+ * Targets all invited and accepted participants while automatically skipping declined offers.
+ */
+function startHackathonFinalistsEmailCampaign() {
+  var ss = getTargetSpreadsheet();
+  if (!ss) {
+    SpreadsheetApp.getUi().alert('Could not locate active Google Spreadsheet.');
+    return;
+  }
+  
+  var sheet = ss.getSheetByName('Hackathon_Finalists_Recipients') || ss.getActiveSheet();
+  if (!sheet) {
+    SpreadsheetApp.getUi().alert('Please open or create the "Hackathon_Finalists_Recipients" sheet first.');
+    return;
+  }
+  
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) {
+    SpreadsheetApp.getUi().alert('The active sheet has no recipient rows. Please paste the recipient data from your Downloads folder first.');
+    return;
+  }
+  
+  var headerMap = getHeaderMap(sheet);
+  
+  // Dynamically resolve columns (1-based index)
+  var colEmail = headerMap['email'] || 1;
+  var colName = headerMap['full name'] || headerMap['name'] || 2;
+  var colRole = headerMap['role'] || 3;
+  var colTeam = headerMap['team name'] || headerMap['team'] || 4;
+  var colCat = headerMap['category'] || 5;
+  var colDesk = headerMap['desk'] || 6;
+  var colTrack = headerMap['track'] || 7;
+  var colInst = headerMap['institution'] || headerMap['college'] || 8;
+  var colScore = headerMap['score'] || 9;
+  var colOfferStatus = headerMap['offer_status'] || headerMap['offer status'] || -1;
+  var colMemberStatus = headerMap['member_status'] || headerMap['member status'] || -1;
+  var statusCol = getOrCreateColumn(sheet, 'Finalist_Email_Status');
+  
+  // Smart auto-detection guardrail:
+  // If Column J header was labeled 'Finalist_Email_Status' but row 2 contains 'invited' or 'accepted',
+  // automatically re-label Column J to 'Offer_Status' and create 'Finalist_Email_Status' in Column K.
+  if (colOfferStatus === -1 && lastRow >= 2) {
+    var sampleVal = String(sheet.getRange(2, statusCol).getValue() || '').trim().toLowerCase();
+    if (sampleVal === 'invited' || sampleVal === 'accepted' || sampleVal === 'declined') {
+      colOfferStatus = statusCol;
+      sheet.getRange(1, statusCol).setValue('Offer_Status');
+      statusCol = getOrCreateColumn(sheet, 'Finalist_Email_Status');
+    }
+  }
+  
+  var quotaRemaining = MailApp.getRemainingDailyQuota();
+  if (quotaRemaining < 5) {
+    SpreadsheetApp.getUi().alert('Daily Gmail sending quota reached (' + quotaRemaining + ' left). Please try again tomorrow.');
+    return;
+  }
+  
+  var lastCol = sheet.getLastColumn();
+  var data = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+  var sentCount = 0;
+  var skippedCount = 0;
+  var declinedCount = 0;
+  
+  for (var i = 0; i < data.length; i++) {
+    var rowNum = i + 2;
+    var row = data[i];
+    
+    var email = String(row[colEmail - 1] || '').trim().toLowerCase();
+    var name = String(row[colName - 1] || '').trim() || 'Innovator';
+    var role = String(row[colRole - 1] || '').trim() || 'Team Member';
+    var teamName = String(row[colTeam - 1] || '').trim() || 'Your Team';
+    var category = String(row[colCat - 1] || '').trim() || 'Auditorium Finalist';
+    var desk = String(row[colDesk - 1] || '').trim() || 'Phase 2 Finalist';
+    var track = String(row[colTrack - 1] || '').trim() || 'Quantum Computing';
+    var institution = String(row[colInst - 1] || '').trim() || 'SRM University-AP';
+    var score = String(row[colScore - 1] || '').trim() || 'Evaluated';
+    
+    var offerStatus = colOfferStatus !== -1 ? String(row[colOfferStatus - 1] || '').trim().toLowerCase() : '';
+    var memberStatus = colMemberStatus !== -1 ? String(row[colMemberStatus - 1] || '').trim().toLowerCase() : '';
+    var currentStatus = String(row[statusCol - 1] || '').trim();
+    
+    if (!email || email.indexOf('@') === -1) {
+      sheet.getRange(rowNum, statusCol).setValue('SKIPPED (Invalid Email)');
+      continue;
+    }
+    
+    // Deduplication check: Never re-send to anyone already marked SENT
+    if (currentStatus.indexOf('SENT') !== -1) {
+      skippedCount++;
+      continue;
+    }
+    
+    // Skip explicitly declined teams or members
+    if (offerStatus === 'declined' || memberStatus === 'declined') {
+      sheet.getRange(rowNum, statusCol).setValue('SKIPPED (Offer/Member Declined)');
+      declinedCount++;
+      continue;
+    }
+    
+    if (MailApp.getRemainingDailyQuota() <= 2) {
+      Logger.log('Quota limit reached during batch. Stopping cleanly.');
+      break;
+    }
+    
+    try {
+      sendHackathonFinalistEmail(email, name, role, teamName, category, desk, track, institution, score, offerStatus);
+      var timestamp = Utilities.formatDate(new Date(), 'Asia/Kolkata', 'yyyy-MM-dd HH:mm:ss');
+      sheet.getRange(rowNum, statusCol).setValue('SENT (' + timestamp + ' IST)');
+      sentCount++;
+      Utilities.sleep(1000); // Polite rate limit
+    } catch (mailErr) {
+      sheet.getRange(rowNum, statusCol).setValue('ERROR: ' + mailErr.toString().slice(0, 100));
+    }
+  }
+  
+  var summary = 'Hackathon Finalists Campaign run completed!\n\n' +
+    'Successfully Dispatched: ' + sentCount + '\n' +
+    'Skipped (Already Sent): ' + skippedCount + '\n' +
+    'Skipped (Declined): ' + declinedCount + '\n' +
+    'Daily Quota Remaining: ' + MailApp.getRemainingDailyQuota();
+  
+  Logger.log(summary);
+  SpreadsheetApp.getUi().alert(summary);
+}
+
+/**
+ * 14. Master HTML email builder for Hackathon Phase 1 Shortlisted Finalists.
+ * Structured as an Official Selection Notice & Academic Letter of Selection for colleges and faculty.
+ */
+function sendHackathonFinalistEmail(recipientEmail, participantName, role, teamName, category, desk, track, institution, score, offerStatus) {
+  var subject = 'IBM Qiskit Fall Fest 2026 — Official Selection Letter: Hackathon Phase 2 On-Campus Finals (28–29 Oct)';
+  
+  var isLeader = (String(role).toLowerCase().indexOf('leader') !== -1);
+  var isAccepted = (String(offerStatus).toLowerCase() === 'accepted');
+  
+  var statusBadgeText = isAccepted ? 'CONFIRMED SELECTION · PHASE 2 DESK ACTIVE' : 'OFFICIAL SELECTION · PHASE 2 INVITATION ACTIVE';
+  var statusBadgeColor = isAccepted ? '#1e7e45' : '#7c1415';
+  
+  var roleNoticeHtml = '';
+  if (isLeader) {
+    if (isAccepted) {
+      roleNoticeHtml = '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f0f7f3;border:1px solid #c2e0cf;border-left:4px solid #1e7e45;border-radius:8px;padding:18px 20px;margin:0 0 28px 0;">'
+        + '<tr><td>'
+        + '<div style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#1e7e45;margin-bottom:4px;">Action Status · Team Leader Update</div>'
+        + '<div style="font-size:15.5px;font-weight:bold;color:#1e7e45;margin-bottom:8px;">Phase 2 Invitation Accepted &middot; Coordinate Passes</div>'
+        + '<p style="margin:0 0 10px 0;font-size:13.5px;color:#2c4033;line-height:1.65;">'
+        + 'Your team has formally accepted the Phase 2 Invitation on the portal. Please ensure all your teammates log in to <a href="https://www.qffsrmap2026.com/learning/hackathon" target="_blank" style="color:#1e7e45;font-weight:bold;">qffsrmap2026.com/learning/hackathon</a> and submit their &#8377;499 Flagship Pass receipt.'
+        + '</p>'
+        + '<p style="margin:0;font-size:13px;color:#2c4033;line-height:1.6;">'
+        + '<strong>Leader Final Step:</strong> You will submit your own pass receipt last, which locks in your team\'s confirmed auditorium desk.'
+        + '</p>'
+        + '</td></tr></table>';
+    } else {
+      roleNoticeHtml = '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f0f7f3;border:1px solid #c2e0cf;border-left:4px solid #1e7e45;border-radius:8px;padding:18px 20px;margin:0 0 28px 0;">'
+        + '<tr><td>'
+        + '<div style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#1e7e45;margin-bottom:4px;">Action Mandatory · Team Leader Responsibility</div>'
+        + '<div style="font-size:15.5px;font-weight:bold;color:#1e7e45;margin-bottom:8px;">Step 1: Accept Phase 2 Invitation on Behalf of Your Team</div>'
+        + '<p style="margin:0 0 10px 0;font-size:13.5px;color:#2c4033;line-height:1.65;">'
+        + 'As Team Leader, your invitation deadline has been extended until <strong>10:36 PM IST tonight (19 October 2026)</strong>. Sign into <a href="https://www.qffsrmap2026.com/learning/hackathon" target="_blank" style="color:#1e7e45;font-weight:bold;">qffsrmap2026.com/learning/hackathon</a> and click <strong>"Accept Phase 2 Invitation"</strong>.'
+        + '</p>'
+        + '<p style="margin:0;font-size:13px;color:#2c4033;line-height:1.6;">'
+        + 'This locks in your team\'s willingness to attend and unlocks the Flagship Pass checkout for your teammates.'
+        + '</p>'
+        + '</td></tr></table>';
+    }
+  } else {
+    roleNoticeHtml = '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#fdf6ed;border:1px solid #f0d5b5;border-left:4px solid #b97e3e;border-radius:8px;padding:18px 20px;margin:0 0 28px 0;">'
+      + '<tr><td>'
+      + '<div style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#b97e3e;margin-bottom:4px;">Action Required · Team Member Instruction</div>'
+      + '<div style="font-size:15.5px;font-weight:bold;color:#7c1415;margin-bottom:8px;">Complete Your Flagship Pass on the Arena</div>'
+      + '<p style="margin:0 0 10px 0;font-size:13.5px;color:#4f3d2a;line-height:1.65;">'
+      + 'Log in to your portal dashboard at <a href="https://www.qffsrmap2026.com/learning/hackathon" target="_blank" style="color:#7c1415;font-weight:bold;">qffsrmap2026.com/learning/hackathon</a> using your registered Google email (' + recipientEmail + ') to complete and submit your &#8377;499 Flagship Pass.'
+      + '</p>'
+      + '<p style="margin:0;font-size:13px;color:#4f3d2a;line-height:1.6;">'
+      + 'Your submission instantly updates your team\'s checklist. Coordinate with your Team Leader to ensure full roster verification.'
+      + '</p>'
+      + '</td></tr></table>';
+  }
+
+  var htmlBody = '<!DOCTYPE html>'
+    + '<html lang="en" xmlns="http://www.w3.org/1999/xhtml">'
+    + '<head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0">'
+    + '<style type="text/css">body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; } table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; } img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; } body { margin: 0; padding: 0; width: 100% !important; background-color: #f5efea; }</style>'
+    + '</head>'
+    + '<body style="margin:0;padding:24px 12px;background-color:#f5efea;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Helvetica,Arial,sans-serif;color:#231f20;line-height:1.65;">'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:680px;margin:0 auto;background-color:#ffffff;border:1px solid #e4dacb;border-radius:12px;overflow:hidden;box-shadow:0 4px 18px rgba(124,20,21,0.06);">'
+    + '<tr><td style="padding:0;background-color:#faf7f2;text-align:center;">'
+    + '<img src="https://www.qffsrmap2026.com/brand/qiskit-fall-fest-banner.png" alt="IBM Qiskit Fall Fest 2026 — Partner Plus Host at SRM University-AP" width="680" style="display:block;width:100%;max-width:680px;height:auto;border:0;outline:none;">'
+    + '</td></tr>'
+    + '<tr><td style="background-color:#7c1415;padding:10px 24px;text-align:center;">'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr>'
+    + '<td style="font-family:\'Georgia\',\'Times New Roman\',serif;font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:#fdf8f0;font-weight:bold;text-align:center;">'
+    + 'IBM PARTNER PLUS · SRM UNIVERSITY-AP · OFFICIAL SELECTION LETTER &amp; FINALIST INVITATION'
+    + '</td></tr></table></td></tr>'
+    + '<tr><td style="padding:32px 36px 36px 36px;">'
+    + '<p style="margin:0 0 16px 0;font-size:16px;color:#231f20;font-weight:bold;">Dear ' + participantName + ' (' + role + ' · Team: ' + teamName + '),</p>'
+    + '<p style="margin:0 0 14px 0;font-size:15px;color:#3d3635;line-height:1.7;">'
+    + 'Congratulations! Following the comprehensive evaluation of <strong>129 competing teams across India</strong> by our academic jury and IBM review panel, your team has officially qualified and been selected as an <strong>Auditorium Finalist</strong> for Phase 2 of the Flagship Quantum Hackathon at <strong>Partner Plus IBM Qiskit Fall Fest 2026</strong>.'
+    + '</p>'
+    + '<p style="margin:0 0 22px 0;font-size:15px;color:#3d3635;line-height:1.7;">'
+    + 'Your algorithm architecture, quantum circuit implementations, and technical documentation ranked among the top submissions nationwide. You are invited to compete in person at SRM University-AP during the 24-hour physical sprint for a total prize pool exceeding <strong>&#8377;1,00,000+</strong> and industrial internship opportunities.'
+    + '</p>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#faf7f2;border:1px solid #e7dcce;border-radius:8px;overflow:hidden;margin:0 0 24px 0;">'
+    + '<tr style="background-color:#f3eae0;border-bottom:1px solid #e7dcce;">'
+    + '<td colspan="2" style="padding:11px 18px;font-family:\'Georgia\',serif;font-size:13px;font-weight:bold;color:#7c1415;letter-spacing:0.8px;text-transform:uppercase;">Official Academic Selection Letter &amp; Finalist Dossier</td>'
+    + '</tr>'
+    + '<tr>'
+    + '<td width="38%" style="padding:10px 18px;font-size:13px;color:#6b625b;border-bottom:1px solid #ebd9c2;font-weight:600;">Candidate Name:</td>'
+    + '<td width="62%" style="padding:10px 18px;font-size:13.5px;color:#231f20;border-bottom:1px solid #ebd9c2;font-weight:bold;">' + participantName + ' (' + role + ')</td>'
+    + '</tr>'
+    + '<tr>'
+    + '<td style="padding:10px 18px;font-size:13px;color:#6b625b;border-bottom:1px solid #ebd9c2;font-weight:600;">Selected Team Name:</td>'
+    + '<td style="padding:10px 18px;font-size:13.5px;color:#7c1415;border-bottom:1px solid #ebd9c2;font-weight:bold;">' + teamName + '</td>'
+    + '</tr>'
+    + '<tr>'
+    + '<td style="padding:10px 18px;font-size:13px;color:#6b625b;border-bottom:1px solid #ebd9c2;font-weight:600;">Official Qualification:</td>'
+    + '<td style="padding:10px 18px;font-size:13px;color:#1e7e45;border-bottom:1px solid #ebd9c2;font-weight:bold;">Selected as Auditorium Finalist (' + category + ')</td>'
+    + '</tr>'
+    + '<tr>'
+    + '<td style="padding:10px 18px;font-size:13px;color:#6b625b;border-bottom:1px solid #ebd9c2;font-weight:600;">Allocated Workstation:</td>'
+    + '<td style="padding:10px 18px;font-size:13.5px;color:#7c1415;border-bottom:1px solid #ebd9c2;font-weight:bold;font-family:monospace;">' + desk + '</td>'
+    + '</tr>'
+    + '<tr>'
+    + '<td style="padding:10px 18px;font-size:13px;color:#6b625b;border-bottom:1px solid #ebd9c2;font-weight:600;">Domain / Technical Track:</td>'
+    + '<td style="padding:10px 18px;font-size:13px;color:#231f20;border-bottom:1px solid #ebd9c2;font-weight:600;">' + track + '</td>'
+    + '</tr>'
+    + '<tr>'
+    + '<td style="padding:10px 18px;font-size:13px;color:#6b625b;font-weight:600;">Institution / College:</td>'
+    + '<td style="padding:10px 18px;font-size:13.5px;color:#231f20;font-weight:600;">' + institution + '</td>'
+    + '</tr>'
+    + '</table>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#fcf9f4;border:1px solid #dfcfb9;border-top:4px solid #7c1415;border-radius:8px;margin:0 0 28px 0;"><tr>'
+    + '<td style="padding:24px 22px;text-align:center;">'
+    + '<div style="display:inline-block;background-color:#faefe0;border:1px solid #d9be97;border-radius:4px;padding:4px 12px;font-size:11px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase;color:' + statusBadgeColor + ';margin-bottom:10px;">' + statusBadgeText + '</div>'
+    + '<h2 style="margin:0 0 8px 0;font-family:\'Georgia\',\'Times New Roman\',serif;font-size:22px;color:#7c1415;font-weight:bold;line-height:1.3;">Enter Hackathon Arena &amp; Confirm Desk</h2>'
+    + '<p style="margin:0 0 6px 0;font-size:14px;color:#554c4a;">24-Hour Physical Sprint · SRM University-AP · &#8377;1,00,000+ Prize Pool · Industry Internships</p>'
+    + '<p style="margin:0 0 8px 0;font-size:14px;color:#7c1415;font-weight:bold;">Hackathon Dates: 28 &amp; 29 October 2026 · Auditorium X-Lab</p>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 18px auto;background-color:#faefe0;border:1px solid #d9be97;border-radius:6px;"><tr>'
+    + '<td style="padding:8px 16px;font-size:13px;color:#630e10;font-weight:bold;">Gate Entry &amp; Registration: 9:00 AM – 11:00 AM strictly (entry closes at 11:00 AM)</td>'
+    + '</tr></table>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr>'
+    + '<td align="center" style="border-radius:6px;background-color:#7c1415;">'
+    + '<a href="https://www.qffsrmap2026.com/learning/hackathon" target="_blank" style="display:inline-block;padding:13px 28px;font-size:14px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:6px;letter-spacing:0.8px;text-transform:uppercase;border:1px solid #630e10;">Open Hackathon Arena &rarr;</a>'
+    + '</td></tr></table>'
+    + '<p style="margin:14px 0 0 0;font-size:12px;color:#7d726e;">Sign in with "Continue with Google" using: <strong style="color:#7c1415;">' + recipientEmail + '</strong></p>'
+    + '</td></tr></table>'
+    + roleNoticeHtml
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:24px 0 22px 0;"><tr><td style="border-bottom:1px solid #ebd9c2;"></td></tr></table>'
+    + '<h2 style="margin:0 0 6px 0;font-family:\'Georgia\',\'Times New Roman\',serif;font-size:20px;color:#7c1415;font-weight:bold;">Phase 2 Operational Protocol &amp; Inclusions</h2>'
+    + '<div style="width:40px;height:2px;background-color:#b97e3e;margin-bottom:16px;"></div>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 24px 0;">'
+    + '<tr><td width="50%" valign="top" style="padding:0 8px 12px 0;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#faf7f2;border:1px solid #e7dcce;border-radius:8px;padding:14px 16px;"><tr><td>'
+    + '<div style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#b97e3e;margin-bottom:4px;">Hackathon Physical Sprint</div>'
+    + '<div style="font-size:14.5px;font-weight:bold;color:#231f20;margin-bottom:6px;">28 &amp; 29 October 2026</div>'
+    + '<div style="font-size:13px;color:#554c4a;line-height:1.55;">24-hour physical sprint in the Auditorium X-Lab with dedicated team desk, high-speed power strips, Gigabit Wi-Fi, and live IBM mentorship.</div>'
+    + '</td></tr></table></td>'
+    + '<td width="50%" valign="top" style="padding:0 0 12px 8px;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#faf7f2;border:1px solid #e7dcce;border-radius:8px;padding:14px 16px;"><tr><td>'
+    + '<div style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#b97e3e;margin-bottom:4px;">Campus Arrival &amp; Check-In</div>'
+    + '<div style="font-size:14.5px;font-weight:bold;color:#231f20;margin-bottom:6px;">9:00 AM – 11:00 AM Strictly</div>'
+    + '<div style="font-size:13px;color:#554c4a;line-height:1.55;">Registration desks and entry gates open strictly between 9:00 AM and 11:00 AM. After 11:00 AM the gate closes. Please arrive strictly on time if you plan to attend on that day.</div>'
+    + '</td></tr></table></td></tr>'
+    + '<tr><td width="50%" valign="top" style="padding:0 8px 0 0;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#faf7f2;border:1px solid #e7dcce;border-radius:8px;padding:14px 16px;"><tr><td>'
+    + '<div style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#b97e3e;margin-bottom:4px;">Industry Co-Design</div>'
+    + '<div style="font-size:14.5px;font-weight:bold;color:#231f20;margin-bottom:6px;">Problem Statement Refinement</div>'
+    + '<div style="font-size:13px;color:#554c4a;line-height:1.55;">We are refining problem statements with our industry partner. While specific problem statements may be updated, the underlying quantum processor topology and architectures you worked with in Phase 1 remain the same.</div>'
+    + '</td></tr></table></td>'
+    + '<td width="50%" valign="top" style="padding:0 0 0 8px;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#faf7f2;border:1px solid #e7dcce;border-radius:8px;padding:14px 16px;"><tr><td>'
+    + '<div style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#b97e3e;margin-bottom:4px;">Outstation Logistics &amp; Accommodation</div>'
+    + '<div style="font-size:14.5px;font-weight:bold;color:#231f20;margin-bottom:6px;">PG Assistance (~&#8377;500/day)</div>'
+    + '<div style="font-size:13px;color:#554c4a;line-height:1.55;">Verified student PG accommodation arranged near campus by our hospitality team. Coordinate bookings and logistics assistance directly via the official WhatsApp Community.</div>'
+    + '</td></tr></table></td></tr></table>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#fbf7ef;border-left:4px solid #7c1415;border-radius:0 6px 6px 0;margin:0 0 28px 0;"><tr>'
+    + '<td style="padding:16px 20px;font-size:13.5px;color:#4f443b;line-height:1.65;">'
+    + '<div style="font-weight:bold;color:#7c1415;margin-bottom:6px;font-size:14px;">All-Access Flagship Pass Privileges (&#8377;499 per member):</div>'
+    + 'All shortlisted hackathon finalists must purchase the <strong>All-Access Flagship Pass (&#8377;499 per member)</strong> on the portal. Your pass includes:'
+    + '<ul style="margin:8px 0 8px 18px;padding:0;">'
+    + '<li><strong>Flagship Hackathon Phase 2:</strong> 24-hr physical sprint on <strong>28 &amp; 29 October</strong> with dedicated auditorium seating and IBM judging.</li>'
+    + '<li><strong>Quantum Capture The Flag (QCTF):</strong> Full entry to the flagship cybersecurity competition on <strong>27 October</strong>.</li>'
+    + '<li><strong>Quantum Startup Pitch Fest:</strong> Present your prototype and pitch directly to venture investors and incubation leaders.</li>'
+    + '<li><strong>5-Day Catered Dining:</strong> Catered lunches and twice-daily refreshments across all five days (26–30 October).</li>'
+    + '<li><strong>Daily Campus Entry:</strong> 9:00 AM – 11:00 AM strictly (registration desks close at 11:00 AM sharp).</li>'
+    + '<li><strong>Do NOT purchase the &#8377;99 General Pass:</strong> The &#8377;99 pass is strictly for non-hackathon visitors and excludes sprint seating, QCTF, Pitch Fest, and meals.</li>'
+    + '<li><strong>Easebuzz Single Payment Rule:</strong> One Easebuzz transaction ID covers exactly one pass purchase. Each teammate must make their own payment and upload their distinct receipt.</li>'
+    + '</ul>'
+    + '</td></tr></table>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#fbf7ef;border:1px solid #e1d3bf;border-radius:8px;padding:20px;margin:0 0 30px 0;"><tr><td>'
+    + '<h3 style="margin:0 0 6px 0;font-size:16px;color:#7c1415;font-weight:bold;">Official Finalists WhatsApp Community</h3>'
+    + '<p style="margin:0 0 14px 0;font-size:13.5px;color:#4f443b;line-height:1.6;">'
+    + 'Join our dedicated WhatsApp Community for instant coordination regarding PG accommodation, campus arrival directions, desk seating plans, and direct contact with track coordinators:'
+    + '</p>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="background-color:#2a6a43;border-radius:6px;">'
+    + '<a href="https://chat.whatsapp.com/HoLFUpcm46L0qDE6VBdboW" target="_blank" style="display:inline-block;padding:11px 22px;font-size:13.5px;font-weight:bold;color:#ffffff;text-decoration:none;">Join WhatsApp Community &rarr;</a>'
+    + '</td></tr></table></td></tr></table>'
+    + '<p style="margin:0 0 16px 0;font-size:14.5px;color:#3d3635;line-height:1.7;">'
+    + 'We look forward to seeing your team build on campus and present your solutions to our IBM and industry panel on 28–29 October. Congratulations once again on earning your place among the top quantum finalists in India.'
+    + '</p>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0 10px 0;"><tr><td style="border-left:3px solid #7c1415;padding-left:14px;">'
+    + '<p style="margin:0;font-size:14.5px;color:#231f20;line-height:1.5;">Best regards,<br><strong>Hackathon Technical Committee &amp; Organizing Board</strong><br>Partner Plus IBM Qiskit Fall Fest 2026<br>Department of Computer Science &amp; Engineering<br>School of Engineering and Sciences, SRM University-AP</p>'
+    + '</td></tr></table></td></tr>'
+    + '<tr><td style="background-color:#faf7f2;border-top:1px solid #ebd9c2;padding:22px 36px;text-align:center;">'
+    + '<p style="margin:0 0 6px 0;font-family:\'Georgia\',\'Times New Roman\',serif;font-size:13px;color:#7c1415;font-weight:bold;">Partner Plus IBM Qiskit Fall Fest 2026</p>'
+    + '<p style="margin:0 0 10px 0;font-size:12px;color:#6b625b;">SRM University-AP, Neerukonda, Mangalagiri Mandal, Andhra Pradesh 522240</p>'
+    + '<p style="margin:0;font-size:12px;color:#857a73;">Hackathon Arena: <a href="https://www.qffsrmap2026.com/learning/hackathon" target="_blank" style="color:#7c1415;text-decoration:underline;">qffsrmap2026.com/learning/hackathon</a> &nbsp;·&nbsp; Learning Portal: <a href="https://www.qffsrmap2026.com/learning" target="_blank" style="color:#7c1415;text-decoration:underline;">qffsrmap2026.com/learning</a> &nbsp;·&nbsp; Contact: <a href="mailto:qiskitfallfest@srmap.edu.in" style="color:#7c1415;text-decoration:underline;">qiskitfallfest@srmap.edu.in</a></p>'
+    + '</td></tr></table></body></html>';
+
+  GmailApp.sendEmail(recipientEmail, subject, 'Please view this email in an HTML-compatible client.', {
+    htmlBody: htmlBody,
+    name: 'Qiskit Fall Fest 2026'
+  });
+}
 
 
 
+// ============================================================================
+// HACKATHON PHASE 2 PAYMENT REMINDER EMAIL CAMPAIGN
+// ============================================================================
+
+/**
+ * 14. Automatically creates and formats the 'Payment_Reminder_Recipients' tab.
+ */
+function setupPaymentReminderSheet() {
+  var ss = getTargetSpreadsheet();
+  if (!ss) {
+    try {
+      SpreadsheetApp.getUi().alert('Could not locate active Google Spreadsheet.');
+    } catch (e) {}
+    return;
+  }
+  
+  var sheet = ss.getSheetByName('Payment_Reminder_Recipients');
+  if (!sheet) {
+    sheet = ss.insertSheet('Payment_Reminder_Recipients');
+    sheet.appendRow([
+      'Email',
+      'Full Name',
+      'Role',
+      'Team Name',
+      'Offer_Status',
+      'Track',
+      'Deadline',
+      'Payment_Status',
+      'Reminder_Category',
+      'Email_Status'
+    ]);
+    sheet.getRange(1, 1, 1, 10).setFontWeight('bold').setBackground('#7c1415').setFontColor('#ffffff');
+    sheet.setFrozenRows(1);
+    SpreadsheetApp.getUi().alert(
+      'Sheet "Payment_Reminder_Recipients" created successfully!\n\n' +
+      'Next Step: Open "tools/payment_reminder_recipients.csv", copy the 99 recipient rows, and paste them into this sheet. Then click:\n\n' +
+      'Qiskit Fall Fest 2026 -> 16. Start Hackathon Payment Reminder Campaign'
+    );
+  } else {
+    SpreadsheetApp.getUi().alert('Sheet "Payment_Reminder_Recipients" already exists.');
+  }
+}
+
+/**
+ * 15. Dispatches a single test payment reminder email to sahgyan9@gmail.com.
+ */
+function sendTestPaymentReminderEmail() {
+  var testEmail = 'sahgyan9@gmail.com';
+  try {
+    sendPaymentReminderEmail(
+      testEmail,
+      'Gyan Kumar Sah (Test)',
+      'leader',
+      'IgniteNova',
+      'team_lead',
+      '22 Oct 2026, 11:59 PM IST'
+    );
+    SpreadsheetApp.getUi().alert('Test Payment Reminder email successfully dispatched to ' + testEmail + '!\nPlease check your inbox.');
+  } catch (err) {
+    SpreadsheetApp.getUi().alert('Failed to send test email: ' + err.toString());
+  }
+}
+
+/**
+ * 16. Batched campaign dispatcher for the payment reminder cohort (99 recipients).
+ */
+function startPaymentReminderEmailCampaign() {
+  var ss = getTargetSpreadsheet();
+  if (!ss) {
+    SpreadsheetApp.getUi().alert('Could not locate active Google Spreadsheet.');
+    return;
+  }
+  
+  var sheet = ss.getSheetByName('Payment_Reminder_Recipients') || ss.getActiveSheet();
+  if (!sheet) {
+    SpreadsheetApp.getUi().alert('Please open or create the "Payment_Reminder_Recipients" sheet first.');
+    return;
+  }
+  
+  var lastRow = sheet.getLastRow();
+  if (lastRow <= 1) {
+    SpreadsheetApp.getUi().alert('The active sheet has no recipient rows. Please paste the recipient data from tools/payment_reminder_recipients.csv first.');
+    return;
+  }
+  
+  var headerMap = getHeaderMap(sheet);
+  var colEmail = headerMap['email'] || 1;
+  var colName = headerMap['full name'] || headerMap['name'] || 2;
+  var colRole = headerMap['role'] || 3;
+  var colTeam = headerMap['team name'] || headerMap['team'] || 4;
+  var colDeadline = headerMap['deadline'] || 7;
+  var colCategory = headerMap['reminder_category'] || headerMap['category'] || 9;
+  var colStatus = headerMap['email_status'] || 10;
+  
+  var dataRange = sheet.getRange(2, 1, lastRow - 1, Math.max(colStatus, 10));
+  var values = dataRange.getValues();
+  
+  var remainingQuota = 0;
+  try {
+    remainingQuota = MailApp.getRemainingDailyQuota();
+  } catch (e) {
+    remainingQuota = 100;
+  }
+  
+  var toProcess = 0;
+  for (var i = 0; i < values.length; i++) {
+    var status = String(values[i][colStatus - 1] || '').trim();
+    if (!status || status.indexOf('Sent') === -1) {
+      toProcess++;
+    }
+  }
+  
+  if (toProcess === 0) {
+    SpreadsheetApp.getUi().alert('All recipients in this sheet have already been emailed.');
+    return;
+  }
+  
+  var ui = SpreadsheetApp.getUi();
+  var confirm = ui.alert(
+    'Confirm Payment Reminder Email Campaign',
+    'Found ' + toProcess + ' pending recipients.\n' +
+    'Your remaining Gmail daily quota: ' + remainingQuota + ' emails.\n\n' +
+    'Do you want to begin dispatching?',
+    ui.ButtonSet.YES_NO
+  );
+  
+  if (confirm !== ui.Button.YES) return;
+  
+  var sentCount = 0;
+  var errorCount = 0;
+  
+  for (var j = 0; j < values.length; j++) {
+    var currentStatus = String(values[j][colStatus - 1] || '').trim();
+    if (currentStatus && currentStatus.indexOf('Sent') !== -1) continue;
+    
+    var email = String(values[j][colEmail - 1] || '').trim();
+    var name = String(values[j][colName - 1] || '').trim() || email.split('@')[0];
+    var role = String(values[j][colRole - 1] || '').trim() || 'member';
+    var teamName = String(values[j][colTeam - 1] || '').trim();
+    var deadline = String(values[j][colDeadline - 1] || '').trim() || '22 Oct 2026, 11:59 PM IST';
+    var category = String(values[j][colCategory - 1] || '').trim() || 'unpaid_member';
+    
+    if (!email || email.indexOf('@') === -1) {
+      sheet.getRange(j + 2, colStatus).setValue('Skipped: Invalid Email').setBackground('#fde8e8');
+      continue;
+    }
+    
+    try {
+      sendPaymentReminderEmail(email, name, role, teamName, category, deadline);
+      sheet.getRange(j + 2, colStatus).setValue('Sent at ' + new Date().toLocaleTimeString()).setBackground('#e6f4ea');
+      sentCount++;
+      Utilities.sleep(400); // safety throttle
+    } catch (err) {
+      sheet.getRange(j + 2, colStatus).setValue('Error: ' + err.toString().slice(0, 80)).setBackground('#fce8e6');
+      errorCount++;
+    }
+  }
+  
+  SpreadsheetApp.getUi().alert(
+    'Campaign Complete!\n\n' +
+    'Successfully sent: ' + sentCount + '\n' +
+    'Errors: ' + errorCount
+  );
+}
+
+/**
+ * Dispatches a single formatted payment reminder email via GmailApp.
+ */
+function sendPaymentReminderEmail(recipientEmail, participantName, role, teamName, category, deadline) {
+  var portalUrl = 'https://www.qffsrmap2026.com/learning#campus-pass';
+  var arenaUrl = 'https://www.qffsrmap2026.com/learning/hackathon';
+  var whatsappUrl = 'https://chat.whatsapp.com/HoLFUpcm46L0qDE6VBdboW';
+  
+  var roleNoticeHtml = '';
+  var subject = '';
+  
+  if (category === 'team_lead') {
+    subject = 'Urgent: Team ' + teamName + ' Phase 2 Payment Window Extended to 22 Oct (11:59 PM IST)';
+    roleNoticeHtml = '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#fdf5f5;border:1px solid #e8b8bb;border-left:4px solid #7c1415;border-radius:8px;padding:18px 20px;margin:0 0 24px 0;"><tr><td>'
+      + '<div style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#7c1415;margin-bottom:4px;">Team Leader Responsibility</div>'
+      + '<div style="font-size:15px;font-weight:bold;color:#7c1415;margin-bottom:8px;">Coordinate Team Receipts &amp; Finalize Confirmed Desk</div>'
+      + '<p style="margin:0 0 10px 0;font-size:13.5px;color:#4a1d20;line-height:1.65;">'
+      + 'Your team <strong>' + teamName + '</strong>\'s payment window has been extended to <strong>' + deadline + '</strong>.'
+      + '</p>'
+      + '<p style="margin:0 0 10px 0;font-size:13.5px;color:#4a1d20;line-height:1.65;">'
+      + '<strong>Next Action:</strong> Ensure all your teammates sign into <a href="' + portalUrl + '" target="_blank" style="color:#7c1415;font-weight:bold;">qffsrmap2026.com/learning#campus-pass</a> and submit their &#8377;499 Flagship Pass receipt.'
+      + '</p>'
+      + '<p style="margin:0;font-size:13px;color:#4a1d20;line-height:1.6;">'
+      + '<strong>Leader Final Step:</strong> You will submit your own pass receipt last, which locks in your team\'s confirmed auditorium desk for the 24-hour sprint.'
+      + '</p>'
+      + '</td></tr></table>';
+  } else if (category === 'paid_member_waiting_for_team') {
+    subject = 'Receipt Confirmed: Team ' + teamName + ' Phase 2 Sprint | Qiskit Fall Fest 2026';
+    roleNoticeHtml = '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f0f7f3;border:1px solid #c2e0cf;border-left:4px solid #1e7e45;border-radius:8px;padding:18px 20px;margin:0 0 24px 0;"><tr><td>'
+      + '<div style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#1e7e45;margin-bottom:4px;">Teammate · Payment Received</div>'
+      + '<div style="font-size:15px;font-weight:bold;color:#1e7e45;margin-bottom:8px;">Your Receipt is Submitted · Nudge Your Teammates</div>'
+      + '<p style="margin:0 0 10px 0;font-size:13.5px;color:#2c4033;line-height:1.65;">'
+      + 'We have received your &#8377;499 Flagship Pass receipt for <strong>Team ' + teamName + '</strong>. Thank you!'
+      + '</p>'
+      + '<p style="margin:0;font-size:13px;color:#2c4033;line-height:1.6;">'
+      + 'Your team\'s payment window is open until <strong>' + deadline + '</strong>. Please remind your remaining teammates to submit their receipts so your team leader can complete the final confirmation.'
+      + '</p>'
+      + '</td></tr></table>';
+  } else if (category === 'confirmed_team_unpaid_member') {
+    subject = 'Action Required: Your INR 499 Flagship Pass for Team ' + teamName + ' | Qiskit Fall Fest 2026';
+    roleNoticeHtml = '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#fdf6ed;border:1px solid #f0d5b5;border-left:4px solid #b97e3e;border-radius:8px;padding:18px 20px;margin:0 0 24px 0;"><tr><td>'
+      + '<div style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#b97e3e;margin-bottom:4px;">Action Required · Newly Added Finalist</div>'
+      + '<div style="font-size:15px;font-weight:bold;color:#7c1415;margin-bottom:8px;">Submit Your &#8377;499 Flagship Pass Receipt</div>'
+      + '<p style="margin:0 0 10px 0;font-size:13.5px;color:#4f3d2a;line-height:1.65;">'
+      + 'You were recently added to <strong>Team ' + teamName + '</strong> for the onsite finals! Your team desk is confirmed, but your individual attendee pass is pending.'
+      + '</p>'
+      + '<p style="margin:0;font-size:13px;color:#4f3d2a;line-height:1.6;">'
+      + 'Please sign in to <a href="' + portalUrl + '" target="_blank" style="color:#7c1415;font-weight:bold;">qffsrmap2026.com/learning#campus-pass</a> before <strong>' + deadline + '</strong> to pay &#8377;499 on Easebuzz (Diamond Pass) and upload your receipt.'
+      + '</p>'
+      + '</td></tr></table>';
+  } else {
+    subject = 'Action Required: Your INR 499 Flagship Pass for Team ' + teamName + ' | Qiskit Fall Fest 2026';
+    roleNoticeHtml = '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#fdf6ed;border:1px solid #f0d5b5;border-left:4px solid #b97e3e;border-radius:8px;padding:18px 20px;margin:0 0 24px 0;"><tr><td>'
+      + '<div style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#b97e3e;margin-bottom:4px;">Action Required · Team Member</div>'
+      + '<div style="font-size:15px;font-weight:bold;color:#7c1415;margin-bottom:8px;">Submit Your &#8377;499 Flagship Pass on the Portal</div>'
+      + '<p style="margin:0 0 10px 0;font-size:13.5px;color:#4f3d2a;line-height:1.65;">'
+      + 'Your team <strong>' + teamName + '</strong> is an official finalist for Phase 2 at SRM University-AP!'
+      + '</p>'
+      + '<p style="margin:0 0 10px 0;font-size:13.5px;color:#4f3d2a;line-height:1.65;">'
+      + 'Your payment window has been extended to <strong>' + deadline + '</strong>. Each team member must pay &#8377;499 individually on Easebuzz and submit their receipt on the portal.'
+      + '</p>'
+      + '<p style="margin:0;font-size:13px;color:#4f3d2a;line-height:1.6;">'
+      + 'Log into <a href="' + portalUrl + '" target="_blank" style="color:#7c1415;font-weight:bold;">qffsrmap2026.com/learning#campus-pass</a> using your registered Google account (' + recipientEmail + ') to complete payment.'
+      + '</p>'
+      + '</td></tr></table>';
+  }
+
+  var htmlBody = '<!DOCTYPE html>'
+    + '<html lang="en">'
+    + '<head><meta charset="UTF-8"><style type="text/css">body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; } img { border: 0; outline: none; } body { margin: 0; padding: 24px 12px; background-color: #f5efea; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif; color: #231f20; line-height: 1.65; }</style></head>'
+    + '<body>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:660px;margin:0 auto;background-color:#ffffff;border:1px solid #e4dacb;border-radius:12px;overflow:hidden;">'
+    + '<tr><td style="background-color:#faf7f2;text-align:center;">'
+    + '<img src="https://www.qffsrmap2026.com/brand/qiskit-fall-fest-banner.png" alt="IBM Qiskit Fall Fest 2026" width="660" style="display:block;width:100%;max-width:660px;height:auto;border:0;">'
+    + '</td></tr>'
+    + '<tr><td style="background-color:#7c1415;padding:12px 24px;text-align:center;color:#fdf8f0;font-family:\'Georgia\',serif;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;font-weight:bold;">'
+    + 'IBM PARTNER PLUS · SRM UNIVERSITY-AP · FLAGSHIP HACKATHON ARENA'
+    + '</td></tr>'
+    + '<tr><td style="padding:32px 32px 36px 32px;">'
+    + '<p style="margin:0 0 14px 0;font-size:16px;font-weight:bold;color:#231f20;">Dear ' + participantName + ' (' + (role.charAt(0).toUpperCase() + role.slice(1)) + ' · Team: ' + teamName + '),</p>'
+    + roleNoticeHtml
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#fbf7ef;border-left:4px solid #7c1415;border-radius:0 6px 6px 0;padding:16px 20px;margin:0 0 24px 0;"><tr><td>'
+    + '<div style="font-weight:bold;color:#7c1415;margin-bottom:6px;font-size:14px;">All-Access Flagship Pass Privileges (&#8377;499 per member):</div>'
+    + '<ul style="margin:8px 0 8px 18px;padding:0;font-size:13.5px;color:#4f443b;line-height:1.6;">'
+    + '<li><strong>24-Hour Physical Sprint:</strong> Auditorium X-Lab on <strong>28 &amp; 29 October</strong> with dedicated seating and live IBM mentoring.</li>'
+    + '<li><strong>Quantum Capture The Flag (QCTF):</strong> Full entry to the flagship cybersecurity competition on <strong>27 October</strong>.</li>'
+    + '<li><strong>Quantum Startup Pitch Fest:</strong> Pitch your working prototype to venture investors and incubation leaders.</li>'
+    + '<li><strong>5-Day Catered Dining:</strong> Catered lunches and twice-daily refreshments across all five days (26–30 October).</li>'
+    + '<li><strong>Daily Campus Entry:</strong> 9:00 AM – 11:00 AM registration desks at SRM University-AP.</li>'
+    + '<li><strong>Do NOT purchase the &#8377;99 General Pass:</strong> The &#8377;99 pass is strictly for non-hackathon visitors and excludes sprint seating, QCTF, Pitch Fest, and meals.</li>'
+    + '</ul>'
+    + '</td></tr></table>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:24px auto 28px auto;"><tr><td style="background-color:#7c1415;border-radius:6px;text-align:center;">'
+    + '<a href="' + portalUrl + '" target="_blank" style="display:inline-block;padding:12px 26px;color:#ffffff;font-size:14px;font-weight:bold;text-decoration:none;">Open Flagship Pass Portal &rarr;</a>'
+    + '</td></tr></table>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#fbf7ef;border:1px solid #e1d3bf;border-radius:8px;padding:18px;margin:0 0 24px 0;"><tr><td>'
+    + '<h4 style="margin:0 0 6px 0;font-size:14.5px;color:#7c1415;font-weight:bold;">Finalists WhatsApp Community</h4>'
+    + '<p style="margin:0 0 12px 0;font-size:13px;color:#4f443b;line-height:1.5;">Join our coordination community for PG accommodation guidance near campus (approx. &#8377;500/night), arrival directions, and desk seating charts:</p>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="background-color:#2a6a43;border-radius:5px;">'
+    + '<a href="' + whatsappUrl + '" target="_blank" style="display:inline-block;padding:9px 18px;color:#ffffff;font-size:13px;font-weight:bold;text-decoration:none;">Join Finalists WhatsApp &rarr;</a>'
+    + '</td></tr></table></td></tr></table>'
+    + '<p style="margin:0 0 16px 0;font-size:14px;color:#3d3635;line-height:1.6;">We look forward to seeing <strong>Team ' + teamName + '</strong> build on campus and present your solutions to our IBM and industry panel on 28–29 October.</p>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:20px;"><tr><td style="border-left:3px solid #7c1415;padding-left:12px;">'
+    + '<p style="margin:0;font-size:13.5px;color:#231f20;line-height:1.5;">Best regards,<br><strong>Hackathon Technical Committee &amp; Organizing Board</strong><br>Partner Plus IBM Qiskit Fall Fest 2026<br>School of Engineering and Sciences, SRM University-AP</p>'
+    + '</td></tr></table></td></tr>'
+    + '<tr><td style="background-color:#faf7f2;border-top:1px solid #ebd9c2;padding:20px 32px;text-align:center;font-size:12px;color:#857a73;">'
+    + 'Hackathon Arena: <a href="' + arenaUrl + '" target="_blank" style="color:#7c1415;text-decoration:underline;">qffsrmap2026.com/learning/hackathon</a> &nbsp;·&nbsp; Pass Portal: <a href="' + portalUrl + '" target="_blank" style="color:#7c1415;text-decoration:underline;">qffsrmap2026.com/learning#campus-pass</a><br>'
+    + 'SRM University-AP, Neerukonda, Mangalagiri Mandal, Andhra Pradesh 522240'
+    + '</td></tr></table></body></html>';
+
+  GmailApp.sendEmail(recipientEmail, subject, 'Please view this email in an HTML-compatible client.', {
+    htmlBody: htmlBody,
+    name: 'Qiskit Fall Fest 2026'
+  });
+}
