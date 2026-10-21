@@ -5,7 +5,10 @@ import clsx from 'clsx';
 import { Copy, Download, Loader2, RefreshCw, Search } from 'lucide-react';
 import {
   ACCOMMODATION_DATES,
+  ARRIVAL_MODE_LABEL,
   GENDER_LABEL,
+  arrivalTime,
+  missingTravelDetails,
   formatStayDate,
   stayNights,
   type AccommodationRequest,
@@ -48,7 +51,7 @@ type InstitutionConfirmation = {
   shortlistedExternal: number;
   shortlistedExternalConfirmed: number;
 };
-type Filter = 'needs' | 'general_pass' | 'allocated' | 'not_needed' | 'not_eligible' | 'all';
+type Filter = 'needs' | 'missing_travel' | 'general_pass' | 'allocated' | 'not_needed' | 'not_eligible' | 'all';
 
 const GENDERS: Gender[] = ['male', 'female', 'other'];
 
@@ -94,6 +97,34 @@ export function AdminAccommodationView() {
   const staying = rows.filter((r) => r.group === 'shortlisted' && wantsStay(r));
   const passStaying = rows.filter((r) => r.group === 'general_pass' && wantsStay(r));
   const notEligible = rows.filter((r) => !r.group);
+  // Answered before travel details were asked; the profile asks them to add the details
+  const missingTravel = rows.filter((r) => r.group && missingTravelDetails(r));
+
+  // Pickup planning: everyone in either group who wants a room, by arrival day and point
+  const arrivals = useMemo(() => {
+    const groups = new Map<string, { date: string; point: string; times: string[] }>();
+    for (const r of [...staying, ...passStaying]) {
+      if (!r.check_in || !r.arrival_point) continue;
+      const key = `${r.check_in}|${r.arrival_point}`;
+      const g = groups.get(key) || { date: r.check_in, point: r.arrival_point, times: [] };
+      g.times.push(arrivalTime(r.arrival_time) || '?');
+      groups.set(key, g);
+    }
+    return Array.from(groups.values())
+      .map((g) => ({ ...g, times: g.times.sort() }))
+      .sort((a, b) => a.date.localeCompare(b.date) || b.times.length - a.times.length);
+  }, [staying, passStaying]);
+
+  const fromCities = useMemo(() => {
+    const counts = new Map<string, { label: string; n: number }>();
+    for (const r of [...staying, ...passStaying]) {
+      const label = r.travelling_from?.trim();
+      if (!label) continue;
+      const key = label.toLowerCase();
+      counts.set(key, { label: counts.get(key)?.label || label, n: (counts.get(key)?.n || 0) + 1 });
+    }
+    return Array.from(counts.values()).sort((a, b) => b.n - a.n);
+  }, [staying, passStaying]);
 
   const byGender = useMemo(() => {
     const out: Record<Gender, number> = { male: 0, female: 0, other: 0 };
@@ -118,6 +149,7 @@ export function AdminAccommodationView() {
     if (filter === 'needs' && !(r.group === 'shortlisted' && wantsStay(r))) return false;
     if (filter === 'general_pass' && r.group !== 'general_pass') return false;
     if (filter === 'not_eligible' && r.group) return false;
+    if (filter === 'missing_travel' && !(r.group && missingTravelDetails(r))) return false;
     if (filter === 'allocated' && r.status !== 'allocated') return false;
     if (filter === 'not_needed' && r.needs_accommodation) return false;
     if (!query.trim()) return true;
@@ -159,7 +191,8 @@ export function AdminAccommodationView() {
       'accommodation-requests',
       [
         'Name', 'Email', 'Phone', 'Phone confirmed', 'Emergency contact', 'Emergency phone', 'Group', 'Phase 2 offer', 'Team', 'Institution', 'Institution confirmed',
-        'Gender', 'Needs stay', 'Arrival (check-in)', 'Departure (check-out)', 'Nights', 'Notes', 'Status',
+        'Gender', 'Needs stay', 'Arrival (check-in)', 'Departure (check-out)', 'Nights',
+        'Travelling from', 'Arriving by', 'Arriving at', 'Arrival time', 'Notes', 'Status',
         'Allocation', 'Submitted by', 'Updated',
       ],
       rows.map((r) => [
@@ -179,11 +212,32 @@ export function AdminAccommodationView() {
         r.check_in,
         r.check_out,
         stayNights(r.check_in, r.check_out).length || '',
+        r.travelling_from,
+        r.arrival_mode ? ARRIVAL_MODE_LABEL[r.arrival_mode] : '',
+        r.arrival_point,
+        arrivalTime(r.arrival_time),
         r.notes,
         r.status,
         r.allocation_notes,
         r.submitted_by,
         r.updated_at,
+      ])
+    );
+  }
+
+  function exportMissingTravelCsv() {
+    downloadCsv(
+      'accommodation-missing-travel-details',
+      ['Name', 'Email', 'Phone', 'WhatsApp link', 'Group', 'Team', 'Check-in', 'Check-out'],
+      missingTravel.map((r) => [
+        r.full_name,
+        r.email,
+        r.contact_phone,
+        whatsappLink(r.contact_phone),
+        r.group === 'general_pass' ? 'General Pass' : 'Shortlisted',
+        r.team_name,
+        r.check_in,
+        r.check_out,
       ])
     );
   }
@@ -245,7 +299,7 @@ export function AdminAccommodationView() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-3">
         {[
           { label: 'Need a stay (shortlisted)', value: staying.length },
           { label: GENDER_LABEL.male, value: byGender.male },
@@ -255,6 +309,7 @@ export function AdminAccommodationView() {
           { label: 'General Pass want a stay', value: passStaying.length },
           { label: 'Not answered', value: unanswered.length },
           { label: 'Not eligible', value: notEligible.length },
+          { label: 'Missing travel details', value: missingTravel.length },
         ].map((t) => (
           <div key={t.label} className={tile}>
             <p className="text-xs text-slate-500 dark:text-slate-400">{t.label}</p>
@@ -340,6 +395,68 @@ export function AdminAccommodationView() {
         </div>
       </div>
 
+      <div className={tile}>
+        <h3 className="text-sm font-semibold text-slate-900 dark:text-[#FAF6F3] mb-3">Arrivals for pickup (shortlisted and General Pass)</h3>
+        {arrivals.length === 0 ? (
+          <p className="text-sm text-slate-500">No travel details yet.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-slate-500 dark:text-slate-400">
+                  <th className="py-2 pr-4 font-medium">Arrival day</th>
+                  <th className="py-2 pr-4 font-medium">Arriving at</th>
+                  <th className="py-2 pr-4 font-medium text-right">People</th>
+                  <th className="py-2 font-medium">Times</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-[#250D11]">
+                {arrivals.map((a) => (
+                  <tr key={`${a.date}-${a.point}`}>
+                    <td className="py-2 pr-4 whitespace-nowrap">{formatStayDate(a.date)}</td>
+                    <td className="py-2 pr-4">{a.point}</td>
+                    <td className="py-2 pr-4 text-right tabular-nums font-semibold">{a.times.length}</td>
+                    <td className="py-2 text-xs text-slate-600 dark:text-slate-300 tabular-nums">{a.times.join(', ')}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {fromCities.length > 0 && (
+          <p className="mt-3 text-xs text-slate-600 dark:text-slate-300">
+            <span className="font-semibold">Travelling from:</span> {fromCities.map((c) => `${c.label} (${c.n})`).join(', ')}
+          </p>
+        )}
+      </div>
+
+      {missingTravel.length > 0 && (
+        <div className={clsx(tile, 'flex flex-wrap items-center justify-between gap-2')}>
+          <p className="text-sm text-slate-700 dark:text-slate-300">
+            <span className="font-semibold">{missingTravel.length}</span> asked for a room before travel details were added. Their profile
+            asks them to complete it.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => navigator.clipboard.writeText(missingTravel.map((r) => r.email).join(', '))}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 dark:border-[#3D1418] px-3 py-1.5 text-xs font-semibold cursor-pointer"
+            >
+              <Copy className="h-3.5 w-3.5" />
+              Copy emails
+            </button>
+            <button
+              type="button"
+              onClick={exportMissingTravelCsv}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-burgundy text-white px-3 py-1.5 text-xs font-semibold cursor-pointer"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Export CSV
+            </button>
+          </div>
+        </div>
+      )}
+
       {unanswered.length > 0 && (
         <div className={clsx(tile, 'space-y-2')}>
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -406,6 +523,7 @@ export function AdminAccommodationView() {
               ['allocated', 'Allocated'],
               ['not_needed', 'No stay needed'],
               ['general_pass', `General Pass (${rows.filter((r) => r.group === 'general_pass').length})`],
+              ['missing_travel', `Missing travel details (${missingTravel.length})`],
               ['not_eligible', `Not eligible (${notEligible.length})`],
               ['all', 'All'],
             ] as [Filter, string][]
@@ -489,6 +607,15 @@ export function AdminAccommodationView() {
                       ) : (
                         <p className="text-xs text-slate-500 mt-0.5">No stay needed</p>
                       )}
+                      {r.needs_accommodation &&
+                        (r.travelling_from && r.arrival_mode ? (
+                          <p className="text-xs text-slate-700 dark:text-slate-300">
+                            From {r.travelling_from} by {ARRIVAL_MODE_LABEL[r.arrival_mode].toLowerCase()} · arriving {r.arrival_point} around{' '}
+                            {arrivalTime(r.arrival_time)}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-amber-700 dark:text-amber-300">Travel details not added yet</p>
+                        ))}
                       {r.emergency_phone && (
                         <p className="text-xs text-slate-500">
                           Emergency: {r.emergency_name} · {r.emergency_phone}

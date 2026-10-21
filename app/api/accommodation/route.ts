@@ -10,6 +10,8 @@ import {
   ACCOMMODATION_CONFIG_KEY,
   ACCOMMODATION_DATES,
   ACCOMMODATION_TABLE,
+  ARRIVAL_MODE_LABEL,
+  OTHER_ARRIVAL_POINT,
   type AccommodationPerson,
   type AccommodationRequest,
 } from '@/lib/accommodation';
@@ -115,6 +117,12 @@ export async function POST(request: NextRequest) {
     const gender = body?.gender;
     const checkIn = body?.checkIn || null;
     const checkOut = body?.checkOut || null;
+    const clean = (v: unknown, max: number) => String(v || '').trim().replace(/\s+/g, ' ').slice(0, max);
+    const travellingFrom = clean(body?.travellingFrom, 80);
+    const arrivalMode = String(body?.arrivalMode || '');
+    // A listed point, or the place typed for "Other"
+    const arrivalPoint = clean(body?.arrivalPoint === OTHER_ARRIVAL_POINT ? body?.arrivalPointOther : body?.arrivalPoint, 80);
+    const arrivalTimeValue = String(body?.arrivalTime || '').slice(0, 5);
 
     const [ctx, configRes] = await Promise.all([
       resolveContext(email, session.fullName || email.split('@')[0]),
@@ -143,6 +151,18 @@ export async function POST(request: NextRequest) {
       if (!ACCOMMODATION_DATES.includes(checkIn) || !ACCOMMODATION_DATES.includes(checkOut) || checkOut <= checkIn) {
         return NextResponse.json({ error: 'Choose a check-out date after the check-in date.' }, { status: 400 });
       }
+      if (travellingFrom.length < 2) {
+        return NextResponse.json({ error: 'Enter the city or town you are travelling from.' }, { status: 400 });
+      }
+      if (!(arrivalMode in ARRIVAL_MODE_LABEL)) {
+        return NextResponse.json({ error: 'Choose how you will arrive.' }, { status: 400 });
+      }
+      if (arrivalPoint.length < 2) {
+        return NextResponse.json({ error: 'Choose where you will arrive.' }, { status: 400 });
+      }
+      if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(arrivalTimeValue)) {
+        return NextResponse.json({ error: 'Enter your approximate arrival time.' }, { status: 400 });
+      }
     }
 
     const { data: existing, error: existingErr } = await supabaseAdmin
@@ -168,6 +188,10 @@ export async function POST(request: NextRequest) {
       gender: needs ? gender : ['male', 'female', 'other'].includes(gender) ? gender : null,
       check_in: needs ? checkIn : null,
       check_out: needs ? checkOut : null,
+      travelling_from: needs ? travellingFrom : null,
+      arrival_mode: needs ? arrivalMode : null,
+      arrival_point: needs ? arrivalPoint : null,
+      arrival_time: needs ? arrivalTimeValue : null,
       team_id: ctx.teamId,
       institution: candidate.institution,
       // Omitted fields keep their stored value on update

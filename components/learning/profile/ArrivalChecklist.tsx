@@ -4,7 +4,7 @@ import React from 'react';
 import clsx from 'clsx';
 import { ArrowRight, CheckCircle2, Circle } from 'lucide-react';
 import type { ProfileOverview } from '@/hooks/use-profile-overview';
-import type { AccommodationStatus } from '@/lib/accommodation';
+import { missingTravelDetails, type AccommodationStatus } from '@/lib/accommodation';
 import type { TransportStatus } from '@/lib/transport';
 import { normalizeCertificateName } from '@/lib/certificate-name-shared';
 import { OPEN_CONTACT_EVENT } from '@/lib/phone';
@@ -30,8 +30,8 @@ interface Item {
 const sameName = (a: string | null | undefined, b: string | null | undefined) =>
   normalizeCertificateName(a || '').toLowerCase() === normalizeCertificateName(b || '').toLowerCase();
 
-function openersFor(people: { isYou: boolean; name: string; request: unknown }[]) {
-  const open = people.filter((p) => !p.request);
+function openersFor<R>(people: { isYou: boolean; name: string; request: R | null }[], incomplete: (r: R) => boolean = () => false) {
+  const open = people.filter((p) => !p.request || incomplete(p.request));
   const others = open.filter((p) => !p.isYou).map((p) => p.name);
   return { open: open.length, others };
 }
@@ -139,7 +139,8 @@ export function ArrivalChecklist({
   }
 
   if (accommodation?.eligible) {
-    const { open, others } = openersFor(accommodation.people);
+    const { open, others } = openersFor(accommodation.people, missingTravelDetails);
+    const youMissingDetails = accommodation.people.some((p) => p.isYou && missingTravelDetails(p.request));
     items.push({
       id: 'stay',
       title: 'Answer accommodation (Non-SRMAP Student)',
@@ -147,10 +148,12 @@ export function ArrivalChecklist({
         open === 0
           ? 'Answered. The organizing team confirms each booking.'
           : others.length
-            ? `Still to answer: ${others.join(', ')}${open > others.length ? ' and you' : ''}.`
-            : 'Rooms are only for students who are not from SRM University-AP. Tell us if you need one, and your check-in and check-out dates.',
+            ? `Still to answer or add travel details: ${others.join(', ')}${open > others.length ? ' and you' : ''}.`
+            : youMissingDetails
+              ? 'Add where you are travelling from, how and where you will arrive, and your arrival time.'
+              : 'Rooms are only for students who are not from SRM University-AP. Tell us if you need one, your dates and how you will travel.',
       done: open === 0,
-      linkLabel: open === 0 ? 'View' : 'Answer',
+      linkLabel: open === 0 ? 'View' : youMissingDetails ? 'Add details' : 'Answer',
       onLink: () => window.dispatchEvent(new Event(OPEN_ACCOMMODATION_EVENT)),
     });
   }

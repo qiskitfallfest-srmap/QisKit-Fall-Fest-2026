@@ -6,6 +6,12 @@ import clsx from 'clsx';
 import { AlertCircle, BedDouble, Loader2, RefreshCw } from 'lucide-react';
 import {
   ACCOMMODATION_DATES,
+  ARRIVAL_MODE_LABEL,
+  ARRIVAL_POINTS,
+  OTHER_ARRIVAL_POINT,
+  arrivalTime,
+  missingTravelDetails,
+  type ArrivalMode,
   DEFAULT_CHECK_IN,
   DEFAULT_CHECK_OUT,
   GENDER_LABEL,
@@ -41,12 +47,15 @@ function stayDetail(p: AccommodationPerson): string | undefined {
   const r = p.request;
   if (!r?.needs_accommodation || !r.check_in || !r.check_out) return undefined;
   const nights = stayNights(r.check_in, r.check_out).length;
-  return `${GENDER_LABEL[r.gender as Gender] || ''} · ${formatStayDate(r.check_in)} to ${formatStayDate(r.check_out)} (${nights} night${nights === 1 ? '' : 's'})`;
+  const stay = `${GENDER_LABEL[r.gender as Gender] || ''} · ${formatStayDate(r.check_in)} to ${formatStayDate(r.check_out)} (${nights} night${nights === 1 ? '' : 's'})`;
+  if (!r.travelling_from || !r.arrival_mode) return stay;
+  return `${stay} · From ${r.travelling_from} by ${ARRIVAL_MODE_LABEL[r.arrival_mode].toLowerCase()}, arriving ${r.arrival_point} around ${arrivalTime(r.arrival_time)}`;
 }
 
 function personState(p: AccommodationPerson): { tone: Tone; label: string } {
   const r = p.request;
   if (!r) return { tone: 'warning', label: 'Not answered' };
+  if (missingTravelDetails(r)) return { tone: 'warning', label: 'Add travel details' };
   if (!r.needs_accommodation) return { tone: 'neutral', label: 'No stay needed' };
   if (r.status === 'allocated') return { tone: 'success', label: 'Room allocated' };
   return { tone: 'info', label: 'Stay requested' };
@@ -63,7 +72,7 @@ const optionClass = (selected: boolean) =>
       : 'border-slate-300 dark:border-[#3D1418] bg-white dark:bg-[#150709] text-slate-700 dark:text-slate-200'
   );
 
-type ErrorField = 'needs' | 'gender' | 'dates' | 'form';
+type ErrorField = 'needs' | 'gender' | 'dates' | 'from' | 'mode' | 'point' | 'time' | 'form';
 
 function PersonForm({
   person,
@@ -82,6 +91,13 @@ function PersonForm({
   const [gender, setGender] = useState<Gender | ''>((r?.gender as Gender) || '');
   const [checkIn, setCheckIn] = useState(r?.check_in || DEFAULT_CHECK_IN);
   const [checkOut, setCheckOut] = useState(r?.check_out || DEFAULT_CHECK_OUT);
+  const [from, setFrom] = useState(r?.travelling_from || '');
+  const [mode, setMode] = useState<ArrivalMode | ''>(r?.arrival_mode || '');
+  // A stored point that is not in the list was typed under "Other"
+  const storedListed = !r?.arrival_point || ARRIVAL_POINTS.includes(r.arrival_point);
+  const [point, setPoint] = useState(r?.arrival_point ? (storedListed ? r.arrival_point : OTHER_ARRIVAL_POINT) : '');
+  const [pointOther, setPointOther] = useState(storedListed ? '' : r?.arrival_point || '');
+  const [time, setTime] = useState(arrivalTime(r?.arrival_time ?? null));
   const [phone, setPhone] = useState(r?.phone || '');
   const [notes, setNotes] = useState(r?.notes || '');
   const [busy, setBusy] = useState(false);
@@ -113,6 +129,10 @@ function PersonForm({
     if (field === 'needs') focusGroup(`${idBase}-needs`);
     else if (field === 'gender') focusGroup(`${idBase}-gender`);
     else if (field === 'dates') document.getElementById(`${idBase}-out`)?.focus();
+    else if (field === 'mode') focusGroup(`${idBase}-mode`);
+    else if (field === 'point')
+      document.getElementById(point === OTHER_ARRIVAL_POINT ? `${idBase}-point-other` : `${idBase}-point`)?.focus();
+    else if (field !== 'form') document.getElementById(`${idBase}-${field}`)?.focus();
   }
 
   function changeCheckIn(value: string) {
@@ -129,6 +149,11 @@ function PersonForm({
     if (needs === null) return fail('needs', 'Choose whether a place to stay is needed.');
     if (needs && !gender) return fail('gender', 'Select a gender so rooms can be allocated.');
     if (needs && checkOut <= checkIn) return fail('dates', 'Check-out must be after check-in.');
+    if (needs && from.trim().length < 2) return fail('from', 'Enter the city or town you are travelling from.');
+    if (needs && !mode) return fail('mode', 'Choose how you will arrive.');
+    if (needs && (!point || (point === OTHER_ARRIVAL_POINT && pointOther.trim().length < 2)))
+      return fail('point', 'Choose where you will arrive.');
+    if (needs && !time) return fail('time', 'Enter your approximate arrival time.');
     setBusy(true);
     setError(null);
     try {
@@ -141,6 +166,11 @@ function PersonForm({
           gender: gender || undefined,
           checkIn,
           checkOut,
+          travellingFrom: from,
+          arrivalMode: mode || undefined,
+          arrivalPoint: point,
+          arrivalPointOther: pointOther,
+          arrivalTime: time,
           notes,
           ...(person.isYou ? { phone } : {}),
         }),
@@ -272,6 +302,105 @@ function PersonForm({
               {nights > 0 ? `${nights} night${nights === 1 ? '' : 's'}` : 'Choose a check-out after check-in.'}
             </p>
           </div>
+
+          <fieldset className="space-y-3">
+            <legend className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-1">Travel to campus</legend>
+            <div>
+              <label htmlFor={`${idBase}-from`} className="block text-sm font-medium text-slate-800 dark:text-slate-100 mb-1">
+                Travelling from (city or town)
+              </label>
+              <input
+                id={`${idBase}-from`}
+                value={from}
+                onChange={(e) => {
+                  setFrom(e.target.value);
+                  if (error?.field === 'from') setError(null);
+                }}
+                maxLength={80}
+                placeholder="e.g. Rajahmundry"
+                aria-invalid={error?.field === 'from' || undefined}
+                aria-describedby={describedBy('from')}
+                className={inputClass}
+              />
+            </div>
+            <div role="radiogroup" aria-label="Arriving by" aria-describedby={describedBy('mode')}>
+              <p className="text-sm font-medium text-slate-800 dark:text-slate-100 mb-1">Arriving by</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {(Object.keys(ARRIVAL_MODE_LABEL) as ArrivalMode[]).map((m) => (
+                  <label key={m} className={optionClass(mode === m)}>
+                    <input
+                      type="radio"
+                      name={`${idBase}-mode`}
+                      checked={mode === m}
+                      onChange={() => {
+                        setMode(m);
+                        if (error?.field === 'mode') setError(null);
+                      }}
+                      className="accent-[#6C151E]"
+                    />
+                    {ARRIVAL_MODE_LABEL[m]}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label htmlFor={`${idBase}-point`} className="block text-sm font-medium text-slate-800 dark:text-slate-100 mb-1">
+                  Arriving at
+                </label>
+                <select
+                  id={`${idBase}-point`}
+                  value={point}
+                  onChange={(e) => {
+                    setPoint(e.target.value);
+                    if (error?.field === 'point') setError(null);
+                  }}
+                  aria-invalid={(error?.field === 'point' && point !== OTHER_ARRIVAL_POINT) || undefined}
+                  aria-describedby={describedBy('point')}
+                  className={inputClass}
+                >
+                  <option value="">Choose</option>
+                  {[...ARRIVAL_POINTS, OTHER_ARRIVAL_POINT].map((pt) => (
+                    <option key={pt} value={pt}>
+                      {pt}
+                    </option>
+                  ))}
+                </select>
+                {point === OTHER_ARRIVAL_POINT && (
+                  <input
+                    id={`${idBase}-point-other`}
+                    value={pointOther}
+                    onChange={(e) => {
+                      setPointOther(e.target.value);
+                      if (error?.field === 'point') setError(null);
+                    }}
+                    maxLength={80}
+                    placeholder="Station, stop or landmark"
+                    aria-label="Other arrival point"
+                    aria-invalid={error?.field === 'point' || undefined}
+                    className={clsx(inputClass, 'mt-2')}
+                  />
+                )}
+              </div>
+              <div>
+                <label htmlFor={`${idBase}-time`} className="block text-sm font-medium text-slate-800 dark:text-slate-100 mb-1">
+                  Approximate arrival time on {formatStayDate(checkIn)}
+                </label>
+                <input
+                  id={`${idBase}-time`}
+                  type="time"
+                  value={time}
+                  onChange={(e) => {
+                    setTime(e.target.value);
+                    if (error?.field === 'time') setError(null);
+                  }}
+                  aria-invalid={error?.field === 'time' || undefined}
+                  aria-describedby={describedBy('time')}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+          </fieldset>
         </>
       )}
 
@@ -298,7 +427,7 @@ function PersonForm({
           Notes (optional)
         </label>
         <p id={notesHintId} className="text-xs text-slate-600 dark:text-slate-400 mb-1">
-          Arrival time, accessibility needs or roommate preference.
+          Accessibility needs or roommate preference.
         </p>
         <textarea
           id={`${idBase}-notes`}
@@ -354,7 +483,7 @@ export function AccommodationCard({ mayBeExternal }: { mayBeExternal: boolean })
   // "Needs your attention" opens the first unanswered row
   useEffect(() => {
     function open() {
-      const first = data?.people.find((p) => !p.request);
+      const first = data?.people.find((p) => !p.request || missingTravelDetails(p.request));
       document.getElementById('accommodation')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       if (first && !data?.closed && data?.contactConfirmed) setEditing(first.email);
     }
@@ -381,7 +510,7 @@ export function AccommodationCard({ mayBeExternal }: { mayBeExternal: boolean })
   }
   if (!data.eligible) return null;
 
-  const unanswered = data.people.filter((p) => !p.request).length;
+  const unanswered = data.people.filter((p) => !p.request || missingTravelDetails(p.request)).length;
   const multiple = data.people.length > 1;
 
   function close(email: string, message?: string) {

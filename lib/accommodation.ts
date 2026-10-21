@@ -43,6 +43,37 @@ export function stayNights(checkIn: string | null, checkOut: string | null): str
   return ACCOMMODATION_DATES.filter((d) => d >= checkIn && d < checkOut);
 }
 
+export type ArrivalMode = 'train' | 'bus' | 'flight' | 'own_vehicle';
+
+export const ARRIVAL_MODE_LABEL: Record<ArrivalMode, string> = {
+  train: 'Train',
+  bus: 'Bus',
+  flight: 'Flight',
+  own_vehicle: 'Own vehicle',
+};
+
+export const OTHER_ARRIVAL_POINT = 'Other';
+
+export const ARRIVAL_POINTS = [
+  'Vijayawada Railway Station',
+  'Vijayawada Bus Stand (PNBS)',
+  'Vijayawada Airport (Gannavaram)',
+  'Guntur Railway Station',
+  'Guntur Bus Stand',
+  'Directly to campus',
+];
+
+/** "HH:MM" from a Postgres TIME value ("HH:MM:SS") */
+export function arrivalTime(value: string | null): string {
+  return value ? value.slice(0, 5) : '';
+}
+
+/** A room request saved before travel details were asked, or saved without them */
+export function missingTravelDetails(r: AccommodationRequest | null): boolean {
+  if (!r?.needs_accommodation || r.status !== 'requested') return false;
+  return !(r.travelling_from && r.arrival_mode && r.arrival_point && r.arrival_time);
+}
+
 export interface AccommodationRequest {
   id: string;
   email: string;
@@ -55,6 +86,10 @@ export interface AccommodationRequest {
   institution: string | null;
   phone: string | null;
   notes: string | null;
+  travelling_from: string | null;
+  arrival_mode: ArrivalMode | null;
+  arrival_point: string | null;
+  arrival_time: string | null;
   submitted_by: string;
   status: 'requested' | 'allocated' | 'cancelled';
   allocation_notes: string | null;
