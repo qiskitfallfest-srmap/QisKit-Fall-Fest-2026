@@ -95,7 +95,7 @@ function PaymentCountdown({ deadlineIso, onExpire }: { deadlineIso: string; onEx
 
 const FLAGSHIP_INCLUSIONS = [
   'Hackathon Phase 2 (24-hour on-campus sprint)',
-  'Flagship Tracks: Quantum Startup Pitch & QCTF',
+  'Flagship Track: QCTF',
   'Special lunch & 2 snack servings on all 5 days',
   'Hardware setup & priority seating',
   'Everything in the General Pass',
@@ -145,7 +145,7 @@ const GATEWAY_OPENED_KEY = 'qff_pass_gateway_opened_v1';
 const PASS_INCLUSIONS = [
   'Keynotes by IBM Quantum researchers',
   'Hands-on masterclass workshops',
-  'Industry Tech Expo',
+  'Industry Tech Expo & Quantum Startup Pitch',
   'Quantum Reference Center Tour',
   'The Great Quantum Debate & Quantum Arcade',
 ];
@@ -1032,7 +1032,7 @@ export function OnCampusPassCard() {
               ))}
             </ul>
             <p className="text-[11px] text-rose-200/80 pt-2 border-t border-white/10 leading-snug">
-              Excludes Hackathon Phase 2, Startup Pitch, QCTF &amp; meals (Flagship Pass only).
+              Excludes Hackathon Phase 2, QCTF &amp; meals (Flagship Pass only).
             </p>
           </div>
           <div className="flex items-baseline gap-2 border-t border-white/20 pt-4">
@@ -1071,7 +1071,7 @@ export function OnCampusPassCard() {
             ))}
           </ul>
           <p className="text-[11px] text-rose-200/80 pt-2 border-t border-white/10 leading-snug">
-            Excludes Hackathon Phase 2, Startup Pitch, QCTF &amp; meals (Flagship Pass only).
+            Excludes Hackathon Phase 2, QCTF &amp; meals (Flagship Pass only).
           </p>
         </div>
         <div className="flex items-baseline gap-1.5 border-t border-white/20 pt-4">
@@ -1096,7 +1096,7 @@ export function OnCampusPassCard() {
                 Claim Your Free On-Campus Pass
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-                As an SRM-AP student, entry to keynote lectures, hands-on workshops, the Industry Tech Expo, Quantum Reference Center tour, debate, and open arcade games is 100% complimentary.
+                As an SRM-AP student, entry to keynote lectures, hands-on workshops, the Industry Tech Expo, the Quantum Startup Pitch, the Quantum Reference Center tour, the debate, and open arcade games is free.
               </p>
             </div>
 
@@ -1220,7 +1220,7 @@ export function OnCampusPassCard() {
             Pass Scope &amp; Exclusions Notice
           </p>
           <p className="leading-relaxed">
-            The <strong>₹99 General Pass</strong> grants full campus entry to keynotes, workshops, tech expo exhibits, the Quantum Reference Center tour, debates, and open games for all 5 days. It does <strong>not</strong> include entry to competitive flagship tracks (<strong>Hackathon Phase 2</strong>, <strong>Quantum Startup Pitch</strong>, <strong>QCTF</strong>) or the <strong>5-day special lunch and daily refreshments</strong>.
+            The <strong>₹99 General Pass</strong> grants full campus entry to keynotes, workshops, tech expo exhibits, the Quantum Reference Center tour, debates, and open games for all 5 days. It also includes the <strong>Quantum Startup Pitch</strong>. It does <strong>not</strong> include entry to competitive flagship tracks (<strong>Hackathon Phase 2</strong>, <strong>QCTF</strong>) or the <strong>5-day special lunch and daily refreshments</strong>.
           </p>
           <p className="leading-relaxed text-amber-800/80 dark:text-amber-300/80">
             These flagship tracks and meals are reserved exclusively for the <strong>₹499 All-Access Flagship Pass</strong> (awarded to shortlisted hackathon teams and qualified finalists).

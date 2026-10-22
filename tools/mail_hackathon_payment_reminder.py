@@ -151,7 +151,7 @@ def render_email(recipient):
           <li><strong>Quantum Startup Pitch Fest:</strong> Pitch your working prototype to venture investors and incubation leaders.</li>
           <li><strong>5-Day Catered Dining:</strong> Catered lunches and twice-daily refreshments across all five days (26–30 October).</li>
           <li><strong>Daily Campus Entry:</strong> 9:00 AM – 11:00 AM registration desks at SRM University-AP.</li>
-          <li><strong>Do NOT purchase the &#8377;99 General Pass:</strong> The &#8377;99 pass is strictly for non-hackathon visitors and excludes sprint seating, QCTF, Pitch Fest, and meals.</li>
+          <li><strong>Do NOT purchase the &#8377;99 General Pass:</strong> The &#8377;99 pass is strictly for non-hackathon visitors and excludes sprint seating, QCTF, and meals.</li>
         </ul>
       </div>
 

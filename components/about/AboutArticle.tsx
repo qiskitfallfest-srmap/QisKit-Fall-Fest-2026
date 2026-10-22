@@ -56,7 +56,7 @@ const PATHS = [
 ];
 
 const FLAGSHIP_PASS_BENEFITS = [
-  'Access to flagship activities, including Hackathon Phase 2, QCTF, and Startup Pitch',
+  'Access to flagship activities, including Hackathon Phase 2 and QCTF',
   'Special lunch on all five days of the festival',
   'Two snack servings per day during the five-day event',
   'Access to eligible festival activities and industry interactions',
@@ -518,11 +518,11 @@ export function AboutArticle() {
                   ₹99 <span className="text-sm font-sans font-semibold text-emerald-700 dark:text-emerald-400">(Free for SRM-AP Students)</span>
                 </p>
                 <p className="mt-4 text-[15px] leading-relaxed">
-                  For eligible campus activities, exhibitions, keynote sessions, workshops, Quantum Reference Center tour,
-                  debates, and open-participation games.
+                  For eligible campus activities, exhibitions, keynote sessions, workshops, the Quantum Startup Pitch,
+                  Quantum Reference Center tour, debates, and open-participation games.
                 </p>
                 <p className="mt-2 text-xs text-[#7A6B6C] dark:text-[#A8999A] leading-relaxed">
-                  Does not include Hackathon Phase 2, Startup Pitch, QCTF, or 5-day meals (reserved exclusively for the ₹499 Flagship Pass).
+                  Does not include Hackathon Phase 2, QCTF, or 5-day meals (reserved exclusively for the ₹499 Flagship Pass).
                 </p>
               </div>
               <div className="border-t border-[#6C151E]/20 bg-[#6C151E]/[0.04] p-6 sm:border-t-0 sm:border-l dark:border-[#F07A86]/20 dark:bg-[#F07A86]/[0.05]">

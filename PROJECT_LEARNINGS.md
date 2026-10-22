@@ -254,7 +254,7 @@ sahgyan9/Qiskit-Fall-Fest-SRMAP-2026 (PLANNING REPO)
 1. **Separation of Pass Tiers & Fee Integrity**:
    - **Online Phase is 100% Free**: Masterclasses, video lectures, concept quizzes, creative competitions (Reels, Poster, Essay), and Hackathon Phase 1 require zero payment.
    - **₹99 General Offline Pass**: Covers physical campus access, exhibitions, keynotes, non-flagship workshops, debates, and open games from October 26–30.
-   - **₹499 Flagship All-Access Pass**: Reserved exclusively for Hackathon Phase 2 finalists, QCTF qualifiers, and Startup Pitch competitors (includes 5 days of lunches and refreshments).
+   - **₹499 Flagship All-Access Pass**: Reserved exclusively for Hackathon Phase 2 finalists and QCTF qualifiers (the Quantum Startup Pitch moved to the General Pass on 22 Oct 2026) (includes 5 days of lunches and refreshments).
    - **Hackathon Guardrail**: Active hackathon leaders and accepted teammates are strictly blocked from submitting ₹99 claims (`app/api/pass/claim/route.ts` and `components/learning/OnCampusPassCard.tsx`), preventing confusion with their ₹499 finalist requirement.
 2. **Database & Storage Architecture (`public.festival_pass_claims`)**:
    - Stores `user_email`, `user_name`, `pass_tier`, `transaction_reference` (Easebuzz Transaction ID), `receipt_url` (`media/pass-receipts/*`), `amount_inr` (99.00), `status` (`claimed_provisional`, `verified`, `rejected`), `qr_code_token` (`qff26_[16-byte-hex]`), and check-in audit stamps (`checked_in`, `checked_in_at`, `checked_in_by`).
