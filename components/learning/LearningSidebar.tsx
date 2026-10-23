@@ -22,12 +22,15 @@ import {
   CheckCircle2,
   ArrowLeft,
   UserRound,
+  Flag,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { supabase } from '@/lib/supabase';
 import { CURRICULUM_SESSIONS } from '@/data/learning/curriculum';
 import { DAILY_COMPETITIONS } from '@/data/learning/competitions';
 import { useCurriculumSessions } from '@/hooks/use-curriculum-sessions';
+import { QCTF_PUBLIC_STATES, isQctfStaff } from '@/lib/qctf/access';
+import type { QctfState } from '@/data/qctf/tracks';
 import { useQuizzes } from '@/hooks/use-quizzes';
 import { useCodingChallengeStatus } from '@/hooks/use-coding-challenge';
 import { CertificateModal } from '@/components/learning/CertificateModal';
@@ -62,6 +65,7 @@ export function LearningSidebar() {
   const isHackathon = pathname === '/learning/hackathon';
   const isProfile = pathname === '/learning/profile';
   const isCodingChallenge = pathname === '/learning/qiskit-challenge' || pathname?.startsWith('/learning/qiskit-challenge');
+  const isQctf = pathname?.startsWith('/learning/qctf');
   const activeChallengeDay = searchParams?.get('challenge');
 
   // Detect active session from pathname (e.g. /learning/session/session-3 or /learning/session/session-3/quiz)
@@ -99,6 +103,18 @@ export function LearningSidebar() {
     );
   };
   const [session, setSession] = useState<any>(null);
+  const [qctfState, setQctfState] = useState<QctfState>('hidden');
+
+  useEffect(() => {
+    fetch('/api/qctf/status')
+      .then((res) => res.json())
+      .then((data) => data?.state && setQctfState(data.state))
+      .catch(() => {});
+  }, []);
+
+  const showQctf = Boolean(session) && (isQctfStaff(session) || QCTF_PUBLIC_STATES.includes(qctfState));
+  const qctfBadge =
+    qctfState === 'live' || qctfState === 'frozen' ? 'LIVE' : qctfState === 'closed' ? 'RESULTS' : qctfState === 'announced' ? 'OPEN' : 'PREVIEW';
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [progress, setProgress] = useState<Record<string, any>>({});
   const [competitions, setCompetitions] = useState<Record<string, any>>({});
@@ -484,6 +500,40 @@ export function LearningSidebar() {
           </span>
         )}
       </Link>
+
+      {/* QCTF: organizers and testers always; everyone signed in once the arena is announced */}
+      {showQctf && (
+        <Link
+          href="/learning/qctf"
+          onClick={() => setIsMobileMenuOpen(false)}
+          className={clsx(
+            'w-full flex items-center justify-between px-3 py-2 mb-2 rounded-lg transition-colors text-xs sm:text-sm font-semibold group',
+            isQctf
+              ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/20 dark:text-[#E89BA5] border border-burgundy/20 dark:border-burgundy/40 shadow-xs'
+              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1C0A0D] border border-transparent'
+          )}
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <Flag
+              className={clsx(
+                'w-3.5 h-3.5 shrink-0',
+                isQctf
+                  ? 'text-burgundy dark:text-[#E89BA5]'
+                  : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
+              )}
+            />
+            <div className="flex flex-col min-w-0">
+              <span className="truncate">Quantum Capture the Flag</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono font-normal">
+                Flagship · 27 Oct
+              </span>
+            </div>
+          </div>
+          <span className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-mono font-semibold bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+            {qctfBadge}
+          </span>
+        </Link>
+      )}
 
       <div className="mb-2">
         {/* Expandable Challenges Accordion Button */}

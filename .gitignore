@@ -51,3 +51,6 @@ __pycache__/
 
 # Jury evaluation workbook (participant emails and verdicts)
 QFF2026_Online_Competitions_Evaluation_Master.xlsx
+
+# QCTF competition challenges with plaintext flags (load with tools/qctf_challenges_to_sql.py)
+qctf-private/

@@ -17,8 +17,10 @@ const ratelimit = (redisUrl && redisToken) ? new Ratelimit({
 }) : null;
 
 export async function middleware(request: NextRequest) {
-  // Only apply rate limiting to API routes
-  if (request.nextUrl.pathname.startsWith('/api')) {
+  // Only apply rate limiting to API routes. QCTF is exempt: a whole hall plays from the
+  // campus network behind a few shared IPs, and flag submissions are limited per player
+  // in lib/qctf/server.ts instead.
+  if (request.nextUrl.pathname.startsWith('/api') && !request.nextUrl.pathname.startsWith('/api/qctf/')) {
     if (ratelimit) {
       const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1';
       const { success, limit, reset, remaining } = await ratelimit.limit(ip);

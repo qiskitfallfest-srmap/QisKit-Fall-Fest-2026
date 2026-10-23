@@ -18,6 +18,7 @@ import { AdminTransportView } from '@/components/learning/AdminTransportView';
 import { AdminRequestsView } from '@/components/learning/AdminRequestsView';
 import { AdminWhitelistManager } from '@/components/learning/AdminWhitelistManager';
 import { AdminOverridesPanel } from '@/components/learning/AdminOverridesPanel';
+import { AdminQctfView } from '@/components/learning/AdminQctfView';
 import {
   Shield,
   ListChecks,
@@ -36,6 +37,7 @@ import {
   Inbox,
   BedDouble,
   Bus,
+  Flag,
 } from 'lucide-react';
 
 type AdminTab =
@@ -53,7 +55,8 @@ type AdminTab =
   | 'notices'
   | 'accommodation'
   | 'transport'
-  | 'requests';
+  | 'requests'
+  | 'qctf';
 
 const NAV_GROUPS: { label: string; items: { id: AdminTab; label: string; icon: React.ElementType }[] }[] = [
   {
@@ -62,6 +65,10 @@ const NAV_GROUPS: { label: string; items: { id: AdminTab; label: string; icon: R
       { id: 'hackathon', label: 'Teams & Participants', icon: Trophy },
       { id: 'phase2', label: 'Phase 2 Results', icon: ListChecks },
     ],
+  },
+  {
+    label: 'On Campus',
+    items: [{ id: 'qctf', label: 'QCTF Control', icon: Flag }],
   },
   {
     label: 'Participants',
@@ -174,6 +181,7 @@ export default function AdminConsolePage() {
   const sections: Record<AdminTab, React.ReactNode> = {
     hackathon: <AdminHackathonView />,
     phase2: <AdminPhase2View />,
+    qctf: <AdminQctfView />,
     whitelist: <AdminWhitelistManager onChange={fetchConfig} onCountChange={setWhitelistCount} />,
     payments: <AdminPaymentsManager />,
     accommodation: <AdminAccommodationView />,
