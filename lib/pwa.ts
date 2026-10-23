@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useSyncExternalStore } from 'react';
 
 /**
  * Client helpers for the installable app and Web Push.
@@ -13,6 +13,17 @@ import { useEffect, useState, useSyncExternalStore } from 'react';
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
+// Captured at first load: the auth redirect handler and tab routing can replace the
+// URL (dropping the hash) before the profile card that the hash points at renders.
+let initialHash = typeof window !== 'undefined' ? window.location.hash : '';
+
+/** True once if the page was opened with this #hash; later calls return false. */
+export function consumeInitialHash(id: string): boolean {
+  if (initialHash !== `#${id}`) return false;
+  initialHash = '';
+  return true;
 }
 
 let deferredPrompt: BeforeInstallPromptEvent | null = null;
@@ -117,31 +128,55 @@ async function currentSubscription(): Promise<PushSubscription | null> {
   return reg.pushManager.getSubscription();
 }
 
-export function usePushState(): [PushState, (s: PushState) => void] {
-  const [state, setState] = useState<PushState>('loading');
+// One push state for the page, shared by the profile card, the checklist step and the
+// strip on learning pages, so turning it on in one place updates the others.
+let pushState: PushState = 'loading';
+let pushCheck: Promise<void> | null = null;
+const pushListeners = new Set<() => void>();
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      let next: PushState;
-      if (!pushSupported()) next = isIos() && !isStandalone() ? 'needs-install' : 'unsupported';
-      else if (Notification.permission === 'denied') next = 'denied';
-      else {
-        const sub = await currentSubscription().catch(() => null);
-        next = sub && Notification.permission === 'granted' ? 'on' : 'off';
-      }
-      if (!cancelled) setState(next);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  return [state, setState];
+function setPushState(next: PushState) {
+  pushState = next;
+  pushListeners.forEach((fn) => fn());
 }
 
-/** Must run from a click handler: browsers only show the permission prompt after a user gesture. */
+function checkPushState(): Promise<void> {
+  pushCheck ??= (async () => {
+    if (!pushSupported()) return setPushState(isIos() && !isStandalone() ? 'needs-install' : 'unsupported');
+    if (Notification.permission === 'denied') return setPushState('denied');
+    const sub = await currentSubscription().catch(() => null);
+    setPushState(sub && Notification.permission === 'granted' ? 'on' : 'off');
+  })();
+  return pushCheck;
+}
+
+function subscribePush(fn: () => void) {
+  pushListeners.add(fn);
+  void checkPushState();
+  return () => pushListeners.delete(fn);
+}
+
+/** The setter is kept for callers that apply a result themselves; enable/disablePush already update it. */
+export function usePushState(): [PushState, (s: PushState) => void] {
+  return [useSyncExternalStore(subscribePush, () => pushState, () => 'loading'), setPushState];
+}
+
+/**
+ * Turns push on for this device and updates every component showing the state.
+ * Must run from a click handler: browsers only show the permission prompt after a user gesture.
+ */
 export async function enablePush(): Promise<PushState> {
+  const next = await subscribeThisDevice();
+  setPushState(next);
+  return next;
+}
+
+export async function disablePush(): Promise<PushState> {
+  const next = await unsubscribeThisDevice();
+  setPushState(next);
+  return next;
+}
+
+async function subscribeThisDevice(): Promise<PushState> {
   if (!pushSupported()) return 'unsupported';
   if (!VAPID_PUBLIC_KEY) throw new Error('Notifications are not configured yet.');
 
@@ -170,7 +205,7 @@ export async function enablePush(): Promise<PushState> {
   return 'on';
 }
 
-export async function disablePush(): Promise<PushState> {
+async function unsubscribeThisDevice(): Promise<PushState> {
   const sub = await currentSubscription();
   if (sub) {
     await fetch('/api/push/subscribe', {

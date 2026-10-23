@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { LearningSidebar } from '@/components/learning/LearningSidebar';
 import { Footer } from '@/components/shared/Footer';
 import { LearningShell } from '@/components/learning/LearningShell';
+import { AppAlertStrip } from '@/components/learning/AppAlertStrip';
 
 export default function LearningLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -31,6 +32,8 @@ export default function LearningLayout({ children }: { children: React.ReactNode
 
       {/* Global Shared Footer - Suppressed on Python Coding Challenge in Qiskit */}
       {!isCodingChallenge && <Footer />}
+
+      <AppAlertStrip />
     </div>
   );
 }

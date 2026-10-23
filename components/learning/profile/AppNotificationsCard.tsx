@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AlertCircle, Bell, BellOff, Download, Loader2, Share, Smartphone } from 'lucide-react';
 import {
+  consumeInitialHash,
   disablePush,
   enablePush,
   promptInstall,
@@ -12,6 +13,8 @@ import {
   type PushState,
 } from '@/lib/pwa';
 import { Card, StatusPill, buttonStyles } from './profile-ui';
+
+export const APP_NOTIFICATIONS_CARD_ID = 'app-notifications';
 
 function InstallRow({ state }: { state: InstallState }) {
   const [busy, setBusy] = useState(false);
@@ -86,7 +89,7 @@ const PUSH_DETAIL: Record<PushState, string> = {
   unsupported: 'This browser does not support notifications. Try Chrome, Edge, Firefox or Safari.',
 };
 
-function PushRow({ state, setState }: { state: PushState; setState: (s: PushState) => void }) {
+function PushRow({ state }: { state: PushState }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -94,7 +97,7 @@ function PushRow({ state, setState }: { state: PushState; setState: (s: PushStat
     setBusy(true);
     setError(null);
     try {
-      setState(await action());
+      await action();
     } catch (err: any) {
       setError(err?.message || 'Something went wrong.');
     } finally {
@@ -153,20 +156,32 @@ function PushRow({ state, setState }: { state: PushState; setState: (s: PushStat
  */
 export function AppNotificationsCard({ alwaysShow = false }: { alwaysShow?: boolean }) {
   const install = useInstallState();
-  const [push, setPush] = usePushState();
+  const [push] = usePushState();
 
-  if (install === 'unknown' || push === 'loading') return null;
-  if (!alwaysShow && (push === 'on' || push === 'unsupported')) return null;
+  const hidden = install === 'unknown' || push === 'loading' || (!alwaysShow && (push === 'on' || push === 'unsupported'));
+
+  // Deep link from WhatsApp/email: /learning/profile#app-notifications. The card renders
+  // after the profile loads, so the browser's own hash scroll has already missed it.
+  useEffect(() => {
+    if (hidden || !consumeInitialHash(APP_NOTIFICATIONS_CARD_ID)) return;
+    const t = setTimeout(
+      () => document.getElementById(APP_NOTIFICATIONS_CARD_ID)?.scrollIntoView({ block: 'start' }),
+      150
+    );
+    return () => clearTimeout(t);
+  }, [hidden]);
+
+  if (hidden) return null;
 
   return (
     <Card
-      id="app-notifications"
+      id={APP_NOTIFICATIONS_CARD_ID}
       title="App and notifications"
       description="Install the portal on your phone and get on-campus updates during 26–30 October. Notifications are per device."
     >
       <div className="divide-y divide-slate-100 dark:divide-[#2A0E12]">
         <InstallRow state={install} />
-        <PushRow state={push} setState={setPush} />
+        <PushRow state={push} />
       </div>
     </Card>
   );

@@ -8,6 +8,8 @@ import { missingTravelDetails, type AccommodationStatus } from '@/lib/accommodat
 import type { TransportStatus } from '@/lib/transport';
 import { normalizeCertificateName } from '@/lib/certificate-name-shared';
 import { OPEN_CONTACT_EVENT } from '@/lib/phone';
+import { usePushState, type PushState } from '@/lib/pwa';
+import { APP_NOTIFICATIONS_CARD_ID } from './AppNotificationsCard';
 import { contactNeedsAnswer } from './ContactConfirmCard';
 import { OPEN_ACCOMMODATION_EVENT } from './AccommodationCard';
 import { OPEN_TRANSPORT_EVENT } from './TransportCard';
@@ -36,6 +38,13 @@ function openersFor<R>(people: { isYou: boolean; name: string; request: R | null
   return { open: open.length, others };
 }
 
+const PUSH_STEP_DETAIL: Record<Exclude<PushState, 'loading' | 'unsupported'>, string> = {
+  on: 'Alerts are on for this device.',
+  off: 'Get schedule changes, results and on-campus announcements on this phone.',
+  'needs-install': 'On iPhone, add the portal to your Home Screen first, then turn on alerts from the app.',
+  denied: 'Notifications are blocked for this site in your browser settings.',
+};
+
 /** Scroll to an element once the tab it lives on has rendered */
 function scrollToLater(id: string) {
   setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
@@ -59,6 +68,7 @@ export function ArrivalChecklist({
   onTab: (t: ProfileTab) => void;
 }) {
   const p = overview.profile;
+  const [push] = usePushState();
   const items: Item[] = [];
 
   if (certName) {
@@ -155,6 +165,27 @@ export function ArrivalChecklist({
       done: open === 0,
       linkLabel: open === 0 ? 'View' : youMissingDetails ? 'Add details' : 'Answer',
       onLink: () => window.dispatchEvent(new Event(OPEN_ACCOMMODATION_EVENT)),
+    });
+  }
+
+  // Per device, and left out where push cannot work at all (old browsers) or while it is checked
+  if (push !== 'loading' && push !== 'unsupported') {
+    const done = push === 'on';
+    items.push({
+      id: 'alerts',
+      title: 'Install the app and turn on alerts',
+      detail: PUSH_STEP_DETAIL[push],
+      done,
+      linkLabel: done ? 'View' : push === 'off' ? 'Turn on' : 'How',
+      onLink: () => {
+        // The overview shows the card while alerts are off; once on, it lives in Account
+        if (!done && document.getElementById(APP_NOTIFICATIONS_CARD_ID)) {
+          scrollToLater(APP_NOTIFICATIONS_CARD_ID);
+        } else {
+          onTab('account');
+          scrollToLater(APP_NOTIFICATIONS_CARD_ID);
+        }
+      },
     });
   }
 
