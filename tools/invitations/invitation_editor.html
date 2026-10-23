@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QFF 2026 Invitations</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=EB+Garamond:ital,wght@0,400;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style id="page-size">@page { size: 148mm 210mm; margin: 0; }</style>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --ink: #1f2414; --olive: #4d4a17; --gold: #a8862c; --muted: #5d5f52; --paper: #fffdf7;
+    --ui-bg: #f8fafc; --ui-panel: #ffffff; --ui-border: #e2e8f0; --ui-text: #0f172a; --ui-sub: #64748b; --ui-accent: #4d4a17;
+  }
+  body { background: var(--ui-bg); color: var(--ui-text); font-family: Inter, system-ui, sans-serif; font-size: 14px; }
+
+  /* ---------- Editor (screen only) ---------- */
+  .app { display: grid; grid-template-columns: 460px 1fr; min-height: 100vh; }
+  .panel { background: var(--ui-panel); border-right: 1px solid var(--ui-border); padding: 20px; overflow-y: auto; max-height: 100vh; position: sticky; top: 0; }
+  .panel h1 { font-size: 17px; font-weight: 600; }
+  .panel .hint { color: var(--ui-sub); font-size: 12.5px; margin-top: 4px; line-height: 1.45; }
+  .panel h2 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--ui-sub); margin: 22px 0 10px; }
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; align-items: center; }
+  button { font: inherit; font-size: 13px; padding: 7px 12px; border-radius: 6px; border: 1px solid var(--ui-border); background: #fff; color: var(--ui-text); cursor: pointer; }
+  button:hover { background: #f1f5f9; }
+  button.primary { background: var(--ui-accent); color: #fff; border-color: var(--ui-accent); }
+  button.primary:hover { background: #3c3a12; }
+  button.danger { color: #b91c1c; }
+  .status { font-size: 12px; color: var(--ui-sub); }
+  .invitee-row { border: 1px solid var(--ui-border); border-radius: 8px; padding: 12px; margin-bottom: 10px; background: #fff; }
+  .invitee-row.off { opacity: .55; }
+  .row-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .row-head label { display: flex; gap: 6px; align-items: center; font-size: 12.5px; color: var(--ui-sub); }
+  .row-head .num { font-weight: 600; color: var(--ui-text); font-size: 13px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .field { display: flex; flex-direction: column; gap: 3px; }
+  .field.full { grid-column: 1 / -1; }
+  .field span { font-size: 11.5px; color: var(--ui-sub); }
+  input[type=text], select { font: inherit; font-size: 13px; padding: 6px 8px; border: 1px solid var(--ui-border); border-radius: 6px; background: #fff; color: var(--ui-text); width: 100%; }
+  input[type=text]:focus, select:focus { outline: 2px solid #cbd5e1; border-color: #94a3b8; }
+  .preview { padding: 28px; display: flex; flex-wrap: wrap; gap: 24px; align-content: flex-start; justify-content: center; }
+  .preview .sheet { box-shadow: 0 1px 3px rgba(15,23,42,.12), 0 1px 2px rgba(15,23,42,.06); }
+
+  /* ---------- Invitation card (A5) ---------- */
+  .sheet { background: var(--paper); }
+  .card { width: 148mm; height: 210mm; padding: 7mm; background: var(--paper); color: var(--ink); font-family: 'EB Garamond', Georgia, serif;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .frame { height: 100%; border: 0.6mm solid var(--olive); outline: 0.25mm solid var(--gold); outline-offset: -1.6mm;
+    padding: 9mm 10mm 6mm; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .srm { height: 15mm; }
+  .ornament { display: flex; align-items: center; gap: 2.5mm; margin: 4mm 0 5mm; }
+  .ornament span { width: 18mm; height: 0.25mm; background: var(--gold); }
+  .ornament i { width: 1.8mm; height: 1.8mm; background: var(--gold); transform: rotate(45deg); }
+  .lead { font-style: italic; font-size: 11pt; color: var(--muted); line-height: 1.5; }
+  .event { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 17pt; letter-spacing: .06em; text-transform: uppercase; color: var(--olive); margin: .5mm 0 1mm; }
+  .invitee { margin: 5mm 0; width: 100%; display: flex; flex-direction: column; align-items: center; }
+  .name { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 21pt; line-height: 1.15; }
+  .designation { font-size: 11.5pt; margin-top: 1.2mm; }
+  .role { font-style: italic; font-size: 11pt; margin-top: 1.2mm; color: var(--olive); }
+  .rule { border-bottom: 0.25mm solid var(--muted); }
+  .rule-name { width: 88mm; height: 11mm; }
+  .rule-desig { width: 72mm; height: 8mm; margin-top: 1mm; }
+  .occasion { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 20pt; color: var(--olive); margin-top: .5mm; }
+  .sub { font-size: 10pt; color: var(--muted); }
+  .details { margin-top: 5.5mm; padding: 3.5mm 0; border-top: 0.25mm solid var(--gold); border-bottom: 0.25mm solid var(--gold); width: 96mm; display: grid; gap: 1.6mm; }
+  .details div { display: grid; grid-template-columns: 17mm 1fr; text-align: left; font-size: 10.5pt; line-height: 1.3; }
+  .k { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 8.5pt; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); padding-top: .6mm; }
+  .signs { margin-top: auto; width: 100%; display: flex; justify-content: space-around; }
+  .sign { width: 42mm; }
+  .sign-line { height: 10mm; border-bottom: 0.25mm solid var(--muted); }
+  .sign-name { font-size: 10pt; margin-top: 1mm; min-height: 1.3em; }
+  .sign-title { font-size: 9pt; font-style: italic; color: var(--muted); margin-top: .6mm; }
+  .rsvp { margin-top: 3mm; font-size: 9pt; color: var(--muted); letter-spacing: .04em; }
+  .foot { margin-top: 4mm; display: flex; align-items: center; gap: 2.5mm; font-size: 7.5pt; color: var(--muted); font-family: 'EB Garamond', Georgia, serif; }
+  .ibm { height: 3.2mm; }
+
+  /* A4 sheet mode: A5 card centred on A4 with crop marks */
+  body.a4 .sheet { width: 210mm; height: 297mm; display: flex; align-items: center; justify-content: center; position: relative; background: #fff; }
+  body.a4 .sheet::before, body.a4 .sheet::after { content: ""; position: absolute; left: 31mm; right: 31mm; top: 43.5mm; bottom: 43.5mm;
+    border: 0.15mm dashed #b8b8b8; pointer-events: none; }
+  body.a4 .sheet::after { display: none; }
+
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; }
+    .panel { position: static; max-height: none; border-right: 0; border-bottom: 1px solid var(--ui-border); }
+    .preview { padding: 16px; overflow-x: auto; justify-content: flex-start; }
+  }
+  /* Must come after the narrow-screen rules: an A5 page is narrower than 900px. */
+  @media print {
+    body { background: #fff; }
+    .app { display: block; min-height: 0; }
+    .panel { display: none; }
+    .preview { padding: 0; display: block; }
+    /* Clip each sheet to exactly one page so sub-pixel overflow never spills onto a blank page. */
+    .preview .sheet { box-shadow: none; height: 210mm; overflow: hidden; break-before: page; page-break-before: always; }
+    body.a4 .preview .sheet { height: 297mm; }
+    .preview .sheet:first-child { break-before: auto; page-break-before: auto; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="panel">
+    <h1>Qiskit Fall Fest 2026 &middot; Invitations</h1>
+    <p class="hint">Type each invitee's name and designation. Changes save automatically in this browser. Leave the name empty to print a blank line for handwriting.</p>
+    <div class="toolbar">
+      <button class="primary" id="print">Print</button>
+      <select id="paper" title="Paper">
+        <option value="a5">A5 paper (148 &times; 210 mm)</option>
+        <option value="a4">A4 paper, trim to A5</option>
+      </select>
+      <span class="status" id="status"></span>
+    </div>
+
+    <h2>Invitees</h2>
+    <div id="list"></div>
+    <div class="toolbar">
+      <button id="add">Add invitee</button>
+      <button id="export">Export list</button>
+      <button id="import">Import list</button>
+      <input type="file" id="import-file" accept="application/json" hidden>
+    </div>
+
+    <h2>Signatories and RSVP</h2>
+    <div class="grid2" id="settings"></div>
+    <div class="toolbar"><button class="danger" id="reset">Reset to default list</button></div>
+  </aside>
+
+  <main class="preview" id="preview"></main>
+</div>
+
+<script>
+  const SRM_LOGO = '../../public/brand/srm-ap-logo.png';
+  const IBM_LOGO = '../../public/images/branding/IBM_Quantum_logotype_pos_RGB_tight.webp';
+  const STORAGE_KEY = 'qff2026-invitations-v1';
+
+  // Source: data/offlineSchedule.ts (Day 01 inauguration, Day 05 valedictory).
+  const OCCASIONS = {
+    inaugural:   { label: 'Inaugural Ceremony',   date: 'Monday, 26 October 2026', time: '10:00 AM', venue: 'Auditorium, X-Lab' },
+    valedictory: { label: 'Valedictory Ceremony', date: 'Friday, 30 October 2026', time: '11:00 AM', venue: 'Auditorium, X-Lab' },
+  };
+  const CAMPUS = 'SRM University-AP, Amaravati, Andhra Pradesh';
+
+  const blankInvitee = (designation = '', occasion = 'inaugural') =>
+    ({ include: true, name: '', designation, organisation: designation ? 'SRM University-AP' : '', role: '', occasion });
+
+  const DEFAULT_STATE = {
+    invitees: [
+      blankInvitee('Vice Chancellor'),
+      blankInvitee('Pro Vice Chancellor'),
+      blankInvitee('Registrar'),
+      blankInvitee('Dean, School of Engineering and Sciences'),
+      blankInvitee('Dean, Quantum'),
+    ],
+    settings: { sign1Name: '', sign1Title: 'Faculty Coordinator', sign2Name: '', sign2Title: 'Convenor', rsvpName: '', rsvpPhone: '' },
+    paper: 'a5',
+  };
+
+  let state = load();
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        return { ...structuredClone(DEFAULT_STATE), ...saved, settings: { ...DEFAULT_STATE.settings, ...saved.settings } };
+      }
+    } catch (e) { /* fall through to defaults */ }
+    return structuredClone(DEFAULT_STATE);
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      setStatus('Saved');
+    } catch (e) {
+      setStatus('Could not save in this browser. Use Export list to keep a copy.');
+    }
+  }
+
+  let statusTimer;
+  function setStatus(text) {
+    const el = document.getElementById('status');
+    el.textContent = text;
+    clearTimeout(statusTimer);
+    statusTimer = setTimeout(() => { el.textContent = ''; }, 1800);
+  }
+
+  const esc = (s) => String(s ?? '').trim()
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  // ---------- Editor ----------
+  function renderList() {
+    const list = document.getElementById('list');
+    list.innerHTML = '';
+    state.invitees.forEach((inv, i) => {
+      const row = document.createElement('div');
+      row.className = 'invitee-row' + (inv.include ? '' : ' off');
+      row.innerHTML = `
+        <div class="row-head">
+          <span class="num">${i + 1}</span>
+          <label><input type="checkbox" data-k="include" ${inv.include ? 'checked' : ''}> Print</label>
+          <button class="danger" data-act="remove">Remove</button>
+        </div>
+        <div class="grid2">
+          <label class="field full"><span>Name with honorific</span>
+            <input type="text" data-k="name" placeholder="e.g. Prof. (Dr.) First Last" value="${esc(inv.name)}"></label>
+          <label class="field full"><span>Designation</span>
+            <input type="text" data-k="designation" placeholder="e.g. Vice Chancellor" value="${esc(inv.designation)}"></label>
+          <label class="field full"><span>Organisation</span>
+            <input type="text" data-k="organisation" placeholder="e.g. SRM University-AP" value="${esc(inv.organisation)}"></label>
+          <label class="field"><span>Role (optional)</span>
+            <input type="text" data-k="role" placeholder="e.g. Chief Guest" value="${esc(inv.role)}"></label>
+          <label class="field"><span>Occasion</span>
+            <select data-k="occasion">${Object.entries(OCCASIONS).map(([k, o]) =>
+              `<option value="${k}" ${inv.occasion === k ? 'selected' : ''}>${o.label}</option>`).join('')}</select></label>
+        </div>`;
+      row.addEventListener('input', (e) => {
+        const k = e.target.dataset.k;
+        if (!k) return;
+        inv[k] = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+        row.classList.toggle('off', !inv.include);
+        save(); renderPreview();
+      });
+      row.querySelector('[data-act=remove]').addEventListener('click', () => {
+        const label = inv.name || inv.designation || `invitee ${i + 1}`;
+        if (!confirm(`Remove ${label}?`)) return;
+        state.invitees.splice(i, 1);
+        save(); renderList(); renderPreview();
+      });
+      list.appendChild(row);
+    });
+  }
+
+  function renderSettings() {
+    const s = state.settings;
+    const fields = [
+      ['sign1Name', 'Signatory 1 name'], ['sign1Title', 'Signatory 1 title'],
+      ['sign2Name', 'Signatory 2 name'], ['sign2Title', 'Signatory 2 title'],
+      ['rsvpName', 'RSVP contact name'], ['rsvpPhone', 'RSVP phone'],
+    ];
+    const box = document.getElementById('settings');
+    box.innerHTML = fields.map(([k, label]) =>
+      `<label class="field"><span>${label}</span><input type="text" data-k="${k}" value="${esc(s[k])}"></label>`).join('');
+  }
+  document.getElementById('settings').addEventListener('input', (e) => {
+    const k = e.target.dataset.k;
+    if (!k) return;
+    state.settings[k] = e.target.value;
+    save(); renderPreview();
+  });
+
+  // ---------- Card ----------
+  function cardHTML(inv) {
+    const occ = OCCASIONS[inv.occasion] || OCCASIONS.inaugural;
+    const s = state.settings;
+    const name = esc(inv.name), desig = esc(inv.designation), org = esc(inv.organisation), role = esc(inv.role);
+
+    const nameHTML = name ? `<div class="name">${name}</div>` : '<div class="rule rule-name"></div>';
+    const desigHTML = desig ? `<div class="designation">${desig}${org ? ', ' + org : ''}</div>` : '<div class="rule rule-desig"></div>';
+    const roleHTML = role ? `<div class="role">as the ${role}</div>` : '';
+
+    const signs = [[s.sign1Name, s.sign1Title], [s.sign2Name, s.sign2Title]]
+      .filter(([n, t]) => (n || '').trim() || (t || '').trim())
+      .map(([n, t]) => `<div class="sign"><div class="sign-line"></div>
+        <div class="sign-name">${esc(n)}</div>
+        ${(t || '').trim() ? `<div class="sign-title">${esc(t)}</div>` : ''}</div>`).join('');
+    const rsvp = [s.rsvpName, s.rsvpPhone].map(esc).filter(Boolean);
+
+    return `
+      <div class="sheet"><section class="card"><div class="frame">
+        <img class="srm" src="${SRM_LOGO}" alt="SRM University-AP">
+        <div class="ornament"><span></span><i></i><span></span></div>
+        <p class="lead">The Organising Committee of</p>
+        <p class="event">Qiskit Fall Fest 2026</p>
+        <p class="lead">requests the honour of the presence of</p>
+        <div class="invitee">${nameHTML}${desigHTML}${roleHTML}</div>
+        <p class="lead">to grace the</p>
+        <p class="occasion">${occ.label}</p>
+        <p class="sub">of the on-campus festival of quantum computing</p>
+        <div class="details">
+          <div><span class="k">Date</span><span class="v">${occ.date}</span></div>
+          <div><span class="k">Time</span><span class="v">${occ.time}</span></div>
+          <div><span class="k">Venue</span><span class="v">${occ.venue}<br>${CAMPUS}</span></div>
+        </div>
+        <div class="signs">${signs}</div>
+        ${rsvp.length ? `<div class="rsvp">RSVP &nbsp;&middot;&nbsp; ${rsvp.join(' &nbsp;&middot;&nbsp; ')}</div>` : ''}
+        <div class="foot"><span>Part of the global Qiskit Fall Fest series</span><img class="ibm" src="${IBM_LOGO}" alt="IBM Quantum"></div>
+      </div></section></div>`;
+  }
+
+  function renderPreview() {
+    const included = state.invitees.filter((i) => i.include);
+    document.getElementById('preview').innerHTML = included.length
+      ? included.map(cardHTML).join('')
+      : '<p class="hint" style="color:var(--ui-sub)">No invitees selected for printing.</p>';
+  }
+
+  function applyPaper() {
+    document.body.classList.toggle('a4', state.paper === 'a4');
+    document.getElementById('page-size').textContent = state.paper === 'a4'
+      ? '@page { size: A4; margin: 0; }'
+      : '@page { size: 148mm 210mm; margin: 0; }';
+    document.getElementById('paper').value = state.paper;
+  }
+
+  // ---------- Actions ----------
+  document.getElementById('add').addEventListener('click', () => {
+    state.invitees.push(blankInvitee());
+    save(); renderList(); renderPreview();
+    document.querySelector('#list .invitee-row:last-child input[data-k=name]').focus();
+  });
+  document.getElementById('print').addEventListener('click', () => window.print());
+  document.getElementById('paper').addEventListener('change', (e) => { state.paper = e.target.value; save(); applyPaper(); });
+  document.getElementById('reset').addEventListener('click', () => {
+    if (!confirm('Replace the current list and settings with the default list? Export first if you want to keep it.')) return;
+    state = structuredClone(DEFAULT_STATE);
+    save(); renderAll();
+  });
+  document.getElementById('export').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'qff2026-invitations.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  document.getElementById('import').addEventListener('click', () => document.getElementById('import-file').click());
+  document.getElementById('import-file').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      if (!Array.isArray(data.invitees)) throw new Error('missing invitees');
+      state = { ...structuredClone(DEFAULT_STATE), ...data, settings: { ...DEFAULT_STATE.settings, ...data.settings } };
+      save(); renderAll();
+    } catch (err) {
+      alert('That file is not an exported invitation list.');
+    }
+    e.target.value = '';
+  });
+
+  function renderAll() { renderList(); renderSettings(); applyPaper(); renderPreview(); }
+  renderAll();
+</script>
+</body>
+</html>
