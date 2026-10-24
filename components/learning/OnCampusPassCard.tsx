@@ -23,6 +23,7 @@ import {
   RotateCw,
   Phone,
   BedDouble,
+  MessageCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 import clsx from 'clsx';
@@ -42,6 +43,7 @@ import { usePassStatus } from '@/hooks/use-pass-status';
 import { handleGoogleSignInDirect } from '@/components/learning/AuthGate';
 import { supabase } from '@/lib/supabase';
 import { isSrmApEmail } from '@/lib/participant-track';
+import { ACCOMMODATION_HELPLINES, ACCOMMODATION_WHATSAPP_GROUP } from '@/lib/accommodation';
 
 function formatIst(iso: string) {
   return new Date(iso).toLocaleString('en-IN', {
@@ -472,7 +474,7 @@ export function OnCampusPassCard() {
 
       ctx.fillStyle = '#64748B';
       ctx.font = '22px sans-serif';
-      ctx.fillText('Show this QR at Campus Gate 3 · Helpline: +91 63013 87227', 600, 1480);
+      ctx.fillText(`Show this QR at Campus Gate 3 · Helpline: ${ACCOMMODATION_HELPLINES.map((h) => h.display).join(' / ')}`, 600, 1480);
       ctx.fillText('qffsrmap2026.com', 600, 1530);
 
       const link = document.createElement('a');
@@ -993,14 +995,29 @@ export function OnCampusPassCard() {
             </div>
             <div className="pt-1 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600 dark:text-slate-400 font-mono">
               <span>Call when you are on the way, or if you arrive late:</span>
-              <a
-                href="tel:+916301387227"
-                className="font-bold text-burgundy dark:text-[#E89BA5] hover:underline inline-flex items-center gap-1.5"
-              >
-                <Phone className="w-3.5 h-3.5" />
-                <span>+91 63013 87227</span>
-              </a>
+              <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                {ACCOMMODATION_HELPLINES.map((h) => (
+                  <a
+                    key={h.tel}
+                    href={`tel:${h.tel}`}
+                    className="font-bold text-burgundy dark:text-[#E89BA5] hover:underline inline-flex items-center gap-1.5"
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                    <span>{h.display}</span>
+                  </a>
+                ))}
+              </span>
             </div>
+            <a
+              href={ACCOMMODATION_WHATSAPP_GROUP}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-emerald-300 dark:border-emerald-800 bg-white dark:bg-[#150709] text-emerald-800 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-xs font-semibold"
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              Staying on campus? Join the accommodation WhatsApp group
+              <ExternalLink className="w-3 h-3" />
+            </a>
           </div>
           )}
         </div>

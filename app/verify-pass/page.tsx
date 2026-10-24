@@ -20,10 +20,9 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import clsx from 'clsx';
-import { ARRIVAL_MODE_LABEL, GENDER_LABEL, formatStayDate, stayNights, type ArrivalMode, type Gender } from '@/lib/accommodation';
+import { ACCOMMODATION_HELPLINES, ARRIVAL_MODE_LABEL, GENDER_LABEL, formatStayDate, stayNights, type ArrivalMode, type Gender } from '@/lib/accommodation';
 
-const HELPLINE_DISPLAY = '+91 63013 87227';
-const HELPLINE_TEL = '+916301387227';
+const [{ display: HELPLINE_DISPLAY, tel: HELPLINE_TEL }] = ACCOMMODATION_HELPLINES;
 
 type StayState = 'stay' | 'declined' | 'cancelled' | 'not_answered' | 'not_applicable';
 
@@ -509,9 +508,13 @@ function VerifyPassContent() {
             <MapPin className="w-3.5 h-3.5" />
             Stay and room coordinator
           </span>
-          <a href={`tel:${HELPLINE_TEL}`} className="font-mono font-bold text-burgundy dark:text-[#E89BA5] hover:underline">
-            {HELPLINE_DISPLAY}
-          </a>
+          <span className="flex flex-col items-end gap-0.5">
+            {ACCOMMODATION_HELPLINES.map((h) => (
+              <a key={h.tel} href={`tel:${h.tel}`} className="font-mono font-bold text-burgundy dark:text-[#E89BA5] hover:underline">
+                {h.display}
+              </a>
+            ))}
+          </span>
         </div>
 
         <div className="text-center pt-2">

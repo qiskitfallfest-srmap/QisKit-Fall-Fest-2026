@@ -7,6 +7,13 @@ export const ACCOMMODATION_TABLE = 'accommodation_requests';
 // platform_config value: { closed: boolean, note?: string }
 export const ACCOMMODATION_CONFIG_KEY = 'accommodation_config';
 
+/** Stay and room coordinators, shown to external participants and on the Gate 3 scan page */
+export const ACCOMMODATION_HELPLINES = [
+  { display: '+91 63013 87227', tel: '+916301387227' },
+  { display: '+91 90144 85414', tel: '+919014485414' },
+] as const;
+export const ACCOMMODATION_WHATSAPP_GROUP = 'https://chat.whatsapp.com/Bu8vcL7LMsJ4YcLY4oWNFE';
+
 export type Gender = 'male' | 'female' | 'other';
 
 export const GENDER_LABEL: Record<Gender, string> = {

@@ -3,9 +3,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import useSWR from 'swr';
 import clsx from 'clsx';
-import { AlertCircle, BedDouble, Loader2, RefreshCw, MapPin, Phone } from 'lucide-react';
+import { AlertCircle, BedDouble, ExternalLink, Loader2, MessageCircle, RefreshCw, MapPin, Phone } from 'lucide-react';
 import {
   ACCOMMODATION_DATES,
+  ACCOMMODATION_HELPLINES,
+  ACCOMMODATION_WHATSAPP_GROUP,
   ARRIVAL_MODE_LABEL,
   ARRIVAL_POINTS,
   OTHER_ARRIVAL_POINT,
@@ -512,6 +514,8 @@ export function AccommodationCard({ mayBeExternal }: { mayBeExternal: boolean })
 
   const unanswered = data.people.filter((p) => !p.request || missingTravelDetails(p.request)).length;
   const multiple = data.people.length > 1;
+  // The group is for people with a room; a lead answering for teammates also gets it so they can share it
+  const staying = data.people.some((p) => p.request?.needs_accommodation && p.request.status !== 'cancelled');
 
   function close(email: string, message?: string) {
     setEditing(null);
@@ -634,18 +638,35 @@ export function AccommodationCard({ mayBeExternal }: { mayBeExternal: boolean })
         </p>
         <div className="flex flex-wrap items-center justify-between gap-2 pt-1 font-mono text-[11px] text-slate-600 dark:text-slate-400 border-t border-sky-200/60 dark:border-sky-800/60">
           <span>Questions, or arriving late? Call</span>
-          <a
-            href="tel:+916301387227"
-            className="font-bold text-burgundy dark:text-[#E89BA5] hover:underline inline-flex items-center gap-1"
-          >
-            <Phone className="w-3 h-3" />
-            <span>+91 63013 87227</span>
-          </a>
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            {ACCOMMODATION_HELPLINES.map((h) => (
+              <a
+                key={h.tel}
+                href={`tel:${h.tel}`}
+                className="font-bold text-burgundy dark:text-[#E89BA5] hover:underline inline-flex items-center gap-1"
+              >
+                <Phone className="w-3 h-3" />
+                <span>{h.display}</span>
+              </a>
+            ))}
+          </span>
         </div>
+        {staying && (
+          <a
+            href={ACCOMMODATION_WHATSAPP_GROUP}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-emerald-300 dark:border-emerald-800 bg-white dark:bg-[#150709] text-emerald-800 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 font-semibold"
+          >
+            <MessageCircle aria-hidden="true" className="w-3.5 h-3.5" />
+            Join the accommodation WhatsApp group
+            <ExternalLink aria-hidden="true" className="w-3 h-3" />
+          </a>
+        )}
       </div>
       {data.closed && (
         <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-          This form is closed. If you still need a room or your travel changed, call +91 63013 87227.
+          This form is closed. If you still need a room or your travel changed, call {ACCOMMODATION_HELPLINES.map((h) => h.display).join(' or ')}.
         </p>
       )}
     </Card>
