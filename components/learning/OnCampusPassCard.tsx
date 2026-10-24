@@ -378,6 +378,7 @@ export function OnCampusPassCard() {
 
     const pass = data.pass;
     const isVerified = pass.status === 'verified';
+    const isFaculty = pass.institution?.toLowerCase().includes('faculty');
     const isFreePass = Number(pass.amount_inr) === 0;
     const canvas = document.createElement('canvas');
     canvas.width = 1200;
@@ -413,7 +414,7 @@ export function OnCampusPassCard() {
     ctx.font = 'bold 32px monospace';
     ctx.fillText(
       isVerified
-        ? (isFreePass ? 'VERIFIED ATTENDEE · SRM-AP' : 'VERIFIED ATTENDEE')
+        ? (isFaculty ? 'VERIFIED FACULTY GUEST · QIS' : isFreePass ? 'VERIFIED ATTENDEE · SRM-AP' : 'VERIFIED ATTENDEE')
         : 'PAYMENT VERIFICATION PENDING',
       140,
       430
@@ -442,7 +443,9 @@ export function OnCampusPassCard() {
     ctx.font = 'bold 36px sans-serif';
     const isFlagshipPass = pass.pass_tier === 'flagship_offline';
     ctx.fillText(
-      isFreePass
+      isFaculty
+        ? 'FACULTY PASS · OFFICIAL GUEST (QIS)'
+        : isFreePass
         ? 'GENERAL PASS · COMPLIMENTARY (SRM-AP)'
         : `${passTierLabel(pass.pass_tier).toUpperCase()} (₹${pass.amount_inr})`,
       140,
@@ -452,7 +455,9 @@ export function OnCampusPassCard() {
     ctx.fillStyle = '#334155';
     ctx.font = '26px sans-serif';
     ctx.fillText(
-      isFlagshipPass
+      isFaculty
+        ? 'Access: Keynotes, Workshops, Tech Expo, VIP Dining, Sessions & Ceremonies'
+        : isFlagshipPass
         ? 'Access: Hackathon Phase 2, Flagship Tracks, Meals & all General Pass events'
         : 'Access: Keynotes, Workshops, Tech Expo, Reference Center, Arcade & Debates',
       140,
@@ -817,7 +822,9 @@ export function OnCampusPassCard() {
             {tone.label}
           </span>
           <span className="font-mono text-[11px] font-semibold opacity-90">
-            {Number(pass.amount_inr) === 0
+            {pass.institution?.toLowerCase().includes('faculty')
+              ? 'Faculty Pass · Official Guest (QIS)'
+              : Number(pass.amount_inr) === 0
               ? 'General Offline Pass · Free (SRM-AP)'
               : `${passTierLabel(pass.pass_tier)} · ₹${pass.amount_inr}`}
           </span>
@@ -846,7 +853,9 @@ export function OnCampusPassCard() {
               </div>
             ) : isVerified ? (
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                {Number(pass.amount_inr) === 0
+                {pass.institution?.toLowerCase().includes('faculty')
+                  ? 'Official Faculty Pass confirmed. Show this QR code at Campus Gate 3 upon arrival. Valid 26–30 October 2026.'
+                  : Number(pass.amount_inr) === 0
                   ? 'SRM University-AP complimentary pass confirmed. Show the QR code at the event entrance. Valid 26–30 October 2026.'
                   : 'Payment confirmed. Show this QR code at Campus Gate 3 when you arrive. Valid 26–30 October 2026.'}
               </p>

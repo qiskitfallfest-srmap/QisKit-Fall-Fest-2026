@@ -94,6 +94,7 @@ function istTime(iso: string) {
 }
 
 function passLabel(p: PassData) {
+  if (p.institution?.toLowerCase().includes('faculty')) return 'Faculty Pass · Official (QIS)';
   if (Number(p.amountInr) === 0) return 'General Pass · Free (SRM-AP)';
   return p.passTier === 'flagship_offline' ? `Flagship Pass · ₹${p.amountInr}` : `General Pass · ₹${p.amountInr}`;
 }
