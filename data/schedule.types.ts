@@ -1,4 +1,22 @@
-export type Track = "Workshop" | "Talk" | "Networking" | "Hackathon" | "Community";
+export type Track =
+  | "Workshop"
+  | "Talk"
+  | "Networking"
+  | "Hackathon"
+  | "Community"
+  | "Ceremony"
+  | "QCTF"
+  | "Open Game"
+  | "Expo"
+  | "Break";
+
+/**
+ * Where a session sits during the on-campus phase:
+ *   main      plenary programme in the X-Lab Auditorium, open to every pass holder
+ *   flagship  QCTF and Hackathon Phase 2, shortlisted participants only
+ *   open      open games and the expo, running in parallel for everyone else
+ */
+export type Lane = "main" | "flagship" | "open";
 
 export type SessionLevel = "Beginner" | "Intermediate" | "Advanced" | "Research" | "All levels";
 
@@ -24,6 +42,9 @@ export interface Session {
   registrationUrl?: string;
   learningUrl?: string;
   posterImage?: string;
+  lane?: Lane;
+  /** Calendar date the session ends on when it runs past midnight (YYYY-MM-DD). */
+  endDate?: string;
 }
 
 export interface Day {

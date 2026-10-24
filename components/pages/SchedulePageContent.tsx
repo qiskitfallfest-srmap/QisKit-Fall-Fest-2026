@@ -6,6 +6,7 @@ import { ScheduleStats } from '@/components/schedule/ScheduleStats';
 import { ExploreSchedule } from '@/components/schedule/ExploreSchedule';
 import { Footer } from '@/components/shared/Footer';
 import { SchedulePhase } from '@/data/schedule.types';
+import { findOfflineSession } from '@/data/schedule.utils';
 
 export default function SchedulePageContent() {
   const [currentPhase, setCurrentPhase] = useState<SchedulePhase>('offline');
@@ -32,7 +33,11 @@ export default function SchedulePageContent() {
       let phase: SchedulePhase = 'offline';
       let dayIdx: number | undefined = undefined;
 
-      if (hash === 'offline' || hash === 'day-1' || hash === 'day1' || hash === 'offline-day-1') {
+      const linkedSession = findOfflineSession(hash);
+      if (linkedSession) {
+        // Reminder notifications link to /schedule#<session-id>
+        dayIdx = linkedSession.dayIndex;
+      } else if (hash === 'offline' || hash === 'day-1'|| hash === 'day1' || hash === 'offline-day-1') {
         dayIdx = 0;
       } else if (hash === 'day-2' || hash === 'day2' || hash === 'offline-day-2' || hash === 'qctf') {
         dayIdx = 1;

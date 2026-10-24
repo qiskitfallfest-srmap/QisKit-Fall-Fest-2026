@@ -1,4 +1,4 @@
-import { Day, SchedulePhase, SchedulePhaseInfo, Session, Track } from './schedule.types';
+import { Day, Lane, SchedulePhase, SchedulePhaseInfo, Session, Track } from './schedule.types';
 import { onlineSchedule } from './onlineSchedule';
 import { offlineSchedule } from './offlineSchedule';
 import { REGISTRATION_URL } from '@/lib/constants';
@@ -52,10 +52,12 @@ export function computeScheduleStats(phase: SchedulePhase = 'offline') {
 
   days.forEach((day) => {
     day.sessions.forEach((s) => {
+      if (isBreak(s)) return;
       totalSessionsCount++;
       if (
         s.speaker &&
         s.speaker !== 'To be confirmed' &&
+        s.speaker !== 'To be announced' &&
         s.speaker !== '—' &&
         !s.speaker.startsWith('Student Organizing') &&
         !s.speaker.startsWith('Organizing Team')
@@ -295,4 +297,111 @@ export function getSessionAction(session: Session, phase?: SchedulePhase): Sessi
     detailLabel: 'Register on Learning Portal',
     isExternal: false,
   };
+}
+
+// ---------------------------------------------------------------------------
+// On-campus timing (IST) — shared by the schedule page and the reminder cron
+// ---------------------------------------------------------------------------
+
+const IST_OFFSET_MINUTES = 330;
+
+/** "2:15 PM" → minutes after midnight. */
+export function clockToMinutes(label: string): number {
+  const match = label.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (!match) return 0;
+  let hours = Number(match[1]) % 12;
+  if (match[3].toUpperCase() === 'PM') hours += 12;
+  return hours * 60 + Number(match[2]);
+}
+
+function istToEpoch(isoDate: string, minutes: number): number {
+  const [y, m, d] = isoDate.split('-').map(Number);
+  return Date.UTC(y, m - 1, d) + (minutes - IST_OFFSET_MINUTES) * 60_000;
+}
+
+export interface TimedSession {
+  session: Session;
+  day: Day;
+  dayIndex: number;
+  startMs: number;
+  endMs: number;
+}
+
+export function timeSession(day: Day, dayIndex: number, session: Session): TimedSession {
+  const startMs = istToEpoch(day.fullDate, clockToMinutes(session.time));
+  let endMs = istToEpoch(session.endDate || day.fullDate, clockToMinutes(session.end));
+  if (endMs <= startMs) endMs += 24 * 60 * 60_000;
+  return { session, day, dayIndex, startMs, endMs };
+}
+
+let timedCache: TimedSession[] | null = null;
+
+/** Every on-campus session with absolute start/end times, sorted by start. */
+export function getTimedOfflineSessions(): TimedSession[] {
+  if (!timedCache) {
+    timedCache = offlineSchedule
+      .flatMap((day, dayIndex) => day.sessions.map((session) => timeSession(day, dayIndex, session)))
+      .sort((a, b) => a.startMs - b.startMs);
+  }
+  return timedCache;
+}
+
+export function findOfflineSession(id: string): TimedSession | undefined {
+  return getTimedOfflineSessions().find((t) => t.session.id === id);
+}
+
+export function isBreak(session: Session): boolean {
+  return session.track === 'Break';
+}
+
+/** Index of the day to open by default: today during the fest, else the first day. */
+export function defaultOfflineDayIndex(nowMs: number): number {
+  const idx = offlineSchedule.findIndex((day) => {
+    const start = istToEpoch(day.fullDate, 0);
+    return nowMs >= start && nowMs < start + 24 * 60 * 60_000;
+  });
+  return idx >= 0 ? idx : 0;
+}
+
+export const LANE_LABELS: Record<Lane, string> = {
+  main: 'Main stage',
+  flagship: 'Shortlisted only',
+  open: 'Open to all',
+};
+
+// ---------------------------------------------------------------------------
+// Pass-aware call to action for on-campus sessions
+// ---------------------------------------------------------------------------
+
+export type AttendeeState = 'signed_out' | 'no_pass' | 'pass_pending' | 'pass_verified';
+
+export interface OfflineSessionCta {
+  label: string;
+  href?: string;
+  /** Rendered as a quiet badge instead of a button. */
+  passive?: boolean;
+}
+
+export function getOfflineSessionCta(
+  session: Session,
+  attendee: AttendeeState,
+  isFinalist: boolean
+): OfflineSessionCta | null {
+  if (isBreak(session)) return null;
+
+  if (session.lane === 'flagship') {
+    if (session.track === 'Hackathon' && isFinalist) return { label: 'Finalist hub', href: '/learning/hackathon' };
+    return { label: 'Shortlisted teams only', passive: true };
+  }
+
+  switch (attendee) {
+    case 'signed_out':
+      return { label: 'Register', href: '/learning' };
+    case 'no_pass':
+      return { label: 'Get your pass', href: '/learning#campus-pass' };
+    case 'pass_pending':
+      return { label: 'Pass under review', href: '/learning#campus-pass', passive: true };
+    case 'pass_verified':
+      return { label: 'Included in your pass', passive: true };
+  }
 }
