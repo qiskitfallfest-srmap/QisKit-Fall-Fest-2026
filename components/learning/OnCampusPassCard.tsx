@@ -21,6 +21,8 @@ import {
   MapPin,
   CalendarDays,
   RotateCw,
+  Phone,
+  BedDouble,
 } from 'lucide-react';
 import Link from 'next/link';
 import clsx from 'clsx';
@@ -470,7 +472,7 @@ export function OnCampusPassCard() {
 
       ctx.fillStyle = '#64748B';
       ctx.font = '22px sans-serif';
-      ctx.fillText('Show this QR code at the campus registration desk', 600, 1480);
+      ctx.fillText('Show this QR at Campus Gate 3 · Helpline: +91 63013 87227', 600, 1480);
       ctx.fillText('qffsrmap2026.com', 600, 1530);
 
       const link = document.createElement('a');
@@ -843,8 +845,8 @@ export function OnCampusPassCard() {
             ) : isVerified ? (
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
                 {Number(pass.amount_inr) === 0
-                  ? 'SRM University-AP complimentary pass confirmed. Show the QR code at the campus registration desk on arrival. Valid 26–30 October 2026.'
-                  : 'Payment confirmed. Show the QR code at the campus registration desk on arrival. Valid 26–30 October 2026.'}
+                  ? 'SRM University-AP complimentary pass confirmed. Show the QR code at the event entrance. Valid 26–30 October 2026.'
+                  : 'Payment confirmed. Show this QR code at Campus Gate 3 when you arrive. Valid 26–30 October 2026.'}
               </p>
             ) : (
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -949,9 +951,57 @@ export function OnCampusPassCard() {
                 </div>
               )}
               <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                Scan at registration desk
+                Show at Gate 3
               </span>
             </div>
+          )}
+
+          {/* Campus arrival guide for external participants; SRM AP students are already on campus */}
+          {!isSrmApEmail(pass.user_email) && (
+          <div className="md:col-span-2 border-t border-slate-200 dark:border-[#3D1418] bg-slate-50/80 dark:bg-[#1A0A0D] p-5 sm:p-6 space-y-3">
+            <div className="flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
+              <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-slate-900 dark:text-[#FAF6F3]">
+                Getting to campus
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+              <div className="p-3 rounded-lg bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] space-y-1">
+                <span className="font-mono text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-400">
+                  Free On-Campus Stay
+                </span>
+                <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                  Free for external participants who asked for a stay in the Accommodation section of your profile. Rooms are allotted on the spot when you arrive.
+                </p>
+              </div>
+              <div className="p-3 rounded-lg bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] space-y-1">
+                <span className="font-mono text-[10px] uppercase font-bold text-sky-700 dark:text-sky-400">
+                  Flexible Check-In
+                </span>
+                <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                  Check in whenever you reach campus, day or night. There is no fixed check-in time.
+                </p>
+              </div>
+              <div className="p-3 rounded-lg bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] space-y-1">
+                <span className="font-mono text-[10px] uppercase font-bold text-burgundy dark:text-[#E89BA5]">
+                  Transit to Gate 3
+                </span>
+                <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                  From Vijayawada or Guntur, take an auto to <strong>SRM University-AP, Gate 3</strong>. Our team at Gate 3 checks your pass and takes you to your room.
+                </p>
+              </div>
+            </div>
+            <div className="pt-1 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600 dark:text-slate-400 font-mono">
+              <span>Call when you are on the way, or if you arrive late:</span>
+              <a
+                href="tel:+916301387227"
+                className="font-bold text-burgundy dark:text-[#E89BA5] hover:underline inline-flex items-center gap-1.5"
+              >
+                <Phone className="w-3.5 h-3.5" />
+                <span>+91 63013 87227</span>
+              </a>
+            </div>
+          </div>
           )}
         </div>
       </div>

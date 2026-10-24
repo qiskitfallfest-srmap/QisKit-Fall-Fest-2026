@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { contactStatus } from '@/lib/contact-server';
+import { normalizePhone } from '@/lib/phone';
+import { isSrmApEmail } from '@/lib/participant-track';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,6 +11,8 @@ export const dynamic = 'force-dynamic';
 function sanitizeFilterTerm(value: string): string {
   return value.replace(/[^a-zA-Z0-9@._+-]/g, '').slice(0, 100);
 }
+
+type StayState = 'stay' | 'declined' | 'cancelled' | 'not_answered' | 'not_applicable';
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,10 +27,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const session = await getServerSession();
+    const session = await getServerSession().catch(() => null);
     const isStaff = Boolean(session?.isAdmin);
 
-    // Free-text lookup exposes attendee data, so it is limited to staff
+    // Free-text lookup exposes attendee data, so it is limited to organizer accounts
     if (query && !token && !isStaff) {
       return NextResponse.json(
         { error: 'Sign in with an organizer account to search passes.' },
@@ -78,19 +83,101 @@ export async function GET(request: NextRequest) {
       checkedInAt: pass.checked_in_at,
     };
 
+    const email = String(pass.user_email || '').trim().toLowerCase();
+    const [accRes, leadRes, memberRes, transportRes, contact] = await Promise.all([
+      supabaseAdmin
+        .from('accommodation_requests')
+        .select('*')
+        .ilike('email', email)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabaseAdmin.from('hackathon_teams').select('name').ilike('lead_email', email).limit(1).maybeSingle(),
+      supabaseAdmin
+        .from('team_members')
+        .select('hackathon_teams(name)')
+        .ilike('email', email)
+        .eq('status', 'accepted')
+        .limit(1)
+        .maybeSingle(),
+      isStaff
+        ? supabaseAdmin
+            .from('transport_requests')
+            .select('needs_transport, boarding_point, boarding_other')
+            .ilike('email', email)
+            .limit(1)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+      isStaff ? contactStatus(email) : Promise.resolve(null),
+    ]);
+
+    const acc = accRes.data;
+    // SRM AP students live on or commute to campus; the stay question is only asked of external participants
+    const stayState: StayState = isSrmApEmail(email)
+      ? 'not_applicable'
+      : !acc
+        ? 'not_answered'
+        : acc.status === 'cancelled'
+          ? 'cancelled'
+          : acc.needs_accommodation
+            ? 'stay'
+            : 'declined';
+
+    // Shown on every scan so the Gate 3 team can see the stay without signing in.
+    // Phone numbers, email and the attendee's private note stay with organizer accounts.
+    const accommodation = {
+      state: stayState,
+      allocated: acc?.status === 'allocated',
+      gender: acc?.gender ?? null,
+      checkIn: acc?.check_in ?? null,
+      checkOut: acc?.check_out ?? null,
+      arrivalTime: acc?.arrival_time ?? null,
+      allocationNotes: acc?.allocation_notes ?? null,
+      hasNote: Boolean(acc?.notes?.trim()),
+      ...(isStaff
+        ? {
+            travellingFrom: acc?.travelling_from ?? null,
+            arrivalMode: acc?.arrival_mode ?? null,
+            arrivalPoint: acc?.arrival_point ?? null,
+            notes: acc?.notes ?? null,
+          }
+        : {}),
+    };
+
+    const teamName = leadRes.data?.name || (memberRes.data as any)?.hackathon_teams?.name || null;
+    const hackathon = teamName ? { teamName, role: leadRes.data ? 'Team Lead' : 'Member' } : null;
+
+    if (!isStaff) {
+      return NextResponse.json({
+        valid: pass.status !== 'rejected',
+        isStaff: false,
+        pass: { ...publicFields, accommodation, hackathon },
+      });
+    }
+
+    const tr = transportRes.data;
+    const transport = tr?.needs_transport
+      ? { boardingPoint: tr.boarding_other || tr.boarding_point || 'Not specified' }
+      : null;
+    const rawPhone = contact?.phone || pass.contact_phone || acc?.phone || null;
+
     return NextResponse.json({
       valid: pass.status !== 'rejected',
-      isStaff,
-      pass: isStaff
-        ? {
-            ...publicFields,
-            userEmail: pass.user_email,
-            transactionReference: pass.transaction_reference,
-            receiptUrl: pass.receipt_url,
-            checkedInBy: pass.checked_in_by,
-            createdAt: pass.created_at,
-          }
-        : publicFields,
+      isStaff: true,
+      pass: {
+        ...publicFields,
+        accommodation,
+        hackathon,
+        transport,
+        userEmail: pass.user_email,
+        transactionReference: pass.transaction_reference,
+        phone: normalizePhone(rawPhone) || rawPhone,
+        emergencyName: contact?.emergencyName ?? null,
+        emergencyPhone: contact?.emergencyPhone ?? null,
+        receiptUrl: pass.receipt_url,
+        checkedInBy: pass.checked_in_by,
+        createdAt: pass.created_at,
+      },
     });
   } catch (err: any) {
     console.error('[Pass Verify Server Exception]:', err);
@@ -100,16 +187,16 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession().catch(() => null);
+    const body = await request.json();
+    const { passId } = body;
+
     if (!session?.isAdmin) {
       return NextResponse.json(
-        { error: 'Only organizer accounts can record gate check-ins.' },
+        { error: 'Only organizer accounts can record check-ins.' },
         { status: 403 }
       );
     }
-
-    const body = await request.json();
-    const { passId } = body;
 
     if (!passId) {
       return NextResponse.json({ error: 'Missing pass ID for check-in.' }, { status: 400 });
@@ -146,12 +233,17 @@ export async function POST(request: NextRequest) {
         updated_at: now,
       })
       .eq('id', passId)
+      .eq('checked_in', false)
       .select('*')
-      .single();
+      .maybeSingle();
 
-    if (error || !updatedPass) {
+    if (error) {
       console.error('[Pass Check-In Update Error]:', error);
       return NextResponse.json({ error: 'Failed to record check-in.' }, { status: 500 });
+    }
+    // Two phones scanning the same pass at once: the second one finds it already checked in
+    if (!updatedPass) {
+      return NextResponse.json({ error: 'Attendee is already checked in.' }, { status: 409 });
     }
 
     return NextResponse.json({

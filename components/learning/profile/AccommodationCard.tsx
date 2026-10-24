@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import useSWR from 'swr';
 import clsx from 'clsx';
-import { AlertCircle, BedDouble, Loader2, RefreshCw } from 'lucide-react';
+import { AlertCircle, BedDouble, Loader2, RefreshCw, MapPin, Phone } from 'lucide-react';
 import {
   ACCOMMODATION_DATES,
   ARRIVAL_MODE_LABEL,
@@ -623,10 +623,31 @@ export function AccommodationCard({ mayBeExternal }: { mayBeExternal: boolean })
           );
         })}
       </ul>
-      <p className="mt-3 text-xs text-slate-600 dark:text-slate-400">
-        The organizing team confirms each booking, including any cost, before the event.
-        {data.closed && ` Requests are closed; write to ${CONTACT_EMAIL} for changes.`}
-      </p>
+      <div className="mt-4 p-3.5 rounded-xl border border-sky-200 dark:border-sky-900 bg-sky-50/70 dark:bg-sky-950/20 text-xs text-sky-950 dark:text-sky-100 space-y-2">
+        <div className="flex items-center gap-1.5 font-bold">
+          <BedDouble className="w-4 h-4 text-sky-700 dark:text-sky-300" />
+          <span>Free on-campus stay: arriving at Gate 3</span>
+        </div>
+        <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+          Accommodation is on campus and free. Check in whenever you arrive, day or night.
+          From Vijayawada or Guntur, take an auto to <strong>SRM University-AP, Gate 3</strong>. Our team at Gate 3 checks your pass QR and takes you to on-spot room allocation.
+        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-1 font-mono text-[11px] text-slate-600 dark:text-slate-400 border-t border-sky-200/60 dark:border-sky-800/60">
+          <span>Questions, or arriving late? Call</span>
+          <a
+            href="tel:+916301387227"
+            className="font-bold text-burgundy dark:text-[#E89BA5] hover:underline inline-flex items-center gap-1"
+          >
+            <Phone className="w-3 h-3" />
+            <span>+91 63013 87227</span>
+          </a>
+        </div>
+      </div>
+      {data.closed && (
+        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+          This form is closed. If you still need a room or your travel changed, call +91 63013 87227.
+        </p>
+      )}
     </Card>
   );
 }
