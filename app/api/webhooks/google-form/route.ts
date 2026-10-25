@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { redis, invalidateEmailCache, CACHE_TTL } from '@/lib/redis';
 import { logError, logInfo, logWarn, serializeError } from '@/lib/logger';
+import { notifyQffApp, type QffAppPerson } from '@/lib/qff-app-sync';
 
 export const runtime = 'edge';
 
@@ -49,6 +50,7 @@ export async function POST(request: NextRequest) {
     }
 
     const processedEmails: string[] = [];
+    const appPeople: QffAppPerson[] = [];
 
     for (const record of records) {
       const rawEmail = (record.email || '').trim().toLowerCase();
@@ -132,9 +134,12 @@ export async function POST(request: NextRequest) {
             }
           }
           processedEmails.push(emailToWhitelist);
+          appPeople.push({ email: emailToWhitelist, name: fullName, institution, isActive: true, role: 'participant' });
         }
       }
     }
+
+    notifyQffApp(appPeople);
 
     logInfo('webhooks.google_form.success', {
       count: processedEmails.length,

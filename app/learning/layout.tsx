@@ -6,6 +6,7 @@ import { LearningSidebar } from '@/components/learning/LearningSidebar';
 import { Footer } from '@/components/shared/Footer';
 import { LearningShell } from '@/components/learning/LearningShell';
 import { AppAlertStrip } from '@/components/learning/AppAlertStrip';
+import { AppDownloadBanner } from '@/components/learning/AppDownloadBanner';
 
 export default function LearningLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -20,6 +21,8 @@ export default function LearningLayout({ children }: { children: React.ReactNode
           : 'flex flex-col min-h-screen font-sans bg-[#FAF7F4] text-[#181313] dark:bg-[#100405] dark:text-[#F8F4EF]'
       }
     >
+      {!isCodingChallenge && <AppDownloadBanner />}
+
       <LearningShell
         sidebar={
           <Suspense fallback={<div className="p-4 font-mono text-xs text-slate-400 uppercase tracking-wider">Loading curriculum...</div>}>

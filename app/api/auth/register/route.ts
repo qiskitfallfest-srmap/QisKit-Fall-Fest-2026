@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 import { redis, invalidateEmailCache } from '@/lib/redis';
 import { SUPER_ADMIN_EMAILS } from '@/lib/auth';
 import { logError, logInfo, logWarn, serializeError } from '@/lib/logger';
+import { notifyQffApp } from '@/lib/qff-app-sync';
 import { setSessionCookie, verifySupabaseAccessToken } from '@/lib/session-cookie';
 
 export const runtime = 'edge';
@@ -101,6 +102,7 @@ export async function POST(request: NextRequest) {
       }
     }
     logInfo('auth.register.success', { email, institution });
+    notifyQffApp([{ email, name: fullName, institution, isActive: true, role: assignedRole }]);
 
     // 3b. Dispatch Confirmation Pass Email via Google Apps Script Web App Relay
     const appsScriptUrl = process.env.GOOGLE_APPS_SCRIPT_WEBAPP_URL;
