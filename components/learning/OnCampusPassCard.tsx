@@ -44,6 +44,7 @@ import { handleGoogleSignInDirect } from '@/components/learning/AuthGate';
 import { supabase } from '@/lib/supabase';
 import { isSrmApEmail } from '@/lib/participant-track';
 import { ACCOMMODATION_HELPLINES, ACCOMMODATION_WHATSAPP_GROUP } from '@/lib/accommodation';
+import { SPECIAL_BUS_TRIPS } from '@/lib/transport';
 
 function formatIst(iso: string) {
   return new Date(iso).toLocaleString('en-IN', {
@@ -1001,7 +1002,9 @@ export function OnCampusPassCard() {
                   From Vijayawada or Guntur railway station, take an auto directly to <strong>SRM University-AP, Gate 3</strong>. Our team at Gate 3 checks your pass QR and guides you to on-spot room allocation (flexible 24/7 check-in).
                 </p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 pt-0.5">
-                  <strong>Opted for daily SRM bus?</strong> Special buses report at 8:15 AM from Vijayawada (Varadhi/Mangalagiri) and Guntur (Autonagar/Chillies dhaba) bus stands.
+                  <strong>Opted for daily SRM bus?</strong>{' '}
+                  {SPECIAL_BUS_TRIPS.map((trip) => `${trip.route}: ${trip.boardingPoints.join(', ')}`).join('; ')}. Reporting{' '}
+                  {SPECIAL_BUS_TRIPS[0].reportingTime}, return {SPECIAL_BUS_TRIPS[0].returnTime}.
                 </p>
               </div>
             </div>
