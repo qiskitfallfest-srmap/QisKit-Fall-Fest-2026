@@ -777,17 +777,7 @@ export function OnCampusPassCard() {
                   <Upload className="w-4 h-4" />
                   <span>Resubmit Receipt</span>
                 </button>
-              ) : (
-                <a
-                  href={QFF_APP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2.5 bg-burgundy hover:bg-burgundy-deep text-white text-xs font-semibold rounded-xl transition-colors flex items-center gap-2 cursor-pointer"
-                >
-                  <Smartphone className="w-4 h-4" />
-                  <span>Download the app</span>
-                </a>
-              )}
+              ) : null}
               {!isVerified && !isRejected && (
                 <button
                   type="button"
