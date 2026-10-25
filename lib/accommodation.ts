@@ -22,9 +22,8 @@ export const GENDER_LABEL: Record<Gender, string> = {
   other: 'Other / prefer to discuss',
 };
 
-// Arrival from the evening before Day 1; departure the day after Day 5 at the latest
+// Check-in opens Monday morning (26 October); departure through Saturday (31 October) at latest
 export const ACCOMMODATION_DATES = [
-  '2026-10-25',
   '2026-10-26',
   '2026-10-27',
   '2026-10-28',
@@ -32,7 +31,7 @@ export const ACCOMMODATION_DATES = [
   '2026-10-30',
   '2026-10-31',
 ];
-export const DEFAULT_CHECK_IN = '2026-10-25';
+export const DEFAULT_CHECK_IN = '2026-10-26';
 export const DEFAULT_CHECK_OUT = '2026-10-30';
 
 export function formatStayDate(date: string): string {

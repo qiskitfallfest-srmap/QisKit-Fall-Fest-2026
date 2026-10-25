@@ -148,7 +148,7 @@ function StayPanel({ acc }: { acc: AccommodationInfo }) {
               {acc.allocated ? 'Room allocated · on-campus stay' : 'Needs a room · on-campus stay'}
             </p>
             <p className="text-xs text-sky-900 dark:text-sky-200 mt-0.5">
-              Take them to on-spot room allocation. They can check in at any hour.
+              Take them to on-spot room allocation. Check-in active from Monday morning; stay is chargeable.
             </p>
           </div>
         </div>

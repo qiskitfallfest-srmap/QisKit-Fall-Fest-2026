@@ -979,19 +979,23 @@ export function OnCampusPassCard() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
               <div className="p-3 rounded-lg bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] space-y-1">
-                <span className="font-mono text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-400">
-                  On-Campus Stay
+                <span className="font-mono text-[10px] uppercase font-bold text-amber-700 dark:text-amber-400">
+                  On-Campus Stay (Chargeable)
                 </span>
                 <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
-                  For external participants who asked for a stay in the Accommodation section of your profile. Rooms are chargeable; charges will be shared shortly (queries: +91 63013 87227). Rooms are allotted on the spot when you arrive.
+                  For external participants who requested stay in their profile. Hostel stay is chargeable at subsidized student rates (tariff will be published shortly). For queries or tariff info, call{' '}
+                  <a href="tel:+916301387227" className="font-semibold text-burgundy dark:text-[#E89BA5] underline">
+                    +91 63013 87227
+                  </a>
+                  .
                 </p>
               </div>
               <div className="p-3 rounded-lg bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] space-y-1">
                 <span className="font-mono text-[10px] uppercase font-bold text-sky-700 dark:text-sky-400">
-                  Flexible Check-In
+                  Check-In from Monday Morning
                 </span>
                 <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
-                  Check in whenever you reach campus, day or night. There is no fixed check-in time.
+                  Room check-in and allotment begin strictly from <strong>Monday morning (26 October)</strong> at Gate 3. Early check-in prior to Monday morning is not available.
                 </p>
               </div>
               <div className="p-3 rounded-lg bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] space-y-1">
@@ -999,7 +1003,7 @@ export function OnCampusPassCard() {
                   Transit to Gate 3 (Train / Auto Arrivals)
                 </span>
                 <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
-                  From Vijayawada or Guntur railway station, take an auto directly to <strong>SRM University-AP, Gate 3</strong>. Our team at Gate 3 checks your pass QR and guides you to on-spot room allocation (flexible 24/7 check-in).
+                  From Vijayawada or Guntur railway station, take an auto directly to <strong>SRM University-AP, Gate 3</strong>. Our desk at Gate 3 checks your pass QR and coordinates on-spot room allocation starting Monday morning.
                 </p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 pt-0.5">
                   <strong>Opted for daily SRM bus?</strong>{' '}

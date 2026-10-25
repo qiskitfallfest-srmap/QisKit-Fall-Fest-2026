@@ -544,7 +544,7 @@ export function TransportCard({ mayBeShortlisted }: { mayBeShortlisted: boolean 
           </p>
           <p className="leading-relaxed text-slate-700 dark:text-slate-300">
             These special bus trips are strictly for external participants who requested daily SRM bus transport from Vijayawada or Guntur.
-            Participants arriving by train or staying on campus must take an auto directly to <strong>SRM University-AP, Campus Gate 3</strong>. Our team at Gate 3 will verify your pass QR and guide you to on-spot room allocation (flexible 24/7 check-in).
+            Participants arriving by train or staying on campus must take an auto directly to <strong>SRM University-AP, Campus Gate 3</strong>. Our team at Gate 3 will verify your pass QR and coordinate on-spot room allocation (check-in opens Monday morning, 26 October).
           </p>
         </div>
         {data.closed && (

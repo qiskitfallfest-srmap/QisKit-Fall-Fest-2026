@@ -255,7 +255,7 @@ function PersonForm({
 
           <div>
             <p id={datesHintId} className="text-xs text-slate-600 dark:text-slate-400 mb-2">
-              Rooms are available from the night of {formatStayDate(FIRST_DATE)}, the evening before Day 1. Check out by{' '}
+              Rooms are available starting from Monday morning ({formatStayDate(FIRST_DATE)}). Check out by{' '}
               {formatStayDate(LAST_DATE)}.
             </p>
             <div className="grid grid-cols-2 gap-3">
@@ -529,8 +529,8 @@ export function AccommodationCard({ mayBeExternal }: { mayBeExternal: boolean })
       title="Accommodation"
       description={
         <>
-          For external participants during the on-campus days, 26–30 October. Rooms are available from the night of{' '}
-          {formatStayDate(FIRST_DATE)} until check-out on {formatStayDate(LAST_DATE)}.{' '}
+          For external participants during the on-campus days, 26–30 October. Rooms are available from{' '}
+          {formatStayDate(FIRST_DATE)} (Monday morning check-in) until check-out on {formatStayDate(LAST_DATE)}.{' '}
           {multiple
             ? 'As team lead you can answer for each external teammate; they can also update their own.'
             : 'Tell us if you need a place to stay so we can book rooms.'}
@@ -627,17 +627,19 @@ export function AccommodationCard({ mayBeExternal }: { mayBeExternal: boolean })
           );
         })}
       </ul>
-      <div className="mt-4 p-3.5 rounded-xl border border-sky-200 dark:border-sky-900 bg-sky-50/70 dark:bg-sky-950/20 text-xs text-sky-950 dark:text-sky-100 space-y-2">
-        <div className="flex items-center gap-1.5 font-bold">
-          <BedDouble className="w-4 h-4 text-sky-700 dark:text-sky-300" />
-          <span>On-campus stay: arriving at Gate 3</span>
+      <div className="mt-4 p-4 rounded-xl border border-amber-300 dark:border-amber-900/60 bg-amber-50/80 dark:bg-amber-950/20 text-xs text-amber-950 dark:text-amber-100 space-y-2.5">
+        <div className="flex items-center gap-1.5 font-bold text-amber-900 dark:text-amber-200">
+          <BedDouble className="w-4 h-4 text-amber-700 dark:text-amber-400 shrink-0" />
+          <span>Important Notice: On-Campus Stay &amp; Monday Morning Check-In</span>
         </div>
         <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
-          On-campus accommodation is chargeable. We are finalising the room charges and will share them here shortly; for questions about the stay or charges, call <strong>+91 63013 87227</strong>. Check in whenever you arrive, day or night.
-          From Vijayawada or Guntur, take an auto to <strong>SRM University-AP, Gate 3</strong>. Our team at Gate 3 checks your pass QR and takes you to on-spot room allocation.
+          <strong>Accommodation Charges:</strong> On-campus hostel stay is chargeable. We apologize for any prior miscommunication stating lodging was free. Exact subsidized student room charges are being finalized and will be published here shortly.
         </p>
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-1 font-mono text-[11px] text-slate-600 dark:text-slate-400 border-t border-sky-200/60 dark:border-sky-800/60">
-          <span>Questions, or arriving late? Call</span>
+        <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+          <strong>Check-In Schedule:</strong> Room allotment and check-in strictly begin from <strong>Monday morning (26 October)</strong> at <strong>SRM University-AP, Gate 3</strong>. Check-in is not open prior to Monday morning. From Vijayawada or Guntur, take an auto directly to Gate 3, where our desk will verify your pass QR and coordinate your room allocation.
+        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 font-mono text-[11px] text-slate-600 dark:text-slate-400 border-t border-amber-200/80 dark:border-amber-900/60">
+          <span>Need assistance or have queries? Call</span>
           <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
             {ACCOMMODATION_HELPLINES.map((h) => (
               <a
