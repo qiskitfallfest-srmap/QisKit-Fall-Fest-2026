@@ -15,6 +15,7 @@ export interface QffAppPerson {
   institution?: string | null;
   isActive?: boolean;
   role?: string;
+  passTier?: 'general' | 'flagship' | null;
 }
 
 const APP_URL = (process.env.QFF_APP_URL || 'https://app.qffsrmap2026.com').replace(/\/+$/, '');
