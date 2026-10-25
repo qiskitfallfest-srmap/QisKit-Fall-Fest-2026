@@ -980,10 +980,10 @@ export function OnCampusPassCard() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
               <div className="p-3 rounded-lg bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] space-y-1">
                 <span className="font-mono text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-400">
-                  Free On-Campus Stay
+                  On-Campus Stay
                 </span>
                 <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
-                  Free for external participants who asked for a stay in the Accommodation section of your profile. Rooms are allotted on the spot when you arrive.
+                  For external participants who asked for a stay in the Accommodation section of your profile. Rooms are chargeable; charges will be shared shortly (queries: +91 63013 87227). Rooms are allotted on the spot when you arrive.
                 </p>
               </div>
               <div className="p-3 rounded-lg bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] space-y-1">

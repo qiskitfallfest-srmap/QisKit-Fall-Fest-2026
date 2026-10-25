@@ -145,7 +145,7 @@ function StayPanel({ acc }: { acc: AccommodationInfo }) {
           <BedDouble className="w-6 h-6 text-sky-700 dark:text-sky-300 shrink-0" />
           <div>
             <p className="text-base font-bold text-sky-950 dark:text-sky-100">
-              {acc.allocated ? 'Room allocated · free on-campus stay' : 'Needs a room · free on-campus stay'}
+              {acc.allocated ? 'Room allocated · on-campus stay' : 'Needs a room · on-campus stay'}
             </p>
             <p className="text-xs text-sky-900 dark:text-sky-200 mt-0.5">
               Take them to on-spot room allocation. They can check in at any hour.

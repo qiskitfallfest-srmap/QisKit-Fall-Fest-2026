@@ -630,10 +630,10 @@ export function AccommodationCard({ mayBeExternal }: { mayBeExternal: boolean })
       <div className="mt-4 p-3.5 rounded-xl border border-sky-200 dark:border-sky-900 bg-sky-50/70 dark:bg-sky-950/20 text-xs text-sky-950 dark:text-sky-100 space-y-2">
         <div className="flex items-center gap-1.5 font-bold">
           <BedDouble className="w-4 h-4 text-sky-700 dark:text-sky-300" />
-          <span>Free on-campus stay: arriving at Gate 3</span>
+          <span>On-campus stay: arriving at Gate 3</span>
         </div>
         <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
-          Accommodation is on campus and free. Check in whenever you arrive, day or night.
+          On-campus accommodation is chargeable. We are finalising the room charges and will share them here shortly; for questions about the stay or charges, call <strong>+91 63013 87227</strong>. Check in whenever you arrive, day or night.
           From Vijayawada or Guntur, take an auto to <strong>SRM University-AP, Gate 3</strong>. Our team at Gate 3 checks your pass QR and takes you to on-spot room allocation.
         </p>
         <div className="flex flex-wrap items-center justify-between gap-2 pt-1 font-mono text-[11px] text-slate-600 dark:text-slate-400 border-t border-sky-200/60 dark:border-sky-800/60">
