@@ -5,7 +5,7 @@ export const QFF_APP_URL = 'https://app.qffsrmap2026.com';
 
 /**
  * Shown at the top of every learning page, on every visit (deliberately not dismissible: knowledge in the world, not a toast).
- * Sends participants to the QFF 2026 app, which holds the Event Pass (college entry, event attendance and OD tracking).
+ * Points participants to the QFF 2026 app (college entry, attendance at every event, support). The website's own pass QR stays on the pass card as a fallback if the app has any problem.
  */
 export function AppDownloadBanner() {
   return (
@@ -18,9 +18,9 @@ export function AppDownloadBanner() {
         <div className="flex items-start gap-3 min-w-0">
           <Smartphone aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0" />
           <p className="text-sm leading-snug">
-            <span className="font-semibold">Use the QFF 2026 app.</span>{' '}
+            <span className="font-semibold">Download the QFF 2026 app.</span>{' '}
             <span className="text-white/90">
-              Access all events and get your dynamic Event Pass. It tracks your attendance and OD.
+              It is used for college entry, for attendance at every event, and to get any support you need.
             </span>
           </p>
         </div>
@@ -30,7 +30,7 @@ export function AppDownloadBanner() {
           rel="noopener noreferrer"
           className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-[#7E1322] transition-colors hover:bg-[#FAF7F4] focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#7E1322]"
         >
-          Go to app
+          Download the app
           <ArrowRight aria-hidden="true" className="h-4 w-4" />
         </a>
       </div>

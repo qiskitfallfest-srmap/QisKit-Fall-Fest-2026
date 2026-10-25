@@ -64,23 +64,36 @@ async function sumVerified(table: string, filters: Filters) {
   return (data || []).reduce((sum: number, r: any) => sum + (Number(r.amount_inr) || 0), 0);
 }
 
-async function passMetrics(tier: PassTier) {
-  const t = { pass_tier: tier };
-  const [pending, verified, rejected, checkedIn, collected] = await Promise.all([
-    countBy('festival_pass_claims', { ...t, status: PASS_STATUS.pending }),
-    countBy('festival_pass_claims', { ...t, status: PASS_STATUS.verified }),
-    countBy('festival_pass_claims', { ...t, status: PASS_STATUS.rejected }),
-    countBy('festival_pass_claims', { ...t, checked_in: true }),
-    sumVerified('festival_pass_claims', t),
-  ]);
-  return { pending, verified, rejected, checkedIn, collected };
+type Who = 'all' | 'srm' | 'outside';
+const SRM_DOMAIN = '@srmap.edu.in';
+const isSrmAddress = (email: string) => email.trim().toLowerCase().endsWith(SRM_DOMAIN);
+const emptyMetrics = () => ({ pending: 0, verified: 0, rejected: 0, checkedIn: 0, collected: 0 });
+type PassMetricsOut = ReturnType<typeof emptyMetrics> & { srm: ReturnType<typeof emptyMetrics>; outside: ReturnType<typeof emptyMetrics> };
+
+/** Pass counts per tier, in total and split by SRM-AP email vs outside email (one read of the claims table, summed here). */
+async function allPassMetrics(): Promise<Record<PassTier, PassMetricsOut>> {
+  const out = {} as Record<PassTier, PassMetricsOut>;
+  for (const t of PASS_TIERS) out[t] = { ...emptyMetrics(), srm: emptyMetrics(), outside: emptyMetrics() };
+  for (let from = 0; from < 20000; from += 1000) {
+    const { data } = await supabaseAdmin.from('festival_pass_claims').select('pass_tier, status, amount_inr, checked_in, user_email').range(from, from + 999);
+    for (const r of (data || []) as any[]) {
+      const tier = (r.pass_tier === 'flagship_offline' ? 'flagship_offline' : 'general_offline') as PassTier;
+      const st = toReviewStatus(r.status);
+      for (const bucket of [out[tier], isSrmAddress(String(r.user_email)) ? out[tier].srm : out[tier].outside]) {
+        bucket[st] += 1;
+        if (r.checked_in) bucket.checkedIn += 1;
+        if (st === 'verified') bucket.collected += Number(r.amount_inr) || 0;
+      }
+    }
+    if (!data || data.length < 1000) break;
+  }
+  return out;
 }
 
 async function loadMetrics() {
-  const [general, flagship, certPending, certVerified, certRejected, certCollected, certToDeliverRes] =
+  const [passes, certPending, certVerified, certRejected, certCollected, certToDeliverRes] =
     await Promise.all([
-      passMetrics('general_offline'),
-      passMetrics('flagship_offline'),
+      allPassMetrics(),
       countBy('certificate_payment_submissions', { status: CERT_STATUS.pending }),
       countBy('certificate_payment_submissions', { status: CERT_STATUS.verified }),
       countBy('certificate_payment_submissions', { status: CERT_STATUS.rejected }),
@@ -93,8 +106,8 @@ async function loadMetrics() {
     ]);
 
   return {
-    general,
-    flagship,
+    general: passes.general_offline,
+    flagship: passes.flagship_offline,
     certificate: {
       pending: certPending,
       verified: certVerified,
@@ -117,6 +130,8 @@ export async function GET(request: NextRequest) {
     const search = sanitizeSearch(searchParams.get('search'));
     const tierParam = searchParams.get('tier') as PassTier | null;
     const tier = type === 'pass' && tierParam && PASS_TIERS.includes(tierParam) ? tierParam : null;
+    const whoParam = searchParams.get('who');
+    const who: Who = whoParam === 'srm' || whoParam === 'outside' ? whoParam : 'all';
 
     const table = type === 'pass' ? 'festival_pass_claims' : 'certificate_payment_submissions';
     const nameColumn = type === 'pass' ? 'user_name' : 'candidate_name';
@@ -124,6 +139,9 @@ export async function GET(request: NextRequest) {
 
     let query = supabaseAdmin.from(table).select('*').order('created_at', { ascending: true });
     if (tier) query = query.eq('pass_tier', tier);
+    // SRM-AP students/faculty (free pass, @srmap.edu.in) and outside attendees (paid) are reviewed and counted separately
+    if (who === 'srm') query = query.ilike('user_email', `%${SRM_DOMAIN}`);
+    if (who === 'outside') query = query.not('user_email', 'ilike', `%${SRM_DOMAIN}`);
 
     if (status === 'checked_in' && type === 'pass') {
       query = query.eq('checked_in', true);
@@ -236,6 +254,7 @@ export async function GET(request: NextRequest) {
         passTier: type === 'pass' ? r.pass_tier || 'general_offline' : null,
         name: (type === 'pass' ? r.user_name : r.candidate_name) || email,
         email,
+        isSrm: isSrmAddress(email),
         institution: r.institution || null,
         phone: r.contact_phone || null,
         transactionReference: r.transaction_reference,

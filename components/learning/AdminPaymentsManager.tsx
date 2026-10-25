@@ -32,6 +32,9 @@ const VIEW_TIER: Record<View, PassTier | null> = { general: 'general_offline', f
 type ReviewStatus = 'pending' | 'verified' | 'rejected';
 type StatusFilter = ReviewStatus | 'all' | 'checked_in' | 'to_deliver';
 type DeliveryMode = CertificateDeliveryMode;
+// Who paid: SRM-AP addresses (@srmap.edu.in, free pass for students) are reviewed and counted apart from outside attendees (paid)
+type Who = 'all' | 'srm' | 'outside';
+const WHO_LABEL: Record<Who, string> = { all: 'Everyone', srm: 'SRM-AP emails', outside: 'Outside emails' };
 
 const DELIVERY_LABEL: Record<DeliveryMode, string> = {
   ceremony: 'Valedictory ceremony (in person)',
@@ -48,6 +51,7 @@ interface PaymentItem {
   passTier: PassTier | null;
   name: string;
   email: string;
+  isSrm?: boolean;
   institution: string | null;
   phone: string | null;
   transactionReference: string;
@@ -71,12 +75,16 @@ interface PaymentItem {
   flags: string[];
 }
 
-interface PassMetrics {
+interface PassCounts {
   pending: number;
   verified: number;
   rejected: number;
   checkedIn: number;
   collected: number;
+}
+interface PassMetrics extends PassCounts {
+  srm?: PassCounts;
+  outside?: PassCounts;
 }
 
 interface Metrics {
@@ -159,6 +167,7 @@ export function AdminPaymentsManager() {
   const [view, setView] = useState<View>('general');
   const type = VIEW_TYPE[view];
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('pending');
+  const [who, setWho] = useState<Who>('all');
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [items, setItems] = useState<PaymentItem[]>([]);
@@ -183,6 +192,7 @@ export function AdminPaymentsManager() {
       const params = new URLSearchParams({ type, status: statusFilter });
       const tier = VIEW_TIER[view];
       if (tier) params.set('tier', tier);
+      if (who !== 'all') params.set('who', who);
       if (debouncedSearch) params.set('search', debouncedSearch);
       const res = await fetch(`/api/admin/payments?${params.toString()}`, { cache: 'no-store' });
       const json = await res.json();
@@ -195,7 +205,7 @@ export function AdminPaymentsManager() {
     } finally {
       setLoading(false);
     }
-  }, [type, view, statusFilter, debouncedSearch]);
+  }, [type, view, statusFilter, who, debouncedSearch]);
 
   useEffect(() => {
     fetchItems();
@@ -276,6 +286,7 @@ export function AdminPaymentsManager() {
       'Type',
       'Name',
       'Email',
+      'Email type',
       'Institution',
       'Phone',
       'Amount INR',
@@ -294,6 +305,7 @@ export function AdminPaymentsManager() {
       VIEW_META[viewOf(p)].short,
       p.name,
       p.email,
+      p.isSrm ? 'SRM-AP' : 'Outside',
       p.institution,
       p.phone,
       p.amountInr,
@@ -317,14 +329,14 @@ export function AdminPaymentsManager() {
     URL.revokeObjectURL(url);
   }
 
-  const m = metrics[view];
+  const m: PassCounts = view === 'certificate' ? { ...metrics.certificate, checkedIn: 0 } : who !== 'all' ? metrics[view][who] ?? EMPTY_PASS_METRICS : metrics[view];
   const statusTabs: { key: StatusFilter; label: string; count?: number }[] = [
     { key: 'pending', label: 'Pending', count: m.pending },
     { key: 'verified', label: 'Verified', count: m.verified },
     { key: 'rejected', label: 'Rejected', count: m.rejected },
     ...(view === 'certificate'
       ? [{ key: 'to_deliver' as StatusFilter, label: 'To deliver', count: metrics.certificate.toDeliver }]
-      : [{ key: 'checked_in' as StatusFilter, label: 'Checked in', count: metrics[view].checkedIn }]),
+      : [{ key: 'checked_in' as StatusFilter, label: 'Checked in', count: m.checkedIn }]),
     { key: 'all', label: 'All' },
   ];
 
@@ -381,6 +393,42 @@ export function AdminPaymentsManager() {
                   {t === 'certificate' ? 'to deliver' : 'checked in'}
                 </span>
               </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Who: SRM-AP emails (free pass) and outside emails (paid) side by side, each with its own counts; picking one filters the list below */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {(['all', 'srm', 'outside'] as Who[]).map((w) => {
+          const active = w === who;
+          const c: PassCounts | null = view === 'certificate' ? null : w === 'all' ? metrics[view] : metrics[view][w] ?? null;
+          return (
+            <button
+              key={w}
+              type="button"
+              onClick={() => setWho(w)}
+              className={clsx(
+                CARD,
+                'p-3 text-left transition-colors cursor-pointer',
+                active ? 'ring-2 ring-burgundy/70 dark:ring-[#E89BA5]/60 border-transparent' : 'hover:border-slate-300 dark:hover:border-[#5A1E24]'
+              )}
+            >
+              <span className="text-xs font-bold text-slate-900 dark:text-[#FAF6F3]">
+                {WHO_LABEL[w]}
+                {w === 'srm' && <span className="ml-1.5 font-mono text-[10px] font-semibold text-slate-400">free pass</span>}
+                {w === 'outside' && <span className="ml-1.5 font-mono text-[10px] font-semibold text-slate-400">paid</span>}
+              </span>
+              {c ? (
+                <span className="mt-2 grid grid-cols-4 gap-2 font-mono text-[10px] text-slate-500 dark:text-slate-400">
+                  <span><strong className="block font-serif text-base text-slate-900 dark:text-[#FAF6F3]">{c.verified}</strong>verified</span>
+                  <span><strong className="block font-serif text-base text-slate-900 dark:text-[#FAF6F3]">{c.pending}</strong>to review</span>
+                  <span><strong className="block font-serif text-base text-slate-900 dark:text-[#FAF6F3]">₹{c.collected.toLocaleString('en-IN')}</strong>collected</span>
+                  <span><strong className="block font-serif text-base text-slate-900 dark:text-[#FAF6F3]">{c.checkedIn}</strong>checked in</span>
+                </span>
+              ) : (
+                <span className="mt-2 block font-mono text-[10px] text-slate-400">Filters the list below</span>
+              )}
             </button>
           );
         })}
@@ -475,7 +523,10 @@ export function AdminPaymentsManager() {
                     )}
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold text-slate-900 dark:text-[#FAF6F3] truncate">{p.name}</p>
+                      <p className="text-xs font-bold text-slate-900 dark:text-[#FAF6F3] truncate">
+                        {p.name}
+                        <span className="ml-1.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-slate-400">{p.isSrm ? 'SRM-AP' : 'Outside'}</span>
+                      </p>
                       <p className="font-mono text-[11px] text-slate-500 dark:text-slate-400 truncate">{p.email}</p>
                       <p className="font-mono text-[10px] text-slate-400 mt-0.5 truncate">
                         {p.transactionReference} · {formatTime(p.createdAt)}

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import QRCode from 'qrcode';
 import {
   ShieldCheck,
   ExternalLink,
@@ -10,7 +11,7 @@ import {
   Check,
   AlertCircle,
   Loader2,
-  Smartphone,
+  QrCode,
   Users,
   ArrowRight,
   Clock,
@@ -37,7 +38,6 @@ import {
   passTierLabel,
   uploadReceipt,
 } from '@/lib/payments';
-import { QFF_APP_URL } from '@/components/learning/AppDownloadBanner';
 import { usePassStatus } from '@/hooks/use-pass-status';
 import { handleGoogleSignInDirect } from '@/components/learning/AuthGate';
 import { supabase } from '@/lib/supabase';
@@ -176,6 +176,7 @@ function StepMarker({ index, done, active }: { index: number; done: boolean; act
 
 export function OnCampusPassCard() {
   const { data, isLoading: loading, isError, mutate } = usePassStatus();
+  const [qrDataUrl, setQrDataUrl] = useState<string>('');
 
   const [gatewayOpened, setGatewayOpened] = useState(false);
   const [isResubmitting, setIsResubmitting] = useState(false);
@@ -192,6 +193,28 @@ export function OnCampusPassCard() {
   const [flagshipFormOpen, setFlagshipFormOpen] = useState(false);
   const [flagshipWindowExpired, setFlagshipWindowExpired] = useState(false);
   const handleFlagshipWindowExpire = useCallback(() => setFlagshipWindowExpired(true), []);
+
+  const generateQrCode = useCallback(async (token: string) => {
+    try {
+      const origin =
+        typeof window !== 'undefined' ? window.location.origin : 'https://www.qffsrmap2026.com';
+      const verifyUrl = `${origin}/verify-pass?token=${encodeURIComponent(token)}`;
+      const url = await QRCode.toDataURL(verifyUrl, {
+        width: 320,
+        margin: 1,
+        color: { dark: '#201617', light: '#ffffff' },
+      });
+      setQrDataUrl(url);
+    } catch (err) {
+      console.error('Failed to generate QR code:', err);
+    }
+  }, []);
+
+  const qrToken = data?.pass?.qr_code_token;
+  useEffect(() => {
+    if (qrToken) generateQrCode(qrToken);
+    else setQrDataUrl('');
+  }, [qrToken, generateQrCode]);
 
   // AuthGate re-announces the same session on every load; refetch only when the account changes
   const loadedEmail = data ? (data.isAuthenticated ? data.user?.email ?? null : null) : undefined;
@@ -713,10 +736,10 @@ export function OnCampusPassCard() {
             ) : isVerified ? (
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
                 {pass.institution?.toLowerCase().includes('faculty')
-                  ? 'Official Faculty Pass confirmed. Your Access Pass is in the QFF 2026 app. Valid 26–30 October 2026.'
+                  ? 'Official Faculty Pass confirmed. Show this QR code at Campus Gate 3 upon arrival. Valid 26–30 October 2026.'
                   : Number(pass.amount_inr) === 0
-                  ? 'SRM University-AP complimentary pass confirmed. Your Access Pass is in the QFF 2026 app. Valid 26–30 October 2026.'
-                  : 'Payment confirmed. Your Access Pass is in the QFF 2026 app. Valid 26–30 October 2026.'}
+                  ? 'SRM University-AP complimentary pass confirmed. Show the QR code at the event entrance. Valid 26–30 October 2026.'
+                  : 'Payment confirmed. Show this QR code at Campus Gate 3 when you arrive. Valid 26–30 October 2026.'}
               </p>
             ) : (
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -798,20 +821,21 @@ export function OnCampusPassCard() {
             <div className="relative border-t-2 md:border-t-0 md:border-l-2 border-dashed border-slate-200 dark:border-[#3D1418] p-5 sm:p-6 flex flex-col items-center justify-center text-center gap-2 bg-slate-50/60 dark:bg-[#1C0A0D]">
               <span className={clsx(NOTCH, 'hidden md:block -top-2.5 -left-2.5')} />
               <span className={clsx(NOTCH, 'hidden md:block -bottom-2.5 -left-2.5')} />
-              <div className="w-40 flex flex-col items-center gap-3 text-center">
-                <Smartphone className="w-10 h-10 text-burgundy dark:text-[#E89BA5]" aria-hidden="true" />
-                <p className="text-xs leading-relaxed text-slate-700 dark:text-slate-300">
-                  Your Access Pass is in the QFF 2026 app. It is used for college entry and for attendance at every event.
-                </p>
-              </div>
-              <a
-                href={QFF_APP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-mono text-[10px] font-bold uppercase tracking-wider text-burgundy dark:text-[#E89BA5] underline underline-offset-2"
-              >
-                Download the app
-              </a>
+              {qrDataUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={qrDataUrl}
+                  alt="Pass QR code"
+                  className="w-40 h-40 rounded-lg bg-white p-1 border border-slate-200"
+                />
+              ) : (
+                <div className="w-40 h-40 flex items-center justify-center bg-white rounded-lg border border-slate-200">
+                  <QrCode className="w-10 h-10 text-slate-300" />
+                </div>
+              )}
+              <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Show at Gate 3
+              </span>
             </div>
           )}
 
