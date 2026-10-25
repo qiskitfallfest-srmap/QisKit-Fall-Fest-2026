@@ -1,10 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import QRCode from 'qrcode';
 import {
   ShieldCheck,
-  Download,
   ExternalLink,
   Upload,
   FileText,
@@ -12,7 +10,7 @@ import {
   Check,
   AlertCircle,
   Loader2,
-  QrCode,
+  Smartphone,
   Users,
   ArrowRight,
   Clock,
@@ -39,6 +37,7 @@ import {
   passTierLabel,
   uploadReceipt,
 } from '@/lib/payments';
+import { QFF_APP_URL } from '@/components/learning/AppDownloadBanner';
 import { usePassStatus } from '@/hooks/use-pass-status';
 import { handleGoogleSignInDirect } from '@/components/learning/AuthGate';
 import { supabase } from '@/lib/supabase';
@@ -177,7 +176,6 @@ function StepMarker({ index, done, active }: { index: number; done: boolean; act
 
 export function OnCampusPassCard() {
   const { data, isLoading: loading, isError, mutate } = usePassStatus();
-  const [qrDataUrl, setQrDataUrl] = useState<string>('');
 
   const [gatewayOpened, setGatewayOpened] = useState(false);
   const [isResubmitting, setIsResubmitting] = useState(false);
@@ -194,28 +192,6 @@ export function OnCampusPassCard() {
   const [flagshipFormOpen, setFlagshipFormOpen] = useState(false);
   const [flagshipWindowExpired, setFlagshipWindowExpired] = useState(false);
   const handleFlagshipWindowExpire = useCallback(() => setFlagshipWindowExpired(true), []);
-
-  const generateQrCode = useCallback(async (token: string) => {
-    try {
-      const origin =
-        typeof window !== 'undefined' ? window.location.origin : 'https://www.qffsrmap2026.com';
-      const verifyUrl = `${origin}/verify-pass?token=${encodeURIComponent(token)}`;
-      const url = await QRCode.toDataURL(verifyUrl, {
-        width: 320,
-        margin: 1,
-        color: { dark: '#201617', light: '#ffffff' },
-      });
-      setQrDataUrl(url);
-    } catch (err) {
-      console.error('Failed to generate QR code:', err);
-    }
-  }, []);
-
-  const qrToken = data?.pass?.qr_code_token;
-  useEffect(() => {
-    if (qrToken) generateQrCode(qrToken);
-    else setQrDataUrl('');
-  }, [qrToken, generateQrCode]);
 
   // AuthGate re-announces the same session on every load; refetch only when the account changes
   const loadedEmail = data ? (data.isAuthenticated ? data.user?.email ?? null : null) : undefined;
@@ -371,124 +347,6 @@ export function OnCampusPassCard() {
       setIsSubmitting(false);
       setUploadStatus('');
     }
-  }
-
-  // Downloadable badge PNG sized for phone screens
-  function handleDownloadBadge() {
-    if (!data?.pass || !qrDataUrl) return;
-
-    const pass = data.pass;
-    const isVerified = pass.status === 'verified';
-    const isFaculty = pass.institution?.toLowerCase().includes('faculty');
-    const isFreePass = Number(pass.amount_inr) === 0;
-    const canvas = document.createElement('canvas');
-    canvas.width = 1200;
-    canvas.height = 1800;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    ctx.fillStyle = '#FAF7F5';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.fillStyle = '#6C151E';
-    ctx.fillRect(0, 0, canvas.width, 280);
-
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 38px sans-serif';
-    ctx.fillText('SRM UNIVERSITY-AP', 80, 110);
-
-    ctx.font = '28px monospace';
-    ctx.fillStyle = '#FECDD3';
-    ctx.fillText('QISKIT FALL FEST 2026 · ON-CAMPUS PASS', 80, 165);
-
-    ctx.font = '24px sans-serif';
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillText('26–30 OCTOBER 2026 · MAIN CAMPUS', 80, 215);
-
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(80, 340, 1040, 1300);
-    ctx.strokeStyle = '#E2E8F0';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(80, 340, 1040, 1300);
-
-    ctx.fillStyle = isVerified ? '#047857' : '#B45309';
-    ctx.font = 'bold 32px monospace';
-    ctx.fillText(
-      isVerified
-        ? (isFaculty ? 'VERIFIED FACULTY GUEST · QIS' : isFreePass ? 'VERIFIED ATTENDEE · SRM-AP' : 'VERIFIED ATTENDEE')
-        : 'PAYMENT VERIFICATION PENDING',
-      140,
-      430
-    );
-
-    ctx.fillStyle = '#0F172A';
-    ctx.font = 'bold 54px serif';
-    ctx.fillText(pass.user_name || 'Attendee', 140, 520);
-
-    ctx.fillStyle = '#475569';
-    ctx.font = '30px sans-serif';
-    ctx.fillText(pass.institution || 'SRM University-AP', 140, 580);
-
-    ctx.fillStyle = '#64748B';
-    ctx.font = '26px monospace';
-    ctx.fillText(pass.user_email, 140, 630);
-
-    ctx.strokeStyle = '#E2E8F0';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(140, 670);
-    ctx.lineTo(1060, 670);
-    ctx.stroke();
-
-    ctx.fillStyle = '#6C151E';
-    ctx.font = 'bold 36px sans-serif';
-    const isFlagshipPass = pass.pass_tier === 'flagship_offline';
-    ctx.fillText(
-      isFaculty
-        ? 'FACULTY PASS · OFFICIAL GUEST (QIS)'
-        : isFreePass
-        ? 'GENERAL PASS · COMPLIMENTARY (SRM-AP)'
-        : `${passTierLabel(pass.pass_tier).toUpperCase()} (₹${pass.amount_inr})`,
-      140,
-      740
-    );
-
-    ctx.fillStyle = '#334155';
-    ctx.font = '26px sans-serif';
-    ctx.fillText(
-      isFaculty
-        ? 'Access: Keynotes, Workshops, Tech Expo, VIP Dining, Sessions & Ceremonies'
-        : isFlagshipPass
-        ? 'Access: Hackathon Phase 2, Flagship Tracks, Meals & all General Pass events'
-        : 'Access: Keynotes, Workshops, Tech Expo, Reference Center, Arcade & Debates',
-      140,
-      790
-    );
-
-    const qrImage = new Image();
-    qrImage.onload = () => {
-      ctx.drawImage(qrImage, 360, 870, 480, 480);
-
-      ctx.fillStyle = '#0F172A';
-      ctx.font = 'bold 26px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText(
-        isFreePass ? `Pass Ref: ${pass.transaction_reference}` : `Easebuzz Ref: ${pass.transaction_reference}`,
-        600,
-        1430
-      );
-
-      ctx.fillStyle = '#64748B';
-      ctx.font = '22px sans-serif';
-      ctx.fillText(`Show this QR at Campus Gate 3 · Helpline: ${ACCOMMODATION_HELPLINES.map((h) => h.display).join(' / ')}`, 600, 1480);
-      ctx.fillText('qffsrmap2026.com', 600, 1530);
-
-      const link = document.createElement('a');
-      link.download = `QFF26-Campus-Pass-${(pass.user_name || 'Attendee').replace(/[^a-zA-Z0-9]/g, '_')}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    };
-    qrImage.src = qrDataUrl;
   }
 
   if (loading) {
@@ -855,10 +713,10 @@ export function OnCampusPassCard() {
             ) : isVerified ? (
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
                 {pass.institution?.toLowerCase().includes('faculty')
-                  ? 'Official Faculty Pass confirmed. Show this QR code at Campus Gate 3 upon arrival. Valid 26–30 October 2026.'
+                  ? 'Official Faculty Pass confirmed. Your Access Pass is in the QFF 2026 app. Valid 26–30 October 2026.'
                   : Number(pass.amount_inr) === 0
-                  ? 'SRM University-AP complimentary pass confirmed. Show the QR code at the event entrance. Valid 26–30 October 2026.'
-                  : 'Payment confirmed. Show this QR code at Campus Gate 3 when you arrive. Valid 26–30 October 2026.'}
+                  ? 'SRM University-AP complimentary pass confirmed. Your Access Pass is in the QFF 2026 app. Valid 26–30 October 2026.'
+                  : 'Payment confirmed. Your Access Pass is in the QFF 2026 app. Valid 26–30 October 2026.'}
               </p>
             ) : (
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -920,15 +778,15 @@ export function OnCampusPassCard() {
                   <span>Resubmit Receipt</span>
                 </button>
               ) : (
-                <button
-                  type="button"
-                  onClick={handleDownloadBadge}
-                  disabled={!qrDataUrl}
-                  className="px-4 py-2.5 bg-burgundy hover:bg-burgundy-deep text-white text-xs font-semibold rounded-xl transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                <a
+                  href={QFF_APP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2.5 bg-burgundy hover:bg-burgundy-deep text-white text-xs font-semibold rounded-xl transition-colors flex items-center gap-2 cursor-pointer"
                 >
-                  <Download className="w-4 h-4" />
-                  <span>Download Pass</span>
-                </button>
+                  <Smartphone className="w-4 h-4" />
+                  <span>Download the app</span>
+                </a>
               )}
               {!isVerified && !isRejected && (
                 <button
@@ -950,21 +808,20 @@ export function OnCampusPassCard() {
             <div className="relative border-t-2 md:border-t-0 md:border-l-2 border-dashed border-slate-200 dark:border-[#3D1418] p-5 sm:p-6 flex flex-col items-center justify-center text-center gap-2 bg-slate-50/60 dark:bg-[#1C0A0D]">
               <span className={clsx(NOTCH, 'hidden md:block -top-2.5 -left-2.5')} />
               <span className={clsx(NOTCH, 'hidden md:block -bottom-2.5 -left-2.5')} />
-              {qrDataUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={qrDataUrl}
-                  alt="Pass QR code"
-                  className="w-40 h-40 rounded-lg bg-white p-1 border border-slate-200"
-                />
-              ) : (
-                <div className="w-40 h-40 flex items-center justify-center bg-white rounded-lg border border-slate-200">
-                  <QrCode className="w-10 h-10 text-slate-300" />
-                </div>
-              )}
-              <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                Show at Gate 3
-              </span>
+              <div className="w-40 flex flex-col items-center gap-3 text-center">
+                <Smartphone className="w-10 h-10 text-burgundy dark:text-[#E89BA5]" aria-hidden="true" />
+                <p className="text-xs leading-relaxed text-slate-700 dark:text-slate-300">
+                  Your Access Pass is in the QFF 2026 app. It is used for college entry and for attendance at every event.
+                </p>
+              </div>
+              <a
+                href={QFF_APP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-mono text-[10px] font-bold uppercase tracking-wider text-burgundy dark:text-[#E89BA5] underline underline-offset-2"
+              >
+                Download the app
+              </a>
             </div>
           )}
 
