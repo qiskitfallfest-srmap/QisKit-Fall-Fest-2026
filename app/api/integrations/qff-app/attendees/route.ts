@@ -20,7 +20,6 @@ function keyMatches(header: string | null): boolean {
  * GET ?cursor=<last email>&limit=500
  * Everyone on the whitelist, for the QFF 2026 app's sync (https://app.qffsrmap2026.com), in pages ordered by email.
  * Read-only. Needs `Authorization: Bearer <GCP_ACCESS>`. Phone numbers are never included.
- * flagshipPass = the person has a VERIFIED Rs 499 flagship pass (the app registers them for the hackathon finale).
  */
 export async function GET(request: NextRequest) {
   if (!keyMatches(request.headers.get('authorization'))) {
@@ -41,26 +40,16 @@ export async function GET(request: NextRequest) {
     if (error) throw error;
 
     const emails = (rows || []).map((r) => String(r.email).toLowerCase());
-    const [regs, flagship] = emails.length
-      ? await Promise.all([
-          supabaseAdmin.from('registrations').select('email, institution').in('email', emails),
-          supabaseAdmin
-            .from('festival_pass_claims')
-            .select('user_email')
-            .eq('pass_tier', 'flagship_offline')
-            .eq('status', 'verified')
-            .in('user_email', emails),
-        ])
-      : [{ data: [], error: null }, { data: [], error: null }];
+    const regs = emails.length
+      ? await supabaseAdmin.from('registrations').select('email, institution').in('email', emails)
+      : { data: [], error: null };
     if (regs.error) throw regs.error;
-    if (flagship.error) throw flagship.error;
 
     const institution = new Map<string, string>();
     for (const r of regs.data || []) {
       const key = String(r.email).toLowerCase();
       if (r.institution && !institution.has(key)) institution.set(key, r.institution);
     }
-    const flagshipSet = new Set((flagship.data || []).map((r) => String(r.user_email).toLowerCase()));
 
     const people = (rows || []).map((r) => {
       const email = String(r.email).toLowerCase();
@@ -70,7 +59,6 @@ export async function GET(request: NextRequest) {
         institution: institution.get(email) || null,
         role: r.role,
         isActive: r.is_active !== false,
-        flagshipPass: flagshipSet.has(email),
       };
     });
 
