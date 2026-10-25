@@ -3,6 +3,7 @@ import { getServerSession } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { redis, invalidateEmailCache } from '@/lib/redis';
 import { logError, logInfo } from '@/lib/logger';
+import { notifyQffApp } from '@/lib/qff-app-sync';
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession();
@@ -232,6 +233,8 @@ export async function POST(request: NextRequest) {
       } catch {}
     }
 
+    notifyQffApp(recordsToInsert.map((r) => ({ email: r.email, name: r.full_name, isActive: true, role: r.role })));
+
     logInfo('admin.whitelist.added', {
       admin: session.email,
       added: newAddedCount,
@@ -286,6 +289,7 @@ export async function PATCH(request: NextRequest) {
     if (error) throw error;
 
     await invalidateEmailCache(email);
+    notifyQffApp([{ email: data.email, name: data.full_name, isActive: data.is_active, role: data.role }]);
 
     return NextResponse.json({
       success: true,
