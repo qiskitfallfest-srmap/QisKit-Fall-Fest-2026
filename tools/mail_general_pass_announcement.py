@@ -121,7 +121,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <p style="margin-top: 24px;">
         Best regards,<br>
         <strong>Qiskit Fall Fest 2026 Organizing Committee</strong><br>
-        Department of Physics &amp; School of Engineering and Sciences<br>
+        School of Engineering and Sciences<br>
         SRM University-AP
       </p>
     </div>

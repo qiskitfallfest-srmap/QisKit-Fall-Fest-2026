@@ -995,10 +995,13 @@ export function OnCampusPassCard() {
               </div>
               <div className="p-3 rounded-lg bg-white dark:bg-[#150709] border border-slate-200 dark:border-[#3D1418] space-y-1">
                 <span className="font-mono text-[10px] uppercase font-bold text-burgundy dark:text-[#E89BA5]">
-                  Transit to Gate 3
+                  Transit to Gate 3 (Train / Auto Arrivals)
                 </span>
                 <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
-                  From Vijayawada or Guntur, take an auto to <strong>SRM University-AP, Gate 3</strong>. Our team at Gate 3 checks your pass and takes you to your room.
+                  From Vijayawada or Guntur railway station, take an auto directly to <strong>SRM University-AP, Gate 3</strong>. Our team at Gate 3 checks your pass QR and guides you to on-spot room allocation (flexible 24/7 check-in).
+                </p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 pt-0.5">
+                  <strong>Opted for daily SRM bus?</strong> Special buses report at 8:15 AM from Vijayawada (Varadhi/Mangalagiri) and Guntur (Autonagar/Chillies dhaba) bus stands.
                 </p>
               </div>
             </div>

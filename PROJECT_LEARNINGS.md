@@ -334,3 +334,14 @@ sahgyan9/Qiskit-Fall-Fest-SRMAP-2026 (PLANNING REPO)
 8. **Names, entries and own results** (19 Oct 2026): the award name is the profile name (`allowed_emails.full_name`, edited on `/learning/profile?tab=account`), falling back to the registration name; saving it refreshes the card at once and public pages read it live. The masterclass certificate keeps its own confirmed name (`certificate_names`), also on the Account tab. Institutions print as "SRM University-AP" for any SRM AP spelling or an `@srmap.edu.in` email; entry titles that are file names are hidden. Every participant sees "Your results" on the Results tab: a released jury decision as is, otherwise "Not among the winners" once that competition's winners are announced, so non-winning entries need no manual decision.
 9. **Public entry links**: uploaded posters and essays live in the public `media` bucket under names that contain the participant's email. Public pages link to `/awards/[id]/entry`, which copies the file inside storage to `competition-awards/{awardId}-{hash}.{ext}` on first request and redirects there (no file bytes pass through Vercel, so the 4.5 MB response limit does not apply). Reel links redirect unchanged. Released awards only; admins can open unreleased ones.
 10. **Announced at the Valedictory Ceremony** (20 Oct 2026): results were released and seen early by mistake; organizers decided winners are announced only at the Valedictory Ceremony (30 Oct 2026). `lib/competition-reveal.ts` holds a reveal time in `platform_config` (`competition_results_reveal`, default 30 Oct 2026 2:00 PM IST, after the vote of thanks). Before it, released results stay saved but nothing shows: profile Results tab (entrants see "announced at the Valedictory Ceremony"), dashboard jury panel, `/results`, `/awards/[id]` and its entry link. Admins preview everything and can change the time or "Publish now" from Competition Results. Do not withdraw releases to hide results; the reveal time does it.
+
+---
+
+### GT-40: Institutional Hosting & Strict Prohibition on "Department of Physics"
+1. **Zero Mention of "Department of Physics"**:
+   - Under no circumstances should "Department of Physics" be mentioned in any email templates, official broadcast circulars, Dean communications, UI copy, metadata, or documentation.
+2. **Official Host Attribution**:
+   - The festival is officially hosted by **SRM University-AP**, specifically under the **School of Engineering and Sciences (SEAS)**.
+   - When citing academic or institutional units, use "School of Engineering and Sciences" or simply "SRM University-AP".
+3. **Global Enforcement Across Agents**:
+   - All AI agents, automated email generators, and manual drafting utilities must strictly omit and remove any reference to the Department of Physics.

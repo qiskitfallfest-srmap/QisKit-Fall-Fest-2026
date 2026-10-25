@@ -2,8 +2,8 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
-import { Copy, Download, Loader2, RefreshCw, Search } from 'lucide-react';
-import { TRAVEL_DATES, boardingLabel, formatTravelDate, type TransportRequest } from '@/lib/transport';
+import { Bus, Clock, Copy, Download, Loader2, MapPin, Phone, RefreshCw, Search } from 'lucide-react';
+import { SPECIAL_BUS_TRIPS, TRAVEL_DATES, boardingLabel, formatTravelDate, type TransportRequest } from '@/lib/transport';
 import { OFFER_LABEL, downloadCsv, whatsappLink } from './admin-csv';
 
 type Row = TransportRequest & {
@@ -209,6 +209,85 @@ export function AdminTransportView() {
             <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900 dark:text-[#FAF6F3]">{t.value}</p>
           </div>
         ))}
+      </div>
+
+      {/* Official Special Bus Trips Allocation */}
+      <div className={clsx(tile, 'space-y-3')}>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-[#250D11] pb-3">
+          <div className="flex items-center gap-2">
+            <Bus className="w-5 h-5 text-burgundy dark:text-[#E89BA5]" />
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-[#FAF6F3]">
+                Allocated Special Bus Trips (26.10.2026 to 30.10.2026)
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Exclusive to external participants who opted for daily bus transport.
+              </p>
+            </div>
+          </div>
+          <span className="font-mono text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1 rounded-md">
+            2 Vehicles Assigned · 5 Days
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+          {SPECIAL_BUS_TRIPS.map((trip) => (
+            <div
+              key={trip.sno}
+              className="p-3.5 rounded-xl border border-slate-200 dark:border-[#3D1418] bg-slate-50/70 dark:bg-[#150709] space-y-2.5"
+            >
+              <div className="flex items-center justify-between gap-2 border-b border-slate-200/60 dark:border-[#250D11] pb-2">
+                <span className="font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-burgundy dark:text-[#E89BA5]" />
+                  {trip.route}
+                </span>
+                <span className="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">
+                  {trip.vehicleNo}
+                </span>
+              </div>
+
+              <div className="space-y-1">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+                  Boarding Route
+                </span>
+                <p className="font-medium text-slate-800 dark:text-slate-200">
+                  {trip.boardingPoints.join(' → ')}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 pt-1 font-mono">
+                <div>
+                  <span className="text-[10px] uppercase text-slate-400 block">Morning Reporting</span>
+                  <span className="font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {trip.reportingTime}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase text-slate-400 block">Evening Return</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {trip.returnTime}
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-slate-200/60 dark:border-[#250D11] flex items-center justify-between gap-2">
+                <div>
+                  <span className="text-[10px] uppercase text-slate-400 block">Assigned Driver</span>
+                  <span className="font-medium text-slate-900 dark:text-white">{trip.driverName}</span>
+                </div>
+                <a
+                  href={`tel:${trip.driverPhone}`}
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-slate-900 hover:bg-slate-700 dark:bg-slate-200 dark:hover:bg-white dark:text-slate-900 text-white font-mono text-xs font-semibold"
+                >
+                  <Phone className="w-3 h-3" />
+                  <span>{trip.driverPhoneDisplay}</span>
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className={tile}>

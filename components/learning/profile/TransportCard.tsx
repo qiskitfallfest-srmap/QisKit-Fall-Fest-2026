@@ -3,9 +3,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import useSWR from 'swr';
 import clsx from 'clsx';
-import { AlertCircle, Bus, Loader2, RefreshCw } from 'lucide-react';
+import { AlertCircle, Bus, Clock, Loader2, MapPin, Phone, RefreshCw } from 'lucide-react';
 import {
   OTHER_BOARDING_POINT,
+  SPECIAL_BUS_TRIPS,
   TRAVEL_DATES,
   boardingLabel,
   formatTravelDate,
@@ -454,10 +455,104 @@ export function TransportCard({ mayBeShortlisted }: { mayBeShortlisted: boolean 
           );
         })}
       </ul>
-      <p className="mt-3 text-xs text-slate-600 dark:text-slate-400">
-        Pickup times and exact stops will be shared before Day 1.
-        {data.closed && ` Responses are closed; write to ${CONTACT_EMAIL} for changes.`}
-      </p>
+      {/* Official Special Bus Trips (26.10.2026 - 30.10.2026) */}
+      <div className="mt-5 space-y-3 pt-4 border-t border-slate-200 dark:border-[#3D1418]">
+        <div className="flex flex-wrap items-center justify-between gap-1.5">
+          <div className="flex items-center gap-2">
+            <Bus className="w-4 h-4 text-burgundy dark:text-[#E89BA5]" />
+            <h4 className="font-sans text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-[#FAF6F3]">
+              Special Bus Trips · 26 to 30 October 2026
+            </h4>
+          </div>
+          <span className="font-mono text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded">
+            Running All 5 Days
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+          {SPECIAL_BUS_TRIPS.map((trip) => (
+            <div
+              key={trip.sno}
+              className="p-3.5 rounded-xl border border-slate-200 dark:border-[#3D1418] bg-slate-50/70 dark:bg-[#150709] space-y-2.5"
+            >
+              <div className="flex items-center justify-between gap-2 border-b border-slate-200/60 dark:border-[#250D11] pb-2">
+                <span className="font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-burgundy dark:text-[#E89BA5]" />
+                  {trip.route}
+                </span>
+                <span className="font-mono text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                  {trip.vehicleNo}
+                </span>
+              </div>
+
+              <div className="space-y-1 text-slate-600 dark:text-slate-300">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+                  Boarding Points
+                </span>
+                <p className="font-medium text-slate-800 dark:text-slate-200">
+                  {trip.boardingPoints.join(' · ')}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-slate-700 dark:text-slate-300 pt-1">
+                <div>
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+                    Reporting
+                  </span>
+                  <span className="font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {trip.reportingTime}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+                    Campus Return
+                  </span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {trip.returnTime}
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-slate-200/60 dark:border-[#250D11] flex items-center justify-between gap-2">
+                <div>
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+                    Driver
+                  </span>
+                  <span className="font-medium text-slate-900 dark:text-white">
+                    {trip.driverName}
+                  </span>
+                </div>
+                <a
+                  href={`tel:${trip.driverPhone}`}
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-slate-900 hover:bg-slate-700 dark:bg-slate-200 dark:hover:bg-white dark:text-slate-900 text-white font-mono text-xs font-semibold"
+                >
+                  <Phone className="w-3 h-3" />
+                  <span>{trip.driverPhoneDisplay}</span>
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Train & Auto Transit Disclaimer */}
+        <div className="p-3 rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50/80 dark:bg-amber-950/20 text-xs text-amber-950 dark:text-amber-200 space-y-1">
+          <p className="font-semibold flex items-center gap-1.5 text-amber-900 dark:text-amber-100">
+            <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            Important Notice for Train &amp; Direct Arrivals
+          </p>
+          <p className="leading-relaxed text-slate-700 dark:text-slate-300">
+            These special bus trips are strictly for external participants who requested daily SRM bus transport from Vijayawada or Guntur.
+            Participants arriving by train or staying on campus must take an auto directly to <strong>SRM University-AP, Campus Gate 3</strong>. Our team at Gate 3 will verify your pass QR and guide you to on-spot room allocation (flexible 24/7 check-in).
+          </p>
+        </div>
+        {data.closed && (
+          <p className="text-xs text-slate-500 dark:text-slate-400 pt-1">
+            Responses are closed; write to {CONTACT_EMAIL} for changes.
+          </p>
+        )}
+      </div>
     </Card>
   );
 }

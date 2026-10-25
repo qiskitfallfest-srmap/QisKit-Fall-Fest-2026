@@ -15,3 +15,6 @@ Refer to:
 - `AGENTS.md` for AI agent operational standards, Google Apps Script email relay & whitelist sync (GT-31), dynamic homepage session CTAs (GT-32), active deadline extensions, free event participation rules (GT-24), and 2–6 member hackathon team constraints (GT-25).
 
 
+
+## Institutional Naming Directives
+- **Zero Mention of 'Department of Physics'**: Under no circumstances should 'Department of Physics' be mentioned in any email templates, announcements, or documentation. Always use **SRM University-AP** or **School of Engineering and Sciences (SEAS)**.

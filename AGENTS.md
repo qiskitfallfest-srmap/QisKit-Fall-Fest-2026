@@ -64,6 +64,7 @@ This file is automatically loaded by AI agents working in this workspace.
 - **Zero Decorative Emojis** in UI buttons, status badges, headers, or git commits.
 - **Clean light-theme default** (`#ffffff` / `#f8fafc`, `#e2e8f0` borders, `#0f172a` text).
 - **Concise, direct tone** without AI cheerleading or filler words.
+- **Strict Prohibition on "Department of Physics" (MANDATORY)**: Never mention "Department of Physics" in any email templates, broadcast circulars, UI copy, metadata, or documentation. The festival is hosted by **SRM University-AP** (or **School of Engineering and Sciences** / **SEAS** when specifying university divisions). All AI agents must strictly omit or replace any reference to "Department of Physics".
 - Consult `PROJECT_LEARNINGS.md` for complete ground truths (GT-01 through GT-25).
 
 ---
