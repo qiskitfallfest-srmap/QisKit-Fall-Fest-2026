@@ -31,6 +31,25 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '', 10) || PAGE_MAX, 1), PAGE_MAX);
     const cursor = (searchParams.get('cursor') || '').trim().toLowerCase();
 
+    // ?summary=1: how many claims there are by tier, status and paid/free (no names, no emails): for checking the numbers
+    if (searchParams.get('summary') === '1') {
+      const counts = new Map<string, number>();
+      for (let from = 0; from < 20000; from += 1000) {
+        const { data, error: e } = await supabaseAdmin.from('festival_pass_claims').select('pass_tier, status, amount_inr, user_email').range(from, from + 999);
+        if (e) throw e;
+        for (const r of data || []) {
+          const srm = String(r.user_email).toLowerCase().endsWith('@srmap.edu.in') ? 'srm' : 'outside';
+          const key = [r.pass_tier, r.status, Number(r.amount_inr) > 0 ? 'paid' : 'free', srm].join('|');
+          counts.set(key, (counts.get(key) || 0) + 1);
+        }
+        if (!data || data.length < 1000) break;
+      }
+      return NextResponse.json(
+        { claims: [...counts.entries()].map(([k, n]) => { const [tier, status, amount, who] = k.split('|'); return { tier, status, amount, who, count: n }; }) },
+        { headers: { 'Cache-Control': 'no-store' } }
+      );
+    }
+
     // lower-cased emails are what the app matches on; claims store whatever case the user signed in with, so order and page on the raw column
     let query = supabaseAdmin
       .from('festival_pass_claims')
