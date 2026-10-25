@@ -780,10 +780,12 @@ export function OnCampusPassCard() {
               ) : (
                 <a
                   href={QFF_APP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="px-4 py-2.5 bg-burgundy hover:bg-burgundy-deep text-white text-xs font-semibold rounded-xl transition-colors flex items-center gap-2 cursor-pointer"
                 >
                   <Smartphone className="w-4 h-4" />
-                  <span>Open the app for your pass</span>
+                  <span>Download the app</span>
                 </a>
               )}
               {!isVerified && !isRejected && (
@@ -814,9 +816,11 @@ export function OnCampusPassCard() {
               </div>
               <a
                 href={QFF_APP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="font-mono text-[10px] font-bold uppercase tracking-wider text-burgundy dark:text-[#E89BA5] underline underline-offset-2"
               >
-                Get the app
+                Download the app
               </a>
             </div>
           )}

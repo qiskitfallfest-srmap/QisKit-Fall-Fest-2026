@@ -26,9 +26,11 @@ export function AppDownloadBanner() {
         </div>
         <a
           href={QFF_APP_URL}
+          target="_blank"
+          rel="noopener noreferrer"
           className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-[#7E1322] transition-colors hover:bg-[#FAF7F4] focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#7E1322]"
         >
-          Open the app
+          Download the app
           <ArrowRight aria-hidden="true" className="h-4 w-4" />
         </a>
       </div>
