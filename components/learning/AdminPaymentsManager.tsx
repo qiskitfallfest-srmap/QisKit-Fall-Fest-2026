@@ -33,8 +33,12 @@ type ReviewStatus = 'pending' | 'verified' | 'rejected';
 type StatusFilter = ReviewStatus | 'all' | 'checked_in' | 'to_deliver';
 type DeliveryMode = CertificateDeliveryMode;
 // Who paid: SRM-AP addresses (@srmap.edu.in, free pass for students) are reviewed and counted apart from outside attendees (paid)
-type Who = 'all' | 'srm' | 'outside';
-const WHO_LABEL: Record<Who, string> = { all: 'Everyone', srm: 'SRM-AP emails', outside: 'Outside emails' };
+// "Personal email, SRM-AP college": outside address whose typed college says SRM-AP (self-reported, so kept apart from verified SRM emails)
+type Who = 'all' | 'srm' | 'srm_college' | 'other' | 'outside';
+const WHO_LABEL: Record<Who, string> = { all: 'Everyone', srm: 'SRM-AP emails', srm_college: 'Personal email, says SRM-AP', other: 'Other colleges', outside: 'All outside emails' };
+const WHO_NOTE: Partial<Record<Who, string>> = { srm: 'free pass', srm_college: 'self-reported', other: 'paid', outside: 'paid' };
+const WHO_KEY: Record<Exclude<Who, 'all'>, 'srm' | 'srmCollege' | 'other' | 'outside'> = { srm: 'srm', srm_college: 'srmCollege', other: 'other', outside: 'outside' };
+const GROUP_LABEL: Record<string, string> = { srm: 'SRM-AP email', srmCollege: 'Personal email (SRM-AP college)', other: 'Other college' };
 
 const DELIVERY_LABEL: Record<DeliveryMode, string> = {
   ceremony: 'Valedictory ceremony (in person)',
@@ -52,6 +56,7 @@ interface PaymentItem {
   name: string;
   email: string;
   isSrm?: boolean;
+  group?: 'srm' | 'srmCollege' | 'other';
   institution: string | null;
   phone: string | null;
   transactionReference: string;
@@ -85,6 +90,8 @@ interface PassCounts {
 interface PassMetrics extends PassCounts {
   srm?: PassCounts;
   outside?: PassCounts;
+  srmCollege?: PassCounts;
+  other?: PassCounts;
 }
 
 interface Metrics {
@@ -305,7 +312,7 @@ export function AdminPaymentsManager() {
       VIEW_META[viewOf(p)].short,
       p.name,
       p.email,
-      p.isSrm ? 'SRM-AP' : 'Outside',
+      p.group ? GROUP_LABEL[p.group] : p.isSrm ? 'SRM-AP email' : 'Outside',
       p.institution,
       p.phone,
       p.amountInr,
@@ -329,7 +336,7 @@ export function AdminPaymentsManager() {
     URL.revokeObjectURL(url);
   }
 
-  const m: PassCounts = view === 'certificate' ? { ...metrics.certificate, checkedIn: 0 } : who !== 'all' ? metrics[view][who] ?? EMPTY_PASS_METRICS : metrics[view];
+  const m: PassCounts = view === 'certificate' ? { ...metrics.certificate, checkedIn: 0 } : who !== 'all' ? metrics[view][WHO_KEY[who]] ?? EMPTY_PASS_METRICS : metrics[view];
   const statusTabs: { key: StatusFilter; label: string; count?: number }[] = [
     { key: 'pending', label: 'Pending', count: m.pending },
     { key: 'verified', label: 'Verified', count: m.verified },
@@ -398,11 +405,11 @@ export function AdminPaymentsManager() {
         })}
       </div>
 
-      {/* Who: SRM-AP emails (free pass) and outside emails (paid) side by side, each with its own counts; picking one filters the list below */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {(['all', 'srm', 'outside'] as Who[]).map((w) => {
+      {/* Who: every group side by side with its own counts; picking one filters the list below */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {(['all', 'srm', 'srm_college', 'other'] as Who[]).map((w) => {
           const active = w === who;
-          const c: PassCounts | null = view === 'certificate' ? null : w === 'all' ? metrics[view] : metrics[view][w] ?? null;
+          const c: PassCounts | null = view === 'certificate' ? null : w === 'all' ? metrics[view] : metrics[view][WHO_KEY[w as Exclude<Who, 'all'>]] ?? null;
           return (
             <button
               key={w}
@@ -416,8 +423,7 @@ export function AdminPaymentsManager() {
             >
               <span className="text-xs font-bold text-slate-900 dark:text-[#FAF6F3]">
                 {WHO_LABEL[w]}
-                {w === 'srm' && <span className="ml-1.5 font-mono text-[10px] font-semibold text-slate-400">free pass</span>}
-                {w === 'outside' && <span className="ml-1.5 font-mono text-[10px] font-semibold text-slate-400">paid</span>}
+                {WHO_NOTE[w] && <span className="ml-1.5 font-mono text-[10px] font-semibold text-slate-400">{WHO_NOTE[w]}</span>}
               </span>
               {c ? (
                 <span className="mt-2 grid grid-cols-4 gap-2 font-mono text-[10px] text-slate-500 dark:text-slate-400">
@@ -433,6 +439,45 @@ export function AdminPaymentsManager() {
           );
         })}
       </div>
+
+      {/* Data analysis: both passes by who bought them, with the likely SRM-AP total (SRM emails + personal emails that say SRM-AP) */}
+      {view !== 'certificate' && (
+        <div className={clsx(CARD, 'p-3 overflow-x-auto')}>
+          <div className="text-xs font-bold text-slate-900 dark:text-[#FAF6F3] mb-2">Who holds the passes</div>
+          <table className="w-full text-left font-mono text-[11px] text-slate-600 dark:text-slate-300">
+            <thead>
+              <tr className="text-[10px] uppercase tracking-wider text-slate-400">
+                <th className="py-1 pr-3">Group</th>
+                {(['general', 'flagship'] as const).map((t) => (
+                  <th key={t} className="py-1 px-2" colSpan={3}>{VIEW_META[t].short} ₹{VIEW_META[t].fee}</th>
+                ))}
+              </tr>
+              <tr className="text-[10px] text-slate-400">
+                <th />
+                {(['general', 'flagship'] as const).flatMap((t) => ['verified', 'to review', 'rejected'].map((l) => <th key={t + l} className="py-1 px-2 font-normal">{l}</th>))}
+              </tr>
+            </thead>
+            <tbody>
+              {([
+                ['SRM-AP emails', (t: 'general' | 'flagship') => metrics[t].srm],
+                ['Personal email, says SRM-AP', (t: 'general' | 'flagship') => metrics[t].srmCollege],
+                ['Likely SRM-AP total', (t: 'general' | 'flagship') => ({ verified: (metrics[t].srm?.verified || 0) + (metrics[t].srmCollege?.verified || 0), pending: (metrics[t].srm?.pending || 0) + (metrics[t].srmCollege?.pending || 0), rejected: (metrics[t].srm?.rejected || 0) + (metrics[t].srmCollege?.rejected || 0) })],
+                ['Other colleges', (t: 'general' | 'flagship') => metrics[t].other],
+                ['All', (t: 'general' | 'flagship') => metrics[t]],
+              ] as [string, (t: 'general' | 'flagship') => { verified: number; pending: number; rejected: number } | undefined][]).map(([label, get]) => (
+                <tr key={label} className={clsx('border-t border-slate-100 dark:border-[#3D1418]', (label === 'All' || label.startsWith('Likely')) && 'font-bold text-slate-900 dark:text-[#FAF6F3]')}>
+                  <td className="py-1.5 pr-3">{label}</td>
+                  {(['general', 'flagship'] as const).flatMap((t) => {
+                    const c = get(t);
+                    return [c?.verified ?? 0, c?.pending ?? 0, c?.rejected ?? 0].map((n, i) => <td key={t + i} className="py-1.5 px-2">{n}</td>);
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="mt-2 text-[10px] text-slate-400">&ldquo;Says SRM-AP&rdquo; is the college the person typed with a non-SRM email (SRM Chennai/IST is not counted). It is self-reported, so treat it as a close estimate.</p>
+        </div>
+      )}
 
       {/* Toolbar */}
       <div className={clsx(CARD, 'p-3 flex flex-col lg:flex-row lg:items-center gap-3')}>
