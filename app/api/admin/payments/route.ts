@@ -5,7 +5,7 @@ import { checkCertificateEligibility, mintCertificate } from '@/lib/certificate'
 import { resolveCertificateName } from '@/lib/certificate-name';
 import { notifyQffApp } from '@/lib/qff-app-sync';
 import { COMBINED_FLAGSHIP_CERTIFICATE_INR, isCombinedFlagshipTxn } from '@/lib/payments';
-import { SRM_DOMAIN, claimsSrmCollege, groupOf, isSrmAddress, isSrmStudent } from '@/lib/srm-group';
+import { SRM_DOMAIN, claimsSrmCollege, groupOf, isSrmAddress, isSrmStudent, srmBasisOf } from '@/lib/srm-group';
 
 export const dynamic = 'force-dynamic';
 
@@ -345,7 +345,7 @@ export async function PATCH(request: NextRequest) {
     if (type === 'pass') {
       const { data: pass } = await supabaseAdmin
         .from('festival_pass_claims')
-        .select('id, checked_in, user_email, user_name, pass_tier')
+        .select('id, checked_in, user_email, user_name, pass_tier, institution')
         .eq('id', id)
         .maybeSingle();
       if (!pass) return NextResponse.json({ error: 'Pass not found.' }, { status: 404 });
@@ -372,7 +372,7 @@ export async function PATCH(request: NextRequest) {
       if (error) throw error;
       // a verified pass opens the QFF app for outside attendees: tell the app now (it also pulls every 10 minutes)
       if (nextStatus === 'verified') {
-        notifyQffApp([{ email: pass.user_email, name: pass.user_name, passTier: pass.pass_tier === 'flagship_offline' ? 'flagship' : 'general' }]);
+        notifyQffApp([{ email: pass.user_email, name: pass.user_name, passTier: pass.pass_tier === 'flagship_offline' ? 'flagship' : 'general', srmBasis: srmBasisOf(pass.user_email, pass.institution) }]);
       }
 
       return NextResponse.json({ success: true, status: toReviewStatus(nextStatus) });

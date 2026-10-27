@@ -16,6 +16,8 @@ export interface QffAppPerson {
   isActive?: boolean;
   role?: string;
   passTier?: 'general' | 'flagship' | null;
+  /** from lib/srm-group: tells the app whether to ask this person for the SRM-AP academic details */
+  srmBasis?: 'srm_email' | 'personal_says_srm' | 'outside';
 }
 
 const APP_URL = (process.env.QFF_APP_URL || 'https://app.qffsrmap2026.com').replace(/\/+$/, '');
