@@ -1,13 +1,33 @@
-import React from 'react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { Smartphone, ArrowRight } from 'lucide-react';
+import { getClientSession } from '@/lib/session-client';
 
 export const QFF_APP_URL = 'https://app.qffsrmap2026.com';
 
 /**
  * Shown at the top of every learning page, on every visit (deliberately not dismissible: knowledge in the world, not a toast).
+ * Hidden for admins and on the admin pages (it is for participants); held back until the session is known so admins never see it flash.
  * Points participants to the QFF 2026 app (college entry, attendance at every event, support). The website's own pass QR stays on the pass card as a fallback if the app has any problem.
  */
 export function AppDownloadBanner() {
+  const pathname = usePathname();
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    getClientSession().then((data) => {
+      if (active) setIsAdmin(Boolean(data.session?.isAdmin));
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (isAdmin !== false || pathname?.startsWith('/learning/admin')) return null;
+
   return (
     <div
       role="region"
