@@ -5,6 +5,7 @@ import { checkCertificateEligibility, mintCertificate } from '@/lib/certificate'
 import { resolveCertificateName } from '@/lib/certificate-name';
 import { notifyQffApp } from '@/lib/qff-app-sync';
 import { COMBINED_FLAGSHIP_CERTIFICATE_INR, isCombinedFlagshipTxn } from '@/lib/payments';
+import { SRM_DOMAIN, claimsSrmCollege, groupOf, isSrmAddress, isSrmStudent } from '@/lib/srm-group';
 
 export const dynamic = 'force-dynamic';
 
@@ -65,19 +66,6 @@ async function sumVerified(table: string, filters: Filters) {
 }
 
 type Who = 'all' | 'srm' | 'outside';
-type Group = 'srm' | 'outside';
-const SRM_DOMAIN = '@srmap.edu.in';
-const isSrmAddress = (email: string) => email.trim().toLowerCase().endsWith(SRM_DOMAIN);
-/**
- * Who a claim really belongs to: SRM-AP students are those with an @srmap.edu.in address, plus people who registered with a
- * personal address but typed SRM-AP as their college (SRM Chennai / IST etc. does not count). Everyone else is outside.
- */
-const OTHER_SRM_CAMPUS = /\b(ist|chennai|ktr|kattankulathur|ramapuram|trichy|vadapalani|delhi|ncr|sonepat|sikkim)\b/i;
-const claimsSrmCollege = (institution: unknown) => { const t = String(institution || ''); return /srm/i.test(t) && !OTHER_SRM_CAMPUS.test(t); };
-const isSrmStudent = (email: string, institution: unknown) => isSrmAddress(email) || claimsSrmCollege(institution);
-function groupOf(email: string, institution: unknown): Group {
-  return isSrmStudent(email, institution) ? 'srm' : 'outside';
-}
 const emptyMetrics = () => ({ pending: 0, verified: 0, rejected: 0, checkedIn: 0, collected: 0 });
 type PassMetricsOut = ReturnType<typeof emptyMetrics> & { srm: ReturnType<typeof emptyMetrics>; outside: ReturnType<typeof emptyMetrics> };
 

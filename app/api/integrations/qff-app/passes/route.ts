@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { timingSafeEqual } from 'node:crypto';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { logError } from '@/lib/logger';
+import { claimsSrmCollege, isSrmAddress, mentionsOtherSrmCampus, srmBasisOf, type SrmBasis } from '@/lib/srm-group';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,6 +31,22 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '', 10) || PAGE_MAX, 1), PAGE_MAX);
     const cursor = (searchParams.get('cursor') || '').trim().toLowerCase();
+
+    // ?audit=srm: read-only list for checking the SRM-AP grouping by hand. (a) personal address, college says SRM-AP; (b) college mentions SRM but the rule excludes it.
+    if (searchParams.get('audit') === 'srm') {
+      type R = { user_email: string; user_name: string | null; institution: string | null; pass_tier: string; status: string };
+      const all: R[] = [];
+      for (let from = 0; from < 20000; from += 1000) {
+        const { data, error: e } = await supabaseAdmin.from('festival_pass_claims').select('user_email, user_name, institution, pass_tier, status').range(from, from + 999);
+        if (e) throw e;
+        all.push(...((data as R[]) || []));
+        if (!data || data.length < 1000) break;
+      }
+      const row = (c: R) => ({ email: String(c.user_email).toLowerCase(), name: c.user_name || '', institution: c.institution || '', tier: c.pass_tier === 'flagship_offline' ? 'flagship' : 'general', status: c.status === 'claimed_provisional' ? 'pending' : c.status });
+      const personalSaysSrm = all.filter((c) => !isSrmAddress(c.user_email) && claimsSrmCollege(c.institution)).map(row);
+      const srmMentionExcluded = all.filter((c) => !isSrmAddress(c.user_email) && mentionsOtherSrmCampus(c.institution)).map(row);
+      return NextResponse.json({ personalSaysSrm, srmMentionExcluded }, { headers: { 'Cache-Control': 'no-store' } });
+    }
 
     // ?audit=1: integrity checks on the outside-SRM pass-holders (who paid): amount vs tier, reused bank references, missing reviewer, name mismatches
     if (searchParams.get('audit') === '1') {
@@ -90,7 +107,7 @@ export async function GET(request: NextRequest) {
     // lower-cased emails are what the app matches on; claims store whatever case the user signed in with, so order and page on the raw column
     let query = supabaseAdmin
       .from('festival_pass_claims')
-      .select('user_email, user_name, pass_tier, status')
+      .select('user_email, user_name, pass_tier, status, institution')
       .in('status', ['verified', 'claimed_provisional', 'rejected'])
       .order('user_email', { ascending: true })
       .limit(limit);
@@ -110,14 +127,17 @@ export async function GET(request: NextRequest) {
 
     // one row per email: "verified" beats "pending" beats "rejected" (someone with a verified pass is a pass-holder whatever else they filed)
     const RANK: Record<string, number> = { verified: 3, pending: 2, rejected: 1 };
-    const byEmail = new Map<string, { email: string; name: string; tier: 'general' | 'flagship'; status: 'verified' | 'pending' | 'rejected' }>();
+    const byEmail = new Map<string, { email: string; name: string; tier: 'general' | 'flagship'; status: 'verified' | 'pending' | 'rejected'; srmBasis: SrmBasis }>();
     for (const r of page) {
       const email = String(r.user_email).trim().toLowerCase();
       const tier = r.pass_tier === 'flagship_offline' ? 'flagship' : 'general';
       const status = r.status === 'verified' ? 'verified' : r.status === 'claimed_provisional' ? 'pending' : 'rejected';
       const cur = byEmail.get(email);
-      if (!cur) byEmail.set(email, { email, name: r.user_name || '', tier, status });
+      const srmBasis = srmBasisOf(email, r.institution);
+      if (!cur) byEmail.set(email, { email, name: r.user_name || '', tier, status, srmBasis });
       else {
+        // any claim of this person that says SRM-AP makes them personal_says_srm (an SRM address stays srm_email)
+        if (cur.srmBasis === 'outside' && srmBasis === 'personal_says_srm') cur.srmBasis = 'personal_says_srm';
         if (RANK[status] > RANK[cur.status]) { cur.status = status; cur.tier = tier; }
         else if (status === cur.status && tier === 'flagship') cur.tier = 'flagship';
       }
