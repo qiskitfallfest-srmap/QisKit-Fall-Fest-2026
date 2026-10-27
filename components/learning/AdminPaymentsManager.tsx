@@ -35,10 +35,10 @@ type DeliveryMode = CertificateDeliveryMode;
 // Who paid: SRM-AP addresses (@srmap.edu.in, free pass for students) are reviewed and counted apart from outside attendees (paid)
 type Who = 'all' | 'srm' | 'outside';
 // SRM-AP students = @srmap.edu.in addresses plus personal addresses whose typed college says SRM-AP
-const WHO_LABEL: Record<Who, string> = { all: 'Everyone', srm: 'SRM-AP students', outside: 'Outside SRM-AP' };
+const WHO_LABEL: Record<Who, string> = { all: 'Everyone', srm: 'SRM-AP students', outside: 'External students' };
 const WHO_NOTE: Partial<Record<Who, string>> = { srm: 'by email or college', outside: 'paid' };
 const WHO_KEY: Record<Exclude<Who, 'all'>, 'srm' | 'outside'> = { srm: 'srm', outside: 'outside' };
-const GROUP_LABEL: Record<string, string> = { srm: 'SRM-AP student', outside: 'Outside SRM-AP' };
+const GROUP_LABEL: Record<string, string> = { srm: 'SRM-AP student', outside: 'External student' };
 
 const DELIVERY_LABEL: Record<DeliveryMode, string> = {
   ceremony: 'Valedictory ceremony (in person)',
@@ -311,7 +311,7 @@ export function AdminPaymentsManager() {
       VIEW_META[viewOf(p)].short,
       p.name,
       p.email,
-      p.group ? GROUP_LABEL[p.group] : p.isSrm ? 'SRM-AP email' : 'Outside',
+      p.group ? GROUP_LABEL[p.group] : p.isSrm ? 'SRM-AP email' : 'External',
       p.institution,
       p.phone,
       p.amountInr,
@@ -459,7 +459,7 @@ export function AdminPaymentsManager() {
             <tbody>
               {([
                 ['SRM-AP students', (t: 'general' | 'flagship') => metrics[t].srm],
-                ['Outside SRM-AP', (t: 'general' | 'flagship') => metrics[t].outside],
+                ['External students', (t: 'general' | 'flagship') => metrics[t].outside],
                 ['All', (t: 'general' | 'flagship') => metrics[t]],
               ] as [string, (t: 'general' | 'flagship') => { verified: number; pending: number; rejected: number } | undefined][]).map(([label, get]) => (
                 <tr key={label} className={clsx('border-t border-slate-100 dark:border-[#3D1418]', label === 'All' && 'font-bold text-slate-900 dark:text-[#FAF6F3]')}>
@@ -567,7 +567,7 @@ export function AdminPaymentsManager() {
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-bold text-slate-900 dark:text-[#FAF6F3] truncate">
                         {p.name}
-                        <span className="ml-1.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-slate-400">{p.group === 'srm' ? 'SRM-AP' : 'Outside'}</span>
+                        <span className="ml-1.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-slate-400">{p.group === 'srm' ? 'SRM-AP' : 'External'}</span>
                       </p>
                       <p className="font-mono text-[11px] text-slate-500 dark:text-slate-400 truncate">{p.email}</p>
                       <p className="font-mono text-[10px] text-slate-400 mt-0.5 truncate">
