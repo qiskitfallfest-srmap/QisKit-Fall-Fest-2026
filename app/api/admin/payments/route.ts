@@ -64,34 +64,34 @@ async function sumVerified(table: string, filters: Filters) {
   return (data || []).reduce((sum: number, r: any) => sum + (Number(r.amount_inr) || 0), 0);
 }
 
-type Who = 'all' | 'srm' | 'outside' | 'srm_college' | 'other';
-type Group = 'srm' | 'srmCollege' | 'other';
+type Who = 'all' | 'srm' | 'outside';
+type Group = 'srm' | 'outside';
 const SRM_DOMAIN = '@srmap.edu.in';
 const isSrmAddress = (email: string) => email.trim().toLowerCase().endsWith(SRM_DOMAIN);
 /**
- * Who a claim really belongs to. Some SRM-AP students registered with a personal address, so an outside email whose
- * typed college says SRM-AP counts as "srmCollege" (SRM Chennai / IST etc. does not). Self-reported, so shown apart from the verified SRM emails.
+ * Who a claim really belongs to: SRM-AP students are those with an @srmap.edu.in address, plus people who registered with a
+ * personal address but typed SRM-AP as their college (SRM Chennai / IST etc. does not count). Everyone else is outside.
  */
 const OTHER_SRM_CAMPUS = /\b(ist|chennai|ktr|kattankulathur|ramapuram|trichy|vadapalani|delhi|ncr|sonepat|sikkim)\b/i;
 const claimsSrmCollege = (institution: unknown) => { const t = String(institution || ''); return /srm/i.test(t) && !OTHER_SRM_CAMPUS.test(t); };
+const isSrmStudent = (email: string, institution: unknown) => isSrmAddress(email) || claimsSrmCollege(institution);
 function groupOf(email: string, institution: unknown): Group {
-  if (isSrmAddress(email)) return 'srm';
-  return claimsSrmCollege(institution) ? 'srmCollege' : 'other';
+  return isSrmStudent(email, institution) ? 'srm' : 'outside';
 }
 const emptyMetrics = () => ({ pending: 0, verified: 0, rejected: 0, checkedIn: 0, collected: 0 });
-type PassMetricsOut = ReturnType<typeof emptyMetrics> & { srm: ReturnType<typeof emptyMetrics>; outside: ReturnType<typeof emptyMetrics>; srmCollege: ReturnType<typeof emptyMetrics>; other: ReturnType<typeof emptyMetrics> };
+type PassMetricsOut = ReturnType<typeof emptyMetrics> & { srm: ReturnType<typeof emptyMetrics>; outside: ReturnType<typeof emptyMetrics> };
 
-/** Pass counts per tier, in total and split by SRM-AP email vs outside email (one read of the claims table, summed here). */
+/** Pass counts per tier, in total and split by SRM-AP students vs outside (one read of the claims table, summed here). */
 async function allPassMetrics(): Promise<Record<PassTier, PassMetricsOut>> {
   const out = {} as Record<PassTier, PassMetricsOut>;
-  for (const t of PASS_TIERS) out[t] = { ...emptyMetrics(), srm: emptyMetrics(), outside: emptyMetrics(), srmCollege: emptyMetrics(), other: emptyMetrics() };
+  for (const t of PASS_TIERS) out[t] = { ...emptyMetrics(), srm: emptyMetrics(), outside: emptyMetrics() };
   for (let from = 0; from < 20000; from += 1000) {
     const { data } = await supabaseAdmin.from('festival_pass_claims').select('pass_tier, status, amount_inr, checked_in, user_email, institution').range(from, from + 999);
     for (const r of (data || []) as any[]) {
       const tier = (r.pass_tier === 'flagship_offline' ? 'flagship_offline' : 'general_offline') as PassTier;
       const st = toReviewStatus(r.status);
       const g = groupOf(String(r.user_email), r.institution);
-      for (const bucket of [out[tier], g === 'srm' ? out[tier].srm : out[tier].outside, out[tier][g]]) {
+      for (const bucket of [out[tier], out[tier][g]]) {
         bucket[st] += 1;
         if (r.checked_in) bucket.checkedIn += 1;
         if (st === 'verified') bucket.collected += Number(r.amount_inr) || 0;
@@ -143,7 +143,7 @@ export async function GET(request: NextRequest) {
     const tierParam = searchParams.get('tier') as PassTier | null;
     const tier = type === 'pass' && tierParam && PASS_TIERS.includes(tierParam) ? tierParam : null;
     const whoParam = searchParams.get('who');
-    const who: Who = whoParam === 'srm' || whoParam === 'outside' || whoParam === 'srm_college' || whoParam === 'other' ? whoParam : 'all';
+    const who: Who = whoParam === 'srm' || whoParam === 'outside' ? whoParam : 'all';
 
     const table = type === 'pass' ? 'festival_pass_claims' : 'certificate_payment_submissions';
     const nameColumn = type === 'pass' ? 'user_name' : 'candidate_name';
@@ -151,11 +151,8 @@ export async function GET(request: NextRequest) {
 
     let query = supabaseAdmin.from(table).select('*').order('created_at', { ascending: true });
     if (tier) query = query.eq('pass_tier', tier);
-    // SRM-AP students/faculty (free pass, @srmap.edu.in) and outside attendees (paid) are reviewed and counted separately
-    if (who === 'srm') query = query.ilike('user_email', `%${SRM_DOMAIN}`);
-    if (who === 'outside' || who === 'srm_college' || who === 'other') query = query.not('user_email', 'ilike', `%${SRM_DOMAIN}`);
-    // the college is free text, so splitting outside people by it is done here rather than in the database
-    const byCollege = who === 'srm_college' || who === 'other';
+    // the college is free text, so the SRM-AP / outside split is applied after the query rather than in the database
+    const byWho = who !== 'all';
 
     if (status === 'checked_in' && type === 'pass') {
       query = query.eq('checked_in', true);
@@ -171,13 +168,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { data: fetched, error } = await query.limit(byCollege ? 3000 : 500);
+    const { data: fetched, error } = await query.limit(byWho ? 3000 : 500);
     if (error) {
       console.error('[Admin Payments Query Error]:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const list = (fetched || []).filter((r: any) => !byCollege || (who === 'srm_college') === claimsSrmCollege(r.institution)).slice(0, 500);
+    const list = (fetched || []).filter((r: any) => !byWho || (who === groupOf(String(r.user_email), r.institution))).slice(0, 500);
     const emails = Array.from(new Set(list.map((r: any) => String(r.user_email).toLowerCase())));
     const txns = list.map((r: any) => String(r.transaction_reference).toUpperCase());
 
