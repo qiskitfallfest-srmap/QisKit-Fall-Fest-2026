@@ -35,6 +35,16 @@ async function teamOf(email: string) {
   return { mine, team, members: members || [] };
 }
 
+/** GET ?all=1: every team with its leader, so the app can hand out team names to all of them (including leaders who never opened the app). */
+async function allTeams() {
+  const { data: teams, error } = await supabaseAdmin.from('hackathon_teams').select('id, name, lead_name').limit(2000);
+  if (error) throw error;
+  const { data: leaders, error: e2 } = await supabaseAdmin.from('team_members').select('team_id, email, full_name').eq('role', 'leader').neq('status', 'declined').limit(5000);
+  if (e2) throw e2;
+  const lead = new Map((leaders || []).map((l) => [l.team_id, l]));
+  return (teams || []).map((t) => ({ id: t.id, name: t.name, leadEmail: clean(lead.get(t.id)?.email), leadName: lead.get(t.id)?.full_name || t.lead_name || '' })).filter((t) => t.leadEmail.includes('@'));
+}
+
 /**
  * GET ?email=<address>
  * The hackathon team of one person, for the QFF 2026 app's My Pass page. Leader first. Declined invitations are left out, and teammates'
@@ -43,7 +53,9 @@ async function teamOf(email: string) {
 export async function GET(request: NextRequest) {
   if (!keyMatches(request.headers.get('authorization'))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: NO_STORE });
   try {
-    const email = clean(new URL(request.url).searchParams.get('email'));
+    const params = new URL(request.url).searchParams;
+    if (params.get('all') === '1') return NextResponse.json({ teams: await allTeams() }, { headers: NO_STORE });
+    const email = clean(params.get('email'));
     if (!email.includes('@')) return NextResponse.json({ error: 'email is required' }, { status: 400, headers: NO_STORE });
     const found = await teamOf(email);
     if (!found) return NextResponse.json({ team: null }, { headers: NO_STORE });
@@ -52,6 +64,7 @@ export async function GET(request: NextRequest) {
     const order = (m: { role: string }) => (m.role === 'leader' ? 0 : 1);
     return NextResponse.json({
       team: {
+        id: team.id,
         name: team.name,
         vertical: team.vertical,
         problemStatementId: team.problem_statement_id,
